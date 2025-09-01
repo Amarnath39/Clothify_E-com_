@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Order Notification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #0066cc;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>New Order Received</h1>
+        <p>A new order has been placed. Here are the details:</p>
+        <table>
+            <tr>
+                <th>Order ID</th>
+                <td>{{orderId}}</td>
+            </tr>
+            <tr>
+                <th>Customer Name</th>
+                <td>{{customerName}}</td>
+            </tr>
+            <tr>
+                <th>Total Amount</th>
+                <td>{{totalAmount}}</td>
+            </tr>
+            <tr>
+                <th>Order Date</th>
+                <td>{{orderDate}}</td>
+            </tr>
+        </table>
+        <p>Please process this order as soon as possible.</p>
+    </div>
+</body>
+</html>
