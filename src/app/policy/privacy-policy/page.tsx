@@ -4,7 +4,7 @@ const PrivacyPolicy = () => {
   const sections = [
     {
       title: "Introduction",
-      content: `At Roopsagar, we are committed to protecting your privacy and ensuring that your personal information is handled securely and responsibly. This Privacy Policy outlines the types of data we collect, how it is used, and the rights you have regarding your information.`,
+      content: `At Udayada, we are committed to protecting your privacy and ensuring that your personal information is handled securely and responsibly. This Privacy Policy outlines the types of data we collect, how it is used, and the rights you have regarding your information.`,
     },
     {
       title: "Information We Collect",
@@ -67,8 +67,8 @@ const PrivacyPolicy = () => {
       title: "Contact Us",
       content:
         `For all privacy-related questions or concerns, please contact:
-          📧 info@roopsagarshoppingmall.com
-          📞 +91 8712636775`,
+          📧 Varnasuba755@gmail.com
+          📞 +91 6238305477`,
     },
   ];
 
@@ -95,7 +95,7 @@ const PrivacyPolicy = () => {
 
         <div className="mt-16 text-center">
           <p className="text-xl font-medium text-black">
-            Thank you for trusting fancyvastra with your information!
+            Thank you for trusting Udayaada with your information!
           </p>
         </div>
       </div>

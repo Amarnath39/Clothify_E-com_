@@ -16,7 +16,10 @@ import VideoList from '@/Main/home/video';
 import CategoryCarousel from "@/Main/home/CategoryCarousel";
 
 export const metadata = {
-  title: "Home | Roopsagar",
+  title: "Home | Udayaada",
+  icons:{
+    icon:"/favicon.ico",
+  }
 };
 
 export default function Home() {

@@ -199,7 +199,7 @@ const Navbar = () => {
               className="text-2xl font-bold  flex items-center gap-2"
             >
               <img
-                className="w-44 sm:w-72 object-contain"
+                className="w-24 sm:w-24 object-contain"
                 src="/assets/static/logo/bg-removed.png"
                 alt="Logo"
               />

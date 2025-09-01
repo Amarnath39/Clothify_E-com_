@@ -4,12 +4,12 @@ const ShippingPolicy = () => {
   const sections = [
     {
     title: "Effective Date",
-    content: "Effective Date: 22 July 2025",
+    content: "Effective Date: 01 September 2025",
   },
   {
     title: "Shipping Locations",
     content:
-      "We currently ship only within India. Orders placed for addresses outside India will be canceled.",
+      "We currently ship only within India. Orders placed for addresses outside India will be cancelled.",
   },
   {
     title: "Dispatch Time",
@@ -24,7 +24,7 @@ const ShippingPolicy = () => {
   {
     title: "Shipping Charges",
     content:
-      "Shipping costs are calculated based on weight, dimensions, and delivery location. Final shipping costs are displayed at checkout.",
+      "Free Shipping charges inside Kerala and Outside Kerala around 175. Final shipping costs are displayed at checkout.",
   },
   {
     title: "Tracking Orders",
@@ -34,7 +34,7 @@ const ShippingPolicy = () => {
   {
     title: "Delays & Issues",
     content:
-      "If your order is delayed or arrives damaged: Email us at info@roopsagarshoppingmall.com or Call us at +91 8712636775. We will work with our courier partners to resolve it as quickly as possible.",
+      "If your order is delayed or arrives damaged: Email us at varnasuba755@gmail.com or Call us at +91 6238305477. We will work with our courier partners to resolve it as quickly as possible.",
   },
   ];
 
@@ -47,7 +47,7 @@ const ShippingPolicy = () => {
 
         <div className="bg-white rounded-lg shadow-lg p-6 space-y-8">
           <p className="text-gray-700 leading-relaxed">
-            At Roopsagar, we are committed to delivering high-quality sarees
+            At Udayaada, we are committed to delivering high-quality sarees
             to your doorstep efficiently and reliably. Our shipping and delivery
             services ensure that your orders reach you in perfect condition and
             within the stipulated timeframe.
@@ -73,7 +73,7 @@ const ShippingPolicy = () => {
               at:
             </p>
             <p className="font-semibold text-appPrimary-600">
-              Email: info@roopsagarshoppingmall.com | Phone: +91 8712636775
+              Email: varnasuba755@gmail.com | Phone: +91 6238305477
             </p>
           </div>
         </div>

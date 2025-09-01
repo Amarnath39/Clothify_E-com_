@@ -27,19 +27,19 @@ const quicksand = Quicksand({
 
 export const metadata = {
   title: {
-    default: "Roopsagar",
-    template: "%s | Roopsagar ",
+    default: "Udayada",
+    template: "%s | Udayada",
   },
   keywords:
-    "Roopsagar is almost here to redefine your wardrobe with timeless elegance and effortless style",
+    "Udayada is almost here to redefine your wardrobe with timeless elegance and effortless style",
 
   description:
-    "Roopsagar is almost here to redefine your wardrobe with timeless elegance and effortless style",
+    "Udayada is almost here to redefine your wardrobe with timeless elegance and effortless style",
 
-  image: "/images/Bgremoved_1.png",
-  url: "https://www.roopsagar.com/",
+  image: "/images/bg-removed.png",
+  url: "https://www.udayaada.in/",
 
-  author: "RoopsagarTeam",
+  author: "UdayadaTeam",
 };
 
 export default function RootLayout({

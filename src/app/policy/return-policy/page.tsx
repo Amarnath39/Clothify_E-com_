@@ -4,7 +4,7 @@ const ReturnRefundPolicy = () => {
   const sections = [
     {
     title: "Effective Date",
-    content: "Effective Date: 22 July 2025",
+    content: "Effective Date: 01 September 2025",
   },
   {
     title: "Order Cancellation",
@@ -19,7 +19,7 @@ const ReturnRefundPolicy = () => {
   {
     title: "Return Process",
     content:
-      "Email your return request to info@roopsagarshoppingmall.com with your order number and reason. Wait for confirmation and return instructions. Pack the item securely and ship it to our address.\n\nNote: Customers are responsible for return shipping charges unless the product was defective or incorrect.",
+      "Email your return request to varnasuba755@gmail.com with your order number and reason. Wait for confirmation and return instructions. Pack the item securely and ship it to our address.\n\nNote: Customers are responsible for return shipping charges unless the product was defective or incorrect.",
   },
   {
     title: "Refund Process",
@@ -29,7 +29,7 @@ const ReturnRefundPolicy = () => {
   {
     title: "Contact Support",
     content:
-      "📧 info@roopsagarshoppingmall.com | 📞 +91 8712636775",
+      "📧 varnasuba755@gmail.com | 📞 +91 6238305477",
   },
   ];
 
@@ -59,7 +59,7 @@ const ReturnRefundPolicy = () => {
             Policy, please contact our customer support. at
             <a href="" className="text-blue-500">
               {" "}
-              info@roopsagarshoppingmall.com
+              varnasuba755@gmail.com
             </a>
           </p>
         </div>

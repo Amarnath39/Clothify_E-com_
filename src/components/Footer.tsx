@@ -105,14 +105,14 @@ const Footer = () => {
           <div className="space-y-6 col-span-1 md:col-span-2 lg:col-span-1">
             <div className="bg-white p-4 rounded-lg">
               <img
-                src="/assets/static/logo/Bgremoved_1.png"
+                src="/assets/static/logo/bg-removed.png"
                 alt="logo"
                 className="h-48 w-48 object-contain mx-auto"
               />
-              <p className="text-primaryRed text-sm mt-0 text-center">
+              {/* <p className="text-primaryRed text-sm mt-0 text-center">
                 Discover the essence of tradition with our exquisite collection
                 of ethnic wear.
-              </p>
+              </p> */}
             </div>
           </div>
 
@@ -217,32 +217,32 @@ const Footer = () => {
 
         <div className="mt-16 flex flex-col md:flex-row justify-between items-center border-t border-black pt-8">
           <p className="text-black text-sm mb-4 md:mb-0">
-            &copy; {currentYear} Roopsagar. All Rights Reserved.
+            &copy; {currentYear} Udayaada. All Rights Reserved.
           </p>
           <div className="flex space-x-4 md:mr-24">
-            <a
+            {/* <a
               target="_blank"
               href="https://www.instagram.com/roopsagar_shopping_mall/"
               className="text-red hover:text-yellow-400 transition-colors"
             >
               <FaInstagram size={22} />
-            </a>
-             <a
+            </a> */}
+             {/* <a
           target="_blank"
           href="https://www.facebook.com/RoopsagarSM"
           rel="noopener noreferrer"
           className="text-red hover:text-yellow-400 transition-colors"
         >
           <FaFacebook size={22} />
-        </a>
-        <a
+        </a> */}
+        {/* <a
           target="_blank"
           href="https://youtube.com/@roopsagarshoppingmallpvtltd?si=HOqY07IKT6zaD5v7"
           rel="noopener noreferrer"
           className="text-red hover:text-yellow-400 transition-colors"
         >
           <FaYoutube size={22} />
-        </a>
+        </a> */}
             {/* <a
               href="#"
               className="text-white hover:text-yellow-400 transition-colors"

@@ -169,7 +169,7 @@ function AdminLayout({ children }) {
             <h2 className="text-2xl font-semibold">Admin Panel</h2>
             <FaHamburger size={24} />
           </div>
-          <nav className="mt-4">
+          <nav className="mt-0">
             {filteredAdminCards.map((card, index) => (
               <Link
                 key={index}
