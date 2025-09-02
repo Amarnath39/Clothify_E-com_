@@ -308,7 +308,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
     <div className="flex min-h-screen bg-white">
       <div className="hidden md:block md:w-1/2 relative overflow-hidden">
         <img
-          src="/assets/static/logo/shopping1.png"
+          src="/assets/static/logo/bg-removed.png"
           alt="Fitness Background"
           className="object-cover object-center w-full h-[850px]"
         />
@@ -328,7 +328,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
   className="text-white bg-white px-8 py-6" // px = horizontal, py = vertical
 >
   <div className="flex justify-center">
-    <img src="/assets/static/logo/bg-removed.png" alt="Logo" className="h-[70px] w-[250px]" />
+    {/* <img src="/assets/static/logo/bg-removed.png" alt="Logo" className="h-[70px] w-[250px]" /> */}
   </div>
 </CardHeader>
 
