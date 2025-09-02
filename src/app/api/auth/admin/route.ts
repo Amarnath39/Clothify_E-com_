@@ -44,7 +44,7 @@ export const POST = async (req: NextRequest) => {
       // sameSite: "none",
       maxAge: 1 * 24 * 60 * 60, // 1 day
       path: "/",
-      domain: process.env.NODE_ENV === "production" ? "roopsagarshoppingmall.com" : "localhost"
+      domain: process.env.NODE_ENV === "production" ? "udayaada.in" : "localhost"
     };
 
     // return NextResponse.json({ success: true, token }, { status: 200 });
