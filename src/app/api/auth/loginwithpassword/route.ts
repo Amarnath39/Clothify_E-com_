@@ -41,7 +41,7 @@ export const POST = async (req: NextRequest) => {
         // Optional welcome email
         await orderConfirmationEmail(
           dummyUser.email,
-          "Welcome to Roop Sagar (Dummy Account)!",
+          "Welcome to Udayaada (Dummy Account)!",
           `<p>Hello,</p><p>Your test account has been created.</p>`
         );
       }
