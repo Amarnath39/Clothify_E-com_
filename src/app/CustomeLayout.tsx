@@ -186,11 +186,11 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       {/* Welcome Message Bar with Gradient Animation */}
-      {/* <div className="text-white text-center text-sm gradient-bar fixed top-0 left-0 w-full z-50">
-        <p className="max-w-6xl mx-auto py-3 px-2">
-          Welcome to Roopsagar In World of Fashion
+      <div className="text-center text-sm fixed top-0 left-0 w-full z-[9999] bg-[#380e13]">
+        <p className="max-w-6xl mx-auto py-3 px-2 text-[#FFD700]">
+          ഉടയാട –കേരള സാരി സൗന്ദര്യത്തിന് പുതിയ അധ്യായം
         </p>
-      </div> */}
+      </div>
 
       {/* Padding to push content below fixed bars */}
       <div className="pt-[52px]">
@@ -205,9 +205,10 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
           {!pathname.includes("/admin") && (
             <div className="fixed z-50 w-[48px] h-[48px] sm:w-[54px] sm:h-[54px] bottom-16 sm:bottom-6 right-4 rounded-full opacity-80 hover:scale-105 hover:opacity-100 transition-all ease-linear hover:shadow-lg">
               <a
-                href="https://wa.me/+916238305477"
+                href="https://wa.me/+917306372906?text=Hi!"
                 target="_blank"
                 rel="noopener noreferrer"
+              
               >
                 <img
                   className="w-full h-full rounded-full"

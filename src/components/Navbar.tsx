@@ -139,7 +139,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`bg-white border-b fixed w-full navbar-main transition-all duration-10 ${topPosition}`}
+      className={`bg-white border-b fixed w-full navbar-main transition-all duration-10 mt-8 ${topPosition}`}
       style={{
         zIndex: isDesktopSheetOpen ? 0 : 100,
         transform: "translate3d(0,0,0)",
@@ -198,10 +198,12 @@ const Navbar = () => {
               href="/"
               className="text-2xl font-bold  flex items-center gap-2"
             >
-              <img
-                className="w-24 sm:w-24 object-contain"
-                src="/assets/static/logo/bg-removed.png"
-                alt="Logo"
+              <video
+                className="w-40 sm:w-32 object-contain"
+                src="/assets/static/logo/animatedlogobgremoved.mp4"
+                autoPlay
+                muted
+                playsInline
               />
             </Link>
           </div>
