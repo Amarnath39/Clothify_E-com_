@@ -115,7 +115,7 @@ const TermsAndConditions = () => {
 
         <div className="mt-12 text-center bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-appPrimary-500">
-            Thank you for using Roopsagar
+            Thank you for using Udayada
           </h2>
         </div>
       </div>

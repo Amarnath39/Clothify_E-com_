@@ -109,10 +109,9 @@ const Footer = () => {
                 alt="logo"
                 className="h-48 w-48 object-contain mx-auto"
               />
-              {/* <p className="text-primaryRed text-sm mt-0 text-center">
-                Discover the essence of tradition with our exquisite collection
-                of ethnic wear.
-              </p> */}
+              <p className="text-primaryRed text-sm mt-0 text-center">
+                Subin P.
+              </p>
             </div>
           </div>
 
