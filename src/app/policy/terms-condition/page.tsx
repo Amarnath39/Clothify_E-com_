@@ -6,12 +6,12 @@ const TermsAndConditions = () => {
     {
       title: "Introduction",
       content:
-        "These Terms & Conditions govern your use of the Roopsagar website and all purchases made through our platform.",
+        "These Terms & Conditions govern your use of the Udayaada and all purchases made through our platform.",
     },
     {
       title: "Effective Date and Modifications",
       content:
-        "Effective Date: 22 July 2025. By accessing or using our site, you agree to comply with these terms. We may update the terms at any time, and it is your responsibility to review them periodically.",
+        "Effective Date: 1 September 2025. By accessing or using our site, you agree to comply with these terms. We may update the terms at any time, and it is your responsibility to review them periodically.",
     },
     {
       title: "Responsible Use and Conduct",
@@ -64,7 +64,7 @@ const TermsAndConditions = () => {
 {
   title: "Contact Information",
   content:
-    "📧 info@roopsagarshoppingmall.com | 📞 +91 8712636775",
+    "📧 varnasuba755@gmail.com  | 📞 +91 6238305477",
 },
 
   ];
@@ -83,7 +83,7 @@ const TermsAndConditions = () => {
               href="/"
               className="text-appPrimary-500 font-semibold hover:underline"
             >
-              https://www.roopsagarshoppingmall.com/
+              https://www.udayaada.in/
             </Link>
             , you agree to be bound by these terms and conditions.
           </p>
