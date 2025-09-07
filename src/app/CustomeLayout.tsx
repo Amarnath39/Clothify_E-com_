@@ -186,11 +186,12 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       {/* Welcome Message Bar with Gradient Animation */}
-      <div className="text-center text-sm fixed top-0 left-0 w-full z-[9999] bg-[#380e13]">
-        <p className="max-w-6xl mx-auto py-3 px-2 text-[#FFD700]">
-          ഉടയാട –കേരള സാരി സൗന്ദര്യത്തിന് പുതിയ അധ്യായം
-        </p>
-      </div>
+      <div className="text-center text-sm fixed top-0 left-0 w-full z-[9999] bg-white">
+  <p className="max-w-6xl mx-auto py-3 px-2 text-[#380e13]">
+    Udayada - Timeless Kerala Sarees for the Modern Woman
+  </p>
+</div>
+
 
       {/* Padding to push content below fixed bars */}
       <div className="pt-[52px]">

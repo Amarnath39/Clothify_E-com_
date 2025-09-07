@@ -32,7 +32,7 @@ export default function Home() {
       <BestSelling />
       <Featured />
       <OptionStrap />
-      <CategoryCarousel />
+      {/* <CategoryCarousel /> */}
       {/* <ImageComparisonSlider /> */}
       <MainProducts />
        <VideoList />

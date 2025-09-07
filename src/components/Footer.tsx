@@ -105,9 +105,9 @@ const Footer = () => {
           <div className="space-y-6 col-span-1 md:col-span-2 lg:col-span-1">
             <div className="bg-white p-4 rounded-lg">
               <img
-                src="/assets/static/logo/bg-removed.png"
+                src="/assets/static/logo/footerlogo.svg"
                 alt="logo"
-                className="h-48 w-48 object-contain mx-auto"
+                className="h-56 w-56 object-contain mx-auto"
               />
               <p className="text-primaryRed text-sm mt-0 text-center">
                 Subin P.
