@@ -103,17 +103,18 @@ const Footer = () => {
       <div className="mx-auto w-full max-w-7xl px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-6 col-span-1 md:col-span-2 lg:col-span-1">
-            <div className="bg-white p-4 rounded-lg">
-              <img
-                src="/assets/static/logo/footerlogo.svg"
-                alt="logo"
-                className="h-56 w-56 object-contain mx-auto"
-              />
-              <p className="text-primaryRed text-sm mt-0 text-center">
-                Subin P.
-              </p>
-            </div>
-          </div>
+  <div className="bg-white p-4 rounded-lg text-center">
+    <div className="h-32 w-32 sm:h-72 sm:w-72 mx-auto rounded-3xl bg-[#380e13] flex items-center justify-center overflow-hidden">
+      <img
+        src="/assets/static/logo/Final Footer.svg"
+        alt="logo"
+        className="h-24 w-24 sm:h-60 sm:w-60 object-contain"
+      />
+    </div>
+    
+  </div>
+</div>
+
 
           {LINKS.map(({ title, items }) => (
             <div key={title} className="space-y-4">
