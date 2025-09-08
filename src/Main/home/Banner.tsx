@@ -132,7 +132,7 @@ const Banner = () => {
   return (
     <>
       <div className="flex justify-center overflow-x-hidden">
-        <MainCategoryList />
+        {/* <MainCategoryList /> */}
       </div>
 
       {/* Responsive Banner Container */}

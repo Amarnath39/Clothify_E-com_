@@ -186,11 +186,49 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       {/* Welcome Message Bar with Gradient Animation */}
-      <div className="text-center text-sm fixed top-0 left-0 w-full z-[9999] bg-white">
-  <p className="max-w-6xl mx-auto py-3 px-2 text-[#380e13]">
+<div className="text-white text-center text-sm fixed top-0 left-0 w-full z-50 gold-bar">
+  <p className="max-w-6xl mx-auto py-3 px-2">
     Udayada - Timeless Kerala Sarees for the Modern Woman
   </p>
+
+  <style jsx>{`
+    .gold-bar {
+      background: linear-gradient(
+        90deg,
+        #eab564,
+        #bc4f15b8,
+        #eab565,
+        #bc4f15b8,
+        #eab664
+      );
+      background-size: 300% 300%;
+      animation: shimmer 8s linear infinite;
+      box-shadow: 0 0 15px rgba(234, 182, 100, 0.6);
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .gold-bar p {
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-shadow: 0 0 5px rgba(234, 182, 100, 0.7),
+        0 0 12px rgba(235, 182, 101, 0.9);
+    }
+  `}</style>
 </div>
+
+
+
 
 
       {/* Padding to push content below fixed bars */}

@@ -29,6 +29,7 @@ export default function Home() {
         <AnimatedSearchInput />
       </div> */}
       <Banner />
+      <MainCategoryList />
       <BestSelling />
       <Featured />
       <OptionStrap />
