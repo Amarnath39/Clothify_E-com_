@@ -152,15 +152,7 @@ const Page = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-6 overflow-hidden">
-      {/* Logo added above Products heading */}
-      <div className="flex flex-col items-start space-y-2 mb-2">
-        <img
-          src="/assets/static/logo/2_4__1_-removebg-preview (1).png"
-          alt="Logo"
-          className="w-32 h-20 sm:w-40 sm:h-24 md:w-48 md:h-28 object-contain"
-          style={{ marginTop: 0, marginBottom: 0 }}
-        />
-      </div>
+      
       <h1 className="text-3xl font-bold">Products</h1>
       <div className="relative">
         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />

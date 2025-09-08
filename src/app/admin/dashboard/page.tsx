@@ -87,12 +87,7 @@ const OrdersPage = () => {
   return (
     <div className="container mx-auto px-6 pt-4 pb-2 space-y-6">
       <div className="space-y-2 flex flex-col items-start">
-        <img 
-          src="/assets/static/logo/2_4__1_-removebg-preview (1).png" 
-          alt="Logo" 
-          className="w-32 h-20 sm:w-40 sm:h-24 md:w-48 md:h-28 object-contain"
-          style={{ marginTop: 0, marginBottom: 0 }}
-        />
+        
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
       </div>
 

@@ -185,6 +185,16 @@ function AdminLayout({ children }) {
               </Link>
             ))}
           </nav>
+          <div className="mt-1 p-4 text-base text-white border-gray-800  text-center  mb-1">
+            Powered by <br />
+            <Link
+              href="https://www.webgeon.com/"
+              target="_blank"
+              className="mt-2 hover:text-blue-500"
+            >
+              Webgeon Results
+            </Link>
+          </div>
         </aside>
       )}
 
@@ -200,13 +210,26 @@ function AdminLayout({ children }) {
           showSidebar ? "pl-[300px]" : "pl-8"
         }`}
       >
-        <div className="flex justify-end items-center gap-6">
-          <h2 className="text-xl ">
-            Welcome{" "}
-            <span className="font-bold cursor-pointer">{user.name}</span>
-          </h2>
-          <Button onClick={() => setShowLogoutModal(true)}>Logout</Button>
-        </div>
+        <div className="flex justify-between items-center">
+  {/* Left: Logo */}
+  <div className="flex items-center">
+    <img
+      src="/assets/static/logo/fyncartlogo.png"
+      alt="Logo"
+      className="h-10 w-auto object-contain"
+    />
+  </div>
+
+  {/* Right: Welcome + Logout */}
+  <div className="flex items-center gap-4">
+    <h2 className="text-xl">
+      Welcome{" "}
+      <span className="font-bold cursor-pointer">{user.name}</span>
+    </h2>
+    <Button onClick={() => setShowLogoutModal(true)}>Logout</Button>
+  </div>
+</div>
+
         {children}
       </main>
     </div>

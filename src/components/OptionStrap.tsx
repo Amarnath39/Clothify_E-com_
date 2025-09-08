@@ -8,21 +8,21 @@ const features = [
     icon: <FaExchangeAlt className="text-5xl text-black" />,
     title: "Returns & exchanges",
     description:
-      "We strive to make fashion accessible to everyone, no matter your budget.",
+      "Easy returns and exchanges for your convenience.",
   },
   {
     id: 2,
     icon: <MdLocalShipping className="text-5xl text-black" />,
     title: "Fast Shipping",
     description:
-      "We strive to make fashion accessible to everyone, no matter your budget.",
+      "Quick delivery, straight to your doorstep.",
   },
   {
     id: 3,
     icon: <MdSupportAgent className="text-5xl text-black" />,
     title: "Support 24/7",
     description:
-      "We strive to make fashion accessible to everyone, no matter your budget.",
+      "We're here to help anytime, day or night",
   },
 ];
 

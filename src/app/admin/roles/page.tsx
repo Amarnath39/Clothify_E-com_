@@ -149,15 +149,7 @@ const AdminPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Logo added above Admin Management */}
-      <div className="flex flex-col items-start space-y-2 mb-2">
-        <img
-          src="/assets/static/logo/2_4__1_-removebg-preview (1).png"
-          alt="Logo"
-          className="w-32 h-20 sm:w-40 sm:h-24 md:w-48 md:h-28 object-contain"
-          style={{ marginTop: 0, marginBottom: 0 }}
-        />
-      </div>
+     
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Admin Management</h1>
         <Button onClick={() => setShowAdminForm(!showAdminForm)}>
