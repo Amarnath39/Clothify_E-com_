@@ -119,28 +119,16 @@ const Navbar = () => {
               open={isDesktopSheetOpen}
               onOpenChange={setIsDesktopSheetOpen}
             >
-<<<<<<< Updated upstream
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-blackPrimary hover:text-yellow hover:bg-yellow/5 cursor-pointer"
+                  className="hover:bg-transparent cursor-pointer"
+                  style={{ color: "#eab565" }}
                 >
                   <RxHamburgerMenu size={30} />
                 </Button>
               </SheetTrigger>
-=======
-           <SheetTrigger asChild>
-  <Button
-    variant="ghost"
-    size="icon"
-    className="hover:bg-transparent cursor-pointer text-[#eab565]"
-  >
-    <RxHamburgerMenu size={30} style={{ color: "#eab565" }} />
-  </Button>
-</SheetTrigger>
-
->>>>>>> Stashed changes
 
               <SheetContent
                 side="left"
@@ -188,42 +176,10 @@ const Navbar = () => {
             />
           )}
 
-<<<<<<< Updated upstream
-          {/* Icons */}
-          <div className="hidden md:block">
-            <div className="ml-4 flex items-center gap-2 md:ml-6">
-              <div onClick={() => setIsModalOpen((prev) => !prev)}>
-                <IoMdSearch
-                  color=""
-                  size={30}
-                  className="text-blackPrimary hover:text-yellow cursor-pointer"
-                />
-              </div>
-
-              <div
-                title="cart"
-                onClick={() => router.push("/cart")}
-                className="relative"
-              >
-                <IoBagOutline
-                  size={28}
-                  className="text-blackPrimary hover:text-yellow cursor-pointer font-semibold"
-                />
-                {/* </Button> */}
-                {cartItems.length > 0 && (
-                  <span className="absolute bottom-[-6px] right-[-4px] w-5 h-5 z-[100] rounded-full text-white items-center flex justify-center bg-primaryRed text-[10px]">
-                    {cartItems.length}
-                  </span>
-                )}
-              </div>
-
-              <UserMenu setIsSheetOpen={setIsSheetOpen} />
-=======
           {/* Desktop Icons */}
           <div className="hidden md:flex ml-4 items-center gap-2 md:ml-6">
             <div onClick={() => setIsModalOpen((prev) => !prev)}>
               <IoMdSearch size={30} className="cursor-pointer" style={{ color: "#eab565" }} />
->>>>>>> Stashed changes
             </div>
 
             <div
@@ -239,7 +195,7 @@ const Navbar = () => {
               )}
             </div>
 
-            <UserMenu setIsSheetOpen={setIsSheetOpen} />
+            <UserMenu setIsSheetOpen={setIsSheetOpen}  />
           </div>
 
           {/* Mobile Icons */}
@@ -255,53 +211,39 @@ const Navbar = () => {
                 <FaHeart className="h-5 w-5" style={{ color: "#eab565" }} />
               )}
             </Link>
-<<<<<<< Updated upstream
+
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-blackPrimary hover:text-blackPrimary hover:bg-yellow/20 cursor-pointer"
+                  className="hover:bg-transparent cursor-pointer"
+                  style={{ color: "#eab565" }}
                 >
                   <FaBars className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-=======
->>>>>>> Stashed changes
 
-           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-  <SheetTrigger asChild>
-    <Button
-      variant="ghost"
-      size="icon"
-      className="hover:bg-transparent cursor-pointer"
-    >
-      <FaBars className="h-5 w-5" style={{ color: "#eab565" }} />
-    </Button>
-  </SheetTrigger>
-
-  <SheetContent
-    side="right"
-    className="w-[300px] sm:w-[400px] bg-white text-black"
-    style={{ zIndex: 9999 }}
-  >
-    {token && (
-      <div>
-        <Button onClick={handleLogout} style={{ color: "#eab565" }}>
-          Logout
-        </Button>
-      </div>
-    )}
-    <SheetHeader>
-      <SheetTitle className="text-navbarBackground mt-12">Menu</SheetTitle>
-    </SheetHeader>
-    <div className="py-4 space-y-4 overflow-y-scroll">
-      <NavigationMobile categories={categories} onNavigate={closeSheet} />
-    </div>
-  </SheetContent>
-</Sheet>
-
-
+              <SheetContent
+                side="right"
+                className="w-[300px] sm:w-[400px] bg-white text-black"
+                style={{ zIndex: 9999 }}
+              >
+                {token && (
+                  <div>
+                    <Button onClick={handleLogout} style={{ color: "#eab565" }}>
+                      Logout
+                    </Button>
+                  </div>
+                )}
+                <SheetHeader>
+                  <SheetTitle className="text-navbarBackground mt-12">Menu</SheetTitle>
+                </SheetHeader>
+                <div className="py-4 space-y-4 overflow-y-scroll">
+                  <NavigationMobile categories={categories} onNavigate={closeSheet} />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
