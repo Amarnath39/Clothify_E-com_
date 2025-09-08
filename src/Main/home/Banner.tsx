@@ -21,12 +21,14 @@ const Banner = () => {
   const [textTransition, setTextTransition] = useState(false);
   const router = useRouter();
 
+  // Scroll effect
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Fetch banners
   useEffect(() => {
     const callGetAllBanner = async () => {
       try {
@@ -50,6 +52,7 @@ const Banner = () => {
     callGetAllBanner();
   }, []);
 
+  // Initialize activeIndex and start timer
   useEffect(() => {
     if (banners.length > 0) {
       setActiveIndex(0);
@@ -57,6 +60,7 @@ const Banner = () => {
     }
   }, [banners]);
 
+  // Handle active banner change
   useEffect(() => {
     if (banners.length > 0) {
       startTimer();
@@ -128,78 +132,75 @@ const Banner = () => {
   };
 
   return (
-    <>
-      {/* Responsive Banner Container */}
-      <div className="relative w-full h-[25vh] sm:h-[60vh] md:h-[85vh] overflow-hidden mt-16 sm:mt-20 md:mt-24 px-2 sm:px-4 md:px-8">
-        {/* Banner Image/Video Layer */}
-        <div
-          className="absolute top-0 left-0 w-full h-full cursor-pointer"
-          onClick={handleBannerClick}
-        >
-          {banners.map((banner, index) => (
-            <div
-              key={banner.id}
-              className={`absolute top-0 left-0 w-full h-full transition-all duration-1000 ease-in-out ${
-                activeIndex === index ? "opacity-100 z-10" : "opacity-0 z-0"
-              }`}
-            >
-              {banner.type === "image" ? (
-                <div
-                  className="w-full h-full bg-cover bg-center rounded-[20px]"
-                  style={{
-                    backgroundImage: `url(${banner.src})`,
-                    backgroundPosition: `top ${50 + scrollY * 0.05}%`,
-                    transform: `scale(${transition ? 1.1 : 1})`,
-                    transition:
-                      "transform 6s ease-out, opacity 1s ease-in-out, background-position 0.5s ease-out",
-                  }}
-                />
-              ) : (
-                <video
-                  ref={videoRef}
-                  src={banner.src}
-                  className="w-full h-full object-cover rounded-[20px]"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                />
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Text Overlay */}
-        <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center text-white z-30 px-4 text-center">
-          <h1 className="text-xl sm:text-3xl md:text-5xl font-bold mb-2 sm:mb-4">
-            {banners[activeIndex]?.title}
-          </h1>
-          <p
-            className={`text-sm sm:text-base md:text-lg max-w-xl transition-all duration-500 ease-in-out ${
-              textTransition
-                ? "opacity-0 transform -translate-y-10"
-                : "opacity-100 transform translate-y-0"
+    <div className="relative w-full h-[25vh] sm:h-[60vh] md:h-[85vh] overflow-hidden px-2 sm:px-4 md:px-8">
+      {/* Banner Image/Video Layer */}
+      <div
+        className="absolute top-0 left-0 w-full h-full cursor-pointer"
+        onClick={handleBannerClick}
+      >
+        {banners.map((banner, index) => (
+          <div
+            key={banner.id}
+            className={`absolute top-0 left-0 w-full h-full transition-all duration-1000 ease-in-out ${
+              activeIndex === index ? "opacity-100 z-10" : "opacity-0 z-0"
             }`}
           >
-            {banners[activeIndex]?.description}
-          </p>
-        </div>
-
-        {/* Navigation Buttons */}
-        <button
-          onClick={handlePrev}
-          className="absolute bottom-3 left-3 sm:bottom-5 sm:left-5 bg-white bg-opacity-70 p-2 rounded-full text-red hover:bg-opacity-90 transition-all z-40"
-        >
-          <FaArrowLeft size={18} />
-        </button>
-        <button
-          onClick={handleNext}
-          className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-white bg-opacity-70 p-2 rounded-full text-red hover:bg-opacity-90 transition-all z-40"
-        >
-          <FaArrowRight size={18} />
-        </button>
+            {banner.type === "image" ? (
+              <div
+                className="w-full h-full bg-cover bg-center rounded-[20px]"
+                style={{
+                  backgroundImage: `url(${banner.src})`,
+                  backgroundPosition: `top ${50 + scrollY * 0.05}%`,
+                  transform: `scale(${transition ? 1.1 : 1})`,
+                  transition:
+                    "transform 6s ease-out, opacity 1s ease-in-out, background-position 0.5s ease-out",
+                }}
+              />
+            ) : (
+              <video
+                ref={videoRef}
+                src={banner.src}
+                className="w-full h-full object-cover rounded-[20px]"
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+            )}
+          </div>
+        ))}
       </div>
-    </>
+
+      {/* Text Overlay */}
+      <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center text-white z-30 px-4 text-center">
+        <h1 className="text-xl sm:text-3xl md:text-5xl font-bold mb-2 sm:mb-4">
+          {banners[activeIndex]?.title}
+        </h1>
+        <p
+          className={`text-sm sm:text-base md:text-lg max-w-xl transition-all duration-500 ease-in-out ${
+            textTransition
+              ? "opacity-0 transform -translate-y-10"
+              : "opacity-100 transform translate-y-0"
+          }`}
+        >
+          {banners[activeIndex]?.description}
+        </p>
+      </div>
+
+      {/* Navigation Buttons */}
+      <button
+        onClick={handlePrev}
+        className="absolute bottom-3 left-3 sm:bottom-5 sm:left-5 bg-white bg-opacity-70 p-2 rounded-full text-red hover:bg-opacity-90 transition-all z-40"
+      >
+        <FaArrowLeft size={18} />
+      </button>
+      <button
+        onClick={handleNext}
+        className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-white bg-opacity-70 p-2 rounded-full text-red hover:bg-opacity-90 transition-all z-40"
+      >
+        <FaArrowRight size={18} />
+      </button>
+    </div>
   );
 };
 
