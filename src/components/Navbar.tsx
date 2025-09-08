@@ -139,7 +139,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`bg-[#380e13] border-b fixed w-full navbar-main transition-all duration-10 mt-1 ${topPosition}`}
+      className={`bg-[#380e10] border-b fixed w-full navbar-main transition-all duration-10 mt-1 ${topPosition}`}
       style={{
         zIndex: isDesktopSheetOpen ? 0 : 100,
         transform: "translate3d(0,0,0)",

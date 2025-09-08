@@ -123,9 +123,9 @@ const MainProducts = () => {
 
   return (
     <>
-      <h1 className="text-center text-3xl tracking-wider py-2 pt-6">
-        Check our selection
-      </h1>
+       <h1 className="relative text-3xl tracking-wider py-2 pt-6 text-center mx-auto animated-underline">
+    Check our selection
+  </h1>
       <div key={searchQuery} className="mx-auto px-4 py-2 mt-10">
         <div className="flex flex-col md:flex-row gap-8 ">
           <div className="min-w-[90vw] mx-auto">

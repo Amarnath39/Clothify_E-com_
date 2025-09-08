@@ -352,12 +352,11 @@ const InstagramPage: React.FC = () => {
   return (
     <div className="relative z-20 lg:py-2 py-4 sm:py-2 md:py-2">
       <div className="text-center mb-4 sm:mb-8">
-        <h1
-          className={`${quicksand.className} text-2xl sm:text-3xl md:text-4xl  text-black inline-block relative tracking-wide`}
-        >
-          Follow Us On Instagram
-          <div className="absolute -bottom-2 left-1/2 w-24 h-0.5 bg-red transform -translate-x-1/2"></div>
-        </h1>
+       <h1
+  className={`${quicksand.className} text-2xl sm:text-3xl md:text-4xl text-black inline-block relative tracking-wide mb-8 animated-underline`}
+>
+  Follow Us On Instagram
+</h1>
       </div>
 
       <style>
