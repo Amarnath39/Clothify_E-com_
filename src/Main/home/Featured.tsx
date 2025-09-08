@@ -83,7 +83,7 @@ const Featured = () => {
             {images[currentIndex]?.description}
           </p>
           <Button
-            className="bg-[#E9C533] text-white px-6 py-3 rounded-md text-sm sm:text-base md:text-lg hover:bg-red-300 transition duration-300 transform hover:scale-105"
+            className="bg-[#E9C533] text-white px-6 py-3 rounded-md text-sm sm:text-base md:text-lg hover:bg-amber-600 transition duration-300 transform hover:scale-105"
             onClick={() => router.push("/products")}
           >
             Shop all

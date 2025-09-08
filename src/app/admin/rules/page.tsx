@@ -64,6 +64,15 @@ const RulesPage = () => {
 
   return (
     <div className="container mx-auto p-4">
+      {/* Logo added above Admin Hero Banner heading */}
+      <div className="flex flex-col items-start space-y-2 mb-2">
+        <img
+          src="/assets/static/logo/2_4__1_-removebg-preview (1).png"
+          alt="Logo"
+          className="w-32 h-20 sm:w-40 sm:h-24 md:w-48 md:h-28 object-contain"
+          style={{ marginTop: 0, marginBottom: 0 }}
+        />
+      </div>
       <Card className="mb-8">
         <CardHeader>
           <CardTitle>Rule Management</CardTitle>

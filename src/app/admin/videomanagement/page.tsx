@@ -64,6 +64,15 @@ export default function VideoUploadPage() {
 
   return (
     <div className="p-6 max-w-xl mx-auto">
+      {/* Logo added above Admin Hero Banner heading */}
+      <div className="flex flex-col items-start space-y-2 mb-2">
+        <img
+          src="/assets/static/logo/2_4__1_-removebg-preview (1).png"
+          alt="Logo"
+          className="w-32 h-20 sm:w-40 sm:h-24 md:w-48 md:h-28 object-contain"
+          style={{ marginTop: 0, marginBottom: 0 }}
+        />
+      </div>
       <h2 className="text-xl font-semibold mb-4">Upload Video</h2>
       <input type="file" accept="video/*" onChange={handleFileChange} />
       <button

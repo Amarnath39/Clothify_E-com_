@@ -158,7 +158,7 @@ const Navbar = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-blackPrimary hover:text-blackPrimary hover:bg-transparent cursor-pointer"
+                  className="text-blackPrimary hover:text-yellow hover:bg-yellow/5 cursor-pointer"
                 >
                   <RxHamburgerMenu size={30} />
                 </Button>
@@ -221,7 +221,7 @@ const Navbar = () => {
                 <IoMdSearch
                   color=""
                   size={30}
-                  className="text-blackPrimary hover:black cursor-pointer"
+                  className="text-blackPrimary hover:text-yellow cursor-pointer"
                 />
               </div>
 
@@ -232,7 +232,7 @@ const Navbar = () => {
               >
                 <IoBagOutline
                   size={28}
-                  className="text-blackPrimary hover:black cursor-pointer font-semibold"
+                  className="text-blackPrimary hover:text-yellow cursor-pointer font-semibold"
                 />
                 {/* </Button> */}
                 {cartItems.length > 0 && (
@@ -269,7 +269,7 @@ const Navbar = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-blackPrimary hover:text-blackPrimary hover:bg-transparent cursor-pointer"
+                  className="text-blackPrimary hover:text-blackPrimary hover:bg-yellow/20 cursor-pointer"
                 >
                   <FaBars className="h-5 w-5" />
                 </Button>

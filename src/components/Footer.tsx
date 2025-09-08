@@ -99,7 +99,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="relative w-full bg-white pt-16 pb-8 footer-main mb-16 md:mb-0">
+    <footer className="relative w-full bg-white pt-8 pb-8 footer-main mb-16 md:mb-0">
       <div className="mx-auto w-full max-w-7xl px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-6 col-span-1 md:col-span-2 lg:col-span-1 mb-8">
@@ -215,7 +215,7 @@ const Footer = () => {
           </div>
         )}
 
-        <div className="mt-4 flex flex-col md:flex-row justify-between items-center border-t border-black pt-8">
+        <div className="mt-0 flex flex-col md:flex-row justify-between items-center border-t border-black pt-8">
           <p className="text-black text-sm mb-4 md:mb-0">
             &copy; {currentYear} Udayaada. All Rights Reserved.
           </p>
