@@ -32,9 +32,9 @@ export const sendUserOrderEmail = async (orderDetails: OrderDetails): Promise<vo
 
     // Define mail options
     const mailOptions = {
-      from: '"Roopsagar" <orders@roopsagarshoppingmall.com>', // Verified sender in ZeptoMail
+      from: '"Udayaada" <orders@udayaada.in>', // Verified sender in ZeptoMail
       to: orderDetails?.user?.email || orderDetails.customerEmail,
-      subject: "🧾 Order Confirmation - Fancyvastra",
+      subject: "🧾 Order Confirmation - Udayaada",
       html: emailContent,
     };
 
