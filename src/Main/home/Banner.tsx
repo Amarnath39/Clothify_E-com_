@@ -1,14 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import useIntersectionObserver from "@/hooks/useScrollAnimation";
 import "../../hooks/style.css";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { getAllBanner } from "@/lib/features/banner";
 import { AppDispatch } from "@/lib/store";
 import { useRouter } from "next/navigation";
-import MainCategoryList from "@/components/MainCategoryList";
 
 const Banner = () => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -131,14 +129,13 @@ const Banner = () => {
 
   return (
     <>
-      <div className="flex justify-center overflow-x-hidden">
-        {/* <MainCategoryList /> */}
-      </div>
-
       {/* Responsive Banner Container */}
-      <div className="relative w-full h-[25vh] sm:h-[60vh] md:h-[85vh] overflow-hidden mt-4 sm:mt-6 md:mt-8 px-2 sm:px-4 md:px-8">
+      <div className="relative w-full h-[25vh] sm:h-[60vh] md:h-[85vh] overflow-hidden mt-16 sm:mt-20 md:mt-24 px-2 sm:px-4 md:px-8">
         {/* Banner Image/Video Layer */}
-        <div className="absolute top-0 left-0 w-full h-full cursor-pointer" onClick={handleBannerClick}>
+        <div
+          className="absolute top-0 left-0 w-full h-full cursor-pointer"
+          onClick={handleBannerClick}
+        >
           {banners.map((banner, index) => (
             <div
               key={banner.id}
