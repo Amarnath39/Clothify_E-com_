@@ -102,9 +102,9 @@ const Footer = () => {
     <footer className="relative w-full bg-white pt-16 pb-8 footer-main mb-16 md:mb-0">
       <div className="mx-auto w-full max-w-7xl px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div className="space-y-6 col-span-1 md:col-span-2 lg:col-span-1">
+          <div className="space-y-6 col-span-1 md:col-span-2 lg:col-span-1 mb-8">
   <div className="bg-white p-4 rounded-lg text-center">
-    <div className="h-32 w-32 sm:h-72 sm:w-72 mx-auto rounded-3xl bg-[#380e13] flex items-center justify-center overflow-hidden">
+    <div className="h-32 w-32 sm:h-72 sm:w-72 mx-auto mt-5 rounded-3xl bg-[#380e13] flex items-center justify-center overflow-hidden">
       <img
         src="/assets/static/logo/Final Footer.svg"
         alt="logo"
@@ -117,7 +117,7 @@ const Footer = () => {
 
 
           {LINKS.map(({ title, items }) => (
-            <div key={title} className="space-y-4">
+            <div key={title} className="ml-5 space-y-4">
               <h2 className="text-lg tracking-wide text-blackPrimary border-b border-yellow pb-2">
                 {title}
               </h2>
@@ -215,7 +215,7 @@ const Footer = () => {
           </div>
         )}
 
-        <div className="mt-16 flex flex-col md:flex-row justify-between items-center border-t border-black pt-8">
+        <div className="mt-4 flex flex-col md:flex-row justify-between items-center border-t border-black pt-8">
           <p className="text-black text-sm mb-4 md:mb-0">
             &copy; {currentYear} Udayaada. All Rights Reserved.
           </p>
@@ -262,7 +262,7 @@ const Footer = () => {
               <FaLinkedin size={20} />
             </a> */}
           </div>
-          {/* <p className="text-black text-sm mt-4 md:mt-0">
+          <p className="text-black text-sm mt-4 md:mt-0 mr-10">
             Designed By{" "}
             <Link
               href="https://www.webgeon.com/"
@@ -271,7 +271,7 @@ const Footer = () => {
             >
               Webgeon
             </Link>
-          </p> */}
+          </p>
         </div>
       </div>
     </footer>

@@ -158,7 +158,7 @@ const Navbar = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-blackPrimary hover:text-black cursor-pointer"
+                  className="text-blackPrimary hover:text-blackPrimary cursor-pointer"
                 >
                   <RxHamburgerMenu size={30} />
                 </Button>
@@ -269,7 +269,7 @@ const Navbar = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-blackPrimary hover:text-black cursor-pointer"
+                  className="text-blackPrimary hover:text-yellow cursor-pointer"
                 >
                   <FaBars className="h-5 w-5" />
                 </Button>

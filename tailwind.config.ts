@@ -37,8 +37,8 @@ const config = {
         navbarHover: "#efd1b5",
         // red: "#07363c",
         yellow: "#F4891F",
-        primaryRed: "#902371",
-        secondaryRed: "#902371",
+        primaryRed: "#380e13",
+        secondaryRed: "#380e13",
         blackPrimary: "#5c5c5c",
         yellowish: {
           10: "hsl(var(--yellow-10))",
