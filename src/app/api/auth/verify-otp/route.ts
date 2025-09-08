@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../db";
 import User from "../../../../../model/User";
 import jwt from "jsonwebtoken";
-import cookie, { CookieSerializeOptions } from "cookie";
+import * as cookie from "cookie";
+import { SerializeOptions } from "cookie";
 
 connectDB();
 
@@ -49,7 +50,7 @@ export const POST = async (req: NextRequest) => {
       );
 
       // Set the token in a cookie
-      const cookieOptions: CookieSerializeOptions = {
+      const cookieOptions: SerializeOptions = {
         httpOnly: false,
         secure: process.env.NODE_ENV === "production",
         // sameSite: 'none',
