@@ -27,8 +27,8 @@ const quicksand = Quicksand({
 
 export const metadata = {
   title: {
-    default: "Udayada",
-    template: "%s | Udayada",
+    default: "Udayaada",
+    template: "%s | Udayaada",
   },
   keywords:
     "Udayada is almost here to redefine your wardrobe with timeless elegance and effortless style",

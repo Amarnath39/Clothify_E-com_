@@ -9,7 +9,6 @@ import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const CategoryList = () => {
   const dispatch = useDispatch<any>();
@@ -25,7 +24,6 @@ const CategoryList = () => {
       const { payload } = await dispatch(getAllCategories());
 
       if (payload.success) {
-        // ✅ only parent categories
         const parentCategories = payload.categories.filter(
           (category) => category.parentCategory.length === 0
         );
@@ -40,9 +38,12 @@ const CategoryList = () => {
 
   return (
     <div className="overflow-hidden container mx-auto relative pb-12">
-      <h2 className="text-3xl mb-8 mt-4 text-center">SHOP BY CATEGORY</h2>
+      {/* Title with underline animation */}
+      <h2 className="relative text-3xl mb-8 mt-4 text-center block mx-auto animated-underline">
+        SHOP BY CATEGORY
+      </h2>
 
-      <div className="relative px-8 category-carousel">
+      <div className="relative category-carousel">
         <Swiper
           modules={[Navigation, Autoplay]}
           navigation={{
@@ -55,6 +56,8 @@ const CategoryList = () => {
             pauseOnMouseEnter: true,
           }}
           loop={true}
+          slidesPerView={2}
+          spaceBetween={10}
           breakpoints={{
             320: { slidesPerView: 2, spaceBetween: 10 },
             480: { slidesPerView: 2, spaceBetween: 15 },
@@ -62,57 +65,63 @@ const CategoryList = () => {
             1024: { slidesPerView: 4, spaceBetween: 20 },
             1280: { slidesPerView: 5, spaceBetween: 20 },
           }}
-          className="relative"
+          className="!py-0"
         >
           {categories.map((category: any) => (
-            <SwiperSlide key={category._id}>
+            <SwiperSlide key={category._id} className="!h-auto flex justify-center">
               <div
                 onClick={() => router.push(`/categories/${category._id}`)}
-                className="flex cursor-pointer flex-col items-center transform transition-transform duration-300 hover:scale-105"
+                className="flex cursor-pointer flex-col items-center transition-transform duration-300 hover:scale-105"
               >
-                <div className="relative w-full aspect-square rounded-full overflow-hidden border-4 border-red-300 mb-4 shadow-lg hover:border-red-500 transition-colors duration-300">
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-red-300 mb-2 shadow-lg hover:border-red-500 transition-colors duration-300">
                   <img
                     src={category.img}
                     alt={category.name}
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
                   />
                 </div>
-                <h3 className="text-center font-medium text-lg mb-2">
+                <h3 className="text-center font-medium text-sm md:text-base">
                   {category.name.toUpperCase()}
                 </h3>
               </div>
             </SwiperSlide>
           ))}
         </Swiper>
-
-        {/* Custom Navigation Buttons */}
-        <button className="swiper-button-prev absolute !w-8 !h-8 left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-primary-100 rounded-full p-2 shadow-md transition-all duration-300 hover:scale-110">
-          <ChevronLeft className="w-6 h-6 text-gray-800" />
-        </button>
-        <button className="swiper-button-next absolute !w-8 !h-8 right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-primary-100 rounded-full p-2 shadow-md transition-all duration-300 hover:scale-110">
-          <ChevronRight className="w-6 h-6 text-gray-800" />
-        </button>
       </div>
 
+      {/* Global Styles */}
       <style jsx global>{`
-        .category-carousel .swiper-button-prev::after,
-        .category-carousel .swiper-button-next::after {
-          display: none;
-        }
-
-        .category-carousel .swiper-button-disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
+        /* Swiper adjustments */
         .category-carousel .swiper {
-          padding: 10px;
+          padding: 0 !important;
+        }
+        .category-carousel .swiper-wrapper {
+          align-items: flex-start !important;
+        }
+        .category-carousel .swiper-slide {
+          height: auto !important;
+          display: flex;
+          justify-content: center;
         }
 
-        @media (max-width: 640px) {
-          .category-carousel .swiper-button-prev,
-          .category-carousel .swiper-button-next {
-            display: none;
+        /* Animated underline */
+        .animated-underline::after {
+          content: "";
+          display: block;
+          height: 4px;
+          margin: 0.5rem auto 0;
+          border-radius: 9999px;
+          background: linear-gradient(to right, #eab564, #eab664);
+          width: 0;
+          animation: underlineGrow 0.8s ease-out forwards;
+        }
+
+        @keyframes underlineGrow {
+          from {
+            width: 0;
+          }
+          to {
+            width: 6rem; /* same as Tailwind w-24 */
           }
         }
       `}</style>
