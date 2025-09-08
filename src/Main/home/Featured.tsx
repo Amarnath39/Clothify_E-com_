@@ -72,7 +72,7 @@ const Featured = () => {
   return (
     <div className="container mx-auto  py-6 sm:py-8 md:py-10 lg:py-12  sm:max-w-[90vw]">
       {/* <div className="flex flex-col md:flex-row items-center gap-8 sm:gap-6 md:gap-8 rounded-xl overflow-hidden bg-[#485e11] max-h-[70vh] sm:max-h-[62vh]"> */}
-  <div className="flex flex-col md:flex-row items-center gap-8 sm:gap-6 md:gap-8 rounded-xl overflow-hidden bg-[#380e13] max-h-[70vh] sm:max-h-[62vh]">
+  <div className="flex flex-col md:flex-row items-center gap-8 sm:gap-6 md:gap-8 rounded-xl overflow-hidden bg-[#380e10] max-h-[70vh] sm:max-h-[62vh]">
  
         {/* Left Side: Text Content */}
         <div className="w-full md:w-1/2 space-y-4 sm:space-y-6 md:space-y-8 flex flex-col items-center sm:items-start text-white pl-6">

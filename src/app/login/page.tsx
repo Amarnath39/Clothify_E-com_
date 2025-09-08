@@ -317,7 +317,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
 <div className="flex items-center justify-center w-full md:w-1/2 px-4" style={{ backgroundColor: '#fafaf9' }}>
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-[#902371] bg-clip-text text-transparent mb-2">
+            <h1 className="text-4xl font-bold bg-[#380e10] bg-clip-text text-transparent mb-2">
               Welcome Back
             </h1>
             <p className="text-gray-700 font-medium">Choose your preferred login method</p>
@@ -328,7 +328,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
   className="text-white bg-white px-8 py-6" // px = horizontal, py = vertical
 >
   {/* <div className="flex justify-center">
-    <div className="bg-[#380e13] h-30 w-full">
+    <div className="bg-[#380e10] h-30 w-full">
     <img src="/assets/static/logo/Udayaada Final.png" alt="Logo" className="h-[70px] w-[250px]" /></div>
   </div> */}
 </CardHeader>
@@ -378,7 +378,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
                           />
                         </div>
                       </div>
-                      <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #902371, #d63384)' }}
+                      <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
  disabled={isLoading}>
                         {isLoading ? 'Sending OTP...' : 'Send OTP'}
                       </Button>
@@ -403,7 +403,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
   numInputs={6}
 />
 
-                      <Button type="submit" className="w-full h-12 text-gray-800 font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #902371, #d63384)' }}
+                      <Button type="submit" className="w-full h-12 text-gray-800 font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
  disabled={isLoading}>
                         {isLoading ? 'Verifying...' : 'Verify & Sign In'}
                       </Button>
@@ -421,8 +421,8 @@ const [phoneNumber, setPhoneNumber] = useState('');
     size="sm"
     className={`flex-1 text-xs ${
       emailLoginType === 'password'
-        ? 'bg-[#902371] text-white hover:bg-[#7e1e64]'
-        : 'bg-transparent text-[#902371] hover:bg-[#f3e6f0]'
+        ? 'bg-[#380e10] text-white hover:bg-[#d8cbc4]'
+        : 'bg-transparent text-[#380e10] hover:bg-[#d8cbc4]'
     }`}
     onClick={() => {
       setEmailLoginType('password');
@@ -437,8 +437,8 @@ const [phoneNumber, setPhoneNumber] = useState('');
     size="sm"
     className={`flex-1 text-xs ${
       emailLoginType === 'otp'
-        ? 'bg-[#902371] text-white hover:bg-[#7e1e64]'
-        : 'bg-transparent text-[#902371] hover:bg-[#f3e6f0]'
+        ? 'bg-[#380e10] text-white hover:bg-[#d8cbc4]'
+        : 'bg-transparent text-[#380e10] hover:bg-[#d8cbc4]'
     }`}
     onClick={() => {
       setEmailLoginType('otp');
@@ -461,7 +461,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
                           Forgot Password?
                         </button>
                       </div>
-                      <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #902371, #d63384)' }}
+                      <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
  disabled={isLoading}>
                         {isLoading ? 'Signing In...' : 'Sign In with Password'}
                       </Button>
@@ -470,7 +470,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
                     <form onSubmit={handleSendEmailOtp} className="space-y-4">
                       <Label htmlFor="email-otp" className="text-gray-800 font-semibold">Email Address</Label>
                       <Input id="email-otp" type="email" placeholder="Enter email" value={emailData.email} onChange={(e) => setEmailData(prev => ({ ...prev, email: e.target.value }))} required />
-                      <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #902371, #d63384)' }}
+                      <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
  disabled={isLoading}>
                         {isLoading ? 'Sending OTP...' : 'Send Email OTP'}
                       </Button>
@@ -493,7 +493,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
   numInputs={6}
 />
 
-                      <Button type="submit" className="w-full h-12 text-gray-800 font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #902371, #d63384)' }}
+                      <Button type="submit" className="w-full h-12 text-gray-800 font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
  disabled={isLoading}>
                         {isLoading ? 'Verifying...' : 'Verify & Sign In'}
                       </Button>

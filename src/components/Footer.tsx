@@ -104,7 +104,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-6 col-span-1 md:col-span-2 lg:col-span-1 mb-8">
   <div className="bg-white p-4 rounded-lg text-center">
-    <div className="h-32 w-32 sm:h-72 sm:w-72 mx-auto mt-5 rounded-3xl bg-[#380e13] flex items-center justify-center overflow-hidden">
+    <div className="h-32 w-32 sm:h-72 sm:w-72 mx-auto mt-5 rounded-3xl bg-[#380e10] flex items-center justify-center overflow-hidden">
       <img
         src="/assets/static/logo/Final Footer.svg"
         alt="logo"

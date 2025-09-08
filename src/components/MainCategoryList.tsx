@@ -73,7 +73,7 @@ const CategoryList = () => {
                 onClick={() => router.push(`/categories/${category._id}`)}
                 className="flex cursor-pointer flex-col items-center transition-transform duration-300 hover:scale-105"
               >
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-red-300 mb-2 shadow-lg hover:border-red-500 transition-colors duration-300">
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-amber-700 mb-2 shadow-lg hover:border-amber-800 transition-colors duration-300">
                   <img
                     src={category.img}
                     alt={category.name}
