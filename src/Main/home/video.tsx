@@ -71,9 +71,9 @@ export default function VideoList() {
   <div className="p-0 w-full">
     {/* Heading */}
 <h1
-  className={`${quicksand.className} text-2xl sm:text-3xl md:text-4xl text-black text-center relative tracking-wide mt-10 mb-6 animated-underline`}
+  className={`${quicksand.className} text-2xl sm:text-3xl md:text-4xl text-black text-center relative tracking-wide mt-12 mb-6 animated-underline`}
 >
-  Watch and Shop
+  WATCH AND SHOP
 </h1>
 
     {/* Error message if any */}

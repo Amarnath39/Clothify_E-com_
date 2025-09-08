@@ -403,7 +403,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
   numInputs={6}
 />
 
-                      <Button type="submit" className="w-full h-12 text-gray-800 font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
+                      <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
  disabled={isLoading}>
                         {isLoading ? 'Verifying...' : 'Verify & Sign In'}
                       </Button>
@@ -493,7 +493,7 @@ const [phoneNumber, setPhoneNumber] = useState('');
   numInputs={6}
 />
 
-                      <Button type="submit" className="w-full h-12 text-gray-800 font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
+                      <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
  disabled={isLoading}>
                         {isLoading ? 'Verifying...' : 'Verify & Sign In'}
                       </Button>

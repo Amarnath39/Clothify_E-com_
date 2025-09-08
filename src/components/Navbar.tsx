@@ -2,9 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { BsBag, BsCartPlus } from "react-icons/bs";
 import { RxHamburgerMenu } from "react-icons/rx";
 import {
   Sheet,
@@ -13,53 +11,38 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { IoBagOutline, IoCloseOutline } from "react-icons/io5";
+import { IoBagOutline } from "react-icons/io5";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-import {
-  FaShoppingCart,
-  FaUser,
-  FaSearch,
   FaBars,
-  FaChevronDown,
-  FaChevronRight,
   FaHeart,
   FaRegHeart,
-  FaInstagram,
 } from "react-icons/fa";
 import AnimatedSearchInput from "./AnimateSearchInput";
-import { RiArrowDropDownLine } from "react-icons/ri";
+import { IoMdSearch } from "react-icons/io";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllCategories } from "@/lib/features/catogary";
 import toast from "react-hot-toast";
-import Navigation from "./Navigation";
-import useWindowSize from "@/hooks/useWindowSize";
-import UserMenu from "./UserMenu";
 import NavigationMobile from "./NavigationMobile";
-import { IoMdCloseCircleOutline, IoMdSearch } from "react-icons/io";
+import UserMenu from "./UserMenu";
+import useWindowSize from "@/hooks/useWindowSize";
 import { logoutApi } from "@/lib/features/auth";
 
 const Navbar = () => {
   const dispatch = useDispatch<any>();
-  const [categories, setCategoroies] = useState<any>([]);
+  const [categories, setCategories] = useState<any>([]);
   const router = useRouter();
   const cartItems = useSelector((state: any) => state.cart.items);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isDesktopSheetOpen, setIsDesktopSheetOpen] = useState<any>(false);
-  const [showSearch, setShowSearch] = useState<any>(false);
-  const [showSearchMobile, setShowSearchMobile] = useState<any>(false);
   const wishlistItems = useSelector((state: any) => state.wishlist.items);
   const token = useSelector((state: any) => state.auth.token);
+
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDesktopSheetOpen, setIsDesktopSheetOpen] = useState<any>(false);
+  const [isModalOpen, setIsModalOpen] = useState<any>(false);
   const [topPosition, setTopPosition] = useState("top-10");
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isScrollingUp, setIsScrollingUp] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState<any>(false);
+
   useEffect(() => {
     callGetAllCategories();
   }, []);
@@ -67,9 +50,8 @@ const Navbar = () => {
   const callGetAllCategories = async () => {
     try {
       const { payload } = await dispatch(getAllCategories());
-
       if (payload.success) {
-        setCategoroies(payload.categories);
+        setCategories(payload.categories);
       } else {
         toast.error(payload.msg);
       }
@@ -82,11 +64,6 @@ const Navbar = () => {
 
   const closeSheet = () => {
     setIsSheetOpen(false);
-  };
-
-  const handleNavigation = (path) => {
-    router.push(path);
-    closeSheet();
   };
 
   const handleLogout = async () => {
@@ -105,26 +82,15 @@ const Navbar = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-
-          // Add a small threshold for scroll direction detection
           const scrollDelta = currentScrollY - lastScrollY;
           const isScrollingUpward = scrollDelta < -5;
 
-          if (isScrollingUpward) {
-            setIsScrollingUp(true);
-          } else if (scrollDelta > 5) {
-            setIsScrollingUp(false);
-          }
+          if (isScrollingUpward) setIsScrollingUp(true);
+          else if (scrollDelta > 5) setIsScrollingUp(false);
 
-          // Adjust position logic with immediate updates
-          if (currentScrollY <= 0) {
-            setTopPosition("top-10");
-          } else if (currentScrollY <= 10) {
-            // Add intermediate position for smoother transition
-            setTopPosition(isScrollingUpward ? "top-10" : "top-0");
-          } else {
-            setTopPosition("top-0");
-          }
+          setTopPosition(
+            currentScrollY <= 0 ? "top-10" : currentScrollY <= 10 ? (isScrollingUpward ? "top-10" : "top-0") : "top-0"
+          );
 
           setLastScrollY(currentScrollY);
           ticking = false;
@@ -132,7 +98,6 @@ const Navbar = () => {
         ticking = true;
       }
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY, isScrollingUp]);
@@ -147,13 +112,14 @@ const Navbar = () => {
       }}
     >
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 p-4 sm:p-5">
-<div className="flex items-center justify-between h-20 md:h-12">
+        <div className="flex items-center justify-between h-20 md:h-12">
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-4 text-lg tracking-wide ">
+          <div className="hidden md:flex items-center space-x-4 text-lg tracking-wide">
             <Sheet
               open={isDesktopSheetOpen}
               onOpenChange={setIsDesktopSheetOpen}
             >
+<<<<<<< Updated upstream
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
@@ -163,6 +129,18 @@ const Navbar = () => {
                   <RxHamburgerMenu size={30} />
                 </Button>
               </SheetTrigger>
+=======
+           <SheetTrigger asChild>
+  <Button
+    variant="ghost"
+    size="icon"
+    className="hover:bg-transparent cursor-pointer text-[#eab565]"
+  >
+    <RxHamburgerMenu size={30} style={{ color: "#eab565" }} />
+  </Button>
+</SheetTrigger>
+
+>>>>>>> Stashed changes
 
               <SheetContent
                 side="left"
@@ -171,39 +149,35 @@ const Navbar = () => {
               >
                 {token && (
                   <div>
-                    <Button onClick={handleLogout}>Logout</Button>
+                    <Button onClick={handleLogout} style={{ color: "#eab565" }}>
+                      Logout
+                    </Button>
                   </div>
                 )}
-                <div className="flex justify-end"></div>
-                <SheetHeader className="">
+                <SheetHeader>
                   <SheetTitle className="text-navbarBackground mt-12">
                     Our Categories
                   </SheetTitle>
                 </SheetHeader>
-                <div className="py-4 space-y-4 ">
-                  <div className="overflow-y-scroll">
-                    <NavigationMobile
-                      categories={categories}
-                      onNavigate={closeSheet}
-                      setIsDesktopSheetOpen={setIsDesktopSheetOpen}
-                    />
-                  </div>
+                <div className="py-4 space-y-4 overflow-y-scroll">
+                  <NavigationMobile
+                    categories={categories}
+                    onNavigate={closeSheet}
+                    setIsDesktopSheetOpen={setIsDesktopSheetOpen}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
           </div>
+
           {/* Logo */}
           <div className="flex-shrink-0 md:ml-24">
-            <Link
-              href="/"
-              className="text-2xl font-bold  flex items-center gap-2"
-            >
+            <Link href="/" className="text-2xl font-bold flex items-center gap-2">
               <img
-  className="w-48 sm:w-40 md:w-56 lg:w-64 object-contain"
-  src="/assets/static/logo/Udayaada Final.png"
-  alt="Logo"
-/>
-
+                className="w-48 sm:w-40 md:w-56 lg:w-64 object-contain"
+                src="/assets/static/logo/Udayaada Final.png"
+                alt="Logo"
+              />
             </Link>
           </div>
 
@@ -214,6 +188,7 @@ const Navbar = () => {
             />
           )}
 
+<<<<<<< Updated upstream
           {/* Icons */}
           <div className="hidden md:block">
             <div className="ml-4 flex items-center gap-2 md:ml-6">
@@ -243,27 +218,44 @@ const Navbar = () => {
               </div>
 
               <UserMenu setIsSheetOpen={setIsSheetOpen} />
+=======
+          {/* Desktop Icons */}
+          <div className="hidden md:flex ml-4 items-center gap-2 md:ml-6">
+            <div onClick={() => setIsModalOpen((prev) => !prev)}>
+              <IoMdSearch size={30} className="cursor-pointer" style={{ color: "#eab565" }} />
+>>>>>>> Stashed changes
             </div>
+
+            <div
+              title="cart"
+              onClick={() => router.push("/cart")}
+              className="relative cursor-pointer"
+            >
+              <IoBagOutline size={28} style={{ color: "#eab565" }} />
+              {cartItems.length > 0 && (
+                <span className="absolute bottom-[-6px] right-[-4px] w-5 h-5 z-[100] rounded-full text-white flex items-center justify-center bg-primaryRed text-[10px]">
+                  {cartItems.length}
+                </span>
+              )}
+            </div>
+
+            <UserMenu setIsSheetOpen={setIsSheetOpen} />
           </div>
 
-          {/* Mobile menu button */}
-
+          {/* Mobile Icons */}
           <div className="md:hidden flex items-center gap-1">
             <div onClick={() => setIsModalOpen((prev) => !prev)}>
-              <IoMdSearch
-                color=""
-                size={24}
-                
-                className="text-blackPrimary hover:black cursor-pointer"
-              />
+              <IoMdSearch size={24} className="cursor-pointer" style={{ color: "#eab565" }} />
             </div>
+
             <Link href="/wishlist">
               {wishlistItems.length === 0 ? (
-                <FaRegHeart className="h-5 w-5 text-blackPrimary" />
+                <FaRegHeart className="h-5 w-5" style={{ color: "#eab565" }} />
               ) : (
-                <FaHeart className="h-5 w-5 text-blackPrimary " />
+                <FaHeart className="h-5 w-5" style={{ color: "#eab565" }} />
               )}
             </Link>
+<<<<<<< Updated upstream
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -274,33 +266,42 @@ const Navbar = () => {
                   <FaBars className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
+=======
+>>>>>>> Stashed changes
 
-              <SheetContent
-                side="right"
-                className="w-[300px] sm:w-[400px] bg-white text-black"
-                style={{ zIndex: 9999 }}
-              >
-                {token && (
-                  <div>
-                    <Button onClick={handleLogout}>Logout</Button>
-                  </div>
-                )}
-                <div className="flex justify-end"></div>
-                <SheetHeader className="">
-                  <SheetTitle className="text-navbarBackground mt-12">
-                    Menu
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="py-4 space-y-4 ">
-                  <div className="overflow-y-scroll">
-                    <NavigationMobile
-                      categories={categories}
-                      onNavigate={closeSheet}
-                    />
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+  <SheetTrigger asChild>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="hover:bg-transparent cursor-pointer"
+    >
+      <FaBars className="h-5 w-5" style={{ color: "#eab565" }} />
+    </Button>
+  </SheetTrigger>
+
+  <SheetContent
+    side="right"
+    className="w-[300px] sm:w-[400px] bg-white text-black"
+    style={{ zIndex: 9999 }}
+  >
+    {token && (
+      <div>
+        <Button onClick={handleLogout} style={{ color: "#eab565" }}>
+          Logout
+        </Button>
+      </div>
+    )}
+    <SheetHeader>
+      <SheetTitle className="text-navbarBackground mt-12">Menu</SheetTitle>
+    </SheetHeader>
+    <div className="py-4 space-y-4 overflow-y-scroll">
+      <NavigationMobile categories={categories} onNavigate={closeSheet} />
+    </div>
+  </SheetContent>
+</Sheet>
+
+
           </div>
         </div>
       </div>

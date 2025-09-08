@@ -33,7 +33,7 @@ const Features = () => {
         {features.map((feature) => (
           <div key={feature.id} className="flex flex-col items-center">
             {feature.icon}
-            <h3 className="text-2xl font-semibold text-green-900 mt-4">
+            <h3 className="text-2xl font-semibold text-amber-800 mt-4">
               {feature.title}
             </h3>
             <p className="text-gray-700 mt-2">{feature.description}</p>

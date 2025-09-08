@@ -353,9 +353,9 @@ const InstagramPage: React.FC = () => {
     <div className="relative z-20 lg:py-2 py-4 sm:py-2 md:py-2">
       <div className="text-center mb-4 sm:mb-8">
        <h1
-  className={`${quicksand.className} text-2xl sm:text-3xl md:text-4xl text-black inline-block relative tracking-wide mb-8 animated-underline`}
+  className={`${quicksand.className} text-2xl  mt-12 sm:text-3xl md:text-4xl text-black inline-block relative tracking-wide mb-8 animated-underline`}
 >
-  Follow Us On Instagram
+  FOLLOW US ON INSTAGRAM
 </h1>
       </div>
 
@@ -488,7 +488,7 @@ const InstagramPage: React.FC = () => {
 
       <div className="text-center lg:mt-10 md:mt-7 mt-3 sm:mt-5">
         <a
-          href="https://www.instagram.com/roopsagar_shopping_mall/"
+          href="https://www.instagram.com/udayaada_.in_2025/"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block bg-gradient-to-r bg-secondaryRed text-white font-bold text-lg py-2 px-10 rounded-full hover:bg-yellow transition-all duration-300 shadow-lg hover:shadow-xl"

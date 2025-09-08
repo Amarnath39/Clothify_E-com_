@@ -9,6 +9,10 @@ import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import { useRouter } from "next/navigation";
+import { Quicksand } from "next/font/google";
+
+// Import Quicksand font
+const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
 
 const CategoryList = () => {
   const dispatch = useDispatch<any>();
@@ -37,11 +41,11 @@ const CategoryList = () => {
   };
 
   return (
-    <div className="overflow-hidden container mx-auto relative pb-12">
+    <div className={`${quicksand.className} overflow-hidden container mx-auto relative pb-12`}>
       {/* Title with underline animation */}
-      <h2 className="relative text-3xl mb-8 mt-4 text-center block mx-auto animated-underline">
+      <h1 className="relative text-3xl mb-8 mt-12 text-center block mx-auto animated-underline">
         SHOP BY CATEGORY
-      </h2>
+      </h1  >
 
       <div className="relative category-carousel">
         <Swiper
