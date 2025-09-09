@@ -64,7 +64,6 @@ export default function VideoUploadPage() {
 
   return (
     <div className="p-6 max-w-xl mx-auto">
-      
       <h2 className="text-xl font-semibold mb-4">Upload Video</h2>
       <input type="file" accept="video/*" onChange={handleFileChange} />
       <button

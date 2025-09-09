@@ -31,7 +31,7 @@ export const metadata = {
     template: "%s | Udayaada",
   },
   keywords:
-    "Udayada is almost here to redefine your wardrobe with timeless elegance and effortless style",
+    "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style",
 
   description:
     "Udayada is almost here to redefine your wardrobe with timeless elegance and effortless style",
@@ -57,7 +57,7 @@ export default function RootLayout({
           type="font/ttf"
           crossOrigin="anonymous"
         />
-        <link rel="icon" href="/assets/static/logo/Bgremoved_1.png" sizes="any" />
+        {/* <link rel="icon" href="/assets/static/logo/Bgremoved_1.png" sizes="any" /> */}
       </head>
       <body className={` ${mulish.className} `}>
         <ThemeProvider
