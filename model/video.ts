@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const VideoSchema = new mongoose.Schema({
   videoId: {
-    type: String, // formatted like '001', '002'
+    type: Number, // formatted like '001', '002'
     required: true,
     unique: true,
   },
