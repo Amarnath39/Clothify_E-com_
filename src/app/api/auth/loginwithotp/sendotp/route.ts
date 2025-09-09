@@ -38,7 +38,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     const API_KEY = "c5837917-42b5-11f0-a562-0200cd936042";
-    const VAR1 = encodeURIComponent(user.full_name || "User");
+    const VAR1 = encodeURIComponent(user.full_name || "Udayaada");
     const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${phone}/AUTOGEN/OTPlogin?var1=${VAR1}`;
 
     const response = await axios.get(url);

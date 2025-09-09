@@ -59,7 +59,41 @@ export const POST = async (req: NextRequest) => {
     user.emailOtpExpiry = expiry;
     await user.save();
 
-    const html = `<p>Your OTP for login is: <strong>${otp}</strong></p><p>This OTP will expire in 5 minutes.</p>`;
+    const html = `
+  <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 30px;">
+    <div style="max-width: 600px; margin: auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+      
+      <div style="background: #004aad; color: #ffffff; padding: 20px; text-align: center;">
+        <h2 style="margin: 0; font-size: 22px;">Login Verification</h2>
+      </div>
+      
+      <div style="padding: 25px; color: #333333;">
+        <p style="font-size: 16px; margin-bottom: 20px;">
+          Dear User,
+        </p>
+        <p style="font-size: 15px; line-height: 1.6; margin-bottom: 20px;">
+          Please use the following One-Time Password (OTP) to complete your login process:
+        </p>
+        
+        <div style="text-align: center; margin: 25px 0;">
+          <span style="font-size: 28px; font-weight: bold; letter-spacing: 3px; background: #f4f6fb; padding: 15px 25px; border-radius: 6px; border: 1px solid #ddd; display: inline-block;">
+            ${otp}
+          </span>
+        </div>
+        
+        <p style="font-size: 14px; color: #555;">
+          ⚠️ This OTP will expire in <strong>5 minutes</strong>.  
+          If you did not request this, please ignore this email.
+        </p>
+      </div>
+      
+      <div style="background: #f1f1f1; text-align: center; padding: 15px; font-size: 12px; color: #777;">
+        © ${new Date().getFullYear()} Your Company. All rights reserved.
+      </div>
+    </div>
+  </div>
+`;
+
     await orderConfirmationEmail(email, "Your OTP for Login", html);
 
     return NextResponse.json({ message: "OTP sent to email successfully" });
