@@ -56,7 +56,7 @@ const UserMenu = ({ setIsSheetOpen }) => {
         >
           <LucideUserRound
             size={30}
-            className=" text-blackPrimary hover:text-yellow cursor-pointer"
+            className=" text-[#eab565] cursor-pointer"
           />
         </Button>
       </DropdownMenuTrigger>

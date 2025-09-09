@@ -420,13 +420,14 @@ const Footer = () => {
           {/* Accepted Cards Section moved here */}
           <div className="col-span-1 md:col-span-2 lg:col-span-1 space-y-4 mt-1">
             <h3 className="text-md tracking-wide text-blackPrimary border-b border-yellow pb-2">
-              ACCEPTED CARDS
+              ACCEPTED PAYMENT METHODS
             </h3>
             <div className="flex space-x-4 mt-0">
               <img src="/assets/static/logo/mastero-removebg-preview.png" alt="Maestro" className="h-8 object-contain" />
               <img src="/assets/static/logo/visa.png" alt="Visa" className="h-8 object-contain" />
               <img src="/assets/static/logo/rupay-logo-icon.png" alt="RuPay" className="h-8 object-contain" />
               <img src="/assets/static/logo/card.png" alt="Mastercard" className="h-8 object-contain" />
+              <img src="/assets/static/logo/upii.jpg" alt="UPI" className="h-7 object-contain" />
             </div>
             <Button
               onClick={() => setIsOpen(true)}

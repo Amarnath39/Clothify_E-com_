@@ -31,6 +31,7 @@ import {
   FaTrash,
   FaCheckCircle,
   FaTshirt,
+  FaWhatsapp,
 } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation, Thumbs } from "swiper/modules";
@@ -52,6 +53,7 @@ import { toggleItem } from "@/lib/features/wishlist";
 import toast from "react-hot-toast";
 import { addToCart, removeFromCart } from "@/lib/features/cart";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Quicksand } from "next/font/google";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@radix-ui/react-tabs";
 import ProductGalleryPage from "../../FullScreenCrousel";
@@ -78,6 +80,7 @@ const ProductDetails = ({
   const cartItems = useSelector((state: any) => state.cart.items);
   const [selectedSize, setSelectedSize] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter();
   const isInCart = cartItems.some(
     (item) => item.id === productData?._id && item.size._id == selectedSize?._id
   );
@@ -158,6 +161,20 @@ const ProductDetails = ({
       dispatch(addToCart({ id: productData._id, size: size }));
       toast.success(`${productData.name} added to cart`);
     }
+  };
+
+  const handleBuyNow = () => {
+    if (!isInCart) {
+      dispatch(addToCart({ id: productData._id, size: selectedSize }));
+      toast.success(`${productData.name} added to cart`);
+    }
+    router.push('/cart');
+  };
+
+  const handleWhatsAppShare = () => {
+    const message = `Check out this product: ${productData.name}\nPrice: ₹${selectedSize ? selectedSize.offerPrice : productData.actualPrice}\n${window.location.href}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   if (loading) {
@@ -414,30 +431,47 @@ const ProductDetails = ({
             </div>
           )}
 
-          <div className="flex space-x-4">
-            <Button
-              onClick={() => handleAddtoCart(selectedSize)}
-              className="py-6 text-lg w-full flex items-center justify-center"
-            >
-              {isInCart ? (
-                <span className="flex items-center">
-                  <FaTrash className="mr-2" /> Remove from cart
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  <FaShoppingCart className="mr-2" /> Add to Cart
-                </span>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-12 h-12 flex items-center justify-center"
-              onClick={toggleWishlist}
-            >
-              <FaHeart
-                className={`${isWishlist ? "text-red-500" : "text-gray-400"}`}
-              />
-            </Button>
+          <div className="space-y-3">
+            <div className="flex space-x-4">
+              <Button
+                onClick={() => handleAddtoCart(selectedSize)}
+                className="py-6 text-lg w-full flex items-center justify-center"
+              >
+                {isInCart ? (
+                  <span className="flex items-center">
+                    <FaTrash className="mr-2" /> Remove from cart
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <FaShoppingCart className="mr-2" /> Add to Cart
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-12 h-12 flex items-center justify-center"
+                onClick={toggleWishlist}
+              >
+                <FaHeart
+                  className={`${isWishlist ? "text-red-500" : "text-gray-400"}`}
+                />
+              </Button>
+            </div>
+            <div className="flex space-x-4">
+              <Button
+                onClick={handleBuyNow}
+                className="py-6 text-lg w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700"
+              >
+                Buy Now
+              </Button>
+              <Button
+                variant="outline"
+                className="w-12 h-12 flex items-center justify-center bg-green-50 hover:bg-green-100"
+                onClick={handleWhatsAppShare}
+              >
+                <FaWhatsapp className="text-green-600" />
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-4 text-gray-600 text-sm">
