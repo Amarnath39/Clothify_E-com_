@@ -112,7 +112,7 @@ const Navbar = () => {
       }}
     >
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 p-4 sm:p-5">
-        <div className="flex items-center justify-between h-20 md:h-12">
+<div className="flex items-center justify-between h-14 md:h-16">
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-4 text-lg tracking-wide">
             <Sheet
