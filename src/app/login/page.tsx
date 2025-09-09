@@ -305,16 +305,10 @@ const [phoneNumber, setPhoneNumber] = useState('');
 
 
   return (
-    <div className="flex min-h-screen bg-white">
-      <div className="hidden md:block md:w-1/2 relative overflow-hidden">
-        <img
-          src="/assets/static/logo/Login Page .svg"
-          alt="Fitness Background"
-          className="object-cover object-center w-full h-[850px]"
-        />
-      </div>
+    <div className="flex min-h-screen bg-white justify-center">
+     
 
-<div className="flex items-center justify-center w-full md:w-1/2 px-4" style={{ backgroundColor: '#fafaf9' }}>
+<div className="flex items-center justify-center w-full md:w-1/2 px-4" style={{ backgroundColor: '#ffffff' }}>
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold bg-[#380e10] bg-clip-text text-transparent mb-2">
@@ -327,14 +321,11 @@ const [phoneNumber, setPhoneNumber] = useState('');
             <CardHeader
   className="text-white bg-white px-8 py-6" // px = horizontal, py = vertical
 >
-  {/* <div className="flex justify-center">
-    <div className="bg-[#380e10] h-30 w-full">
-    <img src="/assets/static/logo/Udayaada Final.png" alt="Logo" className="h-[70px] w-[250px]" /></div>
-  </div> */}
+  
 </CardHeader>
 
 
-            <CardContent className="p-6">
+            <CardContent className="p-2">
               <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'email' | 'sms')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100">
                   <TabsTrigger value="sms" className="flex items-center gap-2 data-[state=active]:bg-white text-gray-800">
