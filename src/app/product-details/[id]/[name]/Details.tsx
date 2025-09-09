@@ -280,7 +280,7 @@ const ProductDetails = ({
 
         {/* Product Details */}
         <div className="space-y-4">
-          <h1 className="text-2xl sm:text-4xl font-medium capitalize tracking-wide text-primary">
+          <h1 className="text-2xl sm:text-4xl font-medium capitalize tracking-wide text-primaryRed">
             {productData?.name}
           </h1>
           {/* <div className="flex items-center space-x-2">
