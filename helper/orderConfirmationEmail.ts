@@ -11,12 +11,12 @@ const orderConfirmationEmail = async (
       port: 587,
       auth: {
         user: "emailapikey",
-        pass: "PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==",
+        pass: "PHtE6r1bEOHqgmV9oxUFtPW4R8atMIsp/+plJFJGsIlDXvVQSU0D/o0vkmCwo0gjA6JCQPWZyt9osezJ4enRJDu7NmlLVWqyqK3sx/VYSPOZsbq6x00esVkfc0LYXYTrcdNq0STfstrbNA==",
       },
     });
 
     const mailOptions = {
-      from: '"Udayaada" <orders@Udayaada.com>',
+      from: '"Example Team" <orders@udayaada.in>',
       to,
       subject,
       html,
