@@ -62,7 +62,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
     setPaying(true);
     dispatch(clearOrderId());
     try {
-      const response: any = await axios.post(`/api/payment`, {
+      const response: any = await axios.post(`/api/payment/initiate`, {
         amount: orderDetails.payablePrice,
         orderId: orderDetails._id,
       });

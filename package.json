@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -46,6 +45,7 @@
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.427.0",
     "next-themes": "^0.3.0",
+    "pg-sdk-node": "https://phonepe.mycloudrepo.io/public/repositories/phonepe-pg-sdk-node/releases/v2/phonepe-pg-sdk-node.tgz",
     "puppeteer": "^23.1.1",
     "react": "^18",
     "react-datepicker": "^7.4.0",
