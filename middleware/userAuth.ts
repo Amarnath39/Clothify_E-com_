@@ -52,7 +52,12 @@ export async function userAuthMiddleware(
 
     // Set the user ID in the response headers for downstream use
     res.headers.set("x-user-id", payload.id as string);
-    return res;
+    return NextResponse.next({
+  headers: {
+    "x-user-id": payload.id as string,
+  },
+});
+
   } catch (error) {
     console.error("Token validation error:", error); // Use console.error for errors
     return NextResponse.json(

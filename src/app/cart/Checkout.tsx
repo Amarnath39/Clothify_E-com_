@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,25 +22,19 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { IoClose } from "react-icons/io5";
 import { clearOrderId } from "@/lib/features/order";
-import { emptyCart } from "@/lib/features/cart";
 
 const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
   const router = useRouter();
   const dispatch = useDispatch<any>();
   const [shippingAddress, setShippingAddress] = useState<any>(null);
   const [paying, setPaying] = useState(false);
-  const { token, user, adminToken } = useSelector((state: any) => state.auth);
-  const handleChangeAddress = () => {
-    router.push("/profile");
-  };
+  const { token, user } = useSelector((state: any) => state.auth);
 
-  const handleAddAddress = () => {
-    router.push("/profile");
-  };
+  const handleChangeAddress = () => router.push("/profile");
+  const handleAddAddress = () => router.push("/profile");
 
   const callGetUserDetails = async () => {
     const { payload } = await dispatch(getUserDetails());
-
     if (payload.success) {
       setShippingAddress(payload.user.defaultAddress);
     } else {
@@ -52,6 +44,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
 
   useEffect(() => {
     callGetUserDetails();
+    AOS.init();
   }, []);
 
   const initiatePayment = async () => {
@@ -61,22 +54,33 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
     }
     setPaying(true);
     dispatch(clearOrderId());
+
     try {
-      const response: any = await axios.post(`/api/payment/initiate`, {
-        amount: orderDetails.payablePrice,
-        orderId: orderDetails._id,
-      });
+      const response: any = await axios.post(
+        `/api/payment/initiate`,
+        {
+          amount: orderDetails.payablePrice,
+          orderId: orderDetails._id,
+        },
+        {
+          headers: {
+            "x-user-id": user._id,
+            Authorization: `Bearer ${token}`, // optional but recommended
+          },
+          withCredentials: true, // send cookies too
+        }
+      );
 
       if (response.data.success) {
         window.location.href = response.data.url;
       } else {
         toast.error(response.data.msg);
       }
-      setPaying(false);
     } catch (error) {
       console.log(error);
+      toast.error("Refresh and try again");
+    } finally {
       setPaying(false);
-      toast.error("refresh and try again");
     }
   };
 
@@ -86,18 +90,11 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
         className="sm:max-w-[500px] max-h-[90vh] p-0 flex flex-col overflow-hidden"
         style={{ zIndex: 9999 }}
       >
-        {/* Fixed Header */}
-        {/* <DialogHeader className="bg-gradient-to-r from-gray-100 to-gray-50 text-black border-b p-6 sticky top-30 z-10">
-          <DialogTitle className="text-2xl font-bold flex items-center">
-            <FiShoppingBag className="mr-2" />
-            Checkout Summary
-          </DialogTitle>
-        </DialogHeader> */}
-        <div className="bg-gradient-to-r from-gray-100 to-gray-50 text-black border-b p-6 sticky top-30 z-10 ">
-          <div className="text-xl font-bold flex justify-between mt-4 items-center">
-            <h1 className="text-xl font-bold flex items-center ">
-              <FiShoppingBag className="mr-2 " />
-              Checkout Summary
+        {/* Header */}
+        <div className="bg-gradient-to-r from-gray-100 to-gray-50 text-black border-b p-6 sticky top-0 z-10">
+          <div className="text-xl font-bold flex justify-between items-center">
+            <h1 className="flex items-center">
+              <FiShoppingBag className="mr-2" /> Checkout Summary
             </h1>
             <IoClose size={32} onClick={() => onClose()} />
           </div>
@@ -105,13 +102,10 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
 
         {/* Scrollable Content */}
         <div className="p-6 flex-1 overflow-y-auto">
-          <div
-            data-aos="fade-up"
-            className="bg-white rounded-lg shadow-md p-4 mb-6"
-          >
+          {/* Order Details */}
+          <div data-aos="fade-up" className="bg-white rounded-lg shadow-md p-4 mb-6">
             <h3 className="text-lg font-semibold mb-3 flex items-center">
-              <FiTruck className="mr-2" />
-              Order Details
+              <FiTruck className="mr-2" /> Order Details
             </h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -121,10 +115,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
               <div className="flex justify-between text-green-600">
                 <span>Product Discounts:</span>
                 <span>
-                  ₹
-                  {orderDetails.totalPrice +
-                    deliveryFee +
-                    -orderDetails.payablePrice}
+                  ₹{orderDetails.totalPrice + deliveryFee - orderDetails.payablePrice}
                 </span>
               </div>
               {orderDetails.off > 0 && (
@@ -144,31 +135,22 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
             </div>
           </div>
 
+          {/* Shipping Address */}
           <div data-aos="fade-up" data-aos-offset="0" data-aos-delay="200">
-            <h3 className="text-lg font-semibold mb-3 flex items-center text-black">
-              <FiMapPin className="mr-2" />
-              Shipping Address
+            <h3 className="text-lg font-semibold mb-3 flex items-center">
+              <FiMapPin className="mr-2" /> Shipping Address
             </h3>
-            <p className="text-red">Shipping to:</p>
             {shippingAddress ? (
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm ">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
                 <p className="font-medium">{shippingAddress.name}</p>
                 <p>{shippingAddress.address}</p>
                 <p>{shippingAddress.city}</p>
                 <p>
-                  {shippingAddress.state}, {shippingAddress.country}
-                  {shippingAddress.zipCode}
+                  {shippingAddress.state}, {shippingAddress.country} {shippingAddress.zipCode}
                 </p>
                 <p>Mobile: {shippingAddress.mobile}</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {shippingAddress.addressType}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={handleChangeAddress}
-                >
+                <p className="text-sm text-gray-500 mt-1">{shippingAddress.addressType}</p>
+                <Button variant="outline" size="sm" className="mt-3" onClick={handleChangeAddress}>
                   <FiEdit2 className="mr-2" /> Change Address
                 </Button>
               </div>
@@ -183,7 +165,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
           </div>
         </div>
 
-        {/* Fixed Button Area */}
+        {/* Pay Button */}
         <div className="bg-gray-50 p-6">
           <Button
             disabled={!shippingAddress || paying}
