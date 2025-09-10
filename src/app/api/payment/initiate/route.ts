@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import User from "../../../../../model/User";
 import Order from "../../../../../model/Order";
 
+
 export async function POST(req: NextRequest) {
   try {
     // 1. Get userId from headers
@@ -16,13 +17,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. (Optional) Verify user exists
     const user = await User.findById(userId);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized user" }, { status: 401 });
     }
 
-    // 3. Get request body
+    
     const body = await req.json();
     const { amount, orderId }: { amount: number; orderId: string } = body;
 
