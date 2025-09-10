@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 interface Video {
-  videoId: string;
+  videoId: number;
   filename: string;
 }
 
@@ -44,7 +44,7 @@ export default function VideoUploadPage() {
     }
   };
 
-  const handleDelete = async (videoId: string) => {
+  const handleDelete = async (videoId: number) => {
     const confirmed = window.confirm('Are you sure you want to delete this video?');
 
     if (!confirmed) return;
@@ -64,7 +64,6 @@ export default function VideoUploadPage() {
 
   return (
     <div className="p-6 max-w-xl mx-auto">
-      
       <h2 className="text-xl font-semibold mb-4">Upload Video</h2>
       <input type="file" accept="video/*" onChange={handleFileChange} />
       <button
