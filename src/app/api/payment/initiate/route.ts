@@ -8,7 +8,7 @@ import Order from "../../../../../model/Order";
 export async function POST(req: NextRequest) {
   try {
     // 1. Get userId from headers
-        const userId = req.headers.get("x-user-id");
+    const userId = req.headers.get("x-user-id");
     if (!userId) {
       return NextResponse.json(
         { success: false, msg: "Please provide User Id" },
@@ -16,11 +16,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // // 2. Verify user exists
-    // const user = await User.findById(userId);
-    // if (!user) {
-    //   return NextResponse.json({ error: "Unauthorized user" }, { status: 401 });
-    // }
+    // 2. (Optional) Verify user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized user" }, { status: 401 });
+    }
 
     // 3. Get request body
     const body = await req.json();
@@ -51,7 +51,16 @@ export async function POST(req: NextRequest) {
     // 8. Call PhonePe API
     const response = await getPhonePeClient().pay(request);
 
-    // 9. Return response
+    // 9. Update order details in DB
+    order.transactionId = merchantOrderId;
+    order.tempTransactionId = merchantOrderId;
+    order.currentStatus = "PENDING";
+    order.paymentStatus = "INITIATED";
+    order.date = new Date();
+
+    await order.save();
+
+    // 10. Return response
     return NextResponse.json({
       success: true,
       url: response.redirectUrl,
