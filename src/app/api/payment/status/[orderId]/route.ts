@@ -1,24 +1,52 @@
 import { getPhonePeClient } from "@/lib/phonepeClient";
 import { NextResponse } from "next/server";
+import Order from "../../../../../../model/Order";
+import { connectDB } from "../../../../../../db";
 
 interface Params {
-  params: { orderId: string };
+  params: { orderId: string }; // frontend sends tempTransactionId
 }
 
 export async function GET(req: Request, { params }: Params) {
   try {
-    const { orderId } = params;
+    await connectDB();
+
+    const { orderId } = params; // frontend sends tempTransactionId
 
     if (!orderId) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
 
+    // 🔹 Call PhonePe API
     const response = await getPhonePeClient().getOrderStatus(orderId);
+
+    // Extract required details
+    const paymentStatus = response?.status || "PENDING"; // ✅ use `status`
+    const transactionId =
+      response?.transactionId || orderId; // ✅ fallback to tempTransactionId if null
+
+    // 🔹 Find order by tempTransactionId and update
+    const updatedOrder = await Order.findOneAndUpdate(
+      { tempTransactionId: orderId },
+      {
+        paymentStatus,
+        transactionId,
+      },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return NextResponse.json(
+        { error: "Order not found in database" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      status: response.state,
-      data: response,
+      status: paymentStatus,
+      transactionId,
+      order: updatedOrder,
     });
   } catch (error: any) {
     console.error("Payment status check error:", error);
