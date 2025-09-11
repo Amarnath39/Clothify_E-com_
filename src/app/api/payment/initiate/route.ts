@@ -4,10 +4,12 @@ import { StandardCheckoutPayRequest } from "pg-sdk-node";
 import { NextRequest, NextResponse } from "next/server";
 import User from "../../../../../model/User";
 import Order from "../../../../../model/Order";
+import { connectDB } from "../../../../../db";
 
 
 export async function POST(req: NextRequest) {
   try {
+    await connectDB();
     // 1. Get userId from headers
     const userId = req.headers.get("x-user-id");
     if (!userId) {
