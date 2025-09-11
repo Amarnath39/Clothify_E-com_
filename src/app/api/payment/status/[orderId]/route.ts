@@ -4,20 +4,20 @@ import Order from "../../../../../../model/Order";
 import { connectDB } from "../../../../../../db";
 
 interface Params {
-  params: { orderId: string }; // frontend sends tempTransactionId
+  params: { orderId: string }; 
 }
 
 export async function GET(req: Request, { params }: Params) {
   try {
     await connectDB();
 
-    const { orderId } = params; // frontend sends tempTransactionId
+    const { orderId } = params; 
 
     if (!orderId) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
 
-    // 🔹 Call PhonePe API
+    
     const response = await getPhonePeClient().getOrderStatus(orderId);
 
     // Extract required details
