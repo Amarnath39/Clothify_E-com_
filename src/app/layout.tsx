@@ -30,17 +30,40 @@ export const metadata = {
     default: "Udayaada",
     template: "%s | Udayaada",
   },
-  keywords:
-    "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style",
-
   description:
-    "Udayada is almost here to redefine your wardrobe with timeless elegance and effortless style",
+    "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style.",
+  keywords:
+    "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style.",
+  authors: [{ name: "Webgeon Results " }],
 
-  image: "/images/bg-removed.png",
-  url: "https://www.udayaada.in/",
+  openGraph: {
+    title: "Udayaada",
+    description:
+      "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style",
+    url: "https://www.udayaada.in/",
+    siteName: "Udayaada",
+    images: [
+      {
+        url: "assets/static/logo/og-image.png", // ✅ served from public/
+        width: 1200,
+        height: 630,
+        alt: "Udayaada OpenGraph Image",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
 
-  author: "UdayadaTeam",
+  twitter: {
+    card: "summary_large_image",
+    title: "Udayaada",
+    description:
+      "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style",
+    images: ["assets/static/logo/og-image.png"], // ✅ Twitter also uses this
+  },
 };
+
+
 
 export default function RootLayout({
   children,
