@@ -4,33 +4,33 @@ import Order from "../../../../../../model/Order";
 import { connectDB } from "../../../../../../db";
 
 interface Params {
-  params: { orderId: string }; 
+  params: { orderId: string }; // frontend sends tempTransactionId
 }
 
 export async function GET(req: Request, { params }: Params) {
   try {
     await connectDB();
 
-    const { orderId } = params; 
+    const { orderId } = params; // tempTransactionId from frontend
 
     if (!orderId) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
 
-    
-    const response = await getPhonePeClient().getOrderStatus(orderId);
+    // 🔹 Call PhonePe API
+    const response: any = await getPhonePeClient().getOrderStatus(orderId);
 
-    // Extract required details
-    const paymentStatus = response?.status || "PENDING"; // ✅ use `status`
-    const transactionId =
-      response?.transactionId || orderId; // ✅ fallback to tempTransactionId if null
+    // Extract required details from PhonePe response
+    const paymentStatus = response?.state || "PENDING";
+    const transactionId = response?.transactionId || orderId; // fallback to tempTransactionId
 
-    // 🔹 Find order by tempTransactionId and update
+    // 🔹 Update order in DB
     const updatedOrder = await Order.findOneAndUpdate(
       { tempTransactionId: orderId },
       {
         paymentStatus,
         transactionId,
+        currentStatus: paymentStatus === "COMPLETED" ? "CONFIRMED" : "PENDING",
       },
       { new: true }
     );
@@ -42,9 +42,10 @@ export async function GET(req: Request, { params }: Params) {
       );
     }
 
+    // 🔹 Response to frontend (always return `status` for consistency)
     return NextResponse.json({
       success: true,
-      status: paymentStatus,
+      status: paymentStatus, // alias for state
       transactionId,
       order: updatedOrder,
     });
