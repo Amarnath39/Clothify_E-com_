@@ -44,7 +44,7 @@ export const metadata = {
     siteName: "Udayaada",
     images: [
       {
-        url: "assets/static/logo/og-image.png", // ✅ served from public/
+        url: "/assets/static/logo/og-image.png", // ✅ served from public/
         width: 1200,
         height: 630,
         alt: "Udayaada OpenGraph Image",
@@ -59,7 +59,7 @@ export const metadata = {
     title: "Udayaada",
     description:
       "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style",
-    images: ["assets/static/logo/og-image.png"], // ✅ Twitter also uses this
+    images: ["/assets/static/logo/og-image.png"], // ✅ Twitter also uses this
   },
 };
 
