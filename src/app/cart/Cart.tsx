@@ -72,6 +72,7 @@ const Cart = () => {
   const { orderId, orderDate }: any = useSelector(
     (state: RootState) => state.order
   );
+const [userDeliveryFee, setUserDeliveryFee] = useState(0);
 
   // console.log(cartItemCount, "cartItemCount");
   const callGetCartItems = async () => {
@@ -156,18 +157,27 @@ const Cart = () => {
     }
   };
 
-  const calculateDeliveryFee = (cartItems, cartProducts) => {
-    // Calculate total quantity across all items
-    const totalQuantity =
-      cartItems?.reduce((sum, item) => sum + Number(item.count), 0) || 0;
+ const calculateDeliveryFee = (cartItems, cartProducts) => {
+  const totalQuantity =
+    cartItems?.reduce((sum, item) => sum + Number(item.count), 0) || 0;
 
-    // Each additional item adds 24
-    const shippingPrice = totalQuantity * 100;
+  let deliveryFee = 0;
 
-    return shippingPrice;
-  };
+  if (userDeliveryFee === 0) {
+    deliveryFee = 0;
+  } else if (userDeliveryFee === 150) {
+    deliveryFee =
+      totalQuantity === 1 ? 150 : 150 + 75 * (totalQuantity - 1);
+  } else {
+    deliveryFee = userDeliveryFee * totalQuantity;
+  }
+
+  return deliveryFee;
+};
+
 
   const { subtotal, tax, finalTotal, promotions, deliveryFee } = useMemo(() => {
+
     const subtotal = cartItems?.reduce((sum, item: any) => {
       const product: any = cartProducts.find(
         (p: any) => p?._id === item?.id && p?.size?._id === item?.size?._id
@@ -197,7 +207,7 @@ const Cart = () => {
     dispatch(setTotalAmount(finalTotal));
 
     return { subtotal, tax, finalTotal, promotions, deliveryFee };
-  }, [cartItems, cartProducts, discountAmount]);
+ }, [cartItems, cartProducts, discountAmount, userDeliveryFee]);
 
   const calculateDiscountAmount = (coupon: any, totalOfferPrice: any) => {
     let discount = 0;
@@ -211,23 +221,27 @@ const Cart = () => {
     return discount;
   };
 
-  const callGetAllAddress = async () => {
-    try {
-      const { payload } = await dispatch(getUserDetails());
+const callGetAllAddress = async () => {
+  try {
+    const { payload } = await dispatch(getUserDetails());
 
-      if (payload.success) {
-        if (payload?.user?.defaultAddress) {
-          dispatch(setAddressState(payload?.user?.defaultAddress?.state));
-        } else {
-          dispatch(setAddressState(""));
-        }
+    if (payload.success) {
+      // ✅ Get deliveryFee from root, not user
+      const deliveryFeeFromApi = payload?.deliveryFee || 0;
+      setUserDeliveryFee(deliveryFeeFromApi);  // ✅ Set correctly
+
+      if (payload?.user?.defaultAddress) {
+        dispatch(setAddressState(payload?.user?.defaultAddress?.state));
       } else {
-        // toast.error(payload.msg);
+        dispatch(setAddressState(""));
       }
-    } catch (error) {
-      console.log(error);
     }
-  };
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
 
   useEffect(() => {
     callGetAllAddress();
@@ -571,7 +585,7 @@ const Cart = () => {
 
                   <div className="flex items-center justify-between py-1">
                     <span className="text-gray-600">Delivery Fee</span>
-                    <span className="text-lg font-medium">₹{deliveryFee}</span>
+                <span className="text-lg font-medium">₹{deliveryFee?.toFixed(2)}</span>
                   </div>
 
                   <div className="flex items-center justify-between py-1 text-green-600">
