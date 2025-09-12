@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import Order from "../../../../../../model/Order";
 import { connectDB } from "../../../../../../db";
 
+// 📧 Import email sender
+import { sendUserOrderEmail } from "../../../../../../helper/sendUserOrderEmail"; 
+
 interface Params {
   params: { orderId: string }; // frontend sends tempTransactionId
 }
@@ -57,6 +60,15 @@ export async function GET(req: Request, { params }: Params) {
         { error: "Order not found in database" },
         { status: 404 }
       );
+    }
+
+    // 📧 Send confirmation email if payment is successful
+    if (paymentStatus === "Paid") {
+      try {
+        await sendUserOrderEmail(updatedOrder);
+      } catch (emailError) {
+        console.error("❌ Failed to send order confirmation email:", emailError);
+      }
     }
 
     // 🔹 Response to frontend (always return unified status)
