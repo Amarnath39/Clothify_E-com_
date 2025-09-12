@@ -28,7 +28,7 @@ export default function OTPVerification() {
       const response = await axios.post("/api/send-otp", {
         phoneNumber,
         apiKey: API_KEY,
-        var1Value: "Fancy Vastra",
+        var1Value: "Udayaada",
       });
 
       console.log(response.data, "res:::");

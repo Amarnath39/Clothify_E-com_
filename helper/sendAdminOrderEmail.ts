@@ -21,7 +21,7 @@ export const sendAdminOrderEmail = async (orderDetails: OrderDetails): Promise<v
       secure: false,
       auth: {
         user: "emailapikey",
-        pass: "PHtE6r1bEOHqgmV9oxUFtPW4R8atMIsp/+plJFJGsIlDXvVQSU0D/o0vkmCwo0gjA6JCQPWZyt9osezJ4enRJDu7NmlLVWqyqK3sx/VYSPOZsbq6x00esVkfc0LYXYTrcdNq0STfstrbNA==",
+        pass: "PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==",
       }
     });
 
@@ -36,7 +36,7 @@ export const sendAdminOrderEmail = async (orderDetails: OrderDetails): Promise<v
 
     // Prepare mail options
     const mailOptions = {
-      from: `"Roop Sagar" <orders@roopsagarshoppingmall.com>`,
+      from: '"Udayaada" <orders@udayaada.in>',
       to: process.env.REC_EMAIL || 'admin@yourdomain.com',
       subject: '🛒 New Order Received',
       html: emailContent,

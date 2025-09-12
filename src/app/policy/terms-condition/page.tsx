@@ -49,12 +49,12 @@ const TermsAndConditions = () => {
 {
   title: "Intellectual Property",
   content:
-    "All website content—images, logos, product descriptions, and branding—are the property of Roopsagar. Unauthorized use is strictly prohibited.",
+    "All website content—images, logos, product descriptions, and branding—are the property of Udayaada. Unauthorized use is strictly prohibited.",
 },
 {
   title: "Limitation of Liability",
   content:
-    "Roopsagar is not liable for delays or failures in performance due to external events or any indirect, incidental, or consequential damages.",
+    "Udayaada is not liable for delays or failures in performance due to external events or any indirect, incidental, or consequential damages.",
 },
 {
   title: "Governing Law",

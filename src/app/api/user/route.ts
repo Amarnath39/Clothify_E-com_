@@ -8,19 +8,60 @@ import { sendEmail } from "../../../../helper/sendEmail";
 connectDB();
 
 export const GET = async (req: NextRequest) => {
-    try {
-        const userId = req.headers.get('x-user-id');
-        if (!userId) {
-            return NextResponse.json({ success: false, msg: "Please provide User Id" }, { status: 400 });
-        }
-        const user = await User.findById(userId).populate(['address', 'defaultAddress']);
-        if (!user) return NextResponse.json({ success: false, msg: "User not found" }, { status: 404 });
-        return NextResponse.json({ success: true, msg: "Success", user }, { status: 200 });
-    } catch (error) {
-        console.log("Error to get user details ", error);
-        return NextResponse.json({ success: false, msg: "Internal Server Error" }, { status: 500 });
+  try {
+    const userId = req.headers.get("x-user-id");
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, msg: "Please provide User Id" },
+        { status: 400 }
+      );
     }
+
+    // fetch user with addresses
+    const user = await User.findById(userId).populate([
+      "address",
+      "defaultAddress",
+    ]);
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, msg: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // check state field
+    let deliveryFee = 150; // default
+    let state = null;
+
+    // priority to defaultAddress if available
+    if (user.defaultAddress && user.defaultAddress.state) {
+      state = user.defaultAddress.state;
+    } else if (user.address && user.address.length > 0) {
+      // take first address if multiple exist
+      state = user.address[0].state;
+    }
+
+    if (state === "Kerala") {
+  deliveryFee = 0;
 }
+
+
+
+
+
+    return NextResponse.json(
+      { success: true, msg: "Success", user, deliveryFee },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.log("Error to get user details ", error);
+    return NextResponse.json(
+      { success: false, msg: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+};
 
 export const PATCH = async (req: NextRequest) => {
     try {

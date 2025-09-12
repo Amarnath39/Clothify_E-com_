@@ -223,14 +223,14 @@
 //           <div className="flex space-x-4 md:mr-24">
 //             {/* <a
 //               target="_blank"
-//               href="https://www.instagram.com/roopsagar_shopping_mall/"
+//               href="https://www.instagram.com/Udayaada/"
 //               className="text-red hover:text-yellow-400 transition-colors"
 //             >
 //               <FaInstagram size={22} />
 //             </a> */}
 //              {/* <a
 //           target="_blank"
-//           href="https://www.facebook.com/RoopsagarSM"
+//           href="https://www.facebook.com/Udayaada"
 //           rel="noopener noreferrer"
 //           className="text-red hover:text-yellow-400 transition-colors"
 //         >
@@ -238,7 +238,7 @@
 //         </a> */}
 //         {/* <a
 //           target="_blank"
-//           href="https://youtube.com/@roopsagarshoppingmallpvtltd?si=HOqY07IKT6zaD5v7"
+//           href="https://youtube.com/@Udayaadapvtltd?si=HOqY07IKT6zaD5v7"
 //           rel="noopener noreferrer"
 //           className="text-red hover:text-yellow-400 transition-colors"
 //         >
@@ -505,14 +505,14 @@ const Footer = () => {
           <div className="flex space-x-4 md:mr-24">
             {/* <a
               target="_blank"
-              href="https://www.instagram.com/roopsagar_shopping_mall/"
+              href="https://www.instagram.com/Udayaada/"
               className="text-red hover:text-yellow-400 transition-colors"
             >
               <FaInstagram size={22} />
             </a> */}
              {/* <a
           target="_blank"
-          href="https://www.facebook.com/RoopsagarSM"
+          href="https://www.facebook.com/Udayaada"
           rel="noopener noreferrer"
           className="text-red hover:text-yellow-400 transition-colors"
         >
@@ -520,7 +520,7 @@ const Footer = () => {
         </a> */}
         {/* <a
           target="_blank"
-          href="https://youtube.com/@roopsagarshoppingmallpvtltd?si=HOqY07IKT6zaD5v7"
+          href="https://youtube.com/@Udayaadapvtltd?si=HOqY07IKT6zaD5v7"
           rel="noopener noreferrer"
           className="text-red hover:text-yellow-400 transition-colors"
         >

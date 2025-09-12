@@ -38,7 +38,7 @@ export const PATCH = async (req: NextRequest, { params }: { params: { id: string
                 deliveryPartner: order.deliveryPartner,
                 userName: order.user.name,
                 userEmail: order.user.email,
-                companyName: "Fancyvastra"
+                companyName: "Udayaada"
             }
 
             // Send mail

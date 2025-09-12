@@ -25,7 +25,7 @@ import productSlice from "./features/products";
 import addressSlice from "./features/address";
 // Define the persist config
 const persistConfig = {
-  key: "Fancyvastra",
+  key: "Udayaada",
   storage,
 
   whitelist: ["cart", "auth", "wishlist", "order"],
