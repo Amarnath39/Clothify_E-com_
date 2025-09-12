@@ -1,5 +1,7 @@
 
+
 // 'use client';
+
 // import { useState } from 'react';
 // import { Button } from '@/components/ui/button';
 // import { Input } from '@/components/ui/input';
@@ -14,6 +16,7 @@
 // import { useDispatch } from "react-redux";
 // import { smsLogin,emailLogin } from "@/lib/features/auth/actions";
 // import { createSlice } from "@reduxjs/toolkit";
+// import Modal from '@/components/ui/Modal'; // Update the path as per your file structure
 
 
 
@@ -29,6 +32,24 @@
 // const router = useRouter();
 //   const [activeTab, setActiveTab] = useState<'sms' | 'email'>('sms');
 //   const [emailLoginType, setEmailLoginType] = useState<'password' | 'otp'>('password');
+
+// //pop up
+// const [modalOpen, setModalOpen] = useState(false);
+// const [modalContent, setModalContent] = useState<{
+//   title: string;
+//   description?: string;
+//   type?: 'success' | 'error' | 'info';
+// }>({
+//   title: '',
+//   description: '',
+//   type: 'info',
+// });
+
+// const showModal = (title: string, description?: string, type: 'success' | 'error' | 'info' = 'info') => {
+//   setModalContent({ title, description, type });
+//   setModalOpen(true);
+// };
+
 
 //   const [emailData, setEmailData] = useState<{
 //     email: string;
@@ -101,7 +122,7 @@
 
 //     await dispatch(emailLogin({ email: emailData.email.trim() }));
 
-//     toast({ title: 'Login Successful', description: 'Welcome!' });
+//     // toast({ title: 'Login Successful', description: 'Welcome!' });
 
 //     router.push('/profile');
 //     setTimeout(() => {
@@ -141,9 +162,11 @@
 //     }
 
 //     setEmailOtpSent(true);
-//     toast({ title: 'OTP Sent', description: `Check ${emailData.email}` });
+//     // toast({ title: 'OTP Sent', description: `Check ${emailData.email}` });
+//     showModal('OTP Sent', `Check your inbox at ${emailData.email}`, 'success');
 //   } catch (err: any) {
-//     toast({ title: 'Error', description: err.message, variant: 'destructive' });
+//     // toast({ title: 'Error', description: err.message, variant: 'destructive' });
+//     showModal('Error', err.message, 'error');
 //   } finally {
 //     setIsLoading(false);
 //   }
@@ -154,13 +177,20 @@
 // const handleVerifyEmailOtp = async (e: any) => {
 //   e.preventDefault();
 
-//   if (emailData.otp.length !== 6) {
-//     return toast({ title: 'Complete OTP', variant: 'destructive' });
-//   }
+//   // if (emailData.otp.length !== 6) {
+//   //   return toast({ title: 'Complete OTP', variant: 'destructive' });
+//   // }
 
-//   if (!emailData.email) {
-//     return toast({ title: 'Missing Email', variant: 'destructive' });
-//   }
+//   // if (!emailData.email) {
+//   //   return toast({ title: 'Missing Email', variant: 'destructive' });
+//   // }
+// if (emailData.otp.length !== 6) {
+//   return showModal('Incomplete OTP', 'Please enter the full 6-digit OTP.', 'error');
+// }
+
+// if (!emailData.email) {
+//   return showModal('Missing Email', 'Please provide your email address.', 'error');
+// }
 
 //   setIsLoading(true);
 
@@ -187,19 +217,22 @@
 //     }
 
 //     // ✅ Redux dispatch just like SMS login
-//     await dispatch(emailLogin({ email: emailData.email.trim() }));
+//    await dispatch(emailLogin({ email: emailData.email.trim() }));
 
-//     toast({ title: 'Login Successful', description: 'Welcome!' });
+//   // showModal('Login Successful', 'Welcome!', 'success');
 
-//     router.push('/profile');
-//     setTimeout(() => {
-//       window.location.href = '/profile';
-//     }, 1000);
-//   } catch (err: any) {
-//     toast({ title: 'Error', description: err.message, variant: 'destructive' });
-//   } finally {
-//     setIsLoading(false);
-//   }
+//   router.push('/profile');
+
+//   // Optional: Delay full reload for smoother UX
+//   setTimeout(() => {
+//     window.location.href = '/profile';
+//   }, 1000);
+
+// } catch (err: any) {
+//   showModal('Error', err.message, 'error');
+// } finally {
+//   setIsLoading(false);
+// }
 // };
 // const [phoneNumber, setPhoneNumber] = useState('');
 // <input
@@ -214,10 +247,9 @@
 //   e.preventDefault();
  
 //   if (!smsData.phone) {
+//   return showModal('Missing Phone Number', 'Please enter your phone number to proceed.', 'error');
+// }
 
-//     return toast({ title: 'Enter phone number', variant: 'destructive' });
-
-//   }
  
 //   setIsLoading(true);
  
@@ -239,13 +271,13 @@
  
 //     setSmsData((prev) => ({ ...prev, sessionId: res.sessionId }));
 
-//     setSmsOtpSent(true);
+// setSmsOtpSent(true);
 
-//     toast({ title: 'OTP Sent', description: `Sent to ${smsData.phone}` });
+// showModal('OTP Sent', `OTP has been sent to ${smsData.countryCode} ${smsData.phone}`, 'success');
 
 //   } catch (error: any) {
+//   showModal('Error Sending OTP', error.message || 'Something went wrong.', 'error');
 
-//     toast({ title: 'Error', description: error.message, variant: 'destructive' });
 
 //   } finally {
 
@@ -260,13 +292,14 @@
 //   const handleVerifyOtp = async (e: React.FormEvent) => {
 //     e.preventDefault();
 
-//     if (smsData.otp.length !== 6) {
-//       return toast({ title: 'Enter 6-digit OTP', variant: 'destructive' });
-//     }
+//    if (smsData.otp.length !== 6) {
+//   return showModal('Invalid OTP', 'Please enter the complete 6-digit OTP.', 'error');
+// }
 
-//     if (!smsData.sessionId) {
-//       return toast({ title: 'Session expired. Try again.', variant: 'destructive' });
-//     }
+// if (!smsData.sessionId) {
+//   return showModal('Session Expired', 'Your OTP session has expired. Please request a new OTP.', 'error');
+// }
+
 
 //     setIsLoading(true);
 
@@ -282,17 +315,17 @@
 
 //       const res = await response.json();
 
-//       if (!response.ok) throw new Error(res.error || 'OTP verification failed');
+//      if (!response.ok) throw new Error(res.error || 'OTP verification failed');
 
-//       toast({ title: 'Success', description: 'Phone verified!' });
-//       await dispatch(smsLogin({ phone: smsData.phone.trim()}));
-//       router.push("/profile");
-//       setTimeout(() => {
+// showModal('Success', 'Phone verified!', 'success');
+
+// await dispatch(smsLogin({ phone: smsData.phone.trim() }));
+
+// router.push("/profile");
+// setTimeout(() => {
 //   window.location.href = '/profile';
 // }, 1000);
 
-//     } catch (error: any) {
-//       toast({ title: 'Error', description: error.message, variant: 'destructive' });
 //     } finally {
 //       setIsLoading(false);
 //     }
@@ -305,20 +338,22 @@
 //     <div className="flex min-h-screen bg-white justify-center">
      
 
-// <div className="flex items-center justify-center w-full md:w-1/2 px-4" style={{ backgroundColor: '#ffffff' }}>
+// <div className="flex items-center justify-center w-full md:w-1/2 px-4" style={{ backgroundColor: '#fffff' }}>
 //         <div className="w-full max-w-md">
-//           <div className="text-center mb-8">
+//           <div className="text-center mb-8" >
 //             <h1 className="text-4xl font-bold bg-[#380e10] bg-clip-text text-transparent mb-2">
 //               Welcome Back
 //             </h1>
 //             <p className="text-gray-700 font-medium">Choose your preferred login method</p>
 //           </div>
 
-//           <Card className="w-full max-w-md shadow-xl border-2 rounded-2xl">
+//           <Card className="w-full max-w-md shadow-xl border-2 rounded-2xl" style={{ backgroundColor: '#faf8e9ff' }}>
 //             <CardHeader
-//   className="text-white bg-white px-8 py-6" // px = horizontal, py = vertical
+//   className="text-white bg-white px-8 py-6 rounded-2xl"style={{ backgroundColor: '#380e10' }} // px = horizontal, py = vertical
 // >
-  
+//    <div className="flex justify-center rounded-2xl">
+//     <img src="/assets/static/logo/Final Footer.svg" alt="Logo" className="h-[140px] w-[300px]" />
+//   </div>
 // </CardHeader>
 
 
@@ -402,7 +437,7 @@
 //                   )}
 //                 </TabsContent>
 
-//                 <TabsContent value="email" className="space-y-4 animate-fade-in">
+//                 {/* <TabsContent value="email" className="space-y-4 animate-fade-in">
 //                   <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
 //   <Button
 //     type="button"
@@ -490,7 +525,80 @@
 //                       </Button>
 //                     </form>
 //                   )}
-//                 </TabsContent>
+//                 </TabsContent> */}
+//                 <TabsContent value="email" className="space-y-4 animate-fade-in">
+//   {!emailOtpSent ? (
+//     <form onSubmit={handleSendEmailOtp} className="space-y-4">
+//       <Label htmlFor="email-otp" className="text-gray-800 font-semibold">
+//         Email Address
+//       </Label>
+//       <Input
+//         id="email-otp"
+//         type="email"
+//         placeholder="Enter email"
+//         value={emailData.email}
+//         onChange={(e) =>
+//           setEmailData((prev) => ({ ...prev, email: e.target.value }))
+//         }
+//         required
+//       />
+//       <Button
+//         type="submit"
+//         className="w-full h-12 text-white font-semibold rounded-lg"
+//         style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
+//         disabled={isLoading}
+//       >
+//         {isLoading ? 'Sending OTP...' : 'Send Email OTP'}
+//       </Button>
+//     </form>
+//   ) : (
+//     <form onSubmit={handleVerifyEmailOtp} className="space-y-6">
+//       <div className="text-center space-y-2">
+//         <div
+//           className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+//           style={{ backgroundColor: '#bbe4ca' }}
+//         >
+//           <Check className="w-8 h-8 text-gray-800" />
+//         </div>
+//         <h3 className="text-lg font-semibold text-gray-900">OTP Sent!</h3>
+//         <p className="text-gray-700 text-sm">
+//           Enter the 6-digit code sent to
+//           <br />
+//           <span className="font-medium text-gray-900">
+//             {emailData.email}
+//           </span>
+//         </p>
+//       </div>
+
+//       <OTPInput
+//         value={emailData.otp}
+//         onChange={(otp) =>
+//           setEmailData((prev) => ({ ...prev, otp }))
+//         }
+//         numInputs={6}
+//       />
+
+//       <Button
+//         type="submit"
+//         className="w-full h-12 text-white font-semibold rounded-lg"
+//         style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
+//         disabled={isLoading}
+//       >
+//         {isLoading ? 'Verifying...' : 'Verify & Sign In'}
+//       </Button>
+
+//       <Button
+//         type="button"
+//         variant="ghost"
+//         className="w-full text-gray-700"
+//         onClick={() => setEmailOtpSent(false)}
+//       >
+//         Change email address
+//       </Button>
+//     </form>
+//   )}
+// </TabsContent>
+
 //               </Tabs>
 //             </CardContent>
 //           </Card>
@@ -505,15 +613,24 @@
 //           </div>
 //         </div>
 //       </div>
+//        <Modal
+//   isOpen={modalOpen}
+//   onClose={() => setModalOpen(false)}
+//   title={modalContent.title}
+//   description={modalContent.description}
+//   type={modalContent.type}
+// />
 //     </div>
+
+   
 //   );
+
 // };
+
 
 // export default Login;
 
-// // };
 
-// // export default Login;
 
 
 
@@ -864,12 +981,12 @@ setTimeout(() => {
             <p className="text-gray-700 font-medium">Choose your preferred login method</p>
           </div>
 
-          <Card className="w-full max-w-md shadow-xl border-2 rounded-2xl" style={{ backgroundColor: '#faf8e9ff' }}>
+          <Card className="w-full max-w-md shadow-x1 border-2 rounded-2xl" style={{ backgroundColor: '#faf8e9ff' }}>
             <CardHeader
-  className="text-white bg-white px-8 py-6 rounded-2xl"style={{ backgroundColor: '#380e10' }} // px = horizontal, py = vertical
+  className="text-white bg-white px-8 py-6 shadow-x1 border-2  rounded-2xl"style={{ backgroundColor: '#faf8e9ff' }} // px = horizontal, py = vertical
 >
    <div className="flex justify-center rounded-2xl">
-    <img src="/assets/static/logo/Final Footer.svg" alt="Logo" className="h-[140px] w-[300px]" />
+<img src="/assets/static/logo/OTPtransparent.svg" alt="Logo" className="h-[160px] w-[600px]" />
   </div>
 </CardHeader>
 
@@ -877,12 +994,22 @@ setTimeout(() => {
             <CardContent className="p-2">
               <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'email' | 'sms')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100">
-                  <TabsTrigger value="sms" className="flex items-center gap-2 data-[state=active]:bg-white text-gray-800">
-                    <Phone className="w-4 h-4" /> SMS
-                  </TabsTrigger>
-                  <TabsTrigger value="email" className="flex items-center gap-2 data-[state=active]:bg-white text-gray-800">
-                    <Mail className="w-4 h-4" /> Email
-                  </TabsTrigger>
+               <TabsTrigger
+  value="sms"
+  className="flex items-center gap-2 text-gray-800 bg-[#ede8c9ff] data-[state=active]:bg-yellow-500"
+
+>
+  <Phone className="w-4 h-4" /> SMS
+</TabsTrigger>
+
+<TabsTrigger
+  value="email"
+className="flex items-center gap-2 text-gray-800 bg-[#ede8c9ff] data-[state=active]:bg-yellow-300"
+
+>
+  <Mail className="w-4 h-4" /> Email
+</TabsTrigger>
+
                 </TabsList>
 
                 <TabsContent value="sms" className="space-y-4 animate-fade-in">
@@ -890,33 +1017,42 @@ setTimeout(() => {
                     <form onSubmit={handleSendOtp} className="space-y-4">
                       <Label htmlFor="phone" className="text-gray-800 font-semibold">Phone Number</Label>
                       <div className="flex gap-2">
-                        <Select value={smsData.countryCode} onValueChange={(value) => setSmsData(prev => ({ ...prev, countryCode: value }))}>
-                          <SelectTrigger className="w-32 h-12 border-gray-200 text-gray-800">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                            {countryCodes.map((country) => (
-                              <SelectItem key={country.code} value={country.code} className="text-gray-800">
-                                <div className="flex items-center gap-2">
-                                  <span>{country.flag}</span>
-                                  <span>{country.code}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <div className="relative flex-1">
-                          <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
-                          <Input
-                            id="phone"
-                            type="tel"
-                            placeholder="Enter phone number"
-                            value={smsData.phone}
-                            onChange={(e) => setSmsData(prev => ({ ...prev, phone: e.target.value }))}
-                            className="pl-10 h-12 border-gray-200 text-gray-800"
-                            required
-                          />
-                        </div>
+                       <Select value={smsData.countryCode} onValueChange={(code) => setSmsData((prev) => ({ ...prev, countryCode: code }))}>
+  <SelectTrigger className="w-[120px] h-12 bg-white text-gray-800 border border-gray-200 rounded-md">
+    <SelectValue placeholder="Code" />
+  </SelectTrigger>
+
+  <SelectContent className="bg-white border border-gray-200 shadow-md rounded-md">
+    {countryCodes.map((country) => (
+      <SelectItem
+        key={country.code}
+        value={country.code}
+        className="text-gray-800 hover:bg-gray-100 cursor-pointer"
+      >
+        <div className="flex items-center gap-2">
+          <span>{country.flag}</span>
+          <span>{country.code}</span>
+        </div>
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
+                       <div className="relative flex-1">
+  <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+  <Input
+    id="phone"
+    type="tel"
+    placeholder="Enter phone number"
+    value={smsData.phone}
+    onChange={(e) =>
+      setSmsData((prev) => ({ ...prev, phone: e.target.value }))
+    }
+    className="pl-10 h-12 border-gray-200 text-gray-800 bg-white"  // ✅ bg-white added
+    required
+  />
+</div>
+
                       </div>
                       <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
  disabled={isLoading}>
@@ -1057,6 +1193,7 @@ setTimeout(() => {
         onChange={(e) =>
           setEmailData((prev) => ({ ...prev, email: e.target.value }))
         }
+          className="pl-10 h-12 border-gray-200 text-gray-800 bg-white" 
         required
       />
       <Button
@@ -1146,4 +1283,5 @@ setTimeout(() => {
 
 
 export default Login;
+
 
