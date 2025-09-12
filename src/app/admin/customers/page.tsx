@@ -55,7 +55,7 @@ const AdminUserPage = () => {
   return (
     <div className="container mx-auto p-6">
      
-      <h1 className="text-3xl font-bold mb-6">Admin User Management</h1>
+      <h1 className="text-3xl font-bold mb-6">All customers</h1>
       <div className="overflow-x-auto shadow-md rounded-lg">
         <table className="min-w-full bg-white">
           <thead className="bg-gray-200">
