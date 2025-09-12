@@ -13,7 +13,7 @@ export interface OrderDetails {
 
 export const sendOrderShippedEmail = async (orderDetails: OrderDetails): Promise<void> => {
   try {
-    // Create transporter using ZeptoMail
+    
     const transporter = nodemailer.createTransport({
       host: "smtp.zeptomail.in",
       port: 587,
@@ -24,7 +24,6 @@ export const sendOrderShippedEmail = async (orderDetails: OrderDetails): Promise
       },
     });
 
-    // Get HTML content from template
     const emailContent = orderShippedTemplate(orderDetails);
 
     // Define mail options
