@@ -17,7 +17,6 @@
 
 
 
-
 // // Country code list
 // const countryCodes = [  { code: '+91', country: 'India', flag: '🇮🇳' },
 // ];
