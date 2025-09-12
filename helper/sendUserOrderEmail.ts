@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { orderUserTemplate } from "../emailTemplate/order-template-user";
+import { orderShippedTemplate } from "../emailTemplate/order-shipped";
 import { getOrderInvoicePDF } from "../src/app/utils/getOrderInvoice";
 
 export interface OrderDetails {
@@ -11,53 +11,34 @@ export interface OrderDetails {
   user?: any;
 }
 
-// Function to send an email with invoice attachment
-export const sendUserOrderEmail = async (orderDetails: any) => {
+export const sendOrderShippedEmail = async (orderDetails: OrderDetails): Promise<void> => {
   try {
-    // Create a transporter
-    // let transporter = nodemailer.createTransport({
-    //   // host: "smtpout.secureserver.net",
-    //   // host: "smtpout.secureserver.net",
-    //   port: 465,
-    //   auth: {
-    //     user: process.env.EMAIL_USER,
-    //     pass: process.env.EMAIL_PASS,
-    //   },
-    // });
-    var transporter = nodemailer.createTransport({
+    // Create transporter using ZeptoMail
+    const transporter = nodemailer.createTransport({
       host: "smtp.zeptomail.in",
       port: 587,
+      secure: false, // false for port 587
       auth: {
-        user: "emailapikey",
-        pass: "PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==",
+        user: "emailapikey", // ZeptoMail username (literal)
+        pass: "PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==", // Your actual API key
       },
-  });
+    });
 
-    // Generate the email content from template
-    const emailContent = orderUserTemplate(orderDetails);
+    // Get HTML content from template
+    const emailContent = orderShippedTemplate(orderDetails);
 
-    // Get invoice PDF for attachment
-    const invoice = await getOrderInvoicePDF(orderDetails._id);
-
-    // Define email options with attachment
+    // Define mail options
     const mailOptions = {
-      from: '"Udayaada" <orders@udayaada.in>',
-      to: orderDetails?.user?.email,
-      subject: "Order Confirmation",
+      from: '"Udayaada" <orders@udayaada.in>', // Verified sender from ZeptoMail
+      to: orderDetails.customerEmail,
+      subject: "📦 Your Order Has Been Shipped!",
       html: emailContent,
-      attachments: [
-        {
-          filename: invoice.filename,
-          content: Buffer.from(invoice.buffer),
-          contentType: "application/pdf",
-        },
-      ],
     };
 
-    // Send the email
+    // Send email
     await transporter.sendMail(mailOptions);
-    console.log("Order email with invoice sent successfully");
+    console.log("✅ Order shipped email sent to:", orderDetails.customerEmail);
   } catch (error) {
-    console.error("Error sending order email with invoice", error);
+    console.error("❌ Error sending order shipped email:", error);
   }
 };

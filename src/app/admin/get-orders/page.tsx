@@ -270,7 +270,7 @@ const OrdersPage = () => {
     <div className="container mx-auto p-6 space-y-6">
       
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Admin Orders</h1>
+        <h1 className="text-3xl font-bold">All Orders</h1>
 
         <div>
           <span className="text-red font-bold text-xl">{ordersSuccess}</span>{" "}
