@@ -20,9 +20,27 @@ export async function GET(req: Request, { params }: Params) {
     // 🔹 Call PhonePe API
     const response: any = await getPhonePeClient().getOrderStatus(orderId);
 
+    console.log(response)
+    console.log("test")
+
     // Extract required details from PhonePe response
-    const paymentStatus = response?.state || "PENDING";
+    const phonePeStatus = response?.status || "PENDING"; // PhonePe sends SUCCESS / FAILED / PENDING
     const transactionId = response?.transactionId || orderId; // fallback to tempTransactionId
+
+    // 🔹 Map PhonePe status → our paymentStatus
+    let paymentStatus = "Pending";
+    let currentStatus = "PENDING";
+
+    if (phonePeStatus === "SUCCESS") {
+      paymentStatus = "SUCCESS";
+      currentStatus = "CONFIRMED";
+    } else if (phonePeStatus === "FAILED") {
+      paymentStatus = "Failed";
+      currentStatus = "FAILED";
+    } else if (phonePeStatus === "PENDING") {
+      paymentStatus = "Pending";
+      currentStatus = "PENDING";
+    }
 
     // 🔹 Update order in DB
     const updatedOrder = await Order.findOneAndUpdate(
@@ -30,7 +48,7 @@ export async function GET(req: Request, { params }: Params) {
       {
         paymentStatus,
         transactionId,
-        currentStatus: paymentStatus === "COMPLETED" ? "CONFIRMED" : "PENDING",
+        currentStatus,
       },
       { new: true }
     );
@@ -42,10 +60,11 @@ export async function GET(req: Request, { params }: Params) {
       );
     }
 
-    // 🔹 Response to frontend (always return `status` for consistency)
+    // 🔹 Response to frontend (always return unified status)
     return NextResponse.json({
       success: true,
-      status: paymentStatus, // alias for state
+      status: phonePeStatus, // raw status from PhonePe
+      paymentStatus,         // mapped status in our DB
       transactionId,
       order: updatedOrder,
     });
