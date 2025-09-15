@@ -34,10 +34,10 @@ export async function GET(req: Request, { params }: Params) {
     let currentStatus = "PENDING";
 
     if (phonePeState === "COMPLETED") {
-      paymentStatus = "Paid";
+      paymentStatus = "PAYMENT_SUCCESS";
       currentStatus = "CONFIRMED";
     } else if (phonePeState === "FAILED") {
-      paymentStatus = "Failed";
+      paymentStatus = "PAYMENT_ERROR";
       currentStatus = "FAILED";
     } else if (phonePeState === "PENDING") {
       paymentStatus = "Pending";
@@ -63,7 +63,7 @@ export async function GET(req: Request, { params }: Params) {
     }
 
     // 📧 Send confirmation email if payment is successful
-    if (paymentStatus === "Paid" && updatedOrder.orderId) {
+    if (paymentStatus === "PAYMENT_SUCCESS" && updatedOrder.orderId) {
       try {
         await sendUserOrderEmail({
           ...updatedOrder.toObject(),
