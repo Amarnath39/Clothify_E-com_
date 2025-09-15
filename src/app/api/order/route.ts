@@ -111,7 +111,7 @@ export const POST = async (req: NextRequest) => {
               (sizeObj.offerPrice || product.actualPrice) * quantity;
           }
           totalQuantity += quantity;
-          shippingCost = totalQuantity * 100;
+          //shippingCost = totalQuantity * 100;
 
           // Return the product and size details statically
           return {
@@ -176,7 +176,7 @@ export const POST = async (req: NextRequest) => {
     // let generatedOrderId = await generateOrderId();
 
     // Calculate the total payable price
-    let totalPayablePrice = totalOfferPrice - discount + shippingCost;
+    let totalPayablePrice = totalOfferPrice - discount ;
     totalPayablePrice = Math.max(totalPayablePrice, 1);
 
     let newOrder;
