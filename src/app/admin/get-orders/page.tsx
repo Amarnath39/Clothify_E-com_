@@ -83,35 +83,70 @@ const OrdersPage = () => {
     // lastChecked: now.toISOString(),
   };
 
-  const callGetOrdersApi = async () => {
-    try {
-      const response = await axios.get("/api/admin/order", {
-        params: {
-          search: searchTerm,
-          paymentStatus: paymentStatus !== "all" ? paymentStatus : undefined,
-          orderStatus: orderStatus !== "all" ? orderStatus : undefined,
-          startDate: startDate?.toISOString(),
-          endDate: endDate?.toISOString(),
-        },
-      });
-      // console.log(response, "response");
+  // const callGetOrdersApi = async () => {
+  //   try {
+  //     const response = await axios.get("/api/admin/order", {
+  //       params: {
+  //         search: searchTerm,
+  //         paymentStatus: paymentStatus !== "all" ? paymentStatus : undefined,
+  //         orderStatus: orderStatus !== "all" ? orderStatus : undefined,
+  //         startDate: startDate?.toISOString(),
+  //         endDate: endDate?.toISOString(),
+  //       },
+  //     });
+  //     // console.log(response, "response");
 
-      if (response.data.success) {
-        setOrders(response.data.orders);
-        const stats: any = await countRecentSuccessfulPayments(
-          response.data.orders
-        );
-        setOrderSuccess(stats);
-      } else {
-        toast(response.data.msg);
-      }
-    } catch (error) {
-      console.log(error);
-      toast("Failed to fetch orders");
-    } finally {
-      setLoading(false);
+  //     if (response.data.success) {
+  //       setOrders(response.data.orders);
+  //       const stats: any = await countRecentSuccessfulPayments(
+  //         response.data.orders
+  //       );
+  //       setOrderSuccess(stats);
+  //     } else {
+  //       toast(response.data.msg);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     toast("Failed to fetch orders");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  const callGetOrdersApi = async () => {
+  try {
+    const token = localStorage.getItem("token"); // ⬅️ get token from login
+
+    const response = await axios.get("/api/admin/order", {
+      params: {
+        search: searchTerm,
+        paymentStatus: paymentStatus !== "all" ? paymentStatus : undefined,
+        orderStatus: orderStatus !== "all" ? orderStatus : undefined,
+        startDate: startDate?.toISOString(),
+        endDate: endDate?.toISOString(),
+      },
+      headers: {
+        Authorization: `Bearer ${token}`, // ⬅️ attach token
+      },
+    });
+
+    if (response.data.success) {
+      setOrders(response.data.orders);
+
+      const stats: any = await countRecentSuccessfulPayments(
+        response.data.orders
+      );
+      setOrderSuccess(stats);
+    } else {
+      toast(response.data.msg);
     }
-  };
+  } catch (error) {
+    console.log(error);
+    toast("Failed to fetch orders");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // getting success order count
 
