@@ -19,7 +19,7 @@ export const sendUserOrderEmail = async (orderDetails: any): Promise<void> => {
       secure: false,
       auth: {
         user: "emailapikey",
-        pass: process.env.ZEPTO_API_KEY as string,
+        pass:" PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==",
       },
     });
 
