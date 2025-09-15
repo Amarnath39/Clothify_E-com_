@@ -56,7 +56,7 @@ export default function PaymentStatusPage() {
       }, 1000);
 
       if (countdown === 0) {
-        router.push('/');
+        router.push('/orders');
       }
 
       return () => clearTimeout(timer);
