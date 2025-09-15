@@ -301,8 +301,10 @@ const Orders = () => {
             order.paymentStatus === "INITIATED" ||
             order.paymentStatus === "COMPLETED"
         );
-        console.log(actualOrders, "actual");
-        setOrderData(actualOrders);
+        // console.log(actualOrders, "actual");
+        // setOrderData(actualOrders);
+        console.log(formattedOrders, "formattedOrders");
+        setOrderData(formattedOrders);
       }
       setLoading(false);
     } catch (error) {

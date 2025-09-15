@@ -1053,6 +1053,7 @@ const callGetAllAddress = async () => {
           24 * 60 * 60 * 1000
           ? orderId
           : null,
+       shippingCost: deliveryFee, // ✅ send shipping/delivery price
     };
 
     // console.log(payloadApi, "payload for cehckout");
