@@ -981,12 +981,12 @@ setTimeout(() => {
             <p className="text-gray-700 font-medium">Choose your preferred login method</p>
           </div>
 
-          <Card className="w-full max-w-md shadow-x1 border-2 rounded-2xl" style={{ backgroundColor: '#faf8e9ff' }}>
+          <Card className="w-full max-w-md shadow-x1 border-2 rounded-2xl" style={{ backgroundColor: '#ffffff' }}>
             <CardHeader
-  className="text-white bg-white px-8 py-6 shadow-x1 border-2  rounded-2xl"style={{ backgroundColor: '#faf8e9ff' }} // px = horizontal, py = vertical
+  className="text-white bg-white px-8 py-6 shadow-x1 border-2  rounded-2xl"style={{ backgroundColor: '#ffffff' }} // px = horizontal, py = vertical
 >
    <div className="flex justify-center rounded-2xl">
-<img src="/assets/static/logo/OTPtransparent.svg" alt="Logo" className="h-[160px] w-[600px]" />
+<img src="/assets/static/logo/untitled design.svg" alt="Logo" className="h-[160px] w-[600px]" />
   </div>
 </CardHeader>
 

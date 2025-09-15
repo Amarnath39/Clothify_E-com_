@@ -172,7 +172,7 @@ const Navbar = () => {
             <div className="flex-shrink-0 md:ml-24 flex items-center">
     <Link href="/" className="flex items-center">
       <img
-  src="/assets/static/logo/UDAYAADAIN 1.svg"
+  src="/assets/static/logo/UDAYAADAIN.svg"
   alt="Logo"
   className="h-20 md:h-[100px] lg:h-[104px] w-auto object-contain"
 />
