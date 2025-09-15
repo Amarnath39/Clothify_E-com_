@@ -159,15 +159,27 @@ const Navbar = () => {
           </div>
 
           {/* Logo */}
-          <div className="flex-shrink-0 md:ml-24">
+          {/* <div className="flex-shrink-0 md:ml-24">
             <Link href="/" className="text-2xl font-bold flex items-center gap-2">
               <img
                 className="w-48 sm:w-40 md:w-56 lg:w-64 object-contain"
-                src="/assets/static/logo/Udayaada Final.png"
+                // src="/assets/static/logo/Udayaada Final.png"
+                src="/assets/static/logo/new.jpeg"
                 alt="Logo"
               />
             </Link>
-          </div>
+          </div> */}
+            <div className="flex-shrink-0 md:ml-24 flex items-center">
+    <Link href="/" className="flex items-center">
+      <img
+  src="/assets/static/logo/new.jpeg"
+  alt="Logo"
+  className="h-20 md:h-[100px] lg:h-[104px] w-auto object-contain"
+/>
+
+    </Link>
+  </div>
+
 
           {isModalOpen && (
             <AnimatedSearchInput
