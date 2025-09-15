@@ -32,6 +32,11 @@ export const metadata = {
   },
   description:
     "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style.",
+  icons: {
+    icon: "/assets/static/logo/favicon.ico",
+    apple: "/assets/static/logo/apple-touch-icon.png",
+    android: "/assets/static/logo/android-chrome-192x192.png",
+  },
   keywords:
     "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style.",
   authors: [{ name: "Webgeon Results " }],
