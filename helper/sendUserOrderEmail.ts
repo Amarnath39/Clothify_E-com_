@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-export const sendUserOrderEmail = async (order: any): Promise<void> => {
+export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean; message: string; error?: any }> => {
   try {
     // ⚡ ZeptoMail transporter
     const transporter = nodemailer.createTransport({
@@ -8,7 +8,7 @@ export const sendUserOrderEmail = async (order: any): Promise<void> => {
       port: 587,
       auth: {
         user: "emailapikey", // replace with your ZeptoMail username/API key
-        pass: "PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==", // ZeptoMail password/API secret
+        pass: "PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==", // ZeptoMail API secret
       },
     });
 
@@ -53,9 +53,15 @@ export const sendUserOrderEmail = async (order: any): Promise<void> => {
       html: htmlTemplate,
     });
 
-    console.log("📧 Order confirmation email sent successfully to:", order.user?.email || order.customerEmail);
-  } catch (error) {
-    console.error("❌ Email send error:", error);
-    throw error;
+    return {
+      success: true,
+      message: `📧 Order confirmation email sent successfully to: ${order.user?.email || order.customerEmail}`,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: "❌ Failed to send confirmation email.",
+      error: error.message || error,
+    };
   }
 };

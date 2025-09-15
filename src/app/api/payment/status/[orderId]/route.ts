@@ -62,25 +62,26 @@ export async function GET(req: Request, { params }: Params) {
       );
     }
 
-    // 📧 Send confirmation email if payment is successful
-    if (paymentStatus === "PAYMENT_SUCCESS" && updatedOrder.orderId) {
-      try {
-        await sendUserOrderEmail({
-          ...updatedOrder.toObject(),
-          orderId: updatedOrder.orderId, // ✅ ensure orderId is included
-        });
-      } catch (emailError) {
-        console.error("❌ Failed to send order confirmation email:", emailError);
-      }
-    }
+    // 📧 Try sending confirmation email if payment is successful
+   // 📧 Try sending confirmation email if payment is successful
+let emailResponse: { success: boolean; message: string; error?: any } | null = null;
 
-    // 🔹 Response to frontend (always return unified status)
+if (paymentStatus === "PAYMENT_SUCCESS" && updatedOrder.orderId) {
+  emailResponse = await sendUserOrderEmail({
+    ...updatedOrder.toObject(),
+    orderId: updatedOrder.orderId, // ✅ ensure orderId is included
+  });
+}
+
+
+    // 🔹 Response to frontend (include email status if attempted)
     return NextResponse.json({
       success: true,
-      status: phonePeState, // raw state from PhonePe
-      paymentStatus,        // mapped status in our DB
+      status: phonePeState,   // raw state from PhonePe
+      paymentStatus,          // mapped status in our DB
       transactionId,
       order: updatedOrder,
+      email: emailResponse || { success: false, message: "Email not sent (payment not successful)" },
     });
   } catch (error: any) {
     console.error("Payment status check error:", error);
