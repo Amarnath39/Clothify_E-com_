@@ -42,6 +42,7 @@ export const POST = async (req: NextRequest) => {
         { status: 400 }
       );
     }
+
     const user = await User.findById(userId);
     if (!user) {
       return NextResponse.json(
@@ -49,8 +50,9 @@ export const POST = async (req: NextRequest) => {
         { status: 401 }
       );
     }
+
     const body = await req.json();
-    const { productDetails, couponCode, orderId } = body;
+    const { productDetails, couponCode, orderId, shippingCost = 0 } = body; // ✅ shippingCost comes from frontend
 
     // Validate input
     if (
@@ -70,7 +72,6 @@ export const POST = async (req: NextRequest) => {
     ];
 
     const products = await Product.find({ _id: { $in: uniqueProductIds } });
-    // Fetch product details from the database
 
     if (products.length !== uniqueProductIds.length) {
       return NextResponse.json(
@@ -82,7 +83,6 @@ export const POST = async (req: NextRequest) => {
     // Calculate total actual price and total offer price
     let totalActualPrice = 0;
     let totalOfferPrice = 0;
-    let shippingCost = 0;
     let totalQuantity = 0;
     const outOfStockProducts: string[] = [];
     const shippingAddress = await Address.findById(user.defaultAddress);
@@ -90,30 +90,24 @@ export const POST = async (req: NextRequest) => {
     const processedProductDetails = productDetails
       .map((pd) => {
         const product = products.find((p) => p._id.toString() === pd.product);
-        // console.log(pd, "pd:::::");
         if (product) {
           const quantity = pd.count || 1;
           const selectedSize = pd.size;
 
-          // Find the size object from the product's sizes array
           const sizeObj = product.sizes.find(
             (size: any) => size._id.toString() === selectedSize
           );
-          // console.log(product, pd, selectedSize, sizeObj, "quan::::");
 
           if (!sizeObj || sizeObj.stock < quantity) {
             outOfStockProducts.push(product._id.toString());
             return null;
           } else {
-            // Update total prices
             totalActualPrice += product.actualPrice * quantity;
             totalOfferPrice +=
               (sizeObj.offerPrice || product.actualPrice) * quantity;
           }
           totalQuantity += quantity;
-          //shippingCost = totalQuantity * 100;
 
-          // Return the product and size details statically
           return {
             product: product,
             size: sizeObj,
@@ -124,7 +118,6 @@ export const POST = async (req: NextRequest) => {
       })
       .filter((pd) => pd !== null);
 
-    // If there are out-of-stock products, return them in the response
     if (outOfStockProducts.length > 0) {
       return NextResponse.json(
         {
@@ -136,11 +129,10 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    // Calculate discount based on the coupon code
+    // Apply coupon
     let discount = 0;
     if (couponCode) {
       const coupon = await Coupon.findOne({ couponCode });
-      // console.log(coupon, "coupon");
       if (coupon) {
         const isValid =
           coupon.validity &&
@@ -148,7 +140,6 @@ export const POST = async (req: NextRequest) => {
           coupon.availableFor > coupon.userCount &&
           coupon.purchaseAmount <= totalOfferPrice;
 
-        // console.log(isValid, "isvalid");
         const hasUserUsedCoupon = coupon.user.includes(userId);
         if (isValid && (!hasUserUsedCoupon || coupon.multiUse)) {
           if (coupon.type === "percentage") {
@@ -156,27 +147,21 @@ export const POST = async (req: NextRequest) => {
             discount = Math.min(discount, coupon.amount);
           } else if (coupon.type === "flat") {
             discount = coupon.off;
-            // console.log(discount, coupon.amount, "discount");
             discount = Math.min(discount, coupon.amount);
           }
-          discount = Math.max(discount, 1); // Discount should not exceed total offer price
-          // console.log(discount, coupon.amount, "discount:");
+          discount = Math.max(discount, 1);
 
-          // If multiUse is false, add userId to coupon's userId array
           if (!coupon.multiUse) {
             coupon.user.push(userId);
           }
-          // Increment userCount
           coupon.userCount += 1;
           await coupon.save();
         }
       }
     }
 
-    // let generatedOrderId = await generateOrderId();
-
-    // Calculate the total payable price
-    let totalPayablePrice = totalOfferPrice - discount ;
+    // Final payable price (offer - discount + shipping)
+    let totalPayablePrice = totalOfferPrice - discount + shippingCost;
     totalPayablePrice = Math.max(totalPayablePrice, 1);
 
     let newOrder;
@@ -191,13 +176,12 @@ export const POST = async (req: NextRequest) => {
             payablePrice: totalPayablePrice,
             off: discount,
             shippingAddress,
-            shippingCost
+            shippingCost, // ✅ frontend shipping cost
           },
         },
         { new: true }
       );
     } else {
-      // Create and save the order
       newOrder = new Order({
         orderId: await generateOrderId(),
         user: userId,
@@ -206,13 +190,12 @@ export const POST = async (req: NextRequest) => {
         payablePrice: totalPayablePrice,
         off: discount,
         shippingAddress,
-        shippingCost
-        
+        shippingCost, // ✅ frontend shipping cost
       });
 
       await newOrder.save();
     }
-    // Return the total payable price in the response
+
     return NextResponse.json(
       {
         success: true,
@@ -229,6 +212,7 @@ export const POST = async (req: NextRequest) => {
     );
   }
 };
+
 
 export const GET = async (req: NextRequest) => {
   try {
