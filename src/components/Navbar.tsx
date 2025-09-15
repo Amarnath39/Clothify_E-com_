@@ -172,7 +172,7 @@ const Navbar = () => {
             <div className="flex-shrink-0 md:ml-24 flex items-center">
     <Link href="/" className="flex items-center">
       <img
-  src="/assets/static/logo/new.jpeg"
+  src="/assets/static/logo/UDAYAADAIN.svg"
   alt="Logo"
   className="h-20 md:h-[100px] lg:h-[104px] w-auto object-contain"
 />
@@ -221,7 +221,7 @@ const Navbar = () => {
                 <FaRegHeart className="h-5 w-5" style={{ color: "#eab565" }} />
               ) : (
                 <FaHeart className="h-5 w-5" style={{ color: "#eab565" }} />
-              )}
+              )}  
             </Link>
 
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
