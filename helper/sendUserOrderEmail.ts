@@ -1,49 +1,61 @@
 import nodemailer from "nodemailer";
-import { orderUserTemplate } from "../emailTemplate/order-template-user";
-import { getOrderInvoicePDF } from "../src/app/utils/getOrderInvoice";
 
-export interface OrderDetails {
-  orderId: string;
-  customerName: string;
-  totalAmount: string;
-  orderDate: string;
-  customerEmail: string;
-  user?: any;
-}
-
-export const sendUserOrderEmail = async (orderDetails: any): Promise<void> => {
+export const sendUserOrderEmail = async (order: any): Promise<void> => {
   try {
+    // ⚡ ZeptoMail transporter
     const transporter = nodemailer.createTransport({
       host: "smtp.zeptomail.in",
       port: 587,
-      secure: false,
       auth: {
-        user: "emailapikey",
-        pass:" PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==",
+        user: "emailapikey", // replace with your ZeptoMail username/API key
+        pass: "PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==", // ZeptoMail password/API secret
       },
     });
 
-    const emailContent = orderUserTemplate(orderDetails);
-    const invoice = await getOrderInvoicePDF(orderDetails._id);
+    // HTML template
+    const htmlTemplate = `
+      <div style="font-family: Arial, sans-serif; padding:20px; border:1px solid #eee; border-radius:10px;">
+        <h2 style="color:#2E86C1;">✅ Payment Confirmed!</h2>
+        <p>Dear Customer,</p>
+        <p>Your payment has been successfully received. Here are your order details:</p>
 
-    const mailOptions = {
+        <h3>📦 Order Summary</h3>
+        <table style="width:100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding:8px; border:1px solid #ddd;">Order ID</td>
+            <td style="padding:8px; border:1px solid #ddd;">${order.orderId}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px; border:1px solid #ddd;">Transaction ID</td>
+            <td style="padding:8px; border:1px solid #ddd;">${order.transactionId}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px; border:1px solid #ddd;">Amount Paid</td>
+            <td style="padding:8px; border:1px solid #ddd;">₹${order.payablePrice}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px; border:1px solid #ddd;">Payment Status</td>
+            <td style="padding:8px; border:1px solid #ddd; color:green;"><b>${order.paymentStatus}</b></td>
+          </tr>
+        </table>
+
+        <p style="margin-top:20px;">We will process your order shortly and notify you once it is shipped. 🚚</p>
+
+        <p>Thank you for shopping with us! <br/>- <b>Udayaada Team</b></p>
+      </div>
+    `;
+
+    // Send email
+    await transporter.sendMail({
       from: '"Udayaada" <orders@udayaada.in>',
-      to: orderDetails?.user?.email || orderDetails.customerEmail,
-      subject: "🧾 Order Confirmation",
-      html: emailContent,
-      attachments: [
-        {
-          filename: invoice.filename,
-          content: Buffer.from(invoice.buffer),
-          contentType: "application/pdf",
-        },
-      ],
-    };
+      to: order.user?.email || order.customerEmail, // ensure email exists
+      subject: `✅ Payment Confirmed - Order #${order.orderId}`,
+      html: htmlTemplate,
+    });
 
-    await transporter.sendMail(mailOptions);
-    console.log("✅ Order confirmation email sent to:", orderDetails.customerEmail);
+    console.log("📧 Order confirmation email sent successfully to:", order.user?.email || order.customerEmail);
   } catch (error) {
-    console.error("❌ Error sending order confirmation email:", error);
+    console.error("❌ Email send error:", error);
     throw error;
   }
 };

@@ -53,7 +53,7 @@ export async function GET(req: Request, { params }: Params) {
         currentStatus,
       },
       { new: true }
-    );
+    ).populate("user", "email name"); // ✅ populate user email & name if needed
 
     if (!updatedOrder) {
       return NextResponse.json(
@@ -63,9 +63,12 @@ export async function GET(req: Request, { params }: Params) {
     }
 
     // 📧 Send confirmation email if payment is successful
-    if (paymentStatus === "Paid") {
+    if (paymentStatus === "Paid" && updatedOrder.orderId) {
       try {
-        await sendUserOrderEmail(updatedOrder);
+        await sendUserOrderEmail({
+          ...updatedOrder.toObject(),
+          orderId: updatedOrder.orderId, // ✅ ensure orderId is included
+        });
       } catch (emailError) {
         console.error("❌ Failed to send order confirmation email:", emailError);
       }
