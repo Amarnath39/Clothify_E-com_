@@ -186,7 +186,7 @@ const OrdersPage = () => {
 
     try {
       const response = await axios.patch(
-        `/api/payment/status/${orderId}`,
+        `/api/admin/order/${orderId}`,
         payload
       );
       if (response.data.success) {
