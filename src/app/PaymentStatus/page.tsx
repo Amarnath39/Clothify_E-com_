@@ -13,40 +13,48 @@ export default function PaymentStatusPage() {
 
   // Fetch payment status from API
   useEffect(() => {
-    if (!orderId) return;
+  if (!orderId) return;
 
-    const fetchStatus = async () => {
-      try {
-        const res = await fetch(`/api/payment/status/${orderId}`, {
-          method: 'GET',
-          cache: 'no-store',
-        });
+  const fetchStatus = async () => {
+    try {
+      // ✅ Get userId from localStorage (or wherever you store user info)
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
 
-        const data = await res.json();
+      const res = await fetch(`/api/payment/status/${orderId}`, {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          "x-user-id": user?._id || "", // ✅ send user._id in header
+        },
+      });
 
-        if (res.ok && data?.status) {
-          switch (data.status) {
-            case 'COMPLETED':
-            case 'SUCCESS':
-              setStatus('success');
-              break;
-            case 'FAILED':
-              setStatus('failed');
-              break;
-            default:
-              setStatus('pending');
-          }
-        } else {
-          setStatus('failed');
+      const data = await res.json();
+
+      if (res.ok && data?.status) {
+        switch (data.status) {
+          case "COMPLETED":
+          case "SUCCESS":
+            setStatus("success");
+            break;
+          case "FAILED":
+            setStatus("failed");
+            break;
+          default:
+            setStatus("pending");
         }
-      } catch (err) {
-        console.error('Error fetching payment status:', err);
-        setStatus('failed');
+      } else {
+        setStatus("failed");
       }
-    };
+    } catch (err) {
+      console.error("Error fetching payment status:", err);
+      setStatus("failed");
+    }
+  };
 
-    fetchStatus();
-  }, [orderId]);
+  fetchStatus();
+}, [orderId]);
+
 
   // Auto-redirect when payment is successful
   useEffect(() => {
