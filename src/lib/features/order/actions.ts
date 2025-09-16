@@ -54,14 +54,19 @@ export const successOrder = createAsyncThunk(
 export const refreshOrderStatus = createAsyncThunk(
   "/refreshOrders",
 
-  async (data: any, { rejectWithValue, getState }) => {
+  async (
+    data: { orderId: string; transactionId: string; userId?: string }, // ✅ added userId
+    { rejectWithValue, getState }
+  ) => {
     const token = selectToken(getState());
     try {
       const response = await apiConnector(
-        "post",
-      `/api/payment/status/${data.orderId}`,
-        { transactionId: data.transactionId },
-        {},
+        "get", // ✅ GET instead of POST
+        `/api/payment/status/${data.orderId}`,
+        null,
+        {
+          "x-user-id": data.userId || "", // ✅ use optional userId
+        },
         null
       );
       return response.data;
@@ -70,3 +75,4 @@ export const refreshOrderStatus = createAsyncThunk(
     }
   }
 );
+
