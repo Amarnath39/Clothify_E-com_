@@ -291,6 +291,11 @@ const OrdersPage = () => {
       toast(payload?.msg ?? "refresh");
       callGetOrdersApi();
     } catch (error) {}
+
+
+
+
+
   };
 
   if (loading) {
@@ -450,7 +455,7 @@ const OrdersPage = () => {
                         <div
                           onClick={() =>
                             refreshTransactionState(
-                              order._id,
+                              order.orderId,
                               order.tempTransactionId
                             )
                           }
