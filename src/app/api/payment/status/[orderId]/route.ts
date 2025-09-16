@@ -48,12 +48,7 @@ export async function GET(req: Request, { params }: Params) {
     }
 
     // 🔹 Call PhonePe API
-    // 🔹 Call PhonePe API with x-user-id header
-const response: any = await getPhonePeClient().getOrderStatus(orderId, {
-  headers: {
-    "x-user-id": user._id.toString(), // ✅ Send userId in header
-  },
-});
+    const response: any = await getPhonePeClient().getOrderStatus(orderId);
     console.log("PhonePe Response:", response);
 
     // Extract required details from PhonePe response
