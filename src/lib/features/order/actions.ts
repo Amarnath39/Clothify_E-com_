@@ -59,7 +59,7 @@ export const refreshOrderStatus = createAsyncThunk(
     try {
       const response = await apiConnector(
         "post",
-        `/api/admin/order/refresh/${data.orderId}`,
+      `/api/payment/status/${data.orderId}`,
         { transactionId: data.transactionId },
         {},
         null
