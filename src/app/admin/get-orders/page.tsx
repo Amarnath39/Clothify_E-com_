@@ -231,7 +231,7 @@ const OrdersPage = () => {
     };
     try {
       const response = await axios.patch(
-        `/api/admin/order/${orderId}`,
+        `/api/payment/status/${orderId}`,
         payload
       );
       if (response.data.success) {
@@ -344,7 +344,7 @@ const OrdersPage = () => {
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Order Status" />
           </SelectTrigger>
-          <SelectContent>
+          {/* <SelectContent>
             <SelectItem value="all">All Order Status</SelectItem>
             <SelectItem value="Pending">Pending</SelectItem>
             <SelectItem value="CHECKOUT">CHECKOUT</SelectItem>
@@ -359,7 +359,20 @@ const OrdersPage = () => {
             <SelectItem value="Applied for exchange">
               Applied for exchange
             </SelectItem>
-          </SelectContent>
+          </SelectContent> */}
+          <SelectContent>
+  <SelectItem value="all">All Order Status</SelectItem>
+  <SelectItem value="PENDING">PENDING</SelectItem>
+  <SelectItem value="CONFIRMED">CONFIRMED</SelectItem>
+  <SelectItem value="PROCESSING">PROCESSING</SelectItem>
+  <SelectItem value="SHIPPED">SHIPPED</SelectItem>
+  <SelectItem value="DELIVERED">DELIVERED</SelectItem>
+  <SelectItem value="CANCELLED">CANCELLED</SelectItem>
+  <SelectItem value="EXCHANGE_APPROVED">EXCHANGE_APPROVED</SelectItem>
+  <SelectItem value="EXCHANGE_CANCELLED">EXCHANGE_CANCELLED</SelectItem>
+  <SelectItem value="APPLIED_FOR_EXCHANGE">APPLIED_FOR_EXCHANGE</SelectItem>
+</SelectContent>
+
         </Select>
         <div className="relative">
           <DatePicker
