@@ -5,7 +5,7 @@ on:
       - main
 jobs:
   get_commit_hash:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: get_commit_hash
     outputs:
       commitHash: ${{ steps.create_commit_hash.outputs.SHORT_COMMIT_HASH }}
@@ -16,7 +16,7 @@ jobs:
       - name: Show commit hash
         run: echo "Short commit hash is ${{ steps.create_commit_hash.outputs.SHORT_COMMIT_HASH }}"
   docker_build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: docker_build
     needs:
       - get_commit_hash
@@ -40,7 +40,7 @@ jobs:
         id: get_docker_image_tag
         run: echo "DOCKER_IMAGE_TAG=commit_${{needs.get_commit_hash.outputs.commitHash}}" >> $GITHUB_OUTPUT
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: Continuous Deployment
     needs:
       - docker_build
