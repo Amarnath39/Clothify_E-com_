@@ -231,7 +231,7 @@ const OrdersPage = () => {
     };
     try {
       const response = await axios.patch(
-        `/api/payment/status/${orderId}`,
+        `/api/admin/order/${orderId}`,
         payload
       );
       if (response.data.success) {
@@ -291,6 +291,11 @@ const OrdersPage = () => {
       toast(payload?.msg ?? "refresh");
       callGetOrdersApi();
     } catch (error) {}
+
+
+
+
+
   };
 
   if (loading) {
@@ -450,7 +455,7 @@ const OrdersPage = () => {
                         <div
                           onClick={() =>
                             refreshTransactionState(
-                              order._id,
+                              order.orderId,
                               order.tempTransactionId
                             )
                           }
