@@ -193,11 +193,11 @@ try {
 
   const dtdcOptions = {
     method: "post",
-    url: `${process.env.DTDC_BASE_URL}/api/customer/integration/consignment/upload/softdata/v2`,
+    url: `https://app.shipsy.in/api/customer/integration/consignment/upload/softdata/v2`,
     headers: {
       accept: "application/json",
       "Content-Type": "application/json",
-      "api-key": process.env.API_KEY,
+      "api-key": 17650e27594130e98548596eeb92aa,
     },
     data: dtdcPayload,
   };
