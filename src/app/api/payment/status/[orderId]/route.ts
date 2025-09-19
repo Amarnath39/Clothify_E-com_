@@ -5,6 +5,8 @@ import User from "../../../../../../model/User";
 import { connectDB } from "../../../../../../db";
 import { sendUserOrderEmail } from "../../../../../../helper/sendUserOrderEmail";
 import mongoose from "mongoose";
+import axios from "axios";
+import { generateRandomId } from "../../../../../../helper/generateRandomId";
 
 interface UserType {
   _id: mongoose.Types.ObjectId;
@@ -27,13 +29,13 @@ export async function GET(req: Request, { params }: Params) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
 
-    // 🔹 Get order first (so we can use the stored user reference)
-    const order = await Order.findOne({ tempTransactionId: orderId });
+    // 🔹 Get order first
+    const order = await Order.findOne({ tempTransactionId: orderId }).populate("productDetails.product");
     if (!order) {
       return NextResponse.json({ error: "Order not found in database" }, { status: 404 });
     }
 
-    // 🔹 Use user field from order
+    // 🔹 Validate user
     if (!mongoose.Types.ObjectId.isValid(order.user)) {
       return NextResponse.json({ error: "Invalid userId in order" }, { status: 400 });
     }
@@ -61,7 +63,7 @@ export async function GET(req: Request, { params }: Params) {
       currentStatus = "FAILED";
     }
 
-    // 🔹 Update order in DB
+    // 🔹 Update order
     const updatedOrder = await Order.findOneAndUpdate(
       { tempTransactionId: orderId },
       {
@@ -70,7 +72,7 @@ export async function GET(req: Request, { params }: Params) {
         currentStatus,
       },
       { new: true }
-    );
+    ).populate("productDetails.product");
 
     // 📧 Send confirmation email if payment success
     let emailResponse: { success: boolean; message: string; error?: any } | null = null;
@@ -81,7 +83,149 @@ export async function GET(req: Request, { params }: Params) {
         orderId: updatedOrder.orderId || updatedOrder._id.toString(),
         customerEmail: user.email,
       });
+
+      // inside your if (paymentStatus === "PAYMENT_SUCCESS" && updatedOrder) { ... }
+
+try {
+  const customerNo = generateRandomId(15);
+
+  // Map each product into a v2 payload object
+  const consignments = updatedOrder.productDetails.map((v: any) => ({
+    action_type: "single_pickup",
+    consignment_type: "forward",
+    movement_type: "forward",
+    load_type: "NON-DOCUMENT",
+    description: v.product.name,
+    customer_code: "OO3275",
+    reference_number: "", // you can generate or leave blank
+    service_type_id: "B2C Priority",
+
+    // Optional COD fields (skip if prepaid)
+    cod_favor_of: updatedOrder.shippingAddress.name,
+    cod_collection_mode: "cash",
+    cod_amount: v.product.offerPrice,
+
+    // Dimensions & weight
+    dimension_unit: "cm",
+    length: "1",
+    width: "1",
+    height: "1",
+    weight_unit: "kg",
+    weight: "0.25",
+    num_pieces: v.count + (v.freeCount || 0),
+
+    // Values
+    declared_value: v.product.offerPrice,
+    invoice_amount: v.product.offerPrice,
+    invoice_number: `INV-${Date.now()}`,
+    invoice_date: new Date().toISOString().slice(0, 10),
+    declared_value_without_tax: v.product.offerPrice,
+    customer_reference_number: customerNo,
+
+    // Origin (your store/warehouse)
+    origin_details: {
+      name: "Udayaada",
+      phone: "8123000558",
+      address_line_1: "Thalaserry",
+      address_line_2: "Post Palayad",
+      pincode: "670661",
+      city: "CANNANORE",
+      state: "Kerala",
+      country: "India",
+    },
+
+    // Destination (customer address)
+    destination_details: {
+      name: updatedOrder.shippingAddress.name,
+      phone: updatedOrder.shippingAddress.mobile,
+      address_line_1: updatedOrder.shippingAddress.address,
+      address_line_2: "",
+      pincode: updatedOrder.shippingAddress.zipCode,
+      city: updatedOrder.shippingAddress.state,
+      state: updatedOrder.shippingAddress.state,
+      country: "India",
+    },
+
+    // Tax details (dummy example)
+    tax_details: [
+      {
+        cgst: "0.0",
+        sgst: "0.0",
+        igst: "0.0",
+        total_tax: "0.0",
+        sender_gstin: "22AAAAA0000A1Z4",
+      },
+    ],
+
+    // Return details (optional)
+    return_details: {
+      name: "Udayaada",
+      phone: "8123000558",
+      address_line_1: "Thalaserry",
+      address_line_2: "Post Palayad",
+      pincode: "670661",
+      city: "CANNANORE",
+      state: "Kerala",
+      country: "India",
+    },
+
+    // Pieces detail (optional granularity)
+    pieces_detail: [
+      {
+        description: v.product.name,
+        declared_value: v.product.offerPrice,
+        volume: "100",
+        weight: "0.25",
+        height: "1",
+        length: "1",
+        width: "1",
+        weight_unit: "kg",
+        dimension_unit: "cm",
+        volume_unit: "cm3",
+        piece_product_code: `P-${Date.now()}`,
+        reference_image_url: v.product.image || "",
+      },
+    ],
+  }));
+
+  // v2 expects the body as { consignments: [...] }
+  const dtdcPayload = { consignments };
+
+  const dtdcOptions = {
+    method: "post",
+    url: `${process.env.DTDC_BASE_URL}/api/customer/integration/consignment/upload/softdata/v2`,
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      "api-key": process.env.API_KEY,
+    },
+    data: dtdcPayload,
+  };
+
+  const dtdcRes = await axios.request(dtdcOptions);
+
+  if (dtdcRes.data?.data?.[0]?.success) {
+    await Order.findByIdAndUpdate(
+      updatedOrder._id,
+      {
+        $set: {
+          dtdc: {
+            referenceNumber: dtdcRes.data.data[0].reference_number,
+            customerReferenceNumber: dtdcRes.data.data[0].customer_reference_number,
+          },
+        },
+      },
+      { new: true }
+    );
+  } else {
+    console.warn("DTDC integration failed:", dtdcRes.data);
+  }
+} catch (dtdcErr) {
+  console.error("DTDC API Error (v2):", dtdcErr);
+}
+
     }
+    
 
     return NextResponse.json({
       success: true,

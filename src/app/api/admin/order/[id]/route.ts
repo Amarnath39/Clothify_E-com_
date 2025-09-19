@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Order from "../../../../../../model/Order";
 import Admin from "../../../../../../model/Admin";
 import { sendOrderShippedEmail } from "../../../../../../helper/sendOrderShippedEmail";
-import { wabisWhatsApp } from "../../../../../../helper/whatsappNotifier"; // ✅ Import your WhatsApp notifier
+import { sendOrderConfirmation } from "../../../../../../helper/whatsappNotifier"; // ✅ Import your first function
 
 export const PATCH = async (
   req: NextRequest,
@@ -65,15 +65,14 @@ export const PATCH = async (
       // ✅ Send email
       await sendOrderShippedEmail(emailDetails);
 
-      // ✅ Send WhatsApp message
-      const whatsappResp = await wabisWhatsApp.sendOrderStatusUpdate(
-        order.user.phone, // Customer phone
-        order.user.name, // Customer name
-        order._id.toString(), // Order ID
-        "Shipped", // Status
-        order.trackingId,
-        order.deliveryPartner,
-        "" // optional invoiceUrl
+      // ✅ Send WhatsApp confirmation (using your first function)
+      const whatsappResp = await sendOrderConfirmation(
+        order.user.name,          // customerName
+        order.user.phone,         // phoneNumber
+        order._id.toString(),     // orderId
+        order.trackingId || "",   // trackingId
+        "",                       // invoiceUrl (optional here)
+        order.deliveryPartner || "DTDC" // deliveryPartner
       );
 
       console.log("📲 WhatsApp notification result:", whatsappResp);

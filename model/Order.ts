@@ -81,6 +81,11 @@ const Order = new mongoose.Schema(
       type: Object,
       default: null,
     },
+
+     dtdc: {
+      referenceNumber: { type: String, default: null },
+      customerReferenceNumber: { type: String, default: null },
+    },
   },
   { timestamps: true }
 );
