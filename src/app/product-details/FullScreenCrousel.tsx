@@ -42,12 +42,20 @@ const ProductGalleryPage = ({
             {/* Spacing to prevent content from being hidden under fixed header */}
             <div className="mt-20 flex flex-col items-center gap-6">
               {productData?.img.map((image, index) => (
+                // <img
+                //   key={index}
+                //   src={image}
+                //   alt={`Product ${index + 1}`}
+                //   className="w-[350px] h-[350px] sm:w-[500px] sm:h-[500px] max-w-4xl rounded-lg shadow-md object-cover"
+                // />
                 <img
                   key={index}
                   src={image}
                   alt={`Product ${index + 1}`}
-                  className="w-[350px] h-[350px] sm:w-[500px] sm:h-[500px] max-w-4xl rounded-lg shadow-md object-cover"
+                  className="rounded-lg shadow-md mx-auto"
+                  style={{ width: "auto", height: "auto", maxWidth: "100%", maxHeight: "90vh" }}
                 />
+
               ))}
             </div>
           </div>

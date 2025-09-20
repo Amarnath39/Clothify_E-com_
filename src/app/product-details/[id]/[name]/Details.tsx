@@ -123,7 +123,7 @@ const ProductDetails = ({
 
   const handleThumbnailClick = (index) => {
     setCurrentIndex(index);
-  };
+  };  
 
   useEffect(() => {
     if (mainSwiper) {
@@ -233,6 +233,7 @@ const ProductDetails = ({
                   alt={`Thumbnail ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
+
               </button>
             ))}
           </div>
@@ -240,11 +241,10 @@ const ProductDetails = ({
           {/* Main Image */}
           <div className="w-full max-w-lg">
             {productData?.img && productData.img.length > 0 && (
-              <img
+             <img
                 src={productData.img[currentIndex]}
                 alt={productData?.name}
-                className="w-full h-[400px] sm:h-[650px] rounded-lg shadow-lg transition-all duration-300 cursor-pointer"
-                onClick={() => setIsModalOpen(true)}
+                className="max-w-full max-h-[650px] rounded-lg shadow-lg transition-all duration-300 cursor-pointer object-contain mx-auto"
               />
             )}
           </div>
