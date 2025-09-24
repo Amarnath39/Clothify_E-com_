@@ -96,7 +96,7 @@ try {
     movement_type: "forward",
     load_type: "NON-DOCUMENT",
     description: v.product.name,
-    customer_code: "OO3275",
+    customer_code: "OO3609",
     reference_number: "", // you can generate or leave blank
     service_type_id: "B2C Priority",
 
@@ -193,7 +193,7 @@ try {
 
   const dtdcOptions = {
     method: "post",
-    url: `https://app.shipsy.in/api/customer/integration/consignment/upload/softdata/v2`,
+    url: `https://dtdcapi.shipsy.io/api/customer/integration/consignment/softdata`,
     headers: {
       accept: "application/json",
       "Content-Type": "application/json",
