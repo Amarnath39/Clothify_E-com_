@@ -85,7 +85,6 @@ export async function GET(req: Request, { params }: Params) {
       });
 
       // inside your if (paymentStatus === "PAYMENT_SUCCESS" && updatedOrder) { ... }
-
 try {
   const customerNo = generateRandomId(15);
 
@@ -225,8 +224,7 @@ try {
 }
 
     }
-    
-
+  
     return NextResponse.json({
       success: true,
       status: phonePeState,
