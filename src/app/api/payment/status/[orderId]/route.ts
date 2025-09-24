@@ -15,11 +15,9 @@ interface UserType {
   phone?: string;
   role?: string;
 }
-
 interface Params {
   params: { orderId: string }; // frontend sends tempTransactionId
 }
-
 export async function GET(req: Request, { params }: Params) {
   try {
     await connectDB();
@@ -28,7 +26,6 @@ export async function GET(req: Request, { params }: Params) {
     if (!orderId) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
-
     // 🔹 Get order first
     const order = await Order.findOne({ tempTransactionId: orderId }).populate("productDetails.product");
     if (!order) {
@@ -39,7 +36,6 @@ export async function GET(req: Request, { params }: Params) {
     if (!mongoose.Types.ObjectId.isValid(order.user)) {
       return NextResponse.json({ error: "Invalid userId in order" }, { status: 400 });
     }
-
     const user = await User.findById(order.user).lean<UserType>();
     if (!user || !user.email) {
       return NextResponse.json({ error: "User not found or missing email" }, { status: 404 });
@@ -127,7 +123,7 @@ try {
       phone: "8123000558",
       address_line_1: "Thalaserry",
       address_line_2: "Post Palayad",
-      pincode: "670102",
+      pincode:  "670102",
       city: "CANNANORE",
       state: "Kerala",
       country: "India",
@@ -162,7 +158,7 @@ try {
       phone: "8123000558",
       address_line_1: "Thalaserry",
       address_line_2: "Post Palayad",
-      pincode: "670102",
+      pincode:  "670102",
       city: "CANNANORE",
       state: "Kerala",
       country: "India",
