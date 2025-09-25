@@ -8,7 +8,7 @@ import { Toaster } from "react-hot-toast";
 import CustomeLayout from "./CustomeLayout";
 import { Toaster as Toast2 } from "@/components/ui/toaster";
 import BottomNavbar from "@/components/BottomNavigation";
-import useWindowSize from "@/hooks/useWindowSize";
+
 const roboto = Roboto({
   subsets: ["latin"],
   weight: ["300", "400", "500", "700"],
@@ -25,7 +25,7 @@ const quicksand = Quicksand({
   weight: ["400", "700"],
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: {
     default: "Udayaada",
     template: "%s | Udayaada",
@@ -33,9 +33,34 @@ export const metadata = {
   description:
     "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style.",
   icons: {
-    icon: "/assets/static/logo/favicon.ico",
-    apple: "/assets/static/logo/apple-touch-icon.png",
-    android: "/assets/static/logo/android-chrome-192x192.png",
+    // ✅ use absolute URLs for consistency (CDN / SEO / caching)
+    icon: [
+      {
+        url: "https://www.udayaada.in/assets/static/logo/favicon-1.ico",
+        sizes: "any",
+      },
+      {
+        url: "https://www.udayaada.in/assets/static/logo/favicon-32x32.png",
+        type: "image/png",
+        sizes: "32x32",
+      },
+      {
+        url: "https://www.udayaada.in/assets/static/logo/favicon-16x16.png",
+        type: "image/png",
+        sizes: "16x16",
+      },
+    ],
+    apple: "https://www.udayaada.in/assets/static/logo/apple-touch-icon.png",
+    other: [
+      {
+        rel: "android-chrome",
+        url: "https://www.udayaada.in/assets/static/logo/android-chrome-192x192.png",
+      },
+      {
+        rel: "android-chrome",
+        url: "https://www.udayaada.in/assets/static/logo/android-chrome-512x512.png",
+      },
+    ],
   },
   keywords:
     "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style.",
@@ -49,7 +74,7 @@ export const metadata = {
     siteName: "Udayaada",
     images: [
       {
-        url: "https://www.udayaada.in/assets/static/logo/og-image.png", // ✅ served from public/
+        url: "https://www.udayaada.in/assets/static/logo/og-image.png",
         width: 1200,
         height: 630,
         alt: "Udayaada OpenGraph Image",
@@ -64,17 +89,15 @@ export const metadata = {
     title: "Udayaada",
     description:
       "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style",
-    images: ["https://www.udayaada.in/assets/static/logo/og-image.png"], // ✅ Twitter also uses this
+    images: ["https://www.udayaada.in/assets/static/logo/og-image.png"],
   },
 };
 
-
-
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <head>
@@ -85,7 +108,6 @@ export default function RootLayout({
           type="font/ttf"
           crossOrigin="anonymous"
         />
-        {/* <link rel="icon" href="/assets/static/logo/Bgremoved_1.png" sizes="any" /> */}
       </head>
       <body className={` ${mulish.className} `}>
         <ThemeProvider
@@ -97,7 +119,6 @@ export default function RootLayout({
           <StoreProvider>
             <Toaster />
             <Toast2 />
-
             <CustomeLayout>{children}</CustomeLayout>
             <BottomNavbar />
           </StoreProvider>
