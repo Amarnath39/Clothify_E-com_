@@ -151,7 +151,6 @@ try {
         sender_gstin: "22AAAAA0000A1Z4",
       },
     ],
-
     // Return details (optional)
     return_details: {
       name: "Udayaada",
