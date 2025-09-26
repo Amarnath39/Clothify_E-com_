@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { connectDB } from '../../../../../db';
 import Video from '../../../../../model/video';
-
-const uploadDir = path.join(process.cwd(), 'public/uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+import { uploadFile } from '../../../../../helper/uploadFile';
 
 function formatId(num: number): string {
   return num.toString().padStart(3, '0');
@@ -47,13 +43,8 @@ export async function POST(req: NextRequest) {
   const nextId = formatId(nextIdNum);
 
   const newFilename = `${nextId}.${ext}`;
-  const filePath = path.join(uploadDir, newFilename);
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  fs.writeFileSync(filePath, buffer);
-
-  const videoUrl = `/uploads/${newFilename}`;
-
+  const videoUrl = await uploadFile("server/video", file);
+  
   // Save to DB
   await Video.create({
     videoId: nextId,

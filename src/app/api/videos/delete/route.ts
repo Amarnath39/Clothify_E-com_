@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs';
 import { connectDB } from '../../../../../db';
 import Video from '../../../../../model/video';
+import { deleteFile } from '../../../../../helper/deleteFile';
 
 export async function DELETE(req: NextRequest) {
   await connectDB();
@@ -21,11 +20,12 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Video not found in database' }, { status: 404 });
     }
 
-    // 2. Delete the video file
-    const filePath = path.join(process.cwd(), 'public/uploads', video.filename);
+    // 2. Delete the video file from the filesystem
+    const status = await deleteFile(video.url);
 
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // Check if file deletion was successful
+    if (!status) {
+      throw new Error('Failed to delete video file from filesystem');
     }
 
     // 3. Delete the document from DB
