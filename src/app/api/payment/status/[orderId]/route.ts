@@ -7,7 +7,6 @@ import { sendUserOrderEmail } from "../../../../../../helper/sendUserOrderEmail"
 import { sendOrderConfirmation } from "../../../../../../helper/whatsappNotifier";
 import mongoose from "mongoose";
 import axios from "axios";
-import { generateRandomId } from "../../../../../../helper/generateRandomId";
 
 interface UserType {
   _id: mongoose.Types.ObjectId;
@@ -30,7 +29,7 @@ export async function GET(req: Request, { params }: Params) {
       return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
 
-    // 🔹 Get order first
+    // 🔹 Get order
     const order = await Order.findOne({ tempTransactionId: orderId }).populate(
       "productDetails.product"
     );
@@ -68,15 +67,10 @@ export async function GET(req: Request, { params }: Params) {
     // 🔹 Update order
     const updatedOrder = await Order.findOneAndUpdate(
       { tempTransactionId: orderId },
-      {
-        paymentStatus,
-        transactionId,
-        currentStatus,
-      },
+      { paymentStatus, transactionId, currentStatus },
       { new: true }
     ).populate("productDetails.product");
 
-    // 📧 Send confirmation email if payment success
     let emailResponse: { success: boolean; message: string; error?: any } | null = null;
 
     if (paymentStatus === "PAYMENT_SUCCESS" && updatedOrder) {
@@ -90,7 +84,6 @@ export async function GET(req: Request, { params }: Params) {
       // ------------------ DTDC Integration ------------------
       try {
         const customerNo = `CUST${Date.now()}${Math.floor(Math.random() * 10000)}`;
-
         const consignments = updatedOrder.productDetails.map((v: any) => ({
           customer_code: "OO3609",
           load_type: "NON-DOCUMENT",
@@ -101,11 +94,9 @@ export async function GET(req: Request, { params }: Params) {
           height: "1",
           weight_unit: "kg",
           weight: "0.25",
-
           description: v.product.name,
           num_pieces: v.count + (v.freeCount || 0),
           declared_value: v.product.offerPrice || updatedOrder.payablePrice,
-
           origin_details: {
             name: "Udayaada",
             phone: 8123000558,
@@ -115,7 +106,6 @@ export async function GET(req: Request, { params }: Params) {
             city: "CANNANORE",
             state: "Kerala",
           },
-
           destination_details: {
             name: updatedOrder.shippingAddress.name,
             phone: updatedOrder.shippingAddress.mobile,
@@ -168,13 +158,18 @@ export async function GET(req: Request, { params }: Params) {
 
       // ------------------ WhatsApp Order Confirmation ------------------
       try {
+        const customerPhone = updatedOrder.shippingAddress?.mobile || user.phone || "";
+        const customerName = updatedOrder.shippingAddress?.name || user.name || "Customer";
+        const trackingId = updatedOrder.dtdc?.referenceNumber || "";
+        const invoiceUrl = updatedOrder.invoiceUrl || "";
+
         const whatsappResponse = await sendOrderConfirmation(
-          user.name || updatedOrder.shippingAddress.name,       // Customer Name
-          user.phone || updatedOrder.shippingAddress.mobile,    // Customer Phone
-          updatedOrder.orderId || updatedOrder._id.toString(),  // Order ID
-          updatedOrder.dtdc?.referenceNumber || "",             // Tracking ID (if DTDC success)
-          updatedOrder.invoiceUrl || "",                        // Invoice URL
-          "DTDC"                                                // Delivery Partner
+          customerName,
+          customerPhone,
+          updatedOrder.orderId || updatedOrder._id.toString(),
+          trackingId,
+          invoiceUrl,
+          "DTDC"
         );
 
         console.log("✅ WhatsApp Confirmation Response:", whatsappResponse);

@@ -8,7 +8,7 @@ interface SendOrderConfirmationResponse {
 }
 
 /**
- * Send order confirmation via WhatsApp for Panchali Vastra
+ * Send order confirmation via WhatsApp
  */
 export const sendOrderConfirmation = async (
   customerName: string,
@@ -20,7 +20,7 @@ export const sendOrderConfirmation = async (
 ): Promise<SendOrderConfirmationResponse> => {
   try {
     // ✅ Default country code (India)
-    const countryCode = "91";
+    const countryCode = "91"; // without '+'
 
     // ✅ Ensure phone number has country code and remove any '+'
     let formattedPhoneNumber = phoneNumber.replace(/\+/g, "");
@@ -32,22 +32,20 @@ export const sendOrderConfirmation = async (
     const formData = new URLSearchParams({
       apiToken: "10641|R3bJazoz4iohOk42cyQhfOrCo4x0q2ZSuJezDk6m346fe236",
       phoneNumberID: "627218387152627",
-      botTemplateID: "178651",
-      "templateVariable-variable1-1": customerName || "Jos", // Customer name
-      "templateVariable-variable2-2": "Udayaada", // Brand / Store name
-      "templateVariable-variable3-3": orderId, // Order ID
-      "templateVariable-variable4-4": trackingId || "Will be updated soon", // Tracking ID
-      "templateVariable-variable5-5": invoiceUrl || "Not available", // Invoice URL
-      "templateVariable-variable6-6": deliveryPartner || "DTDC", // Delivery partner
+      botTemplateID: "208110",
+      "templateVariable-variable1-1": customerName || "Jos",
+      "templateVariable-variable2-2": "Udayaada",
+      "templateVariable-variable3-3": orderId,
+      "templateVariable-variable4-4": trackingId || "Will be updated soon",
+      "templateVariable-variable5-5": invoiceUrl || "Not available",
+      "templateVariable-variable6-6": deliveryPartner || "DTDC",
       sendToPhoneNumber: formattedPhoneNumber,
     });
 
     console.log("📨 WhatsApp Request Data:", formData.toString());
 
-    // ✅ Send request to Wabis API
     const response: AxiosResponse = await axios.post(
-      process.env.WABIS_BASE_URL ||
-        "https://bot.wabis.in/api/v1/whatsapp/send/template",
+      process.env.WABIS_BASE_URL || "https://bot.wabis.in/api/v1/whatsapp/send/template",
       formData.toString(),
       {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
