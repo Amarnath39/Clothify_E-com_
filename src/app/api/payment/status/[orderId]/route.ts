@@ -29,7 +29,9 @@ export async function GET(req: Request, { params }: Params) {
     }
 
     // 🔹 Get order first
-    const order = await Order.findOne({ tempTransactionId: orderId }).populate("productDetails.product");
+    const order = await Order.findOne({ tempTransactionId: orderId }).populate(
+      "productDetails.product"
+    );
     if (!order) {
       return NextResponse.json({ error: "Order not found in database" }, { status: 404 });
     }
@@ -82,26 +84,14 @@ export async function GET(req: Request, { params }: Params) {
         customerEmail: user.email,
       });
 
-      // ------------------ ✅ DTDC Integration with payablePrice ------------------
+      // ------------------ ✅ DTDC Integration (simplified payload) ------------------
       try {
         const customerNo = `CUST${Date.now()}${Math.floor(Math.random() * 10000)}`;
 
-
-        // Use `payablePrice` from order for declared & invoice values
         const consignments = updatedOrder.productDetails.map((v: any) => ({
-          action_type: "single_pickup",
-          consignment_type: "forward",
-          movement_type: "forward",
-          load_type: "NON-DOCUMENT",
-          description: v.product.name,
           customer_code: "OO3609",
-          reference_number: updatedOrder.orderId, // orderId from DB
+          load_type: "NON-DOCUMENT",
           service_type_id: "B2C Priority",
-
-          // COD logic
-          cod_favor_of: updatedOrder.shippingAddress.name,
-          cod_collection_mode: paymentStatus === "PAYMENT_SUCCESS" ? "prepaid" : "cash",
-          cod_amount: paymentStatus === "PAYMENT_SUCCESS" ? 0 : updatedOrder.payablePrice,
 
           // Dimensions & weight
           dimension_unit: "cm",
@@ -110,80 +100,41 @@ export async function GET(req: Request, { params }: Params) {
           height: "1",
           weight_unit: "kg",
           weight: "0.25",
+
+          // Product details
+          description: v.product.name,
           num_pieces: v.count + (v.freeCount || 0),
 
-          // Values (use payablePrice)
-          declared_value: updatedOrder.payablePrice,
-          invoice_amount: updatedOrder.payablePrice,
-          invoice_number: updatedOrder.invoiceId || `INV-${Date.now()}`,
-          invoice_date: new Date().toISOString().slice(0, 10),
-          declared_value_without_tax: updatedOrder.payablePrice,
-          customer_reference_number: customerNo,
+          // Value (use product.offerPrice)
+          declared_value: v.product.offerPrice || updatedOrder.payablePrice,
 
-          // Origin (your warehouse/store)
+          // Origin details (warehouse info)
           origin_details: {
             name: "Udayaada",
-            phone: "8123000558",
+            phone: 8123000558,
             address_line_1: "Thalaserry",
             address_line_2: "Post Palayad",
-            pincode: "670102",
+            pincode: 670102,
             city: "CANNANORE",
             state: "Kerala",
-            country: "India",
           },
 
-          // Destination (customer shippingAddress)
+          // Destination details (customer shipping address)
           destination_details: {
             name: updatedOrder.shippingAddress.name,
             phone: updatedOrder.shippingAddress.mobile,
+            alternate_phone: updatedOrder.shippingAddress.alternateMobile || "",
             address_line_1: updatedOrder.shippingAddress.address,
             address_line_2: updatedOrder.shippingAddress.addressType || "",
             pincode: updatedOrder.shippingAddress.zipCode,
             city: updatedOrder.shippingAddress.city,
             state: updatedOrder.shippingAddress.state,
-            country: updatedOrder.shippingAddress.country,
           },
 
-          // Tax details
-          tax_details: [
-            {
-              cgst: "0.0",
-              sgst: "0.0",
-              igst: "0.0",
-              total_tax: "0.0",
-              sender_gstin: "22AAAAA0000A1Z4",
-            },
-          ],
-
-          // Return details (same as origin)
-          return_details: {
-            name: "Udayaada",
-            phone: "8123000558",
-            address_line_1: "Thalaserry",
-            address_line_2: "Post Palayad",
-            pincode: "670102",
-            city: "CANNANORE",
-            state: "Kerala",
-            country: "India",
-          },
-
-          // Pieces detail
-          pieces_detail: [
-            {
-              description: v.product.name,
-              declared_value: updatedOrder.payablePrice,
-              volume: "100",
-              weight: "0.25",
-              height: "1",
-              length: "1",
-              width: "1",
-              weight_unit: "kg",
-              dimension_unit: "cm",
-              volume_unit: "cm3",
-              piece_product_code: v.product.sku || `P-${Date.now()}`,
-              reference_image_url: v.product.img?.[0] || "",
-            },
-          ],
+          // Reference numbers
+          customer_reference_number: customerNo,
+          commodity_id: 98,
+          reference_number: "",
         }));
 
         const dtdcPayload = { consignments };
@@ -218,7 +169,7 @@ export async function GET(req: Request, { params }: Params) {
           console.warn("DTDC integration failed:", dtdcRes.data);
         }
       } catch (dtdcErr) {
-        console.error("DTDC API Error (v2):", dtdcErr);
+        console.error("DTDC API Error:", dtdcErr);
       }
     }
     // -------------------------------------------------------------------------------------
@@ -231,7 +182,6 @@ export async function GET(req: Request, { params }: Params) {
       order: updatedOrder,
       email: emailResponse || { success: false, message: "Email not sent (payment not successful)" },
     });
-
   } catch (error: any) {
     console.error("Payment status check error:", error);
     return NextResponse.json(
