@@ -160,16 +160,14 @@ export async function GET(req: Request, { params }: Params) {
       try {
         const customerPhone = updatedOrder.shippingAddress?.mobile || user.phone || "";
         const customerName = updatedOrder.shippingAddress?.name || user.name || "Customer";
-        const trackingId = updatedOrder.dtdc?.referenceNumber || "";
-        const invoiceUrl = updatedOrder.invoiceUrl || "";
 
+        // ✅ Call the updated hardcoded sendOrderConfirmation
         const whatsappResponse = await sendOrderConfirmation(
           customerName,
           customerPhone,
           updatedOrder.orderId || updatedOrder._id.toString(),
-          trackingId,
-          invoiceUrl,
-          "DTDC"
+          "UDAYAADA", // merchantName
+          "DTDC"      // deliveryPartner
         );
 
         console.log("✅ WhatsApp Confirmation Response:", whatsappResponse);

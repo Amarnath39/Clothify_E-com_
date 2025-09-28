@@ -14,42 +14,36 @@ export const sendOrderConfirmation = async (
   customerName: string,
   phoneNumber: string,
   orderId: string,
-  trackingId: string,
-  invoiceUrl: string,
+  merchantName: string = "UDAYAADA", // default merchant name
   deliveryPartner: string = "DTDC"
 ): Promise<SendOrderConfirmationResponse> => {
   try {
-    // ✅ Default country code (India)
-    const countryCode = "91"; // without '+'
+    const countryCode = "91"; // default country code for India
 
-    // ✅ Ensure phone number has country code and remove any '+'
+    // Ensure phone number has country code and remove '+'
     let formattedPhoneNumber = phoneNumber.replace(/\+/g, "");
     if (!formattedPhoneNumber.startsWith(countryCode)) {
       formattedPhoneNumber = `${countryCode}${formattedPhoneNumber}`;
     }
 
-    // ✅ Prepare WhatsApp API form data
+    // Hardcoded WhatsApp API form data
     const formData = new URLSearchParams({
       apiToken: "10641|R3bJazoz4iohOk42cyQhfOrCo4x0q2ZSuJezDk6m346fe236",
       phoneNumberID: "627218387152627",
-      botTemplateID: "208110",
-      "templateVariable-variable1-1": customerName || "Jos",
-      "templateVariable-variable2-2": "Udayaada",
-      "templateVariable-variable3-3": orderId,
-      "templateVariable-variable4-4": trackingId || "Will be updated soon",
-      "templateVariable-variable5-5": invoiceUrl || "Not available",
-      "templateVariable-variable6-6": deliveryPartner || "DTDC",
+      botTemplateID: "200025",
+      "templateVariable-variable1-1": customerName || "Customer",
+      "templateVariable-variable2-2": merchantName || "Merchant",
+      "templateVariable-variable3-3": orderId || "N/A",
+      "templateVariable-variable4-4": deliveryPartner,
       sendToPhoneNumber: formattedPhoneNumber,
     });
 
     console.log("📨 WhatsApp Request Data:", formData.toString());
 
     const response: AxiosResponse = await axios.post(
-      process.env.WABIS_BASE_URL || "https://bot.wabis.in/api/v1/whatsapp/send/template",
+      "https://bot.wabis.in/api/v1/whatsapp/send/template",
       formData.toString(),
-      {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      }
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
     console.log("✅ WhatsApp order confirmation sent:", response.data);
