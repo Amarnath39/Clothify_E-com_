@@ -4,6 +4,7 @@ import Order from "../../../../../../model/Order";
 import User from "../../../../../../model/User";
 import { connectDB } from "../../../../../../db";
 import { sendUserOrderEmail } from "../../../../../../helper/sendUserOrderEmail";
+import { sendOrderConfirmation } from "../../../../../../helper/whatsappNotifier";
 import mongoose from "mongoose";
 import axios from "axios";
 import { generateRandomId } from "../../../../../../helper/generateRandomId";
@@ -15,6 +16,7 @@ interface UserType {
   phone?: string;
   role?: string;
 }
+
 interface Params {
   params: { orderId: string }; // frontend sends tempTransactionId
 }
@@ -78,13 +80,14 @@ export async function GET(req: Request, { params }: Params) {
     let emailResponse: { success: boolean; message: string; error?: any } | null = null;
 
     if (paymentStatus === "PAYMENT_SUCCESS" && updatedOrder) {
+      // ------------------ Email ------------------
       emailResponse = await sendUserOrderEmail({
         ...updatedOrder.toObject(),
         orderId: updatedOrder.orderId || updatedOrder._id.toString(),
         customerEmail: user.email,
       });
 
-      // ------------------ ✅ DTDC Integration (simplified payload) ------------------
+      // ------------------ DTDC Integration ------------------
       try {
         const customerNo = `CUST${Date.now()}${Math.floor(Math.random() * 10000)}`;
 
@@ -101,11 +104,8 @@ export async function GET(req: Request, { params }: Params) {
 
           description: v.product.name,
           num_pieces: v.count + (v.freeCount || 0),
-
-          // Value (use product.offerPrice)
           declared_value: v.product.offerPrice || updatedOrder.payablePrice,
 
-          // Origin details (warehouse info)
           origin_details: {
             name: "Udayaada",
             phone: 8123000558,
@@ -116,7 +116,6 @@ export async function GET(req: Request, { params }: Params) {
             state: "Kerala",
           },
 
-          // Destination details (customer shipping address)
           destination_details: {
             name: updatedOrder.shippingAddress.name,
             phone: updatedOrder.shippingAddress.mobile,
@@ -166,9 +165,25 @@ export async function GET(req: Request, { params }: Params) {
       } catch (dtdcErr) {
         console.error("DTDC API Error:", dtdcErr);
       }
-    }
-    // -------------------------------------------------------------------------------------
 
+      // ------------------ WhatsApp Order Confirmation ------------------
+      try {
+        const whatsappResponse = await sendOrderConfirmation(
+          user.name || updatedOrder.shippingAddress.name,       // Customer Name
+          user.phone || updatedOrder.shippingAddress.mobile,    // Customer Phone
+          updatedOrder.orderId || updatedOrder._id.toString(),  // Order ID
+          updatedOrder.dtdc?.referenceNumber || "",             // Tracking ID (if DTDC success)
+          updatedOrder.invoiceUrl || "",                        // Invoice URL
+          "DTDC"                                                // Delivery Partner
+        );
+
+        console.log("✅ WhatsApp Confirmation Response:", whatsappResponse);
+      } catch (waErr) {
+        console.error("❌ WhatsApp Confirmation Failed:", waErr);
+      }
+    }
+
+    // ------------------ Return Response ------------------
     return NextResponse.json({
       success: true,
       status: phonePeState,
