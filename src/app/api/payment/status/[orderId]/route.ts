@@ -92,8 +92,6 @@ export async function GET(req: Request, { params }: Params) {
           customer_code: "OO3609",
           load_type: "NON-DOCUMENT",
           service_type_id: "B2C Priority",
-
-          // Dimensions & weight
           dimension_unit: "cm",
           length: "1",
           width: "1",
@@ -101,7 +99,6 @@ export async function GET(req: Request, { params }: Params) {
           weight_unit: "kg",
           weight: "0.25",
 
-          // Product details
           description: v.product.name,
           num_pieces: v.count + (v.freeCount || 0),
 
@@ -130,8 +127,6 @@ export async function GET(req: Request, { params }: Params) {
             city: updatedOrder.shippingAddress.city,
             state: updatedOrder.shippingAddress.state,
           },
-
-          // Reference numbers
           customer_reference_number: customerNo,
           commodity_id: 98,
           reference_number: "",
