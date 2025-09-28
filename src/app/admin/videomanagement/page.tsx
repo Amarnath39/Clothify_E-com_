@@ -6,6 +6,7 @@ import axios from 'axios';
 interface Video {
   videoId: number;
   filename: string;
+  url: string;
 }
 
 export default function VideoUploadPage() {
@@ -80,7 +81,7 @@ export default function VideoUploadPage() {
         {videos.map((video) => (
           <li key={video.videoId} className="border p-3 rounded flex justify-between items-center">
             <video controls width={250} className="rounded">
-              <source src={`/uploads/${video.filename}`} type="video/mp4" />
+              <source src={video.url} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
             <button
