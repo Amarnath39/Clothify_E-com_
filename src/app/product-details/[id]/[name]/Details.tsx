@@ -891,7 +891,7 @@ const ProductDetails = ({
             </TabsContent>
           </Tabs>
 
-          <div>
+          {/* <div>
             <h3 className="text-base sm:text-lg font-semibold mb-2">Colors:</h3>
             <div className="flex gap-1 items-center">
               <div
@@ -909,7 +909,44 @@ const ProductDetails = ({
                 ))}
               </div>
             </div>
-          </div>
+          </div> */}
+          <div>
+              <h3 className="text-base sm:text-lg font-semibold mb-2">
+                Colors:
+              </h3>
+              <div className="flex gap-1 items-center">
+                {
+                  <div>
+                    <div className="flex space-x-2 flex-wrap">
+                      {productData.colors.length === 0 && (
+                        <button
+                          className={`w-10 h-14 rounded-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme-primary border-2 border-indigo-500 `}
+                          title={productData.color}
+                        >
+                          <img src={productData?.img[0]} alt="" />
+                        </button>
+                      )}
+                      {productData.colors &&
+                        productData.colors.length > 0 &&
+                        productData.colors.map((color) => (
+                          <button
+                            key={color._id}
+                            className={`w-10 h-14 rounded-sm focus:outline-none focus:ring-2 overflow-hidden focus:ring-offset-2 focus:ring-theme-primary `}
+                            onClick={() =>
+                              router.push(
+                                `/product-details/${color.varientId._id}/${params.name}`
+                              )
+                            }
+                            title={color?.varientId?.color}
+                          >
+                            <img src={color?.varientId?.img[0]} alt="" />
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
 
           {/* sizes */}
 
