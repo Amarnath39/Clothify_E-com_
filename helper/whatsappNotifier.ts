@@ -14,25 +14,23 @@ export const sendOrderConfirmation = async (
   customerName: string,
   phoneNumber: string,
   orderId: string,
-  merchantName: string = "UDAYAADA", // default merchant name
+  merchantName: string = "UDAYAADA",
   deliveryPartner: string = "DTDC"
 ): Promise<SendOrderConfirmationResponse> => {
   try {
-    const countryCode = "91"; // default country code for India
+    const countryCode = "91";
 
-    // Ensure phone number has country code and remove '+'
     let formattedPhoneNumber = phoneNumber.replace(/\+/g, "");
     if (!formattedPhoneNumber.startsWith(countryCode)) {
       formattedPhoneNumber = `${countryCode}${formattedPhoneNumber}`;
     }
 
-    // Hardcoded WhatsApp API form data
     const formData = new URLSearchParams({
       apiToken: "10641|R3bJazoz4iohOk42cyQhfOrCo4x0q2ZSuJezDk6m346fe236",
       phoneNumberID: "627218387152627",
       botTemplateID: "200025",
       "templateVariable-variable1-1": customerName || "Customer",
-      "templateVariable-variable2-2": merchantName || "Merchant",
+      "templateVariable-variable2-2": merchantName,
       "templateVariable-variable3-3": orderId || "N/A",
       "templateVariable-variable4-4": deliveryPartner,
       sendToPhoneNumber: formattedPhoneNumber,
