@@ -996,19 +996,18 @@ setTimeout(() => {
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100">
                <TabsTrigger
   value="sms"
-  className="flex items-center gap-2 text-gray-800 bg-[#ede8c9ff] data-[state=active]:bg-yellow-500"
-
+  className="flex items-center gap-2 text-gray-800  data-[state=active]:bg-[#ede8c9ff]"
 >
   <Phone className="w-4 h-4" /> SMS
 </TabsTrigger>
 
 <TabsTrigger
   value="email"
-className="flex items-center gap-2 text-gray-800 bg-[#ede8c9ff] data-[state=active]:bg-yellow-300"
-
+  className="flex items-center gap-2 text-gray-800 data-[state=active]:bg-[#ede8c9ff]"
 >
   <Mail className="w-4 h-4" /> Email
 </TabsTrigger>
+
 
                 </TabsList>
 
