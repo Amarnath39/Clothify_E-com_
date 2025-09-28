@@ -165,9 +165,7 @@ export async function GET(req: Request, { params }: Params) {
         const whatsappResponse = await sendOrderConfirmation(
           customerName,
           customerPhone,
-          updatedOrder.orderId || updatedOrder._id.toString(),
-          "UDAYAADA", // merchantName
-          "DTDC"      // deliveryPartner
+          updatedOrder.orderId || updatedOrder._id.toString()
         );
 
         console.log("✅ WhatsApp Confirmation Response:", whatsappResponse);
