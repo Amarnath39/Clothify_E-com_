@@ -7,9 +7,7 @@ interface SendOrderConfirmationResponse {
   error?: any;
 }
 
-/**
- * Send order confirmation via WhatsApp
- */
+
 export const sendOrderConfirmation = async (
   customerName: string,
   phoneNumber: string,

@@ -161,13 +161,15 @@ export async function GET(req: Request, { params }: Params) {
         const customerPhone = updatedOrder.shippingAddress?.mobile || user.phone || "";
         const customerName = updatedOrder.shippingAddress?.name || user.name || "Customer";
 
-        const whatsappResponse = await sendOrderConfirmation(
+        const whatsappResp = await sendOrderConfirmation(
           customerName,
           customerPhone,
-          updatedOrder.orderId || updatedOrder._id.toString()
+          updatedOrder.orderId || updatedOrder._id.toString(),
+          order.merchantName || "UDAYAADA",
+          order.deliveryPartner || "DTDC"
         );
 
-        console.log("✅ WhatsApp Confirmation Response:", whatsappResponse);
+        console.log("📲 WhatsApp notification result:", whatsappResp);
       } catch (waErr) {
         console.error("❌ WhatsApp Confirmation Failed:", waErr);
       }

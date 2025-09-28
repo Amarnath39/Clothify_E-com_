@@ -65,18 +65,18 @@ export const PATCH = async (
       // ✅ Send email
       await sendOrderShippedEmail(emailDetails);
 
-      // ✅ Send WhatsApp confirmation (using your first function)
-      const whatsappResp = await sendOrderConfirmation(
-        order.user.name,          // customerName
-        order.user.phone,         // phoneNumber
-        order._id.toString(),     // orderId
-        order.trackingId || "",   // trackingId
-        "",                       // invoiceUrl (optional here)
-        order.deliveryPartner || "DTDC" // deliveryPartner
-      );
+    //   // ✅ Send WhatsApp confirmation (using your first function)
+    //   const whatsappResp = await sendOrderConfirmation(
+    //     order.user.name,          // customerName
+    //     order.user.phone,         // phoneNumber
+    //     order._id.toString(),     // orderId
+    //     order.trackingId || "",   // trackingId
+    //     "",                       // invoiceUrl (optional here)
+    //     order.deliveryPartner || "DTDC" // deliveryPartner
+    //   );
 
-      console.log("📲 WhatsApp notification result:", whatsappResp);
-    }
+    //   console.log("📲 WhatsApp notification result:", whatsappResp);
+     }
 
     return NextResponse.json({ success: true, msg: "Success", order }, { status: 200 });
   } catch (error) {
