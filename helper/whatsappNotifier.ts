@@ -30,15 +30,15 @@ export const sendOrderConfirmation = async (
 
     // ✅ Prepare WhatsApp API form data
     const formData = new URLSearchParams({
-      apiToken: "10550|6mJGxFiTE1MAVqkOLMsln0QleaSywkgkePKCsT7F5d78fa03",
-      phoneNumberID: "579135845293888",
+      apiToken: "10641|R3bJazoz4iohOk42cyQhfOrCo4x0q2ZSuJezDk6m346fe236",
+      phoneNumberID: "627218387152627",
       botTemplateID: "178651",
-      "templateVariable-variable1-1": customerName, // Customer name
+      "templateVariable-variable1-1": customerName || "Jos", // Customer name
       "templateVariable-variable2-2": "Udayaada", // Brand / Store name
       "templateVariable-variable3-3": orderId, // Order ID
       "templateVariable-variable4-4": trackingId || "Will be updated soon", // Tracking ID
       "templateVariable-variable5-5": invoiceUrl || "Not available", // Invoice URL
-      "templateVariable-variable6-6": deliveryPartner, // Delivery partner
+      "templateVariable-variable6-6": deliveryPartner || "DTDC", // Delivery partner
       sendToPhoneNumber: formattedPhoneNumber,
     });
 
