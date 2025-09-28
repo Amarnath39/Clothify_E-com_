@@ -80,7 +80,6 @@ export default function VideoList() {
     <div className="p-0 w-full">
       {/* Heading */}
 <div className={`flex items-center justify-center mb-8 mt-12 ${quicksand.className}`}>
-          <Eye className="w-8 h-8 text-gradient mr-3"  />
          
       <h1 className="relative text-3xl mt-12 tracking-wider py-2 pt-6 text-center mx-auto animated-underline">
           WATCH & SHOP
