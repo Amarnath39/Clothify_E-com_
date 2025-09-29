@@ -29,7 +29,7 @@ const ReturnRefundPolicy = () => {
   {
     title: "Contact Support",
     content:
-      "📧 varnasuba755@gmail.com | 📞 +91 6238305477",
+      "📧 varnasuba755@gmail.com | 📞 +91 7306372906",
   },
   ];
 

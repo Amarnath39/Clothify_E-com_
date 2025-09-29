@@ -68,7 +68,7 @@ const PrivacyPolicy = () => {
       content:
         `For all privacy-related questions or concerns, please contact:
           📧 Varnasuba755@gmail.com
-          📞 +91 6238305477`,
+          📞 +91 7306372906`,
     },
   ];
 

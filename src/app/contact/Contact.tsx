@@ -70,7 +70,7 @@ const Contact = () => {
               <FaPhone className="text-2xl text-primary" />
               <div>
                 <h3 className="font-semibold">Phone</h3>
-                <p>+91 6238305477</p>
+                <p>+91 7306372906</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -85,7 +85,7 @@ const Contact = () => {
               <div>
                 <h3 className="font-semibold">Location</h3>
                 <p>
-                  Poyil House,Punnol,Temple Gate,Thalassery,Kannur,Kerala  Pin:670102
+                  Thalassery,Kannur,Kerala  Pin:670102
                 </p>
               </div>
             </div>

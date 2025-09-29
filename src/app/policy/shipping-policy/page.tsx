@@ -34,7 +34,7 @@ const ShippingPolicy = () => {
   {
     title: "Delays & Issues",
     content:
-      "If your order is delayed or arrives damaged: Email us at varnasuba755@gmail.com or Call us at +91 6238305477. We will work with our courier partners to resolve it as quickly as possible.",
+      "If your order is delayed or arrives damaged: Email us at varnasuba755@gmail.com or Call us at +91 7306372906. We will work with our courier partners to resolve it as quickly as possible.",
   },
   ];
 
@@ -73,7 +73,7 @@ const ShippingPolicy = () => {
               at:
             </p>
             <p className="font-semibold text-appPrimary-600">
-              Email: varnasuba755@gmail.com | Phone: +91 6238305477
+              Email: varnasuba755@gmail.com | Phone: +91 7306372906
             </p>
           </div>
         </div>
