@@ -41,6 +41,7 @@ export async function GET(req: Request, { params }: Params) {
     if (!mongoose.Types.ObjectId.isValid(order.user)) {
       return NextResponse.json({ error: "Invalid userId in order" }, { status: 400 });
     }
+
     const user = await User.findById(order.user).lean<UserType>();
     if (!user || !user.email) {
       return NextResponse.json({ error: "User not found or missing email" }, { status: 404 });
@@ -123,18 +124,17 @@ export async function GET(req: Request, { params }: Params) {
 
         const dtdcPayload = { consignments };
 
-        const dtdcOptions = {
-          method: "post",
-          url: `https://dtdcapi.shipsy.io/api/customer/integration/consignment/softdata`,
-          headers: {
-            accept: "application/json",
-            "Content-Type": "application/json",
-            "api-key": "17650e27594130e98548596eeb92aa",
-          },
-          data: dtdcPayload,
-        };
-
-        const dtdcRes = await axios.request(dtdcOptions);
+        const dtdcRes = await axios.post(
+          `https://dtdcapi.shipsy.io/api/customer/integration/consignment/softdata`,
+          dtdcPayload,
+          {
+            headers: {
+              accept: "application/json",
+              "Content-Type": "application/json",
+              "api-key": "17650e27594130e98548596eeb92aa",
+            },
+          }
+        );
 
         if (dtdcRes.data?.data?.[0]?.success) {
           await Order.findByIdAndUpdate(
@@ -160,19 +160,16 @@ export async function GET(req: Request, { params }: Params) {
       try {
         const customerPhone = updatedOrder.shippingAddress?.mobile || user.phone || "";
         const customerName = updatedOrder.shippingAddress?.name || user.name || "Customer";
-        const trackingId = updatedOrder.dtdc?.referenceNumber || "";
-        const invoiceUrl = updatedOrder.invoiceUrl || "";
 
-        const whatsappResponse = await sendOrderConfirmation(
+        const whatsappResp = await sendOrderConfirmation(
           customerName,
           customerPhone,
           updatedOrder.orderId || updatedOrder._id.toString(),
-          trackingId,
-          invoiceUrl,
-          "DTDC"
+          order.merchantName || "UDAYAADA",
+          order.deliveryPartner || "DTDC"
         );
 
-        console.log("✅ WhatsApp Confirmation Response:", whatsappResponse);
+        console.log("📲 WhatsApp notification result:", whatsappResp);
       } catch (waErr) {
         console.error("❌ WhatsApp Confirmation Failed:", waErr);
       }

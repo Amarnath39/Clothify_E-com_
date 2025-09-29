@@ -15,6 +15,7 @@ export const GET = async (
     const id = params.id;
     const product = await Product.findById(id).populate([
       "categories",
+      "colors.varientId",
       "returnRules",
     ]);
     if (!product)
