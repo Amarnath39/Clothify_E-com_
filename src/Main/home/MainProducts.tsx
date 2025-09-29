@@ -477,7 +477,7 @@ const MainProducts = () => {
                         </button>
                       </div>
                       <div className="p-4 flex flex-col space-y-2">
-                        <CardTitle className="text-base font-medium text-gray-900 h-[3.6em] line-clamp-2">
+                        <CardTitle className="text-base font-medium text-gray-900  line-clamp-2">
                           {product.name}
                         </CardTitle>
                         <div className="flex items-baseline space-x-2">
