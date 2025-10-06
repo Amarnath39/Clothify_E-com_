@@ -3,56 +3,59 @@ import { connectDB } from "../../../../../db";
 import Admin from "../../../../../model/Admin";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-// import { cookie, CookieSerializeOptions } from "cookie";
-var cookie = require("cookie");
+import cookie from "cookie";
 
 connectDB();
+
 export const POST = async (req: NextRequest) => {
   try {
     const { email, password } = await req.json();
 
     // Find admin by email
-    let admin = await Admin.findOne({ email });
-    console.log({admin})
+    const admin = await Admin.findOne({ email });
+    console.log({ admin });
+
     if (!admin) {
       return NextResponse.json(
         { success: false, msg: "Admin not found!" },
         { status: 404 }
       );
-    } else {
-      // Check if password matches
-      const isMatch = await bcrypt.compare(password, admin.password);
-      if (!isMatch) {
-        return NextResponse.json(
-          { success: false, msg: "Invalid credentials" },
-          { status: 401 }
-        );
-      }
     }
 
-    // Generate JWT token
+    // Check password
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      return NextResponse.json(
+        { success: false, msg: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
+
+    // Generate JWT
     const token = jwt.sign(
       { id: admin._id, role: admin.role },
       process.env.JWT_SECRET as string,
       { expiresIn: "30d" }
     );
 
-    // Set the token in a cookie
+    // ✅ Cookie options (works for both localhost and production)
     const cookieOptions: any = {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      // sameSite: "none",
-      maxAge: 1 * 24 * 60 * 60, // 1 day
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60, // 1 day
       path: "/",
-      domain: process.env.NODE_ENV === "production" ? "siskerala.com" : "localhost"
+      ...(process.env.NODE_ENV === "production"
+        ? { domain: "siskerala.com" }
+        : {}), // only set domain in production
     };
 
-    // return NextResponse.json({ success: true, token }, { status: 200 });
+    // ✅ Send response with cookie
     return NextResponse.json(
       {
         success: true,
         msg: "Login successful",
-        token: token,
+        token,
         id: admin._id,
         user: {
           name: admin.name,
@@ -67,7 +70,7 @@ export const POST = async (req: NextRequest) => {
       }
     );
   } catch (error) {
-    console.log("Error to get user details ", error);
+    console.error("Error during admin login:", error);
     return NextResponse.json(
       { success: false, msg: "Internal Server Error" },
       { status: 500 }
