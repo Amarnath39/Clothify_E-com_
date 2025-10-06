@@ -3,7 +3,7 @@ import { connectDB } from "../../../../../db";
 import Admin from "../../../../../model/Admin";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import cookie from "cookie";
+var cookie = require("cookie");
 
 connectDB();
 
@@ -11,11 +11,14 @@ export const POST = async (req: NextRequest) => {
   try {
     const { email, password } = await req.json();
 
+    console.log("📩 Incoming login request:", { email });
+
     // Find admin by email
     const admin = await Admin.findOne({ email });
-    console.log({ admin });
+    console.log("🔍 Admin lookup result:", admin);
 
     if (!admin) {
+      console.warn("⚠️ Admin not found for email:", email);
       return NextResponse.json(
         { success: false, msg: "Admin not found!" },
         { status: 404 }
@@ -24,7 +27,10 @@ export const POST = async (req: NextRequest) => {
 
     // Check password
     const isMatch = await bcrypt.compare(password, admin.password);
+    console.log("🔐 Password match result:", isMatch);
+
     if (!isMatch) {
+      console.warn("❌ Invalid password for:", email);
       return NextResponse.json(
         { success: false, msg: "Invalid credentials" },
         { status: 401 }
@@ -38,19 +44,19 @@ export const POST = async (req: NextRequest) => {
       { expiresIn: "30d" }
     );
 
-    // ✅ Cookie options (works for both localhost and production)
+    console.log("✅ JWT generated successfully");
+
+    // Cookie options
     const cookieOptions: any = {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60, // 1 day
+      maxAge: 1 * 24 * 60 * 60, // 1 day
       path: "/",
-      ...(process.env.NODE_ENV === "production"
-        ? { domain: "siskerala.com" }
-        : {}), // only set domain in production
+      domain: process.env.NODE_ENV === "production" ? "siskerala.com" : "localhost",
     };
 
-    // ✅ Send response with cookie
+    console.log("🍪 Cookie options:", cookieOptions);
+
     return NextResponse.json(
       {
         success: true,
@@ -69,10 +75,19 @@ export const POST = async (req: NextRequest) => {
         },
       }
     );
-  } catch (error) {
-    console.error("Error during admin login:", error);
+  } catch (error: any) {
+    console.error("❌ Error during admin login:");
+    console.error("➡️ Message:", error.message);
+    console.error("➡️ Name:", error.name);
+    console.error("➡️ Stack Trace:", error.stack);
+    console.error("➡️ Full Error Object:", JSON.stringify(error, null, 2));
+
     return NextResponse.json(
-      { success: false, msg: "Internal Server Error" },
+      {
+        success: false,
+        msg: "Internal Server Error",
+        error: error.message, // Show message in response (optional)
+      },
       { status: 500 }
     );
   }
