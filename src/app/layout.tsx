@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Lato, Roboto, Tangerine, Quicksand, Mulish } from "next/font/google";
+import { Lato, Roboto, Tangerine, Quicksand, Mulish, Urbanist } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import StoreProvider from "@/lib/storeProvider";
@@ -8,16 +8,25 @@ import { Toaster } from "react-hot-toast";
 import CustomeLayout from "./CustomeLayout";
 import { Toaster as Toast2 } from "@/components/ui/toaster";
 import BottomNavbar from "@/components/BottomNavigation";
+import useWindowSize from "@/hooks/useWindowSize";
+// import { SearchProvider } from "@/contexts/SearchContext";
+
+const urbanist = Urbanist({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  variable: "--font-urbanist",
+})
 
 const roboto = Roboto({
   subsets: ["latin"],
   weight: ["300", "400", "500", "700"],
   variable: "--font-roboto",
 });
+
 const mulish = Mulish({
   subsets: ["latin"],
   weight: ["300", "400", "500", "700"],
-  variable: "--font-roboto",
+  variable: "--font-mulish",
 });
 
 const quicksand = Quicksand({
@@ -27,57 +36,32 @@ const quicksand = Quicksand({
 
 export const metadata: Metadata = {
   title: {
-    default: "Udayaada",
-    template: "%s | Udayaada",
+    default: "S.I.S BY MV PV",
+    template: "%s | S.I.S BY MV PV",
   },
   description:
-    "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style.",
+    "S.I.S – Strong, Independent, Stylish. A women’s online clothing store redefining fashion with timeless elegance, effortless style, and confidence in every look. It Kicks – Men’s online shoe store for premium sneakers & casuals. Shop stylish, comfortable footwear designed for quality and confidence.",
   icons: {
-    // ✅ use absolute URLs for consistency (CDN / SEO / caching)
-    icon: [
-      {
-        url: "https://www.udayaada.in/assets/static/logo/favicon-1.ico",
-        sizes: "any",
-      },
-      {
-        url: "https://www.udayaada.in/assets/static/logo/favicon-32x32.png",
-        type: "image/png",
-        sizes: "32x32",
-      },
-      {
-        url: "https://www.udayaada.in/assets/static/logo/favicon-16x16.png",
-        type: "image/png",
-        sizes: "16x16",
-      },
-    ],
-    apple: "https://www.udayaada.in/assets/static/logo/apple-touch-icon.png",
-    other: [
-      {
-        rel: "android-chrome",
-        url: "https://www.udayaada.in/assets/static/logo/android-chrome-192x192.png",
-      },
-      {
-        rel: "android-chrome",
-        url: "https://www.udayaada.in/assets/static/logo/android-chrome-512x512.png",
-      },
-    ],
+    icon: "/assets/static/logo/favicon.ico",
+    apple: "/assets/static/logo/apple-touch-icon.png",
+    
   },
   keywords:
-    "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style.",
-  authors: [{ name: "Webgeon Results " }],
+    " S.I.S – Strong, Independent, Stylish. A women’s online clothing store redefining fashion with timeless elegance, effortless style, and confidence in every look. – Men’s online shoe store for premium sneakers & casuals. Shop stylish, comfortable footwear designed for quality and confidence.raa, jewellery, online jewellery store, gold jewellery, silver jewellery, diamond jewellery, bridal jewellery, necklaces, earrings, rings",
+  authors: [{ name: "Webgeon Results" }],
 
   openGraph: {
-    title: "Udayaada",
+    title: "S.I.S BY MV PV",
     description:
-      "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style",
-    url: "https://www.udayaada.in/",
-    siteName: "Udayaada",
+      "Shop stylish S.I.S – Strong, Independent, Stylish. A women’s online clothing store redefining fashion with timeless elegance, effortless style, and confidence in every look. and casual footwear at Grab it Kicks. Experience comfort and quality with every step.",
+    url: "https://www.siskerala.com.com/",
+    siteName: "SIS BY MV|PV",
     images: [
       {
-        url: "https://www.udayaada.in/assets/static/logo/og-image.png",
+        url: "https://www.siskerala.com.com/assets/static/logo/ogimage.png",
         width: 1200,
         height: 630,
-        alt: "Udayaada OpenGraph Image",
+        alt: "S.I.S BY MV PV OpenGraph Image",
       },
     ],
     locale: "en_US",
@@ -86,30 +70,42 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Udayaada",
+    title: "S.I.S BY MV PV",
     description:
-      "Udayaada is almost here to redefine your wardrobe with timeless elegance and effortless style",
-    images: ["https://www.udayaada.in/assets/static/logo/og-image.png"],
+      "Shop stylish S.I.S – Strong, Independent, Stylish – is more than just a women’s clothing brand; it’s a celebration of confidence and individuality. Our online store brings you a curated collection of elegant, trendy, and comfortable outfits designed for the modern woman who knows her worth. and casual footwear at Grab it Kicks. Experience comfort and quality with every step.",
+    images: ["https://www.siskerala.com.com/assets/static/logo/ogimage.png"],
   },
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
       <head>
+        <link rel="icon" href="/assets/static/logo/favicon.ico" sizes="any" />
         <link
-          rel="preload"
-          href="/fonts/SAMAN___.TTF"
-          as="font"
-          type="font/ttf"
-          crossOrigin="anonymous"
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/assets/static/logo/favicon-32x32.png"
         />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="/assets/static/logo/favicon-16x16.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/assets/static/logo/apple-touch-icon.png"
+        />
+        
       </head>
-      <body className={` ${mulish.className} `}>
+      <body className={` ${urbanist.className} `}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -117,10 +113,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <StoreProvider>
-            <Toaster />
-            <Toast2 />
-            <CustomeLayout>{children}</CustomeLayout>
-            <BottomNavbar />
+            {/* <SearchProvider> */}
+              <Toaster />
+              <Toast2 />
+
+              <CustomeLayout>{children}</CustomeLayout>
+              <BottomNavbar />
+            {/* </SearchProvider> */}
           </StoreProvider>
         </ThemeProvider>
       </body>
