@@ -88,7 +88,7 @@ export const POST = async (req: NextRequest) => {
       </div>
       
       <div style="background: #f1f1f1; text-align: center; padding: 15px; font-size: 12px; color: #777;">
-        © ${new Date().getFullYear()} Your Company. All rights reserved.
+        © ${new Date().getFullYear()} Webgeon. All rights reserved.
       </div>
     </div>
   </div>
