@@ -15,7 +15,7 @@ const About = () => {
         /> */}
         <div className="max-w-3xl mx-auto">
           <p className="mb-6 text-md sm:text-lg leading-relaxed text-gray-700">
-            <strong className="text-xl sm:text-2xl block mb-2 text-gray-900">Welcome to Udayaada !</strong>
+            <strong className="text-xl sm:text-2xl block mb-2 text-gray-900">Welcome to S.I.S !</strong>
           
           </p>
 
@@ -25,7 +25,7 @@ const About = () => {
           </p> */}
 
           <div className="mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">What You’ll Find at Udayaada</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">What You’ll Find at S.I.S</h2>
             <ul className="list-disc list-inside text-md sm:text-lg text-gray-700 space-y-1">
               <li>Sarees – From casual drapes to grand traditional weaves</li>
               {/* <li>Kanchipuram Sarees – Pure silk masterpieces steeped in heritage</li> */}
@@ -39,7 +39,7 @@ const About = () => {
           </div>
 
           {/* <div className="mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Why Udayaada?</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Why S.I.S?</h2>
             <ul className="list-disc list-inside text-md sm:text-lg text-gray-700 space-y-1">
               <li>A legacy of over 3 decades in the textile and fashion industry</li>
               <li>Quality you can trust, prices you'll love</li>
@@ -50,7 +50,7 @@ const About = () => {
           </div> */}
 
           <p className="mb-4 text-md sm:text-lg leading-relaxed text-gray-700">
-            Whether you're searching for an iconic bridal saree, a stylish new outfit, or timeless traditional wear, <strong>Udayaada</strong> is your go-to destination for fashion that speaks to your heart.
+            Whether you're searching for an iconic bridal saree, a stylish new outfit, or timeless traditional wear, <strong>S.I.S</strong> is your go-to destination for fashion that speaks to your heart.
           </p>
 
           <p className="mb-6 text-md sm:text-lg leading-relaxed text-gray-700">

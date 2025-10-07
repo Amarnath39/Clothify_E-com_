@@ -120,9 +120,9 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
       {/* ✅ Show gold bar only if NOT in admin */}
       {!pathname.includes("/admin") && (
         <div className="text-brown text-center text-sm fixed top-0 left-0 w-full z-50 gold-bar">
-          <p className="max-w-6xl mx-auto py-3 px-2">
+          {/* <p className="max-w-6xl mx-auto py-3 px-2">
             Timeless Kerala Sarees for the Modern Woman
-          </p>
+          </p> */}
  
           <style jsx>{`
             .gold-bar {
@@ -172,7 +172,7 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
           {!pathname.includes("/admin") && (
             <div className="fixed z-50 w-[48px] h-[48px] sm:w-[54px] sm:h-[54px] bottom-16 sm:bottom-6 right-4 rounded-full opacity-80 hover:scale-105 hover:opacity-100 transition-all ease-linear hover:shadow-lg">
               <a
-                href="https://wa.me/+917306372906?text=Hi!"
+                href="https://wa.me/+916282667959?text=Hi!"
                 target="_blank"
                 rel="noopener noreferrer"
               >

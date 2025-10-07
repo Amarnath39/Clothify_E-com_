@@ -389,11 +389,12 @@ const Footer = () => {
     <div className="h-32 w-32 sm:h-56 sm:w-56 mx-auto mt-5 rounded-3xl  flex items-center justify-center overflow-hidden">
       <img
         // src="/assets/static/logo/Final Footer.svg"
-        src="/assets/static/logo/Untitled design.svg"
+        src="/assets/static/logo/SIS-LOGO.png"
         alt="logo"
         className="h-26 w-26 sm:h-62 sm:w-60 object-contain"
       />
     </div>
+      <p>Sreelekshmi VR</p>
     
   </div>
 </div>
@@ -501,19 +502,19 @@ const Footer = () => {
 
         <div className="mt-0 flex flex-col md:flex-row justify-between items-center border-t border-black pt-8">
           <p className="text-black text-sm mb-4 md:mb-0">
-            &copy; {currentYear} Udayaada. All Rights Reserved.
+            &copy; {currentYear} S.I.S. All Rights Reserved.
           </p>
           <div className="flex space-x-4 md:mr-24">
             {/* <a
               target="_blank"
-              href="https://www.instagram.com/Udayaada/"
+              href="https://www.instagram.com/S.I.S/"
               className="text-red hover:text-yellow-400 transition-colors"
             >
               <FaInstagram size={22} />
             </a> */}
              {/* <a
           target="_blank"
-          href="https://www.facebook.com/Udayaada"
+          href="https://www.facebook.com/S.I.S"
           rel="noopener noreferrer"
           className="text-red hover:text-yellow-400 transition-colors"
         >

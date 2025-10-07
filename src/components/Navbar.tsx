@@ -104,7 +104,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`bg-[#380e10] fixed w-full navbar-main transition-all duration-10 mt-1 ${topPosition}`}
+      className={`bg-[#ffffff] fixed w-full navbar-main transition-all duration-10 mt-1 ${topPosition}`}
       style={{
         zIndex: isDesktopSheetOpen ? 0 : 100,
         transform: "translate3d(0,0,0)",
@@ -124,7 +124,7 @@ const Navbar = () => {
                   variant="ghost"
                   size="icon"
                   className="hover:bg-transparent cursor-pointer"
-                  style={{ color: "#eab565" }}
+                  style={{ color: "#020101" }}
                 >
                   <RxHamburgerMenu size={30} />
                 </Button>
@@ -137,7 +137,7 @@ const Navbar = () => {
               >
                 {token && (
                   <div>
-                    <Button onClick={handleLogout} style={{ color: "#eab565" }}>
+                    <Button onClick={handleLogout} style={{ color: "#020101" }}>
                       Logout
                     </Button>
                   </div>
@@ -172,7 +172,7 @@ const Navbar = () => {
             <div className="flex-shrink-0 md:ml-24 flex items-center">
     <Link href="/" className="flex items-center">
       <img
-  src="/assets/static/logo/UDAYAADAIN.svg"
+  src="/assets/static/logo/SIS-LOGO.png"
   alt="Logo"
   className="h-20 md:h-[100px] lg:h-[104px] w-auto object-contain"
 />
@@ -191,7 +191,7 @@ const Navbar = () => {
           {/* Desktop Icons */}
           <div className="hidden md:flex ml-4 items-center gap-2 md:ml-6">
             <div onClick={() => setIsModalOpen((prev) => !prev)}>
-              <IoMdSearch size={30} className="cursor-pointer" style={{ color: "#eab565" }} />
+              <IoMdSearch size={30} className="cursor-pointer" style={{ color: "#020101" }} />
             </div>
 
             <div
@@ -199,7 +199,7 @@ const Navbar = () => {
               onClick={() => router.push("/cart")}
               className="relative cursor-pointer"
             >
-              <IoBagOutline size={28} style={{ color: "#eab565" }} />
+              <IoBagOutline size={28} style={{ color: "#020101" }} />
               {cartItems.length > 0 && (
                 <span className="absolute bottom-[-6px] right-[-4px] w-5 h-5 z-[100] rounded-full text-white flex items-center justify-center bg-primaryRed text-[10px]">
                   {cartItems.length}
@@ -213,14 +213,14 @@ const Navbar = () => {
           {/* Mobile Icons */}
           <div className="md:hidden flex items-center gap-1">
             <div onClick={() => setIsModalOpen((prev) => !prev)}>
-              <IoMdSearch size={24} className="cursor-pointer" style={{ color: "#eab565" }} />
+              <IoMdSearch size={24} className="cursor-pointer" style={{ color: "#020101" }} />
             </div>
 
             <Link href="/wishlist">
               {wishlistItems.length === 0 ? (
-                <FaRegHeart className="h-5 w-5" style={{ color: "#eab565" }} />
+                <FaRegHeart className="h-5 w-5" style={{ color: "#020101" }} />
               ) : (
-                <FaHeart className="h-5 w-5" style={{ color: "#eab565" }} />
+                <FaHeart className="h-5 w-5" style={{ color: "#020101" }} />
               )}  
             </Link>
 
@@ -230,7 +230,7 @@ const Navbar = () => {
                   variant="ghost"
                   size="icon"
                   className="hover:bg-transparent cursor-pointer"
-                  style={{ color: "#eab565" }}
+                  style={{ color: "#020101" }}
                 >
                   <FaBars className="h-5 w-5" />
                 </Button>
@@ -243,7 +243,7 @@ const Navbar = () => {
               >
                 {token && (
                   <div>
-                    <Button onClick={handleLogout} style={{ color: "#eab565" }}>
+                    <Button onClick={handleLogout} style={{ color: "#020101" }}>
                       Logout
                     </Button>
                   </div>

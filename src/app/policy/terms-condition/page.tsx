@@ -6,12 +6,12 @@ const TermsAndConditions = () => {
     {
       title: "Introduction",
       content:
-        "These Terms & Conditions govern your use of the Udayaada and all purchases made through our platform.",
+        "These Terms & Conditions govern your use of the S.I.S and all purchases made through our platform.",
     },
     {
       title: "Effective Date and Modifications",
       content:
-        "Effective Date: 1 September 2025. By accessing or using our site, you agree to comply with these terms. We may update the terms at any time, and it is your responsibility to review them periodically.",
+        "Effective Date: 07 OCTOBER 2025. By accessing or using our site, you agree to comply with these terms. We may update the terms at any time, and it is your responsibility to review them periodically.",
     },
     {
       title: "Responsible Use and Conduct",
@@ -49,12 +49,12 @@ const TermsAndConditions = () => {
 {
   title: "Intellectual Property",
   content:
-    "All website content—images, logos, product descriptions, and branding—are the property of Udayaada. Unauthorized use is strictly prohibited.",
+    "All website content—images, logos, product descriptions, and branding—are the property of S.I.S. Unauthorized use is strictly prohibited.",
 },
 {
   title: "Limitation of Liability",
   content:
-    "Udayaada is not liable for delays or failures in performance due to external events or any indirect, incidental, or consequential damages.",
+    "S.I.S is not liable for delays or failures in performance due to external events or any indirect, incidental, or consequential damages.",
 },
 {
   title: "Governing Law",
@@ -64,7 +64,7 @@ const TermsAndConditions = () => {
 {
   title: "Contact Information",
   content:
-    "📧 varnasuba755@gmail.com  | 📞 +91 7306372906",
+    "📧 sisbymridhulaparvathy@gmail.com  | 📞 +91 6282667959",
 },
 
   ];
@@ -83,7 +83,7 @@ const TermsAndConditions = () => {
               href="/"
               className="text-appPrimary-500 font-semibold hover:underline"
             >
-              https://www.udayaada.in/
+              https://www.siskerala.com/
             </Link>
             , you agree to be bound by these terms and conditions.
           </p>
@@ -115,7 +115,7 @@ const TermsAndConditions = () => {
 
         <div className="mt-12 text-center bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-appPrimary-500">
-            Thank you for using Udayada
+            Thank you for using S.I.S !
           </h2>
         </div>
       </div>
