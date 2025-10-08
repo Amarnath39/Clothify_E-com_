@@ -7,7 +7,6 @@ import AuthSlice from "./features/auth";
 import categorySlice from "./features/catogary";
 import instaSlice from "./features/insta";
 import cartSlice from "./features/cart";
-// import storage from "redux-persist/lib/storage";
 import {
   FLUSH,
   PAUSE,
@@ -23,11 +22,11 @@ import miscSlice from "./features/misc";
 import orderSlice from "./features/order";
 import productSlice from "./features/products";
 import addressSlice from "./features/address";
+
 // Define the persist config
 const persistConfig = {
   key: "Udayaada",
   storage,
-
   whitelist: ["cart", "auth", "wishlist", "order"],
 };
 
@@ -61,6 +60,15 @@ export const makeStore = () => {
   });
 };
 
+// No changes to these types
 export type AppStore = ReturnType<typeof makeStore>;
 export type RootState = ReturnType<AppStore["getState"]>;
 export type AppDispatch = AppStore["dispatch"];
+
+// --- ADD THIS NEW TYPE ---
+// This defines the shape of the state for all our async thunks
+export type AppThunkConfig = {
+  state: RootState;
+  dispatch: AppDispatch;
+  rejectValue: string; // Or a more specific error type
+};
