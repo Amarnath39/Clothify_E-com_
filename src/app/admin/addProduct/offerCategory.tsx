@@ -30,8 +30,8 @@ export const CategoryProductSelector = ({
   const dispatch = useDispatch<any>();
 
   const fetchProducts = async () => {
-    const { payload } = await dispatch(getAllProducts({ categoryId }));
-
+    const queryString = `category=${categoryId}`;
+    const { payload } = await dispatch(getAllProducts(queryString));
     if (payload.success) {
       const filteredProducts = payload.products.filter(
         (product) => product._id !== currentProductId
