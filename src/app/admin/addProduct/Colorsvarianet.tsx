@@ -29,7 +29,7 @@ export const ColorVariantSelector = ({ onChange, value, currentProductId }) => {
 
   const fetchProducts = async () => {
     const queryParams = new URLSearchParams({ search });
-    const { payload } = await dispatch(getAllProducts(queryParams));
+    const { payload } = await dispatch(getAllProducts(queryParams.toString()));
 
     if (payload.success) {
       // Filter out the current product

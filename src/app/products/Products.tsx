@@ -69,7 +69,7 @@ const Products = () => {
       });
       setLoading(true);
       try {
-        const { payload }: any = await dispatch(getAllProducts(queryParams));
+        const { payload }: any = await dispatch(getAllProducts(queryParams.toString()));
         console.log(payload, "payload");
         if (payload.success) {
           setProducts(payload);

@@ -201,7 +201,7 @@ const AddProduct = () => {
       const allProductsPromises = product.categories.map(async (categoryId) => {
         console.log(categoryId, "id");
         const queryParams = new URLSearchParams({ categoryId });
-        const { payload } = await dispatch(getAllProducts(queryParams));
+        const { payload } = await dispatch(getAllProducts(queryParams.toString()));
         return payload.success ? payload.products : [];
       });
 
@@ -231,7 +231,7 @@ const AddProduct = () => {
     const queryParams = new URLSearchParams({
       search: search,
     });
-    const { payload } = await dispatch(getAllProducts(queryParams));
+    const { payload } = await dispatch(getAllProducts(queryParams.toString()));
 
     if (payload.success) {
       setAllProducts(payload.products);

@@ -59,7 +59,7 @@ const CatgeoryProducts = ({ params }) => {
       });
       setLoading(true);
       try {
-        const { payload }: any = await dispatch(getAllProducts(queryParams));
+        const { payload }: any = await dispatch(getAllProducts(queryParams.toString()));
         if (payload.success) {
           setProducts(payload);
         } else {
