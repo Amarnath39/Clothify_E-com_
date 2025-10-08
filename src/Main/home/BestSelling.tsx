@@ -41,7 +41,7 @@ const BestSelling = () => {
             sort: "newlyArrived",
             limit: "1",
           });
-          return dispatch(getAllProducts(queryParams));
+          return dispatch(getAllProducts(queryParams.toString()));
         });
 
         const results = await Promise.all(productPromises);
