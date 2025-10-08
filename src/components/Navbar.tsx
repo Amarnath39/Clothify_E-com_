@@ -217,7 +217,7 @@ const Navbar = () => {
           {categories.map((category: any) => (
             <Link 
               key={category._id}
-              href={`/collections/${category.slug || category.name.toLowerCase().replace(/ /g, '-')}`}
+              href={`/categories/${category.slug || category.name.toLowerCase().replace(/ /g, '-')}`}
               className="text-sm font-medium tracking-wide uppercase text-gray-700 hover:text-black transition-colors duration-200"
             >
               {category.name}
