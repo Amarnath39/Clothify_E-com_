@@ -1,18 +1,21 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-
 import { apiConnector } from "@/apis/apiConnector";
 import { selectToken } from "@/lib/hooks";
+// 1. Import your thunk config type
+import type { AppThunkConfig } from "@/lib/store"; // Adjust path if needed
 
-export const getAllProducts = createAsyncThunk(
-  "/products",
-
-  async (data: any, { rejectWithValue, getState }) => {
-    const token = selectToken(getState());
+// Note: It's best to replace 'any' with specific types like Product[], Category[], etc.
+export const getAllProducts = createAsyncThunk<any, string, AppThunkConfig>(
+  "products/getAll", // 2. Conventional action type name
+  async (queryString, { rejectWithValue, getState }) => {
+    // 3. getState() is now correctly typed
+    const state = getState();
+    const token = selectToken(state);
 
     try {
       const response = await apiConnector(
         "get",
-        `/api/products?${data}`,
+        `/api/products?${queryString}`,
         null,
         {},
         null
@@ -24,13 +27,11 @@ export const getAllProducts = createAsyncThunk(
   }
 );
 
-export const getAllCategories = createAsyncThunk(
-  "/categories",
-
+export const getAllCategories = createAsyncThunk<any, void, AppThunkConfig>(
+  "category/getAll",
   async (_, { rejectWithValue, getState }) => {
-    
-
-    const token = selectToken(getState());
+    const state = getState();
+    const token = selectToken(state);
 
     try {
       const response = await apiConnector(
@@ -40,8 +41,6 @@ export const getAllCategories = createAsyncThunk(
         {},
         null
       );
-    
-
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data);
@@ -49,15 +48,16 @@ export const getAllCategories = createAsyncThunk(
   }
 );
 
-export const getProductsById = createAsyncThunk(
-  "/products/:id",
-
-  async (data: any, { rejectWithValue, getState }) => {
-    const token = selectToken(getState());
+export const getProductsById = createAsyncThunk<any, string, AppThunkConfig>(
+  "products/getById",
+  async (productId, { rejectWithValue, getState }) => {
+    const state = getState();
+    const token = selectToken(state);
+    
     try {
       const response = await apiConnector(
         "get",
-        `/api/products/${data}`,
+        `/api/products/${productId}`,
         null,
         {},
         null

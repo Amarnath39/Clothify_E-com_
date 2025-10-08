@@ -1,17 +1,20 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-
 import { apiConnector } from "@/apis/apiConnector";
 import { selectToken } from "@/lib/hooks";
+// 1. Import your thunk config type
+import type { AppThunkConfig } from "@/lib/store"; // Adjust path if needed
 
-export const getSearchSuggestion = createAsyncThunk(
-  "/search",
+export const getSearchSuggestion = createAsyncThunk<any, string, AppThunkConfig>(
+  "misc/getSearchSuggestion", // 2. Conventional action type name
+  async (searchQuery, { rejectWithValue, getState }) => {
+    // 3. getState() is now correctly typed
+    const state = getState();
+    const token = selectToken(state);
 
-  async (data: any, { rejectWithValue, getState }) => {
-    const token = selectToken(getState());
     try {
       const response = await apiConnector(
         "get",
-        `/api/search/?search=${data}`,
+        `/api/search/?search=${searchQuery}`,
         null,
         {},
         null
@@ -23,11 +26,12 @@ export const getSearchSuggestion = createAsyncThunk(
   }
 );
 
-export const getImageTextData = createAsyncThunk(
-  "/image-text",
-
+export const getImageTextData = createAsyncThunk<any, void, AppThunkConfig>(
+  "misc/getImageTextData",
   async (_, { rejectWithValue, getState }) => {
-    const token = selectToken(getState());
+    const state = getState();
+    const token = selectToken(state);
+
     try {
       const response = await apiConnector(
         "get",

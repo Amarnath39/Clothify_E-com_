@@ -1,92 +1,16 @@
-// import { createAsyncThunk } from "@reduxjs/toolkit";
-
-// import { apiConnector } from "@/apis/apiConnector";
-// import { selectToken } from "@/lib/hooks";
-
-// export const proceedToCheckoutApi = createAsyncThunk(
-//   "/order",
-
-//   async (data: any, { rejectWithValue, getState }) => {
-//     const token = selectToken(getState());
-//     try {
-//       const response = await apiConnector("post", `/api/order`, data, {}, null);
-//       return response.data;
-//     } catch (error: any) {
-//       return rejectWithValue(error.response?.data);
-//     }
-//   }
-// );
-
-// export const getOrdersData = createAsyncThunk(
-//   "/orders-data",
-
-//   async (_, { rejectWithValue, getState }) => {
-//     const token = selectToken(getState());
-//     try {
-//       const response = await apiConnector("get", `/api/order`, null, {}, null);
-//       return response.data;
-//     } catch (error: any) {
-//       return rejectWithValue(error.response?.data);
-//     }
-//   }
-// );
-
-// export const successOrder = createAsyncThunk(
-//   "/orders",
-
-//   async (data: any, { rejectWithValue, getState }) => {
-//     const token = selectToken(getState());
-//     try {
-//       const response = await apiConnector(
-//         "post",
-//         `/api/order/${data.id}`,
-//         data,
-//         {},
-//         null
-//       );
-//       return response.data;
-//     } catch (error: any) {
-//       return rejectWithValue(error.response?.data);
-//     }
-//   }
-// );
-
-// export const refreshOrderStatus = createAsyncThunk(
-//   "/refreshOrders",
-
-//   async (
-//     data: { orderId: string; transactionId: string; userId?: string }, // ✅ added userId
-//     { rejectWithValue, getState }
-//   ) => {
-//     const token = selectToken(getState());
-//     try {
-//       const response = await apiConnector(
-//         "get", // ✅ GET instead of POST
-//         `/api/payment/status/${data.orderId}`,
-//         null,
-//         {
-//           "x-user-id": data.userId || "", // ✅ use optional userId
-//         },
-//         null
-//       );
-//       return response.data;
-//     } catch (error: any) {
-//       return rejectWithValue(error.response?.data);
-//     }
-//   }
-// );
-
-
 import { createAsyncThunk } from "@reduxjs/toolkit";
-
 import { apiConnector } from "@/apis/apiConnector";
 import { selectToken } from "@/lib/hooks";
+// 1. Import your thunk config type
+import type { AppThunkConfig } from "@/lib/store"; // Adjust path if needed
 
-export const proceedToCheckoutApi = createAsyncThunk(
-  "/order",
+export const proceedToCheckoutApi = createAsyncThunk<any, any, AppThunkConfig>(
+  "order/checkout", // 2. Conventional action type name
+  async (data, { rejectWithValue, getState }) => {
+    // 3. getState() is now correctly typed
+    const state = getState();
+    const token = selectToken(state);
 
-  async (data: any, { rejectWithValue, getState }) => {
-    const token = selectToken(getState());
     try {
       const response = await apiConnector("post", `/api/order`, data, {}, null);
       return response.data;
@@ -96,11 +20,12 @@ export const proceedToCheckoutApi = createAsyncThunk(
   }
 );
 
-export const getOrdersData = createAsyncThunk(
-  "/orders-data",
-
+export const getOrdersData = createAsyncThunk<any, void, AppThunkConfig>(
+  "order/getAll",
   async (_, { rejectWithValue, getState }) => {
-    const token = selectToken(getState());
+    const state = getState();
+    const token = selectToken(state);
+
     try {
       const response = await apiConnector("get", `/api/order`, null, {}, null);
       return response.data;
@@ -110,11 +35,12 @@ export const getOrdersData = createAsyncThunk(
   }
 );
 
-export const successOrder = createAsyncThunk(
-  "/orders",
+export const successOrder = createAsyncThunk<any, any, AppThunkConfig>(
+  "order/success",
+  async (data, { rejectWithValue, getState }) => {
+    const state = getState();
+    const token = selectToken(state);
 
-  async (data: any, { rejectWithValue, getState }) => {
-    const token = selectToken(getState());
     try {
       const response = await apiConnector(
         "post",
@@ -130,21 +56,23 @@ export const successOrder = createAsyncThunk(
   }
 );
 
-export const refreshOrderStatus = createAsyncThunk(
-  "/refreshOrders",
+export const refreshOrderStatus = createAsyncThunk<
+  any,
+  { orderId: string; transactionId: string; userId?: string },
+  AppThunkConfig
+>(
+  "order/refreshStatus",
+  async (data, { rejectWithValue, getState }) => {
+    const state = getState();
+    const token = selectToken(state);
 
-  async (
-    data: { orderId: string; transactionId: string; userId?: string }, // ✅ added userId
-    { rejectWithValue, getState }
-  ) => {
-    const token = selectToken(getState());
     try {
       const response = await apiConnector(
-        "get", // ✅ GET instead of POST
+        "get",
         `/api/payment/status/${data.transactionId}`,
         null,
         {
-          "x-user-id": data.userId || "", // ✅ use optional userId
+          "x-user-id": data.userId || "",
         },
         null
       );
@@ -154,7 +82,3 @@ export const refreshOrderStatus = createAsyncThunk(
     }
   }
 );
-
-
-
-
