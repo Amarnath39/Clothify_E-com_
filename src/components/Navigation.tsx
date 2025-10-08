@@ -71,7 +71,7 @@ const Navigation = ({ categories }) => {
             CATEGORIES
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <div className="p-4 bg-gradient-to-br  rounded-lg shadow-xl border border-red-600/30 max-w-screen-lg max-h-[500px] overflow-auto ">
+            <div className="p-4 bg-gradient-to-br  rounded-lg shadow-xl border border-black max-w-screen-lg max-h-[500px] overflow-auto ">
               <div className="flex space-x-4">
                 {renderCategoryColumn(topLevelCategories)}
                 {activeCategory &&

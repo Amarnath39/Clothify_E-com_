@@ -14,7 +14,7 @@ const BottomNavbar = () => {
   if (!isMobile) return null;
   return (
     <div
-      className="fixed bottom-0 left-0 w-full bg-secondaryRed shadow-md border-t border-white flex justify-around items-center py-3 sm:py-4 footer-main"
+      className="fixed bottom-0 left-0 w-full bg-[#000000] shadow-md border-t border-white flex justify-around items-center py-3 sm:py-4 footer-main"
       style={{ zIndex: 100 }}
     >
       <Link
