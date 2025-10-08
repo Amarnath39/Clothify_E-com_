@@ -4,14 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Quicksand } from "next/font/google";
-import { Eye } from "lucide-react";
-import { Bodoni_Moda } from "next/font/google";
-
-const bodoni_Moda = Bodoni_Moda({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-bodoni_moda",
-});
+// The unused Bodoni_Moda import has been removed.
 
 interface Video {
   videoId: string;
@@ -19,6 +12,7 @@ interface Video {
   url: string;
 }
 const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
+
 export default function VideoList() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [message, setMessage] = useState("");
@@ -79,9 +73,8 @@ export default function VideoList() {
   return (
     <div className="p-0 w-full">
       {/* Heading */}
-<div className={`flex items-center justify-center mb-8 mt-12 ${quicksand.className}`}>
-         
-      <h1 className="relative text-3xl mt-12 tracking-wider py-2 pt-6 text-center mx-auto animated-underline">
+      <div className={`flex items-center justify-center mb-8 mt-12 ${quicksand.className}`}>
+        <h1 className="relative text-3xl mt-12 tracking-wider py-2 pt-6 text-center mx-auto animated-underline">
           WATCH & SHOP
         </h1>
       </div>

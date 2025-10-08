@@ -1,15 +1,14 @@
-// src/Main/home/BestSelling.tsx
-
 "use client";
 
 import React, { useEffect, useState } from "react";
-// import { useDispatch } from "react-redux"; // <-- 1. REMOVE THIS LINE
-import { useAppDispatch } from "@/lib/hooks"; // <-- 2. ADD THIS (adjust path if needed)
 import { useRouter } from "next/navigation";
 import { Quicksand } from "next/font/google";
+
+// Corrected Redux hook import
+import { useAppDispatch } from "@/lib/hooks"; // (Adjust path if needed)
 import { getAllProducts } from "@/lib/features/catogary";
 
-// --- Style imports ---
+// Style imports
 import "swiper/css/pagination";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -24,9 +23,13 @@ const PRODUCT_CATEGORIES = [
 ];
 
 const BestSelling = () => {
-  const [products, setProducts] = useState({});
-  const [hoveredType, setHoveredType] = useState(null);
-  const dispatch = useAppDispatch(); // <-- 3. USE THE TYPED HOOK
+  const [products, setProducts] = useState<any>({}); // Using 'any' for now, but a proper type would be better
+  
+  // Correction #2: Explicitly typed the state to accept string or null
+  const [hoveredType, setHoveredType] = useState<string | null>(null);
+  
+  // Correction #1: Using the correctly typed dispatch hook
+  const dispatch = useAppDispatch();
   const router = useRouter();
 
   useEffect(() => {
@@ -38,7 +41,6 @@ const BestSelling = () => {
             sort: "newlyArrived",
             limit: "1",
           });
-          // This dispatch call is now type-safe and will not cause an error.
           return dispatch(getAllProducts(queryParams));
         });
 
@@ -61,17 +63,18 @@ const BestSelling = () => {
     fetchAllProducts();
   }, [dispatch]);
 
-  // ... rest of your JSX remains the same
   return (
     <div className={`${quicksand.className} antialiased bg-white py-12 sm:py-16`}>
       <h1 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-8">
         Our Collections
       </h1>
+
       <div className="w-full h-[85vh] sm:h-[75vh] min-h-[600px] sm:min-h-[500px] max-h-[900px] sm:max-h-[800px] flex flex-col sm:flex-row p-2 gap-2">
         {PRODUCT_CATEGORIES.map((category) => {
           const product = products[category.type];
           const isHovered = hoveredType === category.type;
           const isAnyHovered = hoveredType !== null;
+
           const flexValue = isAnyHovered
             ? isHovered
               ? "flex-[5]"
@@ -89,11 +92,12 @@ const BestSelling = () => {
                 backgroundSize: "auto 100%",
                 backgroundPosition: "center",
               }}
-              onMouseEnter={() => setHoveredType(category.type)}
+              onMouseEnter={() => setHoveredType(category.type)} // This line will now work correctly
               onMouseLeave={() => setHoveredType(null)}
               onClick={() => router.push(`/products?${category.type}=true`)}
             >
               <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-50 transition-all duration-500"></div>
+
               <div className="relative w-full h-full flex flex-col justify-end items-start p-6 sm:p-10 text-white">
                 <div
                   className="w-full transform transition-transform duration-500 ease-out"
