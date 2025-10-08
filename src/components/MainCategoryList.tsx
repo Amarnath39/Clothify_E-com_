@@ -55,21 +55,31 @@ const CategoryList = () => {
         <Swiper
           modules={[Navigation, Autoplay]}
           autoplay={{
-            delay: 1000,
+            delay: 2500,
             disableOnInteraction: false,
             pauseOnMouseEnter: true,
           }}
-          speed={2000}
+          speed={1500}
           loop={true}
           centeredSlides={true}
-          slidesPerView={2.6} // desktop view
-          spaceBetween={60}
+          // The `slidesPerView` is now fully controlled by the breakpoints below
+          // for a mobile-first responsive approach.
           breakpoints={{
-            // Mobile view is set to 1.01 to ensure the active card is fully centered without peeking too much.
-            480: { slidesPerView: 1.01, spaceBetween: 10 }, 
-            768: { slidesPerView: 2.1, spaceBetween: 40 }, // tablet view
-            1024: { slidesPerView: 2.6, spaceBetween: 60 },
-            1280: { slidesPerView: 2.8, spaceBetween: 80 },
+            // Mobile view (3-card UI): Shows 1 main card and parts of the next/prev
+            320: {
+              slidesPerView: 1.5,
+              spaceBetween: 15,
+            },
+            // Tablet view
+            768: {
+              slidesPerView: 3.5,
+              spaceBetween: 30,
+            },
+            // Desktop view (original 5-card UI)
+            1024: {
+              slidesPerView: 4.6,
+              spaceBetween: 40,
+            },
           }}
           className="!py-8 overflow-visible"
         >
@@ -80,8 +90,8 @@ const CategoryList = () => {
             >
               <div
                 onClick={() => router.push(`/categories/${category._id}`)}
-                // Desktop width/height defined here: w-[320px] md:w-[380px] h-[500px] md:h-[540px]
-                className="relative w-[320px] md:w-[380px] h-[500px] md:h-[540px] cursor-pointer category-card rounded-2xl overflow-hidden shadow-xl transition-transform duration-700"
+                // Card size is now controlled by base styles and the mobile media query
+                className="relative w-[260px] md:w-[300px] h-[380px] md:h-[420px] cursor-pointer category-card rounded-2xl overflow-hidden shadow-xl transition-transform duration-700"
               >
                 {/* Image */}
                 <img
@@ -122,42 +132,58 @@ const CategoryList = () => {
           display: flex;
           justify-content: center;
           overflow: visible !important;
-          transition: transform 0.6s ease;
         }
 
-        /* === 3D Tilt with center highlight (Desktop/Default) === */
+        /* === 3D Perspective Styling for 5-Card Layout === */
+
+        /* Base state for all cards (scaled down) */
         .category-card {
-          transform: perspective(1200px) rotateY(0deg) scale(0.85);
-          opacity: 0.8;
+          transform: perspective(1200px) rotateY(0deg) scale(0.8);
+          opacity: 0.7;
           transition: all 0.8s ease;
         }
 
+        /* Active (Center) Card: larger and fully visible */
         .swiper-slide-active .category-card {
-          /* Default/Desktop Zoom */
-          transform: perspective(1200px) rotateY(0deg) scale(1.15);
+          transform: perspective(1200px) rotateY(0deg) scale(1.1);
           opacity: 1;
           z-index: 10;
           box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
         }
 
+        /* Inner Side Cards (Immediately next to center) */
         .swiper-slide-prev .category-card {
-          transform: perspective(1200px) rotateY(12deg) translateX(50px)
+          transform: perspective(1200px) rotateY(15deg) translateX(40px)
             scale(0.85);
-          opacity: 0.85;
+          opacity: 0.8;
           z-index: 4;
         }
 
         .swiper-slide-next .category-card {
-          transform: perspective(1200px) rotateY(-12deg) translateX(-50px)
+          transform: perspective(1200px) rotateY(-15deg) translateX(-40px)
             scale(0.85);
-          opacity: 0.85;
+          opacity: 0.8;
           z-index: 4;
+        }
+        
+        /* NEW: Outer Side Cards (The second card from the center) */
+        .swiper-slide-prev-prev .category-card {
+            transform: perspective(1200px) rotateY(25deg) translateX(80px) scale(0.7);
+            opacity: 0.6;
+            z-index: 3;
+        }
+
+        .swiper-slide-next-next .category-card {
+            transform: perspective(1200px) rotateY(-25deg) translateX(-80px) scale(0.7);
+            opacity: 0.6;
+            z-index: 3;
         }
 
         .swiper-slide-active .category-card:hover {
-          transform: perspective(1200px) rotateY(0deg) scale(1.2);
+          transform: perspective(1200px) rotateY(0deg) scale(1.15);
         }
 
+        /* Animated Underline for Title */
         .animated-underline::after {
           content: "";
           display: block;
@@ -178,26 +204,23 @@ const CategoryList = () => {
           }
         }
 
-        /* Mobile adjustments (for screens up to 768px wide) */
+        /* MODIFIED: Mobile adjustments for the 3-card UI */
         @media (max-width: 768px) {
-          /* Dimensions: Very wide and short */
+          /*
+            Card width is reduced from the original '80vw' to '65vw'.
+            This makes the central card slightly smaller, allowing the
+            adjacent cards to be more visible and creating the 3-card effect.
+            Height is also adjusted for better proportions on mobile.
+          */
           .category-card {
-            width: 98vw !important;
-            max-width: 480px !important; 
-            height: 200px !important;
+            width: 65vw !important;
+            max-width: 280px !important; 
+            height: 360px !important;
           }
-          
-          /* Active Card: SIGNIFICANTLY INCREASED SCALE (Zoom) for mobile only */
+
+          /* On mobile, the active card's scale is slightly reduced for a cleaner look */
           .swiper-slide-active .category-card {
-            transform: perspective(1000px) rotateY(0deg) scale(2.0); /* Increased scale to 1.2 */
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-          }
-          
-          /* Side Cards: Keep small relative to the central one */
-          .swiper-slide-prev .category-card,
-          .swiper-slide-next .category-card {
-            transform: perspective(1000px) rotateY(0deg) translateX(0px) scale(0.8); /* Reduced scale of side cards */
-            opacity: 0.7;
+            transform: perspective(1200px) rotateY(0deg) scale(1);
           }
         }
       `}</style>
