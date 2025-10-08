@@ -154,3 +154,19 @@
     transform: translateY(-7.5px);
   }
 }
+
+
+@keyframes marquee {
+ 
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}

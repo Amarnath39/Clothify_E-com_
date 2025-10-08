@@ -491,7 +491,7 @@ const InstagramPage: React.FC = () => {
           href="https://www.instagram.com/udayaada_.in_2025/"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block bg-gradient-to-r bg-secondaryRed text-white font-bold text-lg py-2 px-10 rounded-full hover:bg-yellow transition-all duration-300 shadow-lg hover:shadow-xl"
+          className="inline-block bg-gradient-to-r bg-black text-white font-bold text-lg py-2 px-10 rounded-full hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl"
         >
           Follow Us
         </a>

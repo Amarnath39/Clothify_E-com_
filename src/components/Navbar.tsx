@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { RxHamburgerMenu } from "react-icons/rx";
 import {
   Sheet,
   SheetContent,
@@ -111,75 +110,33 @@ const Navbar = () => {
         willChange: "transform",
       }}
     >
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 p-4 sm:p-5">
-<div className="flex items-center justify-between h-14 md:h-16">
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-4 text-lg tracking-wide">
-            <Sheet
-              open={isDesktopSheetOpen}
-              onOpenChange={setIsDesktopSheetOpen}
-            >
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hover:bg-transparent cursor-pointer"
-                  style={{ color: "#020101" }}
-                >
-                  <RxHamburgerMenu size={30} />
-                </Button>
-              </SheetTrigger>
-
-              <SheetContent
-                side="left"
-                className="w-[300px] sm:w-[400px] bg-white text-black"
-                style={{ zIndex: 9999 }}
-              >
-                {token && (
-                  <div>
-                    <Button onClick={handleLogout} style={{ color: "#020101" }}>
-                      Logout
-                    </Button>
-                  </div>
-                )}
-                <SheetHeader>
-                  <SheetTitle className="text-navbarBackground mt-12">
-                    Our Categories
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="py-4 space-y-4 overflow-y-scroll">
-                  <NavigationMobile
-                    categories={categories}
-                    onNavigate={closeSheet}
-                    setIsDesktopSheetOpen={setIsDesktopSheetOpen}
-                  />
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+        {/* Main header section for logo and icons */}
+        <div className="flex items-center justify-between h-14 md:h-16">
 
           {/* Logo */}
-          {/* <div className="flex-shrink-0 md:ml-24">
-            <Link href="/" className="text-2xl font-bold flex items-center gap-2">
+          <div className="flex-shrink-0 flex items-center">
+            <Link href="/" className="flex items-center">
               <img
-                className="w-48 sm:w-40 md:w-56 lg:w-64 object-contain"
-                // src="/assets/static/logo/Udayaada Final.png"
-                src="/assets/static/logo/new.jpeg"
+                src="/assets/static/logo/SIS-LOGO.png"
                 alt="Logo"
+                className="h-20 md:h-[100px] lg:h-[104px] w-auto object-contain"
               />
             </Link>
-          </div> */}
-            <div className="flex-shrink-0 md:ml-24 flex items-center">
-    <Link href="/" className="flex items-center">
-      <img
-  src="/assets/static/logo/SIS-LOGO.png"
-  alt="Logo"
-  className="h-20 md:h-[100px] lg:h-[104px] w-auto object-contain"
-/>
+          </div>
 
-    </Link>
-  </div>
-
+          {/* Desktop Search Bar - Centered */}
+          <div className="hidden md:flex flex-1 justify-center px-8">
+            <div className="w-full max-w-md">
+              <div 
+                onClick={() => setIsModalOpen((prev) => !prev)}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full cursor-pointer hover:border-gray-400 transition-colors"
+              >
+                <IoMdSearch size={24} style={{ color: "#020101" }} />
+                <span className="text-gray-500 text-sm">Search...</span>
+              </div>
+            </div>
+          </div>
 
           {isModalOpen && (
             <AnimatedSearchInput
@@ -189,11 +146,7 @@ const Navbar = () => {
           )}
 
           {/* Desktop Icons */}
-          <div className="hidden md:flex ml-4 items-center gap-2 md:ml-6">
-            <div onClick={() => setIsModalOpen((prev) => !prev)}>
-              <IoMdSearch size={30} className="cursor-pointer" style={{ color: "#020101" }} />
-            </div>
-
+          <div className="hidden md:flex items-center gap-2">
             <div
               title="cart"
               onClick={() => router.push("/cart")}
@@ -207,7 +160,7 @@ const Navbar = () => {
               )}
             </div>
 
-            <UserMenu setIsSheetOpen={setIsSheetOpen}  />
+            <UserMenu setIsSheetOpen={setIsSheetOpen} />
           </div>
 
           {/* Mobile Icons */}
@@ -221,7 +174,7 @@ const Navbar = () => {
                 <FaRegHeart className="h-5 w-5" style={{ color: "#020101" }} />
               ) : (
                 <FaHeart className="h-5 w-5" style={{ color: "#020101" }} />
-              )}  
+              )}
             </Link>
 
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -258,6 +211,20 @@ const Navbar = () => {
             </Sheet>
           </div>
         </div>
+        
+        {/* Category Navigation Bar - Below search */}
+        <div className="hidden md:flex items-center justify-center gap-x-8 py-3 border-t border-gray-200">
+          {categories.map((category: any) => (
+            <Link 
+              key={category._id}
+              href={`/collections/${category.slug || category.name.toLowerCase().replace(/ /g, '-')}`}
+              className="text-sm font-medium tracking-wide uppercase text-gray-700 hover:text-black transition-colors duration-200"
+            >
+              {category.name}
+            </Link>
+          ))}
+        </div>
+
       </div>
     </nav>
   );

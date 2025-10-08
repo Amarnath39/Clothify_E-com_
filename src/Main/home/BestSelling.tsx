@@ -1,160 +1,130 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+import { Quicksand } from "next/font/google";
+import { getAllProducts } from "@/lib/features/catogary"; // Assuming this path is correct
+
+// --- Style imports (can be removed if not used elsewhere) ---
 import "swiper/css/pagination";
 import "swiper/css";
 import "swiper/css/navigation";
 import "./swiper.css";
 
-import Aos from "aos";
-import { useDispatch } from "react-redux";
-import { getAllProducts } from "@/lib/features/catogary";
-import { useRouter } from "next/navigation";
-import { Quicksand } from "next/font/google";
-
 const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
 
-// ProductCard component
-const ProductCard = ({ product, type }) => {
-  const router = useRouter();
+// Configuration for product categories. This makes the component scalable.
+const PRODUCT_CATEGORIES = [
+  {
+    type: "bestsellerProduct",
+    title: "Best Sellers",
+  },
+  {
+    type: "latestProduct",
+    title: "New Arrivals",
+  },
+  {
+    type: "featureProduct",
+    title: "Featured",
+  },
+];
 
-  return (
-    <div
-      onClick={() => {
-        const baseRoute =
-          type === "bestsellerProduct"
-            ? "/products?bestsellerProduct=true"
-            : type === "latestProduct"
-            ? "/products?latestProduct=true"
-            : "/products?featureProduct=true";
-
-        router.push(`${baseRoute}`);
-      }}
-    >
-      <div className="w-[19rem] h-[14rem] sm:w-[24rem] sm:h-[19rem] rounded-lg relative cursor-pointer mx-1">
-        <img
-          loading="lazy"
-          src={product?.img?.[0]}
-          alt={product?.name}
-          className="w-full h-full object-cover object-top transition-opacity duration-300 rounded-3xl"
-        />
-
-        <div className="absolute bottom-10 left-10 flex justify-between items-center gap-20 bg-white hover:bg-gray-100 px-4 py-3 rounded-xl font-medium">
-          <h1 className="text-xl sm:text-2xl text-[#04322f] hover:text-red-400 cursor-pointer font-quicksand">
-            {type === "bestsellerProduct"
-              ? "Best Seller"
-              : type === "latestProduct"
-              ? "Latest"
-              : "Featured"}
-          </h1>
-          <img
-            src="https://cdn.prod.website-files.com/645a69e5ff9a553155774bec/645cc13f45e0640130bc7ae1_right-arrow-medium.svg"
-            alt=""
-            className="h-6 w-8 hover:text-red-400"
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// BestSelling main component
+// Main BestSelling component with the new UI
 const BestSelling = () => {
-  const [bestProduct, setBestProduct] = useState(null);
-  const [latestProduct, setLatestProduct] = useState(null);
-  const [featureProduct, setFeatureProduct] = useState(null);
-  const dispatch = useDispatch<any>();
+  const [products, setProducts] = useState({});
+  const [hoveredType, setHoveredType] = useState(null); // State to track hovered panel
+  const dispatch = useDispatch();
   const router = useRouter();
 
   useEffect(() => {
-    const fetchProducts = async (filterKey, setter) => {
-      const queryParams = new URLSearchParams({
-        [filterKey]: "true",
-        sort: "newlyArrived",
-        limit: "30",
-      });
-
+    const fetchAllProducts = async () => {
       try {
-        const { payload } = await dispatch(getAllProducts(queryParams));
+        const productPromises = PRODUCT_CATEGORIES.map((category) => {
+          const queryParams = new URLSearchParams({
+            [category.type]: "true",
+            sort: "newlyArrived",
+            limit: "1",
+          });
+          return dispatch(getAllProducts(queryParams));
+        });
 
-        if (payload.success && payload.products.length > 0) {
-          setter(payload.products[0]);
-        }
+        const results = await Promise.all(productPromises);
+
+        const fetchedProducts = results.reduce((acc, result, index) => {
+          if (result.payload?.success && result.payload.products.length > 0) {
+            const categoryType = PRODUCT_CATEGORIES[index].type;
+            acc[categoryType] = result.payload.products[0];
+          }
+          return acc;
+        }, {});
+
+        setProducts(fetchedProducts);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     };
 
-    fetchProducts("bestsellerProduct", setBestProduct);
-    fetchProducts("latestProduct", setLatestProduct);
-    fetchProducts("featureProduct", setFeatureProduct);
+    fetchAllProducts();
   }, [dispatch]);
 
   return (
-    <div className={quicksand.className}>
-      <div className="bg-white pb-6 overflow-hidden">
-        {/* Heading with underline */}
-        <h1 className="relative text-xl mt-12 sm:text-3xl font-medium text-center mx-auto mb-8 animated-underline">
-          OUR COLLECTION
-        </h1>
+    <div className={`${quicksand.className} antialiased bg-white py-12 sm:py-16`}>
+      <h1 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-8">
+        Our Collections
+      </h1>
 
-        <div className="flex justify-between items-center gap-8 my-10 mx-4 sm:mx-24">
-          <div
-            className="flex items-center sm:gap-2 cursor-pointer group ml-auto"
-            onClick={() => router.push("/products")}
-          >
-            <span className="text-base sm:text-lg">VIEW MORE</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="36"
-              height="24"
-              viewBox="0 0 26 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="transform transition-transform duration-300 group-hover:translate-x-2"
+      <div className="w-full h-[85vh] sm:h-[75vh] min-h-[600px] sm:min-h-[500px] max-h-[900px] sm:max-h-[800px] flex flex-col sm:flex-row p-2 gap-2">
+        {PRODUCT_CATEGORIES.map((category) => {
+          const product = products[category.type];
+          const isHovered = hoveredType === category.type;
+          const isAnyHovered = hoveredType !== null;
+
+          const flexValue = isAnyHovered
+            ? isHovered
+              ? "flex-[5]"
+              : "flex-[1]"
+            : "flex-1";
+
+          return (
+            <div
+              key={category.type}
+              className={`relative rounded-2xl overflow-hidden cursor-pointer w-full transition-all duration-700 ease-in-out ${flexValue}`}
+              style={{
+                backgroundImage: `url(${
+                  product?.img?.[0] || "https://placehold.co/800x1200/e2e8f0/e2e8f0"
+                })`,
+                // --- THIS IS THE ONLY LINE THAT WAS CHANGED ---
+                backgroundSize: "auto 100%", // Replaced "cover"
+                backgroundPosition: "center",
+              }}
+              onMouseEnter={() => setHoveredType(category.type)}
+              onMouseLeave={() => setHoveredType(null)}
+              onClick={() => router.push(`/products?${category.type}=true`)}
             >
-              <path d="M4 12h16" />
-              <path d="M14 5l7 7-7 7" />
-            </svg>
-          </div>
-        </div>
+              <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-50 transition-all duration-500"></div>
 
-        <div className="flex justify-center flex-wrap gap-10 md:mx-auto my-12">
-          {bestProduct && (
-            <ProductCard product={bestProduct} type="bestsellerProduct" />
-          )}
-          {latestProduct && (
-            <ProductCard product={latestProduct} type="latestProduct" />
-          )}
-          {featureProduct && (
-            <ProductCard product={featureProduct} type="featureProduct" />
-          )}
-        </div>
+              <div className="relative w-full h-full flex flex-col justify-end items-start p-6 sm:p-10 text-white">
+                {/* --- MODIFIED SECTION --- */}
+                {/* The layout classes for mobile have been removed as they are no longer needed. */}
+                <div
+                  className="w-full transform transition-transform duration-500 ease-out"
+                  style={{ opacity: isHovered ? 1 : 0.95 }}
+                >
+                  {/* Title is now always stacked. Margin bottom only applies on desktop to create space for the button. */}
+                  <h2 className="text-2xl sm:text-4xl font-bold tracking-tight sm:mb-4">
+                    {category.title}
+                  </h2>
 
-        {/* Global underline styles */}
-        <style jsx global>{`
-          .animated-underline::after {
-            content: "";
-            display: block;
-            height: 4px;
-            margin: 0.5rem auto 0;
-            border-radius: 9999px;
-            background: linear-gradient(to right, #eab564, #eab664);
-            width: 0;
-            animation: underlineGrow 0.8s ease-out forwards;
-          }
-          @keyframes underlineGrow {
-            from {
-              width: 0;
-            }
-            to {
-              width: 6rem;
-            }
-          }
-        `}</style>
+                  {/* Button is hidden on mobile and appears as a block on desktop ('sm' screens and up) */}
+                  <button className="bg-transparent border-2 border-white text-white font-bold py-2 px-6 rounded-lg hover:bg-white hover:text-black transition-all duration-300 hidden sm:block">
+                    EXPLORE
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

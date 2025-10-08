@@ -452,7 +452,7 @@ const Footer = () => {
 
               <div className="space-y-6">
                 <div className="text-center">
-                  <h2 className="text-lg tracking-wide text-secondaryRed mb-4">
+                  <h2 className="text-lg tracking-wide text-black mb-4">
                     SUBSCRIBE
                   </h2>
                   <p className="text-black text-sm mb-4 tracking-wide">
@@ -475,7 +475,7 @@ const Footer = () => {
                   />
                   <Button
                     type="submit"
-                    className="bg-white text-secondaryRed hover:bg-secondaryRed hover:text-white border-black rounded-lg transition-colors duration-300"
+                    className="bg-white text-black hover:bg-secondaryRed hover:text-white border-black rounded-lg transition-colors duration-300"
                     disabled={loading}
                   >
                     {loading ? "Subscribing..." : "SUBSCRIBE NOW"}

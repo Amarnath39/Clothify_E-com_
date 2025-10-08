@@ -30,8 +30,8 @@ export default function Home() {
       </div> */}
       <Banner />
       <MainCategoryList />
-      <BestSelling />
       <Featured />
+      <BestSelling />
       <OptionStrap />
       {/* <CategoryCarousel /> */}
       {/* <ImageComparisonSlider /> */}

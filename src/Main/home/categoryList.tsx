@@ -1,118 +1,198 @@
 "use client";
 
 import { getAllCategories } from "@/lib/features/catogary";
-import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
-import { Quicksand, Playfair_Display } from "next/font/google";
-import Carousel from "react-multi-carousel";
-import "react-multi-carousel/lib/styles.css";
-import { motion } from "framer-motion";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import { useRouter } from "next/navigation";
+import { Quicksand } from "next/font/google";
 
-const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "600"] });
+// Import Quicksand font
+const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
 
 const CategoryList = () => {
-  const dispatch = useDispatch<any>();
-  const [categoriesData, setCategoriesData] = useState<any[]>([]);
+  const dispatch = useDispatch<any>();
+  const router = useRouter();
+  const [categories, setCategories] = useState<any>([]);
 
-  useEffect(() => {
-    const callGetAllCategory = async () => {
-      try {
-        const { payload } = await dispatch(getAllCategories());
-        if (payload.success === true) {
-          const sortedCategories = payload.categories
-            .sort(
-              (a, b) =>
-                new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-            )
-            .slice(0, 8);
-          setCategoriesData(sortedCategories);
-        } else {
-          toast.error(payload.msg);
-        }
-      } catch (error) {
-        toast.error("Something went wrong");
-      }
-    };
+  useEffect(() => {
+    callGetAllCategories();
+  }, []);
 
-    callGetAllCategory();
-  }, []);
+  const callGetAllCategories = async () => {
+    try {
+      // API connectivity and data fetching remains intact
+      const { payload } = await dispatch(getAllCategories());
 
-  const responsive = {
-    superLargeDesktop: { breakpoint: { max: 4000, min: 1900 }, items: 4 },
-    desktop: { breakpoint: { max: 1900, min: 1500 }, items: 4 },
-    miniDesktop: { breakpoint: { max: 1500, min: 1300 }, items: 4 },
-    tablet: { breakpoint: { max: 1300, min: 1000 }, items: 3 },
-    miniTablet: { breakpoint: { max: 1000, min: 700 }, items: 3 },
-    mobile: { breakpoint: { max: 700, min: 0 }, items: 2 },
-    miniMobile: { breakpoint: { max: 540, min: 0 }, items: 2 },
-  };
+      if (payload.success) {
+        const parentCategories = payload.categories.filter(
+          (category) => category.parentCategory.length === 0
+        );
+        setCategories(parentCategories);
+      } else {
+        toast.error(payload.msg);
+      }
+    } catch (error: any) {
+      toast.error(error?.message);
+    }
+  };
 
-    return (
-      <div className="flex flex-col lg:min-h-[80vh] ">
-        <h1
-          className={`${quicksand.className} mt-8 sm:mt-20 mb-3 lg:mb-8 text-xl sm:text-4xl font-semibold text-gray-800 text-center`}
-        >
-          OUR CATEGORIES
-        </h1>
+  return (
+    <div
+      className={`${quicksand.className} overflow-hidden container mx-auto relative pb-12`}
+    >
+      {/* Title with underline animation */}
+      <h1 className="relative text-3xl mb-8 mt-12 text-center block mx-auto animated-underline">
+        SHOP BY CATEGORY
+      </h1>
 
-        {/* Desktop View */}
-        <div className="hidden lg:grid lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-8 justify-center mx-12">
-          {categoriesData.map((category) => (
-            <Link
-              key={category._id}
-              href={`/categories/${category._id}`}
-              className="group relative overflow-hidden rounded-lg shadow-lg transition-transform duration-300 hover:scale-105"
-            >
-              <div className=" inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <h1 className="bg-navbarBackground text-navbarText text-lg font-bold uppercase tracking-wide px-4 py-2 ">
-                {category.name}
-              </h1>
-              <div className="w-[22rem] xl:w-full h-[27rem] overflow-hidden bg-black flex items-center justify-center">
-  <img
-    src={category.img}
-    alt={category.name}
-    className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
-  />
-</div>
+      <div className="relative category-carousel perspective-effect">
+        <Swiper
+          modules={[Navigation, Autoplay]}
+          // Navigation buttons are functionally present but visually hidden via CSS for the design
+          navigation={{
+            prevEl: ".swiper-button-prev",
+            nextEl: ".swiper-button-next",
+          }}
+          // Autoplay settings remain intact
+          autoplay={{
+            delay: 3000,
+            disableOnInteraction: true,
+            pauseOnMouseEnter: true,
+          }}
+          loop={true}
+          slidesPerView={1} // Set to 1 to ensure the main slide is centered
+          spaceBetween={0}
+          centeredSlides={true} // Crucial for the perspective effect
+          breakpoints={{
+            768: { slidesPerView: 3, spaceBetween: 20 },
+            1024: { slidesPerView: 3, spaceBetween: 20 },
+            1280: { slidesPerView: 3, spaceBetween: 20 },
+          }}
+          className="!py-0"
+        >
+          {categories.map((category: any) => (
+            <SwiperSlide key={category._id} className="!h-auto flex justify-center">
+              <div
+                onClick={() => router.push(`/categories/${category._id}`)}
+                // Routing logic remains intact
+                className="flex cursor-pointer flex-col items-center transition-transform duration-300 transform-gpu hover:scale-[1.03]"
+              >
+                {/* Image container is now rectangular/square without rounded-full */}
+                <div className="w-[200px] h-[300px] md:w-[350px] md:h-[500px] overflow-hidden border-0 mb-0 shadow-2xl transition-shadow duration-300 relative">
+                  <img
+                    src={category.img}
+                    alt={category.name}
+                    className="w-full h-full object-cover transition-transform duration-500"
+                  />
+                  {/* Text overlay from the screenshot */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent text-white text-center">
+                    <h3 className="font-bold text-xl md:text-2xl tracking-widest">
+                      {category.name.toUpperCase()}
+                    </h3>
+                  </div>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
 
-            </Link>
-          ))}
-        </div>
+      {/* Global Styles */}
+      <style jsx global>{`
+        /* Swiper adjustments */
+        .category-carousel .swiper {
+          padding: 0 !important;
+          /* Set up a perspective for the 3D effect */
+          perspective: 1000px;
+          overflow: visible !important; /* Allow slides to be visible outside bounds */
+        }
+        .category-carousel .swiper-wrapper {
+          align-items: flex-start !important;
+        }
+        .category-carousel .swiper-slide {
+          height: auto !important;
+          display: flex;
+          justify-content: center;
+          /* Enable 3D transitions */
+          transition: transform 0.5s ease-out;
+          transform-style: preserve-3d;
+        }
 
-        {/* Mobile View (Carousel) */}
-        <div className="lg:hidden flex justify-center mx-2 lg:mx-12 mt-8">
-          <Carousel
-            responsive={responsive}
-            arrows={true}
-            autoPlay={true}
-            autoPlaySpeed={1500}
-            infinite={true}
-            className="z-10 w-full max-w-6xl"
-          >
-            {categoriesData?.map((category) => (
-              <Link key={category._id} href={`/categories/${category._id}`}>
-                <div className="mx-2 relative group overflow-hidden">
-                  <div className="flex justify-center items-center h-60 sm:h-72 md:h-88 lg:h-[25rem] bg-black">
-  <img
-    className="object-contain h-full w-full transition-transform duration-700 group-hover:scale-105"
-    src={category?.img}
-    alt={category?.name}
-  />
-</div>
+        /* 3D Perspective Effect */
+        @media (min-width: 768px) {
+          /* Current/Active Slide - No rotation, slightly scaled up */
+          .category-carousel .swiper-slide-active {
+            transform: scale(1.1) translateZ(50px);
+            z-index: 10;
+          }
 
-                  <h2 className="text-center mt-2 font-bold text-navbarText">
-                    {category?.name.toUpperCase() ?? "Product Title"}
-                  </h2>
-                </div>
-              </Link>
-            ))}
-          </Carousel>
-        </div>
-      </div>
-    );
-  };
+          /* Next Slide - Rotated right (inward) and pushed back */
+          .category-carousel .swiper-slide-next {
+            transform: rotateY(-10deg) scale(0.9) translateX(-40px);
+            z-index: 5;
+            opacity: 0.8;
+          }
 
-  export default CategoryList;
+          /* Previous Slide - Rotated left (inward) and pushed back */
+          .category-carousel .swiper-slide-prev {
+            transform: rotateY(10deg) scale(0.9) translateX(40px);
+            z-index: 5;
+            opacity: 0.8;
+          }
+          
+          /* Slides further away (not next/prev) */
+          .category-carousel .swiper-slide:not(.swiper-slide-active):not(.swiper-slide-next):not(.swiper-slide-prev) {
+            opacity: 0.5;
+            transform: scale(0.8);
+          }
+        }
+
+        /* Hide navigation buttons as they don't fit the angled design */
+        .category-carousel .swiper-button-prev,
+        .category-carousel .swiper-button-next {
+          display: none;
+        }
+
+        /* Animated underline */
+        .animated-underline::after {
+          content: "";
+          display: block;
+          height: 4px;
+          margin: 0.5rem auto 0;
+          border-radius: 9999px;
+          background: linear-gradient(to right, #eab564, #eab664);
+          width: 0;
+          animation: underlineGrow 0.8s ease-out forwards;
+        }
+
+        @keyframes underlineGrow {
+          from {
+            width: 0;
+          }
+          to {
+            width: 6rem; /* same as Tailwind w-24 */
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default CategoryList;
+
+
+
+
+
+
+
+
+
+
+
+
