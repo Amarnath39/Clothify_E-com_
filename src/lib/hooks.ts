@@ -1,12 +1,14 @@
-import { useRouter } from 'next/navigation'
-import { useDispatch, useSelector, useStore } from 'react-redux'
+// hooks.ts
+
+import { useDispatch, useSelector } from 'react-redux';
+
+import type { RootState, AppDispatch } from './store'; 
 
 
-export const useAppDispatch = useDispatch
-export const useAppSelector = useSelector
-export const useAppStore = useStore
-export const useAppRouter =useRouter
+export const useAppDispatch = () => useDispatch<AppDispatch>();
 
 
-// selectors.js
-export const selectToken = (state:any) => state.auth.token;
+export const useAppSelector = useSelector.withTypes<RootState>();
+
+
+export const selectToken = (state: RootState) => state.auth.token;

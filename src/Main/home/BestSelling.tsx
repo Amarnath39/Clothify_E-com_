@@ -1,12 +1,15 @@
+// src/Main/home/BestSelling.tsx
+
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux"; // <-- 1. REMOVE THIS LINE
+import { useAppDispatch } from "@/lib/hooks"; // <-- 2. ADD THIS (adjust path if needed)
 import { useRouter } from "next/navigation";
 import { Quicksand } from "next/font/google";
-import { getAllProducts } from "@/lib/features/catogary"; // Assuming this path is correct
+import { getAllProducts } from "@/lib/features/catogary";
 
-// --- Style imports (can be removed if not used elsewhere) ---
+// --- Style imports ---
 import "swiper/css/pagination";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -14,27 +17,16 @@ import "./swiper.css";
 
 const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
 
-// Configuration for product categories. This makes the component scalable.
 const PRODUCT_CATEGORIES = [
-  {
-    type: "bestsellerProduct",
-    title: "Best Sellers",
-  },
-  {
-    type: "latestProduct",
-    title: "New Arrivals",
-  },
-  {
-    type: "featureProduct",
-    title: "Featured",
-  },
+  { type: "bestsellerProduct", title: "Best Sellers" },
+  { type: "latestProduct", title: "New Arrivals" },
+  { type: "featureProduct", title: "Featured" },
 ];
 
-// Main BestSelling component with the new UI
 const BestSelling = () => {
   const [products, setProducts] = useState({});
-  const [hoveredType, setHoveredType] = useState(null); // State to track hovered panel
-  const dispatch = useDispatch();
+  const [hoveredType, setHoveredType] = useState(null);
+  const dispatch = useAppDispatch(); // <-- 3. USE THE TYPED HOOK
   const router = useRouter();
 
   useEffect(() => {
@@ -46,6 +38,7 @@ const BestSelling = () => {
             sort: "newlyArrived",
             limit: "1",
           });
+          // This dispatch call is now type-safe and will not cause an error.
           return dispatch(getAllProducts(queryParams));
         });
 
@@ -68,18 +61,17 @@ const BestSelling = () => {
     fetchAllProducts();
   }, [dispatch]);
 
+  // ... rest of your JSX remains the same
   return (
     <div className={`${quicksand.className} antialiased bg-white py-12 sm:py-16`}>
       <h1 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-8">
         Our Collections
       </h1>
-
       <div className="w-full h-[85vh] sm:h-[75vh] min-h-[600px] sm:min-h-[500px] max-h-[900px] sm:max-h-[800px] flex flex-col sm:flex-row p-2 gap-2">
         {PRODUCT_CATEGORIES.map((category) => {
           const product = products[category.type];
           const isHovered = hoveredType === category.type;
           const isAnyHovered = hoveredType !== null;
-
           const flexValue = isAnyHovered
             ? isHovered
               ? "flex-[5]"
@@ -94,8 +86,7 @@ const BestSelling = () => {
                 backgroundImage: `url(${
                   product?.img?.[0] || "https://placehold.co/800x1200/e2e8f0/e2e8f0"
                 })`,
-                // --- THIS IS THE ONLY LINE THAT WAS CHANGED ---
-                backgroundSize: "auto 100%", // Replaced "cover"
+                backgroundSize: "auto 100%",
                 backgroundPosition: "center",
               }}
               onMouseEnter={() => setHoveredType(category.type)}
@@ -103,20 +94,14 @@ const BestSelling = () => {
               onClick={() => router.push(`/products?${category.type}=true`)}
             >
               <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-50 transition-all duration-500"></div>
-
               <div className="relative w-full h-full flex flex-col justify-end items-start p-6 sm:p-10 text-white">
-                {/* --- MODIFIED SECTION --- */}
-                {/* The layout classes for mobile have been removed as they are no longer needed. */}
                 <div
                   className="w-full transform transition-transform duration-500 ease-out"
                   style={{ opacity: isHovered ? 1 : 0.95 }}
                 >
-                  {/* Title is now always stacked. Margin bottom only applies on desktop to create space for the button. */}
                   <h2 className="text-2xl sm:text-4xl font-bold tracking-tight sm:mb-4">
                     {category.title}
                   </h2>
-
-                  {/* Button is hidden on mobile and appears as a block on desktop ('sm' screens and up) */}
                   <button className="bg-transparent border-2 border-white text-white font-bold py-2 px-6 rounded-lg hover:bg-white hover:text-black transition-all duration-300 hidden sm:block">
                     EXPLORE
                   </button>
