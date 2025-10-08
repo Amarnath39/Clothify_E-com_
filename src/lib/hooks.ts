@@ -11,4 +11,4 @@ export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector = useSelector.withTypes<RootState>();
 
 
-export const selectToken = (state: RootState) => state.auth.token;
+export const selectToken = (state: RootState) => state.auth?.token;
