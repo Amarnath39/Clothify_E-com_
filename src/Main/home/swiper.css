@@ -32,7 +32,7 @@
 }
 
 .swiper-pagination-progressbar .swiper-pagination-progressbar-fill {
-  background-color: #07363c; /* Change this to your desired color */
+  background-color: #07363c; 
   transition: width 0.3s ease;
 }
 
@@ -74,12 +74,12 @@
 
 .swiper-button-prev,
 .swiper-button-next {
-  color: #000; /* Change this to your preferred color */
+  color: #000;
 }
 
 .swiper-button-prev:after,
 .swiper-button-next:after {
-  font-size: 24px; /* Adjust size as needed */
+  font-size: 24px; 
   z-index: 1000;
 }
 

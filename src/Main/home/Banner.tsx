@@ -109,7 +109,7 @@ const Banner = () => {
       }
     };
 
-    cancelAnimationFrame(timerRef.current); // Clear any existing timer
+    cancelAnimationFrame(timerRef.current); 
     timerRef.current = requestAnimationFrame(step);
   };
 
@@ -124,7 +124,6 @@ const Banner = () => {
       setActiveIndex(newIndex);
       setTextTransition(false);
       setTransition(false);
-      // startTimer is called in the useEffect for activeIndex change
     }, 500);
   };
 

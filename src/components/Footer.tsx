@@ -394,7 +394,6 @@ const Footer = () => {
         className="h-26 w-26 sm:h-62 sm:w-60 object-contain"
       />
     </div>
-      <p>Sreelekshmi VR</p>
     
   </div>
 </div>
@@ -548,13 +547,13 @@ const Footer = () => {
             </a> */}
           </div>
           <p className="text-black text-sm mt-4 md:mt-0 mr-10">
-            Designed By{" "}
+            Crafted with ❤️ {" "}
             <Link
               href="https://www.webgeon.com/"
               target="_blank"
               className="text-red hover:underline"
             >
-              Webgeon
+              by Webgeon
             </Link>
           </p>
         </div>
