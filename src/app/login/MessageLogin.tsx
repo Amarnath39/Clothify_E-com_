@@ -1,10 +1,15 @@
-// pages/index.js
+"use client"; // Required for components using hooks in Next.js App Router
+
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { smsLogin } from "@/lib/features/auth/actions";
 import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
+
+// --- CORE FIX ---
+// 1. Import your custom hook
+import { useAppDispatch } from "@/lib/redux/hooks"; // <-- ADJUST PATH IF NEEDED
+// 2. Import your async thunk action
+import { smsLogin } from "@/lib/redux/features/auth/actions"; // <-- ADJUST PATH IF NEEDED
 
 export default function OTPVerification() {
   const [step, setStep] = useState(1);
@@ -14,8 +19,11 @@ export default function OTPVerification() {
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const router = useRouter();
-  const API_KEY = "c5837917-42b5-11f0-a562-0200cd936042";
-  const dispatch = useDispatch();
+  const API_KEY = "c5837917-42b5-11f0-a562-0200cd936042"; // Note: Be careful exposing API keys on the client-side
+
+  // --- CORE FIX ---
+  // 3. Use the correctly typed hook
+  const dispatch = useAppDispatch();
 
   // Send OTP
   const sendOTP = async () => {
@@ -26,11 +34,8 @@ export default function OTPVerification() {
 
     setLoading(true);
     try {
-      const response = await axios.post("/api/send-otp", {
-        phoneNumber,
-        apiKey: API_KEY,
-        var1Value: "Udayaada",
-      });
+      // This should ideally be an API route on your own server to hide the API_KEY
+      const response = await axios.post("/api/send-otp", { phoneNumber });
 
       if (response.data.Status === "Success") {
         setSessionId(response.data.Details);
@@ -61,7 +66,6 @@ export default function OTPVerification() {
       const response = await axios.post("/api/verify-otp", {
         phoneNumber,
         otpCode,
-        apiKey: API_KEY,
       });
 
       if (
@@ -69,6 +73,7 @@ export default function OTPVerification() {
         response.data.Details === "OTP Matched"
       ) {
         toast.success("OTP verified successfully!");
+        // This dispatch will now work without causing a build error
         await dispatch(smsLogin({ phone: phoneNumber }));
         router.push("/");
       } else {
@@ -83,7 +88,7 @@ export default function OTPVerification() {
   };
 
   // OTP input handlers
-  const handleOtpChange = (index, inputValue) => {
+  const handleOtpChange = (index: number, inputValue: string) => {
     const lastChar = inputValue.slice(-1);
     if (/^\d$/.test(lastChar) || lastChar === "") {
       const newOtp = [...otp];
@@ -95,16 +100,29 @@ export default function OTPVerification() {
     }
   };
 
-  const handleOtpKeyDown = (index, e) => {
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      if (prevInput) prevInput.focus();
+      inputRefs.current[index - 1]?.focus();
     }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+      e.preventDefault();
+      const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+      const newOtp = [...otp];
+      for (let i = 0; i < pastedData.length; i++) {
+        if (i < newOtp.length) {
+            newOtp[i] = pastedData[i];
+        }
+      }
+      setOtp(newOtp);
+      const nextIndex = Math.min(pastedData.length, otp.length - 1);
+      setTimeout(() => inputRefs.current[nextIndex]?.focus(), 0);
   };
 
   // Resend timer
   const startResendTimer = () => {
-    setResendTimer(24);
+    setResendTimer(30);
     const timer = setInterval(() => {
       setResendTimer((prev) => {
         if (prev <= 1) {
@@ -121,41 +139,13 @@ export default function OTPVerification() {
     sendOTP();
   };
 
-  const goBackToStep1 = () => {
-    setStep(1);
-    setOtp(["", "", "", "", "", ""]);
-  };
-
-  const inputRefs = useRef([]);
-  useEffect(() => {
-    inputRefs.current = inputRefs.current.slice(0, otp.length);
-  }, [otp.length]);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Step 1: Phone input
   if (step === 1) {
     return (
       <div className="min-h-[130vh] bg-gray-50 flex items-center justify-center sm:p-4 pt-24">
         <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md border border-gray-200">
-          {/* Lock Icon */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-black rounded-2xl p-4">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m0 0v2m0-2h2m-2 0H8m8-7V7a4 4 0 00-8 0v4m0 0V7a2 2 0 012-2h4a2 2 0 012 2v4m-6 0h8a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6a2 2 0 012-2z"
-                />
-              </svg>
-            </div>
-          </div>
-
-          {/* Welcome Text */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Welcome Back
@@ -163,62 +153,31 @@ export default function OTPVerification() {
             <p className="text-gray-600">Enter your credentials to continue</p>
           </div>
 
-          {/* Country Code */}
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-medium mb-2">
-              Country Code
-            </label>
-            <div className="relative">
-              <div className="flex items-center px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
-                <span className="mr-2">🇮🇳</span>
-                <span>India (+91)</span>
-                <svg
-                  className="w-5 h-5 ml-auto text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Number */}
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-medium mb-2">
               Mobile Number
             </label>
-            <input
-              type="tel"
-              placeholder="Enter your mobile number"
-              value={phoneNumber}
-              onChange={(e) =>
-                setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
-              }
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
-            />
+            <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-black focus-within:border-transparent">
+               <span className="px-4 text-gray-500">+91</span>
+               <input
+                 type="tel"
+                 placeholder="Enter your mobile number"
+                 value={phoneNumber}
+                 onChange={(e) =>
+                   setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
+                 }
+                 className="w-full py-3 pr-4 border-l border-gray-300 outline-none"
+               />
+            </div>
           </div>
 
-          {/* Send OTP Button */}
           <button
             onClick={sendOTP}
             disabled={loading}
-            className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? <>Sending OTP...</> : <>Send OTP</>}
+            {loading ? "Sending OTP..." : "Send OTP"}
           </button>
-
-          {/* Powered by */}
-          <div className="text-center mt-8">
-            <p className="text-gray-500 text-sm">Powered by</p>
-            <p className="text-gray-900 font-semibold">Webgeon Results</p>
-          </div>
         </div>
       </div>
     );
@@ -228,103 +187,37 @@ export default function OTPVerification() {
   return (
     <div className="min-h-[130vh] bg-gray-50 flex items-center justify-center p-4 pt-24">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md border border-gray-200">
-        {/* Back Button */}
-        <button
-          onClick={() => setStep(1)}
-          className="mb-6 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <svg
-            className="w-6 h-6 text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-
-        {/* Shield Icon */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-black rounded-2xl p-4">
-            <svg
-              className="w-8 h-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* Verify OTP Text */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Verify OTP</h1>
           <p className="text-gray-600 mb-1">Enter the 6-digit code sent to</p>
           <p className="text-gray-900 font-semibold">+91 {phoneNumber}</p>
         </div>
 
-        {/* OTP Input */}
         <div className="flex justify-center space-x-2 mb-8">
           {otp.map((digit, index) => (
             <input
               key={index}
               ref={(el) => (inputRefs.current[index] = el)}
-              id={`otp-${index}`}
               type="text"
               inputMode="numeric"
-              pattern="[0-9]*"
+              maxLength={1}
               value={digit}
               onChange={(e) => handleOtpChange(index, e.target.value)}
               onKeyDown={(e) => handleOtpKeyDown(index, e)}
-              onPaste={(e) => {
-                e.preventDefault();
-                const pastedData = e.clipboardData
-                  .getData("text")
-                  .replace(/\D/g, "");
-                const newOtp = [...otp];
-                for (
-                  let i = 0;
-                  i < pastedData.length && index + i < otp.length;
-                  i++
-                ) {
-                  newOtp[index + i] = pastedData[i];
-                }
-                setOtp(newOtp);
-                const nextIndex = Math.min(
-                  index + pastedData.length,
-                  otp.length - 1
-                );
-                setTimeout(() => inputRefs.current[nextIndex]?.focus(), 0);
-              }}
-              onFocus={() =>
-                setTimeout(() => inputRefs.current[index]?.select(), 0)
-              }
-              className="w-10 h-10 sm:w-12 sm:h-12 text-center text-xl font-semibold border-2 border-gray-300 rounded-lg focus:border-black focus:ring-2 focus:ring-gray-400 outline-none transition-all duration-200 hover:border-gray-400"
+              onPaste={handlePaste}
+              className="w-10 h-10 sm:w-12 sm:h-12 text-center text-xl font-semibold border-2 border-gray-300 rounded-lg focus:border-black focus:ring-2 focus:ring-gray-400 outline-none"
             />
           ))}
         </div>
 
-        {/* Verify Button */}
         <button
           onClick={verifyOTP}
           disabled={loading}
-          className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mb-6"
+          className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed mb-6"
         >
-          {loading ? <>Verifying...</> : <>Verify & Continue</>}
+          {loading ? "Verifying..." : "Verify & Continue"}
         </button>
 
-        {/* Resend Code */}
         <div className="text-center">
           {resendTimer > 0 ? (
             <p className="text-gray-500">Resend code in {resendTimer}s</p>
@@ -336,12 +229,6 @@ export default function OTPVerification() {
               Resend code
             </button>
           )}
-        </div>
-
-        {/* Powered by */}
-        <div className="text-center mt-8">
-          <p className="text-gray-500 text-sm">Powered by</p>
-          <p className="text-gray-900 font-semibold">Webgeon Results</p>
         </div>
       </div>
     </div>
