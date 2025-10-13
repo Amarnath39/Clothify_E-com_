@@ -54,11 +54,11 @@ export const metadata: Metadata = {
     title: "S.I.S BY MV PV",
     description:
       "Shop stylish S.I.S – Strong, Independent, Stylish. A women’s online clothing store redefining fashion with timeless elegance, effortless style, and confidence in every look. and casual footwear at Grab it Kicks. Experience comfort and quality with every step.",
-    url: "https://www.siskerala.com.com/",
+    url: "https://www.siskerala.com./",
     siteName: "SIS BY MV|PV",
     images: [
       {
-        url: "https://www.siskerala.com.com/assets/static/logo/ogimage.png",
+        url: "https://www.siskerala.com/assets/static/logo/ogimage.png",
         width: 1200,
         height: 630,
         alt: "S.I.S BY MV PV OpenGraph Image",
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     title: "S.I.S BY MV PV",
     description:
       "Shop stylish S.I.S – Strong, Independent, Stylish – is more than just a women’s clothing brand; it’s a celebration of confidence and individuality. Our online store brings you a curated collection of elegant, trendy, and comfortable outfits designed for the modern woman who knows her worth. and casual footwear at Grab it Kicks. Experience comfort and quality with every step.",
-    images: ["https://www.siskerala.com.com/assets/static/logo/ogimage.png"],
+    images: ["https://www.siskerala.com/assets/static/logo/ogimage.png"],
   },
 };
 
