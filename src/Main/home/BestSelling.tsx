@@ -4,8 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Quicksand } from "next/font/google";
 
-// Corrected Redux hook import
-import { useAppDispatch } from "@/lib/hooks"; // (Adjust path if needed)
+import { useAppDispatch } from "@/lib/hooks";
 import { getAllProducts } from "@/lib/features/catogary";
 
 // Style imports
@@ -23,12 +22,12 @@ const PRODUCT_CATEGORIES = [
 ];
 
 const BestSelling = () => {
-  const [products, setProducts] = useState<any>({}); // Using 'any' for now, but a proper type would be better
+  const [products, setProducts] = useState<any>({}); 
   
-  // Correction #2: Explicitly typed the state to accept string or null
+
   const [hoveredType, setHoveredType] = useState<string | null>(null);
   
-  // Correction #1: Using the correctly typed dispatch hook
+
   const dispatch = useAppDispatch();
   const router = useRouter();
 

@@ -27,7 +27,7 @@ const CategoryList = () => {
     try {
       const { payload } = await dispatch(getAllCategories());
       if (payload.success) {
-        // Filter for top-level categories
+      
         const parentCategories = payload.categories.filter(
           (category) => category.parentCategory.length === 0
         );
@@ -62,10 +62,9 @@ const CategoryList = () => {
           speed={1500}
           loop={true}
           centeredSlides={true}
-          // The `slidesPerView` is now fully controlled by the breakpoints below
-          // for a mobile-first responsive approach.
+         
           breakpoints={{
-            // Mobile view (3-card UI): Shows 1 main card and parts of the next/prev
+            // Mobile view
             320: {
               slidesPerView: 1.5,
               spaceBetween: 15,

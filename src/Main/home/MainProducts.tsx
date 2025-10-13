@@ -123,7 +123,7 @@ const MainProducts = () => {
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right', isTop: boolean) => {
     if (!ref.current) return;
     
-    const scrollAmount = 400; // Pixels to scroll
+    const scrollAmount = 400; 
     const currentScroll = ref.current.scrollLeft;
     const targetScroll = direction === 'left' 
       ? currentScroll - scrollAmount 
@@ -140,13 +140,13 @@ const MainProducts = () => {
       if (pauseTimerTopRef.current) clearTimeout(pauseTimerTopRef.current);
       pauseTimerTopRef.current = setTimeout(() => {
         setIsPausedTop(false);
-      }, 2000); // Resume after 2 seconds
+      }, 2000); 
     } else {
       setIsPausedBottom(true);
       if (pauseTimerBottomRef.current) clearTimeout(pauseTimerBottomRef.current);
       pauseTimerBottomRef.current = setTimeout(() => {
         setIsPausedBottom(false);
-      }, 2000); // Resume after 2 seconds
+      }, 2000); 
     }
   };
 

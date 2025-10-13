@@ -58,23 +58,15 @@ const Featured = () => {
           return prevIndex === 0 ? images.length - 1 : prevIndex - 1;
         }
       });
-    }, 300); // Wait for fade-out to complete before changing content
+    }, 300); 
 
     setTimeout(() => {
       setContentOpacity(1);
       setIsTransitioning(false);
-    }, 600); // Wait for content change and then fade-in
+    }, 600); 
   };
 
-  // This effect was not present but helps in creating an auto-slide feature.
-  // You can uncomment it if you want the slider to advance automatically.
-  // useEffect(() => {
-  //   const slideInterval = setInterval(() => {
-  //     handleSlide("next");
-  //   }, 5000); // Change slide every 5 seconds
-  //
-  //   return () => clearInterval(slideInterval);
-  // }, [isTransitioning, images.length]);
+
 
 
   return (
