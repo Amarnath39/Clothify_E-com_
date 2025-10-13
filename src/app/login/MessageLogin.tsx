@@ -100,7 +100,9 @@ export default function MessageLogin() {
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`) as HTMLInputElement;
+      const prevInput = document.getElementById(
+        `otp-${index - 1}`
+      ) as HTMLInputElement;
       if (prevInput) prevInput.focus();
     }
   };
@@ -153,7 +155,9 @@ export default function MessageLogin() {
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome Back
+            </h1>
             <p className="text-gray-600">Enter your credentials to continue</p>
           </div>
 
@@ -250,7 +254,9 @@ export default function MessageLogin() {
           {otp.map((digit, index) => (
             <input
               key={index}
-              ref={(el) => (inputRefs.current[index] = el)}
+              ref={(el) => {
+                inputRefs.current[index] = el;
+              }}
               id={`otp-${index}`}
               type="text"
               inputMode="numeric"
