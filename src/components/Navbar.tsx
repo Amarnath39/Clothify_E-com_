@@ -54,7 +54,7 @@ const Navbar = () => {
       } else {
         toast.error(payload.msg);
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error?.message);
     }
   };
@@ -103,7 +103,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`bg-[#ffffff] fixed w-full navbar-main transition-all duration-10 mt-1 ${topPosition}`}
+      className={`bg-[#ffffff] fixed w-full navbar-main transition-all duration-300 pt-5 ${topPosition}`}
       style={{
         zIndex: isDesktopSheetOpen ? 0 : 100,
         transform: "translate3d(0,0,0)",
@@ -112,7 +112,7 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
         {/* Main header section for logo and icons */}
-        <div className="flex items-center justify-between h-14 md:h-16">
+        <div className="flex items-center justify-between h-20 md:h-24">
 
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
@@ -128,7 +128,7 @@ const Navbar = () => {
           {/* Desktop Search Bar - Centered */}
           <div className="hidden md:flex flex-1 justify-center px-8">
             <div className="w-full max-w-md">
-              <div 
+              <div
                 onClick={() => setIsModalOpen((prev) => !prev)}
                 className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full cursor-pointer hover:border-gray-400 transition-colors"
               >
@@ -215,7 +215,7 @@ const Navbar = () => {
         {/* Category Navigation Bar - Below search */}
         <div className="hidden md:flex items-center justify-center gap-x-8 py-3 border-t border-gray-200">
           {categories.map((category: any) => (
-            <Link 
+            <Link
               key={category._id}
               href={`/categories/${category.slug || category.name.toLowerCase().replace(/ /g, '-')}`}
               className="text-sm font-medium tracking-wide uppercase text-gray-700 hover:text-black transition-colors duration-200"

@@ -969,7 +969,7 @@ setTimeout(() => {
 
 
   return (
-    <div className="flex min-h-screen bg-white justify-center">
+    <div className="flex min-h-[150vh] bg-white justify-center">
      
 
 <div className="flex items-center justify-center w-full md:w-1/2 px-4" style={{ backgroundColor: '#fffff' }}>
@@ -986,7 +986,7 @@ setTimeout(() => {
   className="text-white bg-white px-8 py-6 shadow-x1 border-2  rounded-2xl"style={{ backgroundColor: '#ffffff' }} // px = horizontal, py = vertical
 >
    <div className="flex justify-center rounded-2xl">
-<img src="/assets/static/logo/Untitled design.svg" alt="Logo" className="h-[160px] w-[600px]" />
+<img src="/assets/static/logo/SIS-LOGO.png" alt="Logo" className="h-[250px] w-[600px]" />
   </div>
 </CardHeader>
 

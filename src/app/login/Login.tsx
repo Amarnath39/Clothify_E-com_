@@ -122,7 +122,7 @@ const Login = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center"
+      className="min-h-[130vh] flex items-center justify-center bg-cover bg-center"
       style={{ backgroundImage: `url(${banner[0]?.img})` }}
     >
       <div className="absolute inset-0 bg-black bg-opacity-40"></div>
