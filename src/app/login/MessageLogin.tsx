@@ -5,7 +5,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { smsLogin } from "@/lib/features/auth/actions";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/lib/hooks"; // ✅ Corrected import
+import { useAppDispatch } from "@/lib/hooks";
 
 export default function MessageLogin() {
   const [step, setStep] = useState(1);
@@ -16,7 +16,7 @@ export default function MessageLogin() {
   const [resendTimer, setResendTimer] = useState(0);
 
   const router = useRouter();
-  const dispatch = useAppDispatch(); // ✅ Typed dispatch from hooks
+  const dispatch = useAppDispatch(); 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const API_KEY = "c5837917-42b5-11f0-a562-0200cd936042";
 
@@ -51,7 +51,7 @@ export default function MessageLogin() {
     }
   };
 
-  // 🟢 Verify OTP
+
   const verifyOTP = async () => {
     const otpCode = otp.join("");
     if (otpCode.length !== 6) {
