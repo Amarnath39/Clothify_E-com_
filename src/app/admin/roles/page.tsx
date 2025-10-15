@@ -152,7 +152,7 @@ const AdminPage = () => {
      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Admin Management</h1>
-        <Button onClick={() => setShowAdminForm(!showAdminForm)}>
+        <Button className="bg-black text-white hover:bg-black" onClick={() => setShowAdminForm(!showAdminForm)}>
           Add Admin
         </Button>
       </div>
@@ -195,7 +195,7 @@ const AdminPage = () => {
               <SelectItem value="Sales person">Sales Person</SelectItem>
             </SelectContent>
           </Select>
-          <Button type="submit">Create Admin</Button>
+          <Button className="bg-black text-white hover:bg-black" type="submit">Create Admin</Button>
         </form>
       )}
 

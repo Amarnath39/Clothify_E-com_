@@ -107,7 +107,7 @@ const Featured = () => {
                 {images[currentIndex]?.description || "Discover our exclusive collection of handcrafted items, designed with passion and precision."}
               </p>
               <Button
-                className="bg-[#000000] text-white px-6 py-3 rounded-md text-sm sm:text-base md:text-lg hover:bg-amber-600 transition duration-300 transform hover:scale-105"
+                className="bg-[#000000] text-white px-6 py-3 rounded-md text-sm sm:text-base md:text-lg hover:bg-gray-600 transition duration-300 transform hover:scale-105"
                 onClick={() => router.push("/products")}
               >
                 Shop all

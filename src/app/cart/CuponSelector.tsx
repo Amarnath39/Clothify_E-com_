@@ -111,7 +111,7 @@ const CouponSelector = ({
             </div>
           </div>
           <Button
-            className="sm:w-2/12 w-full   sm:mt-5 bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+            className="sm:w-2/12 w-full   sm:mt-5 bg-black hover:bg-gray-800 text-white transition-colors"
             onClick={() => handleApplyCoupon(couponCode)}
           >
             Apply

@@ -485,7 +485,7 @@ const AddProduct = () => {
                 onChange={handleImageUpload}
                 className="hidden"
               />
-              <Button
+              <Button className="bg-black text-white hover:bg-black"
                 type="button"
                 // @ts-ignore
                 onClick={() => document.getElementById("images").click()}
@@ -708,7 +708,7 @@ const AddProduct = () => {
           )}
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button type="button" className="mt-2">
+              <Button type="button" className="mt-2 bg-black text-white hover:bg-black">
                 Add Size
               </Button>
             </DialogTrigger>
@@ -786,7 +786,7 @@ const AddProduct = () => {
                     }
                   />
                 </div> */}
-                <Button type="button" onClick={handleAddSize}>
+                <Button  className="bg-black text-white hover:bg-black"  type="button" onClick={handleAddSize}>
                   Add Size
                 </Button>
               </div>
@@ -831,7 +831,7 @@ const AddProduct = () => {
             onOpenChange={setIsAdditionalFieldModalOpen}
           >
             <DialogTrigger asChild>
-              <Button type="button" className="mt-2">
+              <Button type="button" className="mt-2 bg-black text-white hover:bg-black">
                 Add Additional Field
               </Button>
             </DialogTrigger>
@@ -860,14 +860,14 @@ const AddProduct = () => {
                     }
                   />
                 </div>
-                <Button type="button" onClick={handleAddAdditionalField}>
+                <Button  className="bg-black text-white hover:bg-black"   type="button" onClick={handleAddAdditionalField}>
                   Add Field
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full bg-black text-white hover:bg-black">
           {isDuplicate ? "Save Duplicate Product" : "Add Product"}
         </Button>
       </form>

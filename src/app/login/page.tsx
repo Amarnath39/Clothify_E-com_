@@ -418,7 +418,7 @@ setTimeout(() => {
 </div>
 
                       </div>
-                      <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
+                      <Button type="submit" className="w-full h-12 bg-black text-white  hover:bg-black font-semibold rounded-lg" 
  disabled={isLoading}>
                         {isLoading ? 'Sending OTP...' : 'Send OTP'}
                       </Button>
@@ -443,7 +443,7 @@ setTimeout(() => {
   numInputs={6}
 />
 
-                      <Button type="submit" className="w-full h-12 text-white font-semibold rounded-lg" style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
+                      <Button type="submit" className="w-full h-12 text-white bg-black  hover:bg-gray-700 font-semibold rounded-lg" 
  disabled={isLoading}>
                         {isLoading ? 'Verifying...' : 'Verify & Sign In'}
                       </Button>
@@ -562,8 +562,8 @@ setTimeout(() => {
       />
       <Button
         type="submit"
-        className="w-full h-12 text-white font-semibold rounded-lg"
-        style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
+        className="w-full h-12 text-white bg-black hover:bg-black font-semibold rounded-lg"
+       
         disabled={isLoading}
       >
         {isLoading ? 'Sending OTP...' : 'Send Email OTP'}

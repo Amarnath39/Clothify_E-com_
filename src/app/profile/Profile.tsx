@@ -417,7 +417,7 @@ const Profile = () => {
           >
             <DialogTrigger asChild>
               <div
-                className="bg-slate-200 px-4 py-2 rounded-lg flex items-center cursor-pointer z-[9999]"
+                className="bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-lg flex items-center cursor-pointer z-[9999]"
                 onClick={() => {
                   setEditingAddress(null);
                   setNewAddress(initialAddressState);
@@ -590,7 +590,7 @@ const Profile = () => {
                   </Select>
                 </div>
               </div>
-              <Button onClick={handleAddressSubmit}>
+              <Button className="text-white bg-black hover:bg-gray-800" onClick={handleAddressSubmit}>
                 {editingAddress ? "Update Address" : "Add Address"}
               </Button>
             </DialogContent>

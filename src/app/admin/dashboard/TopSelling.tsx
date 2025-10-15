@@ -190,7 +190,7 @@ const MostSellingProductsPage = () => {
         <div className="flex justify-center mt-4 space-x-2">
           <Button
             onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-            disabled={page === 1}
+            disabled={page === 1} className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
           >
             Previous
           </Button>
@@ -199,7 +199,7 @@ const MostSellingProductsPage = () => {
           </span>
           <Button
             onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={page === totalPages}
+            disabled={page === totalPages} className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
           >
             Next
           </Button>

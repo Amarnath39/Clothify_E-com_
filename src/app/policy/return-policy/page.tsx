@@ -7,24 +7,21 @@ const ReturnRefundPolicy = () => {
     content: "Effective Date: 07 OCTOBER 2025",
   },
   {
-    title: "Order Cancellation",
+    title: "No Cancellation",
     content:
-      "You may cancel your order within 7 hours of placing it, provided it hasn’t been shipped. To cancel, contact us immediately via email or phone.",
+      "Once an order is placed, it cannot be cancelled for any reason. Please ensure all details are correct before confirming your purchase.",
   },
   {
-    title: "Return Conditions",
-    content:
-      "Returns are accepted under the following conditions:\n- Request is made within 7 days of delivery\n- Product is unused, unwashed, and in original packaging\n- Tags and invoices are intact\n\nNon-returnable items include:\n- Innerwear or hygiene-sensitive products\n- Items marked as “Final Sale” or “Non-Returnable”",
+    title: "No Return or Exchange",
+    content:"All sales are final. We do not accept returns or exchanges for reasons such as change of mind, size issues, or color preference.",
   },
   {
-    title: "Return Process",
-    content:
-      "Email your return request to sisbymridhulaparvathy@gmail.com with your order number and reason. Wait for confirmation and return instructions. Pack the item securely and ship it to our address.\n\nNote: Customers are responsible for return shipping charges unless the product was defective or incorrect.",
-  },
+    title: "No Refunds",
+    content:"Refunds are not provided once the order has been confirmed and processed.",  },
   {
-    title: "Refund Process",
+    title: "Exceptions – Damaged, Defective, or Incorrect Items",
     content:
-      "Refunds are initiated only after the item is received and passes quality inspection. It may take 7 business days for the amount to credited in your original payment method.\nReplacement should be raised within 24 hours and the replaced product will be delivered within 5-7  days.",
+      "Refunds or replacements will only be considered if the product received is damaged, defective, or incorrect.\n- A mandatory unboxing (opening) video must be recorded clearly from start to finish without any cuts or edits\n- The video should show the package being opened and the issue clearly visible\n- Claims without a proper opening video will not be accepted \n-You must report the issue within 24 hours of delivery by emailing sisbymridhulaparvathy@gmail.com with your order number, description of the problem, and the unboxing video attached \nOnce verified, a replacement or appropriate resolution will be provided.",
   },
   {
     title: "Contact Support",

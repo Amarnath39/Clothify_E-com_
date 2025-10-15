@@ -134,7 +134,7 @@ const AdminHeroBanner: React.FC = () => {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogTrigger asChild>
-          <Button onClick={() => setIsEditing(false)}>
+          <Button className="bg-black text-white hover:bg-gray-800" onClick={() => setIsEditing(false)}>
             <FiPlus className="mr-2" /> Add New Banner
           </Button>
         </DialogTrigger>
@@ -193,7 +193,7 @@ const AdminHeroBanner: React.FC = () => {
                 placeholder="Position"
                 defaultValue={selectedBanner?.position || 0}
               />
-              <Button type="submit">
+              <Button className="bg-black text-white hover:bg-black" type="submit">
                 {isEditing ? "Update" : "Create"} Banner
               </Button>
             </div>
@@ -232,7 +232,7 @@ const AdminHeroBanner: React.FC = () => {
               <Button variant="outline" onClick={() => handleEdit(banner)}>
                 <FiEdit2 className="mr-2" /> Edit
               </Button>
-              <Button
+              <Button className="bg-black text-white hover:bg-gray-800"
                 onClick={() => handleDelete(banner._id)}
               >
                 <FiTrash2 className="mr-2" /> Delete

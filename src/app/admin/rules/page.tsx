@@ -78,7 +78,7 @@ const RulesPage = () => {
               onChange={(e) => setNewRule(e.target.value)}
               className="flex-grow"
             />
-            <Button onClick={addRule}>Add Rule</Button>
+            <Button className="bg-black text-white hover:bg-black" onClick={addRule}>Add Rule</Button>
           </div>
         </CardContent>
       </Card>
@@ -100,7 +100,7 @@ const RulesPage = () => {
                 <TableRow key={rule._id}>
                   <TableCell>{rule.rule}</TableCell>
                   <TableCell className="text-right">
-                    <Button
+                    <Button className="bg-black text-white hover:bg-black"
                      
                       onClick={() => deleteRule(rule._id)}
                     >

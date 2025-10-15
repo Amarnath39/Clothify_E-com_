@@ -29,7 +29,7 @@ const NavigationMobile = ({
     return (
       <div
         key={category._id}
-        className="w-full border-b border-red-700 last:border-b-0"
+        className="w-full border-b border-black-700 last:border-b-0"
         style={{ zIndex: 9999 }}
       >
         <div className="flex items-center justify-between py-4">

@@ -159,7 +159,7 @@ const CatgeoryProducts = ({ params }) => {
       <div className="relative mx-auto px-4 py-8 mt-32 sm:mt-36 min-h-screen">
         {!isFilterOpen && (
           <button
-            className="md:hidden absolute top-[140px] right-4 z-50 bg-primaryRed text-black p-4 rounded-full shadow-lg"
+            className="md:hidden absolute top-[140px] right-4 z-50 bg-black text-black p-4 rounded-full shadow-lg"
             onClick={() => setIsFilterOpen(true)}
           >
             <FaFilter size={24} color="white"/>
@@ -239,14 +239,14 @@ const CatgeoryProducts = ({ params }) => {
                         )}
                         <button
                           onClick={(e: any) => handleWishlistToggle(product, e)}
-                          className="absolute top-3 right-3 text-primaryRed bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm"
+                          className="absolute top-3 right-3  bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm"
                         >
                           {wishlistItems.some(
                             (item) => item.id === product._id
                           ) ? (
-                            <FaHeart size={20} />
+                            <FaHeart size={20} className="text-red-600"/>
                           ) : (
-                            <FaRegHeart size={20} />
+                            <FaRegHeart size={20} className="text-black" />
                           )}
                         </button>
                         {/* Shopping Bag Icon - Hidden on mobile, shows on hover for larger screens */}
@@ -256,11 +256,11 @@ const CatgeoryProducts = ({ params }) => {
                             setIsSizeModalOpen(true);
                             setSelectedProduct(product);
                           }}
-                          className="absolute bottom-3 right-3 text-white bg-black/80 backdrop-blur-sm rounded-full p-3 shadow-sm 
+                          className="absolute bottom-3 right-3 text-white bg-black backdrop-blur-sm rounded-full p-3 shadow-sm 
                                                 transition-all duration-300 ease-in-out
                                                 md:opacity-0 md:translate-y-full md:group-hover:opacity-100 md:group-hover:translate-y-0"
                         >
-                          <FaShoppingBag size={20} />
+                          <FaShoppingBag size={20}  />
                         </button>
                       </div>
                       <div className="p-4 flex flex-col space-y-1 sm:space-y-2">

@@ -432,7 +432,7 @@ const Footer = () => {
             </div>
             <Button
               onClick={() => setIsOpen(true)}
-              className="bg-red text-white bg-primaryRed hover:text-white rounded-lg transition-colors duration-300 mt-6 sm:mt-12"
+              className=" text-white bg-black hover:bg-gray-700 hover:text-white rounded-lg transition-colors duration-300 mt-6 sm:mt-12"
             >
               Subscribe Now
             </Button>
@@ -474,7 +474,7 @@ const Footer = () => {
                   />
                   <Button
                     type="submit"
-                    className="bg-white text-black hover:bg-secondaryRed hover:text-white border-black rounded-lg transition-colors duration-300"
+                    className="bg-black text-white hover:bg-gray-800 hover:text-white border-black rounded-lg transition-colors duration-300"
                     disabled={loading}
                   >
                     {loading ? "Subscribing..." : "SUBSCRIBE NOW"}

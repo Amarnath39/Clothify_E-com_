@@ -42,7 +42,7 @@ const WishList = () => {
           <p className="text-gray-600 mb-4">
             Start adding some items to your wishlist!
           </p>
-          <Button onClick={() => router.push("/products")} variant="outline">
+          <Button className="bg-black text-white hover:bg-gray-700 hover:text-white" onClick={() => router.push("/products")} variant="outline">
             Explore Products
           </Button>
         </div>
@@ -103,7 +103,7 @@ const WishList = () => {
                 onClick={() => handleRemoveFromWishlist(item.id)}
                 variant="destructive"
                 size="sm"
-                className="flex items-center text-xs sm:text-sm"
+                className="flex items-center text-xs sm:text-sm bg-black"
               >
                 <FaTrash className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden md:block"> Remove </span>

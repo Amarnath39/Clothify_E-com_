@@ -123,12 +123,21 @@ const UserMenu = ({ setIsSheetOpen }) => {
         </Link>
         <DropdownMenuSeparator className="my-1 border-t border-gray-100" />
         {token && (
-          <DropdownMenuItem
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm text-red-600 hover:bg-red-100 cursor-pointer"
-          >
-            Logout
-          </DropdownMenuItem>
+          // <DropdownMenuItem
+          //   onClick={handleLogout}
+          //   className="px-4 py-2 text-sm text-gray-600 hover:bg-red-200 cursor-pointer"
+          // >
+          //   Logout
+          // </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout} asChild>
+  <div
+    className="px-4 py-2 text-sm text-gray-600 hover:bg-red-100 focus:bg-red-100 cursor-pointer transition-colors duration-200"
+
+  >
+    Logout
+  </div>
+</DropdownMenuItem>
+
         )}
       </DropdownMenuContent>
     </DropdownMenu>

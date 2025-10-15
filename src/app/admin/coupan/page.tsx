@@ -149,7 +149,7 @@ const Coupons = () => {
     <div className="container mx-auto p-6">
       
       <h1 className="text-3xl font-bold mb-6">Coupon Management</h1>
-      <Button onClick={() => openDialog()} className="mb-4">
+      <Button  onClick={() => openDialog()} className="mb-4 bg-black text-white hover:bg-black">
         <FiPlus className="mr-2" /> Add New Coupon
       </Button>
       <Table>
@@ -187,7 +187,7 @@ const Coupons = () => {
                   <FiEdit className="mr-2" /> Edit
                 </Button>
                 <Button
-                 
+                 className="bg-black text-white hover:bg-black"
                   size="sm"
                   onClick={() => handleDelete(coupon._id)}
                 >
@@ -310,7 +310,7 @@ const Coupons = () => {
               />
               <Label htmlFor="multiUse">Multi-Use</Label>
             </div>
-            <Button type="submit">Save Coupon</Button>
+            <Button className="bg-black text-white hover:bg-black" type="submit">Save Coupon</Button>
           </form>
         </DialogContent>
       </Dialog>

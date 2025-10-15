@@ -1364,7 +1364,7 @@ const callGetAllAddress = async () => {
   </p>
           <Button
             onClick={() => router.push("/products?search=")}
-            className="w-fit"
+            className="w-fit bg-black text-white hover:bg-gray-800"
           >
             Shop Now
           </Button>

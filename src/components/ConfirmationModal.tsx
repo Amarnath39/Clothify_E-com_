@@ -46,7 +46,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             </Button>
           </AlertDialogCancel>
           <AlertDialogAction asChild>
-            <Button variant="destructive" onClick={onConfirm}>
+            <Button className="bg-black text-white hover:bg-gray-800"  variant="destructive" onClick={onConfirm}>
               {confirmText}
             </Button>
           </AlertDialogAction>

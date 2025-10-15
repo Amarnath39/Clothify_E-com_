@@ -961,7 +961,7 @@ const ProductDetails = ({
               </h4>
               <div className="flex flex-wrap gap-2 size-div">
                 {productData.sizes.map((size) => (
-                  <Button
+                  <Button 
                     title={
                       size.stock === 0
                         ? "No Stock Left "
@@ -973,7 +973,7 @@ const ProductDetails = ({
                         ? "default"
                         : "outline"
                     }
-                    className={`px-3 py-1 ${
+                    className={`px-3 py-1 bg-black ${
                       size.stock === 0 ? "opacity-50 " : ""
                     }`}
                     onClick={() => setSelectedSize(size)}
@@ -990,7 +990,7 @@ const ProductDetails = ({
             <div className="flex space-x-4">
               <Button
                 onClick={() => handleAddtoCart(selectedSize)}
-                className="py-6 text-lg w-full flex items-center justify-center"
+                className="py-6 bg-black hover:bg-gray-800 text-white text-lg w-full flex items-center justify-center"
               >
                 {isInCart ? (
                   <span className="flex items-center">
@@ -1015,7 +1015,7 @@ const ProductDetails = ({
             <div className="flex space-x-4">
               <Button
                 onClick={handleBuyNow}
-                className="py-6 text-lg w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700"
+                className="py-6 text-lg w-full flex items-center justify-center bg-black hover:bg-gray-800"
               >
                 Buy Now
               </Button>

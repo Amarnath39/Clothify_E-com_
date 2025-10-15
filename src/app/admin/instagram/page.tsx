@@ -134,7 +134,7 @@ const Instagram = () => {
       </h1>
       <Button
         onClick={() => setIsDialogOpen(true)}
-        className="mb-8 mx-auto block"
+        className="mb-8 bg-black text-white hover:bg-black mx-auto block"
       >
         Add New Post
       </Button>
@@ -183,7 +183,7 @@ const Instagram = () => {
                 
                 size="sm"
                 onClick={() => handleDelete(post._id)}
-                className="w-full"
+                className="w-full bg-black text-white hover:bg-gray-800"
               >
                 <FiTrash2 className="mr-2" /> Delete
               </Button>
@@ -250,7 +250,7 @@ const Instagram = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full bg-black text-white hover:bg-black">
               Add Post
             </Button>
           </form>

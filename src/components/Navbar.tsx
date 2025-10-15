@@ -196,7 +196,7 @@ const Navbar = () => {
               >
                 {token && (
                   <div>
-                    <Button onClick={handleLogout} style={{ color: "#020101" }}>
+                    <Button onClick={handleLogout} style={{ color: "#255255255", backgroundColor:"black" }}>
                       Logout
                     </Button>
                   </div>

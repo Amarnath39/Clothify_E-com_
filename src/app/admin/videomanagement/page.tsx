@@ -69,7 +69,7 @@ export default function VideoUploadPage() {
       <input type="file" accept="video/*" onChange={handleFileChange} />
       <button
         onClick={handleUpload}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+        className="mt-4 px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
       >
         Upload Video
       </button>
@@ -86,7 +86,7 @@ export default function VideoUploadPage() {
             </video>
             <button
               onClick={() => handleDelete(video.videoId)}
-              className="ml-4 px-3 py-1 bg-red-600 text-white rounded"
+              className="ml-4 px-3 py-1 bg-black hover:bg-gray-700 text-white rounded"
             >
               Delete
             </button>

@@ -388,7 +388,7 @@ const OrdersPage = () => {
               setDateRange(update);
             }}
             customInput={
-              <Button className="w-[200px]">
+              <Button className="w-[200px] bg-black text-white hover:bg-black">
                 <FaCalendarAlt className="mr-2" />
                 {startDate
                   ? startDate.toLocaleDateString()

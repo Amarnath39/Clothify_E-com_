@@ -185,14 +185,23 @@ export default function MessageLogin() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
             />
           </div>
+           <button
+  onClick={sendOTP}
+  disabled={loading}
+  className={`w-full bg-black py-3 px-4 rounded-lg font-medium focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors duration-200
+    ${loading ? "!bg-gray-800 text-white" : "!bg-black text-white hover:!bg-gray-800"}
+  `}
+>
+  {loading ? "Sending OTP..." : "Send OTP"}
+</button>
 
-          <button
+          {/* <button
             onClick={sendOTP}
             disabled={loading}
             className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             {loading ? "Sending OTP..." : "Send OTP"}
-          </button>
+          </button> */}
 
           <div className="text-center mt-8">
             <p className="text-gray-500 text-sm">Powered by</p>

@@ -259,7 +259,7 @@ const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
         <div className="p-4 border-t bg-white">
           <div className="space-y-2">
             <Button
-              className="w-full bg-gray-900 text-white hover:bg-gray-800"
+              className="w-full bg-gray-900 text-white hover:bg-gray-700"
               onClick={() => {
                 onfilterApply(localFilters);
                 onClose();

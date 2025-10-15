@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,10 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   FaEdit,
   FaTrash,
-  FaSearch,
-  FaChevronLeft,
-  FaChevronRight,
-  FaCopy,
+  FaSearch, FaCopy
 } from "react-icons/fa";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -289,7 +286,7 @@ const Page = () => {
                         </Button>
                       ) : (
                         <Link href={`/admin/updateProduct/${product._id}`}>
-                          <Button size="icon">
+                            <Button className="bg-black hover:bg-gray-700" size="icon">
                             <FaEdit className="h-4 w-4" />
                           </Button>
                         </Link>

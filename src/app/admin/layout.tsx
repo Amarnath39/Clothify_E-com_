@@ -160,8 +160,8 @@ function AdminLayout({ children }) {
           <FaHamburger onClick={() => setShowSidebar(true)} size={24} />
         </div>
       )}
-      {showSidebar && (
-        <aside className="w-64 bg-secondaryRed text-white fixed left-0 h-screen overflow-y-scroll">
+      {/* {showSidebar && (
+        <aside className="w-64 bg-gray-900 text-white fixed left-0 h-screen overflow-y-scroll">
           <div
             onClick={() => setShowSidebar(false)}
             className="p-4 flex justify-between cursor-pointer"
@@ -196,7 +196,61 @@ function AdminLayout({ children }) {
             </Link>
           </div>
         </aside>
-      )}
+      )} */}
+{showSidebar && (
+  <aside className="w-64 bg-gray-900 text-white fixed left-0 h-screen overflow-y-scroll">
+    <div
+      onClick={() => setShowSidebar(false)}
+      className="p-4 flex justify-between cursor-pointer"
+    >
+      <h2 className="text-2xl font-semibold">Admin Panel</h2>
+      <FaHamburger size={24} />
+    </div>
+
+    <nav className="mt-0">
+      {filteredAdminCards.map((card, index) => (
+        // <Link
+        //   key={index}
+        //   href={card.href}
+        //   className={`flex items-center px-4 py-3 text-sm transition-all duration-200 ${
+        //     pathname === card.href
+        //       ? "bg-black text-white border-l-4 border-white"
+        //       : "text-gray-300 hover:bg-gray-800 hover:text-white hover:border-l-4 hover:border-gray-400"
+        //   }`}
+        // >
+        //   <span className="mr-3">{card.icon}</span>
+        //   {card.title}
+        // </Link>
+  <Link
+  key={index}
+  href={card.href}
+  className={`flex items-center px-4 py-3 text-sm transition-all duration-200
+    ${
+      pathname === card.href
+        ? "bg-gray-800 text-white border-l-4 border-white"
+        : "text-gray-300 hover:bg-gray-800 hover:text-white hover:border-l-4 hover:border-gray-400"
+    } visited:text-gray-300 focus:bg-gray-800 active:bg-gray-800
+  `}
+>
+  <span className="mr-3">{card.icon}</span>
+  {card.title}
+</Link>
+
+      ))}
+    </nav>
+
+    <div className="mt-1 p-4 text-base text-white border-gray-800 text-center mb-1">
+      Powered by <br />
+      <Link
+        href="https://www.webgeon.com/"
+        target="_blank"
+        className="mt-2 hover:text-blue-500"
+      >
+        Webgeon Results
+      </Link>
+    </div>
+  </aside>
+)}
 
       <ConfirmationModal
         isOpen={showLogoutModal}
@@ -224,9 +278,9 @@ function AdminLayout({ children }) {
   <div className="flex items-center gap-4">
     <h2 className="text-xl">
       Welcome{" "}
-      <span className="font-bold cursor-pointer">{user.name}</span>
+      <span className="font-bold  cursor-pointer">{user.name}</span>
     </h2>
-    <Button onClick={() => setShowLogoutModal(true)}>Logout</Button>
+    <Button onClick={() => setShowLogoutModal(true)}className="bg-black text-white hover:bg-gray-800">Logout</Button>
   </div>
 </div>
 

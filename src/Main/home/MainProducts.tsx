@@ -186,12 +186,12 @@ const MainProducts = () => {
           )}
           <button
             onClick={(e: any) => handleWishlistToggle(product, e)}
-            className="absolute top-3 right-3 text-red-600 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm"
+            className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm"
           >
             {wishlistItems.some((item) => item.id === product._id) ? (
-              <FaHeart size={20} />
+              <FaHeart size={20} className=" text-red-600"/>
             ) : (
-              <FaRegHeart size={20} />
+              <FaRegHeart size={20} className="text-black" />
             )}
           </button>
           <button

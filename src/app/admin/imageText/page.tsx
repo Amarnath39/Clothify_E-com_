@@ -125,7 +125,7 @@ const ImageTextManagement: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
           <Button
-            className="mb-4"
+            className="mb-4 bg-black text-white hover:bg-black"
             onClick={() => {
               resetForm();
               setIsDialogOpen(true);
@@ -175,7 +175,7 @@ const ImageTextManagement: React.FC = () => {
               </p>
             )}
             <p className="my-2">Select two image</p>
-            <Button type="submit">{editingId ? "Update" : "Create"}</Button>
+            <Button  className="bg-black text-white hover:bg-black" type="submit">{editingId ? "Update" : "Create"}</Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -215,7 +215,7 @@ const ImageTextManagement: React.FC = () => {
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
-                <Button
+                <Button className="bg-black text-white hover:bg-gray-800"
                  
                   size="icon"
                   onClick={() => handleDelete(imageText._id)}

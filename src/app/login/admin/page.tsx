@@ -150,7 +150,7 @@ const ForgotPasswordDialog = () => {
           </div>
         )}
         <DialogFooter>
-          <Button onClick={step === 1 ? handleSendOtp : handleVerifyOtp}>
+          <Button className="bg-black text-white hover:bg-black" onClick={step === 1 ? handleSendOtp : handleVerifyOtp}>
             {step === 1 ? "Send OTP" : "Reset Password"}
           </Button>
         </DialogFooter>
@@ -248,7 +248,7 @@ const AdminLogin = () => {
           </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={submitForm} className="w-full" disabled={loading}>
+          <Button onClick={submitForm} className="w-full bg-black text-white hover:bg-black" disabled={loading}>
             {loading ? "Logging in..." : "Log In"}
           </Button>
         </CardFooter>

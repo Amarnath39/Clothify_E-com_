@@ -22,7 +22,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         Previous
       </Button>
       {[...Array(totalPages)].map((_, index) => (
-        <Button
+        <Button className="bg-black text-white hover:bg-gray-800 hover:text-white"
           key={index}
           variant={currentPage === index + 1 ? "default" : "outline"}
           onClick={() => onPageChange(index + 1)}

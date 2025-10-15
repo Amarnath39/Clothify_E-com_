@@ -92,7 +92,7 @@ const ProductSizeModal = ({
               </div>
               <div className="flex items-center space-x-2">
                 {currentPrice && (
-                  <span className="text-xl md:text-2xl font-bold text-indigo-600">
+                  <span className="text-xl md:text-2xl font-bold text-black">
                     ₹{currentPrice?.toFixed(2)}
                   </span>
                 )}
@@ -133,7 +133,7 @@ const ProductSizeModal = ({
                       onClick={() => handleSizeChange(size)}
                       // disabled={size.stock <= 0}
                       variant={selectedSize === size ? "default" : "outline"}
-                      className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base ${
+                      className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base  bg-black${
                         size.stock <= 0 ? "opacity-50" : ""
                       }`}
                     >
@@ -150,7 +150,7 @@ const ProductSizeModal = ({
               <Button
                 onClick={handleAddToCart}
                 disabled={!selectedSize || isInCart || selectedSize.stock <= 0}
-                className="w-full text-white"
+                className="w-full text-white bg-black hover:bg-gray-800"
               >
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 {isInCart

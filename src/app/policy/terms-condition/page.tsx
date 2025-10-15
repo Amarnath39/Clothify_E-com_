@@ -39,12 +39,12 @@ const TermsAndConditions = () => {
 {
   title: "Cancellation Policy",
   content:
-    "Orders can be cancelled within 7 hours of placement if not yet shipped. You must notify us by email or phone.",
+    "Once an order is placed, it cannot be cancelled for any reason. Please ensure all details are correct before confirming your purchase.",
 },
 {
   title: "Returns & Refunds",
   content:
-    "Returns must be requested within 7 days of delivery. Items must be unused, with tags and original packaging intact. Refunds are processed within 7 business days once returned items are inspected.",
+    "All sales are final. We do not accept returns or exchanges for reasons such as change of mind, size issues, or color preference. Refunds are not provided once the order has been confirmed and processed.",
 },
 {
   title: "Intellectual Property",

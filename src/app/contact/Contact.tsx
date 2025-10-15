@@ -152,7 +152,7 @@ const Contact = () => {
               <Button
                 type="submit"
                 // variant="blood"
-                className="w-full"
+                className="w-full bg-black text-white hover:bg-gray-700"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Sending..." : "Send Message"}

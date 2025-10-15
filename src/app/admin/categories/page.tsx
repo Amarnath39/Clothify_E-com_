@@ -120,7 +120,7 @@ const CategoryItem = ({
               <FiEdit className="mr-2" /> Edit
             </Button>
             <Button
-             
+             className="text-white bg-black hover:bg-black"
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
@@ -309,12 +309,12 @@ const Categories = () => {
     <div className="container mx-auto p-6">
       
       <h1 className="text-3xl font-bold mb-6">Categories</h1>
-      <Button
+      <Button 
         onClick={() => {
           setEditCategory(null);
           setIsDialogOpen(true);
         }}
-        className="mb-4"
+        className="mb-4 bg-black text-white hover:bg-black"
       >
         <FiPlus className="mr-2" /> Add New Category
       </Button>
