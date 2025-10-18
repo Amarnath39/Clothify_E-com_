@@ -66,13 +66,26 @@ export const POST = async (
       order.date = new Date();
 
       // Increment sell count for each product in the order
-      for (const productDetail of order.productDetails) {
-        await Product.findByIdAndUpdate(productDetail.product, {
-          $inc: {
-             sellCount: productDetail.count + (productDetail.freeCount || 0),
-            stock: -(productDetail.count + (productDetail.freeCount || 0)),
+     for (const productDetail of order.productDetails) {
+        const totalQuantityToDecrement =
+          productDetail.count + (productDetail.freeCount || 0);
+
+        // Update the Product document where the _id matches and an element
+        // in the `sizes` array has a `size` field matching the one from the order.
+        await Product.findOneAndUpdate(
+          {
+            _id: productDetail.product,
+            "sizes.size": productDetail.size, // Target the specific size
           },
-        });
+          {
+            $inc: {
+              // Increment the top-level sellCount for overall analytics
+              sellCount: totalQuantityToDecrement,
+              // Use the positional `$` operator to decrement the stock of the matched size
+              "sizes.$.stock": -totalQuantityToDecrement,
+            },
+          }
+        );
       }
 
       // Send Email
