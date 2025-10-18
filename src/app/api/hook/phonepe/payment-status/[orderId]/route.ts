@@ -69,8 +69,8 @@ export const POST = async (
       for (const productDetail of order.productDetails) {
         await Product.findByIdAndUpdate(productDetail.product, {
           $inc: {
-            sellCount: productDetail.count + productDetail.freeCount,
-            stock: -(productDetail.count + productDetail.freeCount),
+             sellCount: productDetail.count + (productDetail.freeCount || 0),
+            stock: -(productDetail.count + (productDetail.freeCount || 0)),
           },
         });
       }
