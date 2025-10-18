@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../../db";
-import Admin from "../../../../../../model/Admin";
-import { sendEmail } from "../../../../../../helper/sendEmail";
+import Admin from "../../../../../model/Admin";
+import { sendEmail } from "../../../../../helper/sendEmail";
 import bcrypt from 'bcryptjs';
-import { generateOTP } from "../../../../../../helper/generateOTP";
+import { generateOTP } from "../../../../../helper/generateOTP";
 
 connectDB();
 export const POST = async (req: NextRequest) => {

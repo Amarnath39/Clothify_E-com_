@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Admin from "../../../../../../model/Admin";
+import Admin from "../../../../../model/Admin";
 import { connectDB } from "../../../../../../db";
-import Category from "../../../../../../model/Category";
-import { uploadFile } from "../../../../../../helper/uploadFile";
+import Category from "../../../../../model/Category";
+import { uploadFile } from "../../../../../helper/uploadFile";
 
 connectDB();
 

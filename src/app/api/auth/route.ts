@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import User from "../../../../model/User";
-import { sendEmail } from "../../../../helper/sendEmail";
-import { sendOtp } from "../../../../helper/sendOtp";
+import User from "../../../model/User";
+import { sendEmail } from "../../../helper/sendEmail";
+import { sendOtp } from "../../../helper/sendOtp";
 import { connectDB } from "../../../../db";
-import { generateOTP } from "../../../../helper/generateOTP";
+import { generateOTP } from "../../../helper/generateOTP";
 
 connectDB();
 

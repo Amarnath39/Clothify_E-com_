@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import HeroBanner from "../../../../model/HeroBanner";
+import HeroBanner from "../../../model/HeroBanner";
 import { connectDB } from "../../../../db";
 
 connectDB();

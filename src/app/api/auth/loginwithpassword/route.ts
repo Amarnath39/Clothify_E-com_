@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { connectDB } from "../../../../../db";
-import User from "../../../../../model/User";
-import orderConfirmationEmail from "../../../../../helper/orderConfirmationEmail";
+import User from "../../../../model/User";
+import orderConfirmationEmail from "../../../../helper/orderConfirmationEmail";
 const cookie = require("cookie");
 
 connectDB();

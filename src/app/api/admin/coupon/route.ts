@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Coupon from "../../../../../model/Coupon";
+import Coupon from "../../../../model/Coupon";
 import { connectDB } from "../../../../../db";
-import Admin from "../../../../../model/Admin";
+import Admin from "../../../../model/Admin";
 
 connectDB();
 

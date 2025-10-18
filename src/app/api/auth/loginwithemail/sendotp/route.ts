@@ -1,8 +1,8 @@
 // /app/api/auth/email/send-otp/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import User from "../../../../../../model/User";
+import User from "../../../../../model/User";
 import { connectDB } from "../../../../../../db";
-import orderConfirmationEmail from "../../../../../../helper/orderConfirmationEmail";
+import orderConfirmationEmail from "../../../../../helper/orderConfirmationEmail";
 
 function generateOTP(length = 6): string {
   return Math.floor(100000 + Math.random() * 900000).toString().substring(0, length);

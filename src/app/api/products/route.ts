@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Product from "../../../../model/Product";
-import Category from "../../../../model/Category";
+import Product from "../../../model/Product";
+import Category from "../../../model/Category";
 import { connectDB } from "../../../../db";
-import "../../../../model/Category";
+import "../../../model/Category";
 
 connectDB();
 

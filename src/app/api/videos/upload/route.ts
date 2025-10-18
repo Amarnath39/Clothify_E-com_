@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '../../../../../db';
-import Video from '../../../../../model/video';
-import { uploadFile } from '../../../../../helper/uploadFile';
+import Video from '../../../../model/video';
+import { uploadFile } from '../../../../helper/uploadFile';
 
 function formatId(num: number): string {
   return num.toString().padStart(3, '0');

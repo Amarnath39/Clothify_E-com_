@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Contact from "../../../../model/Contact";
+import Contact from "../../../model/Contact";
 import { connectDB } from "../../../../db";
 
 connectDB();

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../../db";
-import Product from "../../../../../../model/Product";
+import Product from "../../../../../model/Product";
 import mongoose from "mongoose";
-import { uploadFile } from "../../../../../../helper/uploadFile";
-import { deleteFile } from "../../../../../../helper/deleteFile";
-import Admin from "../../../../../../model/Admin";
+import { uploadFile } from "../../../../../helper/uploadFile";
+import { deleteFile } from "../../../../../helper/deleteFile";
+import Admin from "../../../../../model/Admin";
 
 connectDB();
 

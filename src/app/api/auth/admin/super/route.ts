@@ -2,7 +2,7 @@
 import bcrypt from "bcryptjs";
 import { connectDB } from "../../../../../../db";
 import { NextRequest, NextResponse } from "next/server";
-import Admin from "../../../../../../model/Admin";
+import Admin from "../../../../../model/Admin";
 
 // Connect to the database
 connectDB();

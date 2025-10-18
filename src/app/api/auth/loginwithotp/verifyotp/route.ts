@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 import jwt from "jsonwebtoken";
-import User from "../../../../../../model/User";
+import User from "../../../../../model/User";
 import { connectDB } from "../../../../../../db";
 const cookie = require("cookie");
 

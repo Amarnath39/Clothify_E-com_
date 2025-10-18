@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { uploadFile } from "../../../../helper/uploadFile";
-import BeforeAfter from "../../../../model/BeforeAfter";
+import { uploadFile } from "../../../helper/uploadFile";
+import BeforeAfter from "../../../model/BeforeAfter";
 import { connectDB } from "../../../../db";
 
 connectDB();

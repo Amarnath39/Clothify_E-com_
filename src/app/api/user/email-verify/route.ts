@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import User from "../../../../../model/User";
+import User from "../../../../model/User";
 
 export const POST = async (req: NextRequest) => {
   try {

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import Product from "../../../../../model/Product";
-import "../../../../../model/ReturnRules";
+import Product from "../../../../model/Product";
+import "../../../../model/ReturnRules";
 import { connectDB } from "../../../../../db";
-import "../../../../../model/Category";
-import "../../../../../model/ReturnRules";
+import "../../../../model/Category";
+import "../../../../model/ReturnRules";
 
 connectDB();
 

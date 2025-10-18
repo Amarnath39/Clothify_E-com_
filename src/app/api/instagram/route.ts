@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Instagram from "../../../../model/Instagram";
+import Instagram from "../../../model/Instagram";
 import { connectDB } from "../../../../db";
 
 connectDB();

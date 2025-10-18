@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '../../../../../db';
-import Video from '../../../../../model/video';
+import Video from '../../../../model/video';
 
 export async function GET() {
   await connectDB();

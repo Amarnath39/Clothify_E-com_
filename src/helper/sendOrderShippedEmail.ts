@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { orderShippedTemplate } from "../emailTemplate/order-shipped";
+import { orderShippedTemplate } from "../../emailTemplate/order-shipped";
 
 export interface OrderDetails {
   trackingId: string;

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { uploadFile } from "../../../../../helper/uploadFile";
-import Instagram from "../../../../../model/Instagram";
+import { uploadFile } from "../../../../helper/uploadFile";
+import Instagram from "../../../../model/Instagram";
 import { connectDB } from "../../../../../db";
-import Admin from "../../../../../model/Admin";
+import Admin from "../../../../model/Admin";
 
 connectDB();
 

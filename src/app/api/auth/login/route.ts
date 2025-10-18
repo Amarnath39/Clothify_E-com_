@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import * as cookie from "cookie";
 import { connectDB } from "../../../../../db";
-import User from "../../../../../model/User";
+import User from "../../../../model/User";
 
 connectDB();
 

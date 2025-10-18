@@ -17,7 +17,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { MdEmail } from "react-icons/md";
 import { getAllBanner } from "@/lib/features/banner";
-import { shuffleArray } from "@/helpers/helpers";
+import { shuffleArray }  from "@/helpers/helpers";
 
 const Login = () => {
   const dispatch = useDispatch<any>();

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Admin from "../../../../../../model/Admin";
+import Admin from "../../../../../model/Admin";
 import { connectDB } from "../../../../../../db";
-import ZoomData from "../../../../../../model/ZoomData";
-import { uploadFile } from "../../../../../../helper/uploadFile";
+import ZoomData from "../../../../../model/ZoomData";
+import { uploadFile } from "../../../../../helper/uploadFile";
 connectDB();
 
 export const PATCH = async (

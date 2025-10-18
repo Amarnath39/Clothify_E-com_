@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import Order from "../../../../../model/Order";
-import "../../../../../model/Product";
-import "../../../../../model/User";
-import "../../../../../model/Address";
+import Order from "../../../../model/Order";
+import "../../../../model/Product";
+import "../../../../model/User";
+import "../../../../model/Address";
 import { connectDB } from "../../../../../db";
-import Admin from "../../../../../model/Admin";
-import "../../../../../model/Exchange";
-import User from "../../../../../model/User";
-import Product from "../../../../../model/Product";
+import Admin from "../../../../model/Admin";
+import "../../../../model/Exchange";
+import User from "../../../../model/User";
+import Product from "../../../../model/Product";
 
 connectDB();
 

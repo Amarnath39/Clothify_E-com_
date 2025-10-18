@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Category from "../../../../model/Category";
+import Category from "../../../model/Category";
 import { connectDB } from "../../../../db";
 
 connectDB();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Coupon from "../../../../model/Coupon";
+import Coupon from "../../../model/Coupon";
 import { connectDB } from "../../../../db";
 
 connectDB();

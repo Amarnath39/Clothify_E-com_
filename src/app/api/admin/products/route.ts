@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../db";
-import { uploadFile } from "../../../../../helper/uploadFile";
-import Product from "../../../../../model/Product";
-import Admin from "../../../../../model/Admin";
+import { uploadFile } from "../../../../helper/uploadFile";
+import Product from "../../../../model/Product";
+import Admin from "../../../../model/Admin";
 
 connectDB();
 interface Colors {

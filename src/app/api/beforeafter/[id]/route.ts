@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import BeforeAfter from "../../../../../model/BeforeAfter";
+import BeforeAfter from "../../../../model/BeforeAfter";
 import { connectDB } from "../../../../../db";
 
 connectDB();

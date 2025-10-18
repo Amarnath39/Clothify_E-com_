@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import Admin from "../../../../../../model/Admin";
+import Admin from "../../../../../model/Admin";
 import { connectDB } from "../../../../../../db";
-import Order from "../../../../../../model/Order";
-import "../../../../../../model/Product";
-import "../../../../../../model/User";
-import "../../../../../../model/Address";
+import Order from "../../../../../model/Order";
+import "../../../../../model/Product";
+import "../../../../../model/User";
+import "../../../../../model/Address";
 
 connectDB();
 

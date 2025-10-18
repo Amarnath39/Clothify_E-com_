@@ -1,8 +1,10 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
-import Order from "../../../../../../model/Order";
-import Admin from "../../../../../../model/Admin";
-import { sendOrderShippedEmail } from "../../../../../../helper/sendOrderShippedEmail";
-import { sendOrderConfirmation } from "../../../../../../helper/whatsappNotifier"; // ✅ Import your first function
+import Order from "../../../../../model/Order";
+import Admin from "../../../../../model/Admin";
+import { sendOrderShippedEmail } from "../../../../../helper/sendOrderShippedEmail";
+import { sendOrderConfirmation } from "../../../../../helper/whatsappNotifier"; // ✅ Import your first function
 
 export const PATCH = async (
   req: NextRequest,

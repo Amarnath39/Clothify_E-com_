@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import Product from "../../../../../model/Product";
-import Order from "../../../../../model/Order";
-import "../../../../../model/User";
+import Product from "../../../../model/Product";
+import Order from "../../../../model/Order";
+import "../../../../model/User";
 import { connectDB } from "../../../../../db";
 // import Stripe from "stripe";
 import {
   OrderDetails,
   sendAdminOrderEmail,
-} from "../../../../../helper/sendAdminOrderEmail";
-import { sendUserOrderEmail } from "../../../../../helper/sendUserOrderEmail";
-import User from "../../../../../model/User";
+} from "../../../../helper/sendAdminOrderEmail";
+import { sendUserOrderEmail } from "../../../../helper/sendUserOrderEmail";
+import User from "../../../../model/User";
 import axios from "axios";
 import crypto from "crypto";
 import { getShiprocketToken } from "../../hook/phonepe/payment-status/[orderId]/shiprocketToken";

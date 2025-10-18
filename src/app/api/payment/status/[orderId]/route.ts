@@ -1,10 +1,10 @@
 import { getPhonePeClient } from "@/lib/phonepeClient";
 import { NextResponse } from "next/server";
-import Order from "../../../../../../model/Order";
-import User from "../../../../../../model/User";
+import Order from "../../../../../model/Order";
+import User from "../../../../../model/User";
 import { connectDB } from "../../../../../../db";
-import { sendUserOrderEmail } from "../../../../../../helper/sendUserOrderEmail";
-import { sendOrderConfirmation } from "../../../../../../helper/whatsappNotifier";
+import { sendUserOrderEmail } from "../../../../../helper/sendUserOrderEmail";
+import { sendOrderConfirmation } from "../../../../../helper/whatsappNotifier";
 import mongoose from "mongoose";
 import axios from "axios";
 

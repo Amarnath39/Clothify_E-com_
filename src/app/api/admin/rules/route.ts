@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import ReturnRules from "../../../../../model/ReturnRules";
+import ReturnRules from "../../../../model/ReturnRules";
 import { connectDB } from "../../../../../db";
-import Admin from "../../../../../model/Admin";
+import Admin from "../../../../model/Admin";
 
 connectDB();
 

@@ -1,4 +1,4 @@
-import Order from "../../../model/Order";
+import Order from "../../model/Order";
 import { connectDB } from "../../../db";
 import { generateInvoicePDF } from "../utils/invoiceGenerator";
 

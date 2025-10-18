@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import User from "../../../../../model/User";
+import User from "../../../../model/User";
 import { connectDB } from "../../../../../db";
-import Admin from "../../../../../model/Admin";
-import "../../../../../model/Address";
+import Admin from "../../../../model/Admin";
+import "../../../../model/Address";
 
 connectDB();
 

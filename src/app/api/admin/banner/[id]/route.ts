@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import Admin from "../../../../../../model/Admin";
+import Admin from "../../../../../model/Admin";
 import { connectDB } from "../../../../../../db";
-import HeroBanner from "../../../../../../model/HeroBanner";
-import { deleteFile } from "../../../../../../helper/deleteFile";
-import { uploadFile } from "../../../../../../helper/uploadFile";
+import HeroBanner from "../../../../../model/HeroBanner";
+import { deleteFile } from "../../../../../helper/deleteFile";
+import { uploadFile } from "../../../../../helper/uploadFile";
 
 connectDB();
 

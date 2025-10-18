@@ -47,7 +47,7 @@
 // import { useRouter } from "next/navigation";
 // import CheckoutModal from "./Checkout";
 // import { getUserDetails } from "@/lib/features/auth";
-// import { processCartOffers } from "@/helpers/helpers";
+// import { processCartOffers } from "@/helper/helpers";
 // import { setAddressState } from "@/lib/features/address";
 // import { RootState } from "@/lib/store";
 
@@ -729,7 +729,7 @@ import {
 import { useRouter } from "next/navigation";
 import CheckoutModal from "./Checkout";
 import { getUserDetails } from "@/lib/features/auth";
-import { processCartOffers } from "@/helpers/helpers";
+import { processCartOffers }  from "@/helpers/helpers";
 import { setAddressState } from "@/lib/features/address";
 import { RootState } from "@/lib/store";
 

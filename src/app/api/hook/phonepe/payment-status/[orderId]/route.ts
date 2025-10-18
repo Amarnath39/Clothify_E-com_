@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 // --- FIX: All relative paths are now absolute path aliases ---
 import Order from "@/model/Order";
 // --- FIX: Changed 'helper' to 'helpers' to match the likely folder name ---
-import { sendUserOrderEmail } from "@/helpers/sendUserOrderEmail";
+import { sendUserOrderEmail } from "@/helper/sendUserOrderEmail";
 import {
   OrderDetails,
   sendAdminOrderEmail,
-} from "@/helpers/sendAdminOrderEmail";
+} from "@/helper/sendAdminOrderEmail";
 import Product from "@/model/Product";
 import axios from "axios";
 import { getPhonePeClient } from "@/lib/phonepeClient";
-import { sendOrderConfirmation } from "@/helpers/whatsappNotifier";
+import { sendOrderConfirmation } from "@/helper/whatsappNotifier";
 
 export const POST = async (
   req: NextRequest,
@@ -37,9 +37,11 @@ export const POST = async (
 
     // --- CORRECTION 3: Process the order based on the secure status ---
     if (paymentStatus === "COMPLETED") {
+      const paymentDetail = phonePeResponse?.paymentDetails?.[0]; // get the first element
+
       order.paymentStatus = "PAYMENT_SUCCESS";
-      order.paymentMethod = phonePeResponse?.paymentInstrument?.type;
-      order.transactionId = phonePeResponse?.transactionId;
+      order.paymentMethod = paymentDetail?.paymentMode;
+      order.transactionId = paymentDetail?.transactionId;
       order.date = new Date();
 
       // --- We are KEEPING your superior stock update logic below ---

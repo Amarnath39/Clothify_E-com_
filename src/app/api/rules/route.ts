@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ReturnRules from "../../../../model/ReturnRules";
+import ReturnRules from "../../../model/ReturnRules";
 import { connectDB } from "../../../../db";
 
 connectDB();

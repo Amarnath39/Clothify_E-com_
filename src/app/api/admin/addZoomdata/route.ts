@@ -58,12 +58,12 @@
 // };
 
 import { NextRequest, NextResponse } from "next/server";
-import ZoomData from "../../../../../model/ZoomData";
+import ZoomData from "../../../../model/ZoomData";
 import { connectDB } from "../../../../../db";
-import Admin from "../../../../../model/Admin";
+import Admin from "../../../../model/Admin";
 import { writeFile, mkdir, unlink, access } from "fs/promises";
 import path from "path";
-import { uploadFile } from "../../../../../helper/uploadFile";
+import { uploadFile } from "../../../../helper/uploadFile";
 
 connectDB();
 

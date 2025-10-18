@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../db";
-import User from "../../../../../model/User";
+import User from "../../../../model/User";
 import jwt from "jsonwebtoken";
 import * as cookie from "cookie";
 import { SerializeOptions } from "cookie";

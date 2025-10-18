@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
-import User from "../../../../../../model/User";
+import User from "../../../../../model/User";
 import { connectDB } from "../../../../../../db";
 
 export const POST = async (req: NextRequest) => {

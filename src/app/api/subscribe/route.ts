@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import Subscribe from "../../../../model/Subscribe";
-import { sendSubscribeEmail } from "../../../../helper/sendSubscribeEmail";
+import Subscribe from "../../../model/Subscribe";
+import { sendSubscribeEmail } from "../../../helper/sendSubscribeEmail";
 
 export const POST = async (req: NextRequest) => {
     try {

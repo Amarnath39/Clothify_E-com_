@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '../../../../../db';
-import Video from '../../../../../model/video';
-import { deleteFile } from '../../../../../helper/deleteFile';
+import Video from '../../../../model/video';
+import { deleteFile } from '../../../../helper/deleteFile';
 
 export async function DELETE(req: NextRequest) {
   await connectDB();

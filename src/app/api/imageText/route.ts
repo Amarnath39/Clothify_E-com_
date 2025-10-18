@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../db";
-import ZoomData from "../../../../model/ZoomData";
-import ImageText from "../../../../model/ImageText";
+import ZoomData from "../../../model/ZoomData";
+import ImageText from "../../../model/ImageText";
 
 connectDB();
 

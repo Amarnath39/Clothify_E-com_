@@ -1,8 +1,9 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../../db";
-import Admin from "../../../../../../model/Admin";
-import User from "../../../../../../model/User";
-import Order from "../../../../../../model/Order";
+import Admin from "../../../../../model/Admin";
+import User from "../../../../../model/User";
+import Order from "../../../../../model/Order";
 
 connectDB();
 

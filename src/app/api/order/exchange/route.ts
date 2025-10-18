@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../db";
-import { uploadFile } from "../../../../../helper/uploadFile";
-import Exchange from "../../../../../model/Exchange";
-import Order from "../../../../../model/Order";
-import User from "../../../../../model/User";
+import { uploadFile } from "../../../../helper/uploadFile";
+import Exchange from "../../../../model/Exchange";
+import Order from "../../../../model/Order";
+import User from "../../../../model/User";
 
 connectDB();
 

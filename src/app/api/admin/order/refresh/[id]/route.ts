@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../../../db";
-import Admin from "../../../../../../../model/Admin";
+import Admin from "../../../../../../model/Admin";
 import axios from "axios";
 import crypto from "crypto";
-import Order from "../../../../../../../model/Order";
+import Order from "../../../../../../model/Order";
 
 connectDB();
 
