@@ -64,12 +64,12 @@ const MostSellingProductsPage = () => {
     sortProducts();
   }, [sortConfig, products]);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setPage(1); // Reset to first page when searching
   };
 
-  const handleSort = (key) => {
+  const handleSort = (key: string) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
       direction = "desc";
@@ -78,7 +78,11 @@ const MostSellingProductsPage = () => {
   };
 
   const sortProducts = () => {
-    const sortedProducts = [...products].sort((a, b) => {
+    if (!sortConfig.key) {
+      setDisplayedProducts(products);
+      return;
+    }
+    const sortedProducts = [...products].sort((a: any, b: any) => {
       if (a[sortConfig.key] < b[sortConfig.key]) {
         return sortConfig.direction === "asc" ? -1 : 1;
       }
@@ -90,12 +94,12 @@ const MostSellingProductsPage = () => {
     setDisplayedProducts(sortedProducts);
   };
 
-  const SortIcon = ({ column }) => {
+  const SortIcon = ({ column }: { column: string }) => {
     if (sortConfig.key !== column) return null;
     return sortConfig.direction === "asc" ? (
-      <FaSortAmountUp className="ml-2" />
+      <FaSortAmountUp className="ml-2 inline" />
     ) : (
-      <FaSortAmountDown className="ml-2" />
+      <FaSortAmountDown className="ml-2 inline" />
     );
   };
 
@@ -125,25 +129,25 @@ const MostSellingProductsPage = () => {
                   className="cursor-pointer"
                   onClick={() => handleSort("name")}
                 >
-                  Product {<SortIcon column="name" />}
+                  Product <SortIcon column="name" />
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("sellCount")}
                 >
-                  Sold {<SortIcon column="sellCount" />}
+                  Sold <SortIcon column="sellCount" />
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("offerPrice")}
                 >
-                  Price {<SortIcon column="offerPrice" />}
+                  Price <SortIcon column="offerPrice" />
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("stock")}
                 >
-                  Stock {<SortIcon column="stock" />}
+                  Stock <SortIcon column="stock" />
                 </TableHead>
                 <TableHead>Categories</TableHead>
               </TableRow>
@@ -167,10 +171,10 @@ const MostSellingProductsPage = () => {
                     {item.sellCount}
                   </TableCell>
                   <TableCell>₹ {item?.sizes[0]?.offerPrice?.toFixed(2)}</TableCell>
-                  <TableCell>{item.stock}</TableCell>
+                  <TableCell>{item?.sizes[0]?.stock}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {item.categories.map((category, index) => (
+                      {item.categories.map((category: any, index: number) => (
                         <Badge key={index} variant="secondary">
                           {category?.name}
                         </Badge>
@@ -210,3 +214,4 @@ const MostSellingProductsPage = () => {
 };
 
 export default MostSellingProductsPage;
+
