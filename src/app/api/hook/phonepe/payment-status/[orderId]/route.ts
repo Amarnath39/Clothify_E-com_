@@ -1,189 +1,236 @@
-import { NextRequest, NextResponse } from "next/server";
-import Order from "../../../../../../../model/Order";
-import { sendUserOrderEmail } from "../../../../../../../helper/sendUserOrderEmail";
-import {
-  OrderDetails,
-  sendAdminOrderEmail,
-} from "../../../../../../../helper/sendAdminOrderEmail";
-import Product from "../../../../../../../model/Product";
+import { getPhonePeClient } from "@/lib/phonepeClient";
+import { NextResponse } from "next/server";
+import Order from "../../../../../../model/Order";
+import User from "../../../../../../model/User";
+import { connectDB } from "../../../../../../db";
+import { sendUserOrderEmail } from "../../../../../../helper/sendUserOrderEmail";
+import { sendOrderConfirmation } from "../../../../../../helper/whatsappNotifier";
+import mongoose from "mongoose";
 import axios from "axios";
-import { getShiprocketToken } from "./shiprocketToken";
-
-export const POST = async (
-  req: NextRequest,
-  { params }: { params: { orderId: string } }
-) => {
+import Product from "../../../../../../model/Product";
+ 
+interface UserType {
+  _id: mongoose.Types.ObjectId;
+  email: string;
+  name?: string;
+  phone?: string;
+  role?: string;
+}
+ 
+interface Params {
+  params: { orderId: string }; // frontend sends tempTransactionId
+}
+ 
+export async function GET(req: Request, { params }: Params) {
   try {
-    const { response } = await req.json();
+    await connectDB();
+ 
     const { orderId } = params;
-
-    if (!response) {
-      console.log("No response in callback response");
-      return NextResponse.json(
-        { success: false, msg: "Not response in callback response" },
-        { status: 400 }
-      );
+    if (!orderId) {
+      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
-
-    const order = await Order.findOne({ orderId });
-
-    if (!order) {
-      console.log(`No order found with orderId: ${orderId}`);
-      return NextResponse.json(
-        { success: false, msg: "Order not found" },
-        { status: 404 }
-      );
-    }
-
-    const decodedResponse = JSON.parse(atob(response) || "{}");
-
-    // Sample for decoded response
-    // {
-    //    "success": true,
-    //    "code": "PAYMENT_SUCCESS",
-    //     "message": "Your request has been successfully completed.",
-    //     "data": {
-    //       "merchantId": "PGTESTPAYUAT",
-    //       "merchantTransactionId": "MT7850590068188104",
-    //       "transactionId": "T2111221437456190170379",
-    //       "amount": 100,
-    //       "state": "COMPLETED",
-    //       "responseCode": "SUCCESS",
-    //       "paymentInstrument": {
-    //         "type": "UPI",
-    //         "utr": "206378866112"
-    //       }
-    //     }
-    //   }
-
-    // TODO: Follow the same logic from /api/order/[id] down here
-    if (decodedResponse?.code === "PAYMENT_SUCCESS") {
-      // Find the order by ID
-      order.paymentStatus = decodedResponse?.code || "STATUS_UNAVAILABLE";
-
-      order.paymentMethod = decodedResponse?.data?.paymentInstrument?.type;
-      order.transactionId = decodedResponse?.data?.transactionId;
-      order.date = new Date();
-
-      // Increment sell count for each product in the order
-     for (const productDetail of order.productDetails) {
-        const totalQuantityToDecrement =
-          productDetail.count + (productDetail.freeCount || 0);
-
-        // Update the Product document where the _id matches and an element
-        // in the `sizes` array has a `size` field matching the one from the order.
-        //The corrected code
-        await Product.findOneAndUpdate(
-          {
-            _id: productDetail.product,
-            "sizes.size": productDetail.size, // Target the specific size
-          },
-          {
-            $inc: {
-              // Increment the top-level sellCount for overall analytics
-              sellCount: totalQuantityToDecrement,
-              // Use the positional `$` operator to decrement the stock of the matched size
-              "sizes.$.stock": -totalQuantityToDecrement,
-            },
-          }
-        );
-      }
-
-      // Send Email
-      const orderDetails: OrderDetails = {
-        orderId: order?.orderId,
-        customerName: order?.shippingAddress?.name,
-        customerEmail: order?.user?.email,
-        totalAmount: order?.payablePrice,
-        orderDate: new Date(order?.updatedAt).toLocaleString().split(",")[0],
-      };
-
-      await sendUserOrderEmail(order);
-      await sendAdminOrderEmail(orderDetails);
-
-      // shiprocket integration
-      // try {
-      //   const shiprocketToken = await getShiprocketToken();
-      //   if (!shiprocketToken) throw new Error("Failed to get Shiprocket token");
-
-      //   const shiprocketPayload = {
-      //     order_id: order.orderId,
-      //     order_date: order.date,
-      //     pickup_location: "primary",
-      //     channel_id: "",
-      //     comment: "",
-      //     billing_customer_name: order?.user?.name,
-      //     billing_last_name: "",
-      //     billing_address: order?.shippingAddress?.address,
-      //     billing_address_2: "",
-      //     billing_city: order?.shippingAddress?.city,
-      //     billing_pincode: order?.shippingAddress?.zipCode,
-      //     billing_state: order?.shippingAddress?.state,
-      //     billing_country: order?.shippingAddress?.country,
-      //     billing_email: order?.user?.email,
-      //     billing_phone: order?.user?.phone,
-      //     shipping_is_billing: true,
-      //     shipping_customer_name: order?.shippingAddress?.name,
-      //     shipping_address: order?.shippingAddress?.address,
-      //     shipping_city: order?.shippingAddress?.city,
-      //     shipping_pincode: order?.shippingAddress?.zipCode,
-      //     shipping_country: order?.shippingAddress?.country,
-      //     shipping_state: order?.shippingAddress?.state,
-      //     shipping_email: order?.user?.email,
-      //     shipping_phone: order?.user?.phone,
-      //     order_items: order?.productDetails?.map((detail) => ({
-      //       name: detail?.product.name,
-      //       sku: detail?.product.sku,
-      //       units: detail?.count,
-      //       selling_price: detail?.size?.offerPrice,
-      //     })),
-      //     payment_method: "Prepaid",
-      //     shipping_charges: 0,
-      //     giftwrap_charges: 0,
-      //     transaction_charges: 0,
-      //     total_discount: 0,
-      //     sub_total: order?.payablePrice,
-      //     length: 10,
-      //     breadth: 15,
-      //     height: 20,
-      //     weight: 2.5,
-      //   };
-      //   console.log(shiprocketPayload, "shiprocketPayload");
-      //   const shiprocketOptions = {
-      //     method: "POST",
-      //     url: `${process.env.SHIPROCKET_API_URL}/orders/create/adhoc`, // Replace with actual Shiprocket API endpoint
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Authorization: `Bearer ${shiprocketToken}`, // Ensure you have the correct Shiprocket API token
-      //     },
-      //     data: shiprocketPayload,
-      //   };
-      //   const shiprocketResponse = await axios.request(shiprocketOptions);
-      //   if (shiprocketResponse) {
-      //     order.shiprocket = shiprocketResponse?.data;
-      //   }
-      // } catch (error) {}
-      await order.save();
-
-      return NextResponse.json(
-        { success: true, msg: "Order updated successfully", order },
-        { status: 200 }
-      );
-    }
-
-    order.paymentStatus = decodedResponse?.code || "STATUS_UNAVAILABLE";
-
-    await order.save();
-
-    return NextResponse.json(
-      { success: false, msg: "Payment Pending", order },
-      { status: 500 }
+ 
+    // 🔹 Get order
+    const order = await Order.findOne({ tempTransactionId: orderId }).populate(
+      "productDetails.product"
     );
-  } catch (error) {
-    console.log("Error in hooks/phonepe/payment-status: ", error);
+    if (!order) {
+      return NextResponse.json({ error: "Order not found in database" }, { status: 404 });
+    }
+ 
+    // 🔹 Validate user
+    if (!mongoose.Types.ObjectId.isValid(order.user)) {
+      return NextResponse.json({ error: "Invalid userId in order" }, { status: 400 });
+    }
+ 
+    const user = await User.findById(order.user).lean<UserType>();
+    if (!user || !user.email) {
+      return NextResponse.json({ error: "User not found or missing email" }, { status: 404 });
+    }
+ 
+    // 🔹 Call PhonePe API
+    const response: any = await getPhonePeClient().getOrderStatus(orderId);
+    console.log("PhonePe Response:", response);
+ 
+    const phonePeState = response?.state || "PENDING";
+    const transactionId = response?.orderId || orderId;
+ 
+    let paymentStatus = "Pending";
+    let currentStatus = "PENDING";
+ 
+    if (phonePeState === "COMPLETED") {
+      paymentStatus = "PAYMENT_SUCCESS";
+      currentStatus = "CONFIRMED";
+    } else if (phonePeState === "FAILED") {
+      paymentStatus = "PAYMENT_ERROR";
+      currentStatus = "FAILED";
+    }
+ 
+    // 🔹 Update order in DB
+    const updatedOrder = await Order.findOneAndUpdate(
+      { tempTransactionId: orderId },
+      { paymentStatus, transactionId, currentStatus },
+      { new: true }
+    ).populate("productDetails.product");
+ 
+    if (!updatedOrder) {
+      console.error("Order not found for tempTransactionId:", orderId);
+      return { success: false, message: "Order not found" };
+    }
+ 
+    // ✅ If payment is successful, reduce stock
+    if (paymentStatus === "PAYMENT_SUCCESS") {
+      console.log("✅ Payment successful, updating product stock...");
+ 
+      for (const item of updatedOrder.productDetails) {
+        const product = item?.product;
+        const quantity = item?.quantity || 0;
+ 
+        if (product && product._id && quantity > 0) {
+          await Product.findByIdAndUpdate(
+            product._id,
+            { $inc: { stock: -quantity } }, // decrement stock
+            { new: true }
+          );
+          console.log(
+            `🔻 Stock decremented for product ${product._id} by ${quantity}`
+          );
+        }
+      }
+    }
+ 
+    // if (phonePeState === "COMPLETED") {
+    //   paymentStatus = "PAYMENT_SUCCESS";
+    //   currentStatus = "CONFIRMED";
+    // } else if (phonePeState === "FAILED") {
+    //   paymentStatus = "PAYMENT_ERROR";
+    //   currentStatus = "FAILED";
+    // }
+ 
+    // 🔹 Update order
+    // const updatedOrder = await Order.findOneAndUpdate(
+    //   { tempTransactionId: orderId },
+    //   { paymentStatus, transactionId, currentStatus },
+    //   { new: true }
+    // ).populate("productDetails.product");
+ 
+    let emailResponse: { success: boolean; message: string; error?: any } | null = null;
+ 
+    if (paymentStatus === "PAYMENT_SUCCESS" && updatedOrder) {
+      // ------------------ Email ------------------
+      emailResponse = await sendUserOrderEmail({
+        ...updatedOrder.toObject(),
+        orderId: updatedOrder.orderId || updatedOrder._id.toString(),
+        customerEmail: user.email,
+      });
+ 
+      // ------------------ DTDC Integration ------------------
+      // try {
+      //   const customerNo = `CUST${Date.now()}${Math.floor(Math.random() * 10000)}`;
+      //   const consignments = updatedOrder.productDetails.map((v: any) => ({
+      //     customer_code: "OO3609",
+      //     load_type: "NON-DOCUMENT",
+      //     service_type_id: "B2C Priority",
+      //     dimension_unit: "cm",
+      //     length: "1",
+      //     width: "1",
+      //     height: "1",
+      //     weight_unit: "kg",
+      //     weight: "0.25",
+      //     description: v.product.name,
+      //     num_pieces: v.count + (v.freeCount || 0),
+      //     declared_value: v.product.offerPrice || updatedOrder.payablePrice,
+      //     origin_details: {
+      //       name: "Udayaada",
+      //       phone: 8123000558,
+      //       address_line_1: "Thalaserry",
+      //       address_line_2: "Post Palayad",
+      //       pincode: 670102,
+      //       city: "CANNANORE",
+      //       state: "Kerala",
+      //     },
+      //     destination_details: {
+      //       name: updatedOrder.shippingAddress.name,
+      //       phone: updatedOrder.shippingAddress.mobile,
+      //       alternate_phone: updatedOrder.shippingAddress.alternateMobile || "",
+      //       address_line_1: updatedOrder.shippingAddress.address,
+      //       address_line_2: updatedOrder.shippingAddress.addressType || "",
+      //       pincode: updatedOrder.shippingAddress.zipCode,
+      //       city: updatedOrder.shippingAddress.city,
+      //       state: updatedOrder.shippingAddress.state,
+      //     },
+      //     customer_reference_number: customerNo,
+      //     commodity_id: 98,
+      //     reference_number: "",
+      //   }));
+ 
+      //   const dtdcPayload = { consignments };
+ 
+      //   const dtdcRes = await axios.post(
+      //     `https://dtdcapi.shipsy.io/api/customer/integration/consignment/softdata`,
+      //     dtdcPayload,
+      //     {
+      //       headers: {
+      //         accept: "application/json",
+      //         "Content-Type": "application/json",
+      //         "api-key": "17650e27594130e98548596eeb92aa",
+      //       },
+      //     }
+      //   );
+ 
+      //   if (dtdcRes.data?.data?.[0]?.success) {
+      //     await Order.findByIdAndUpdate(
+      //       updatedOrder._id,
+      //       {
+      //         $set: {
+      //           dtdc: {
+      //             referenceNumber: dtdcRes.data.data[0].reference_number,
+      //             customerReferenceNumber: dtdcRes.data.data[0].customer_reference_number,
+      //           },
+      //         },
+      //       },
+      //       { new: true }
+      //     );
+      //   } else {
+      //     console.warn("DTDC integration failed:", dtdcRes.data);
+      //   }
+      // } catch (dtdcErr) {
+      //   console.error("DTDC API Error:", dtdcErr);
+      // }
+ 
+      // ------------------ WhatsApp Order Confirmation ------------------
+      try {
+        const customerPhone = updatedOrder.shippingAddress?.mobile || user.phone || "";
+        const customerName = updatedOrder.shippingAddress?.name || user.name || "Customer";
+ 
+        const whatsappResp = await sendOrderConfirmation(
+          customerName,
+          customerPhone,
+          updatedOrder.orderId || updatedOrder._id.toString(),
+          order.merchantName || "S.I.S",
+          order.deliveryPartner || "ANY"
+        );
+ 
+        console.log("📲 WhatsApp notification result:", whatsappResp);
+      } catch (waErr) {
+        console.error("❌ WhatsApp Confirmation Failed:", waErr);
+      }
+    }
+ 
+    // ------------------ Return Response ------------------
+    return NextResponse.json({
+      success: true,
+      status: phonePeState,
+      paymentStatus,
+      transactionId,
+      order: updatedOrder,
+      email: emailResponse || { success: false, message: "Email not sent (payment not successful)" },
+    });
+  } catch (error: any) {
+    console.error("Payment status check error:", error);
     return NextResponse.json(
-      { success: false, msg: "Internal Server Error" },
+      { error: "Status check failed", details: error.message },
       { status: 500 }
     );
   }
-};
+}
