@@ -44,29 +44,20 @@ export const POST = async (
       order.transactionId = paymentDetail?.transactionId;
       order.date = new Date();
 
-      // --- We are KEEPING your superior stock update logic below ---
+      // --- THE FIX: Reverted to the Original, Correct Stock Update Logic ---
+      // The previous logic was designed for products with multiple sizes, each with its own stock.
+      // Your original logic correctly targets a single 'stock' field on the main product document.
+      // We are bringing that simpler, correct logic back.
       for (const productDetail of order.productDetails) {
         const totalQuantityToDecrement =
           productDetail.count + (productDetail.freeCount || 0);
 
-        const updateResult = await Product.findOneAndUpdate(
-          {
-            _id: productDetail.product,
-            "sizes.size": productDetail.size, // Target the specific size
+        await Product.findByIdAndUpdate(productDetail.product, {
+          $inc: {
+            sellCount: totalQuantityToDecrement,
+            stock: -totalQuantityToDecrement, // This correctly decrements the top-level stock field.
           },
-          {
-            $inc: {
-              sellCount: totalQuantityToDecrement,
-              "sizes.$.stock": -totalQuantityToDecrement,
-            },
-          }
-        );
-
-        if (!updateResult) {
-          console.error(
-            `Failed to update stock for product ${productDetail.product} with size "${productDetail.size}". This usually means the 'size' field is missing from the order details.`
-          );
-        }
+        });
       }
 
       const orderDetails: OrderDetails = {
@@ -122,4 +113,3 @@ export const POST = async (
     );
   }
 };
-
