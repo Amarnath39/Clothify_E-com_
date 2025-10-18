@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-// --- FIX: All relative paths are now absolute path aliases ---
 import Order from "@/model/Order";
-// --- FIX: Changed 'helper' to 'helpers' to match the likely folder name ---
 import { sendUserOrderEmail } from "@/helper/sendUserOrderEmail";
 import {
   OrderDetails,
   sendAdminOrderEmail,
 } from "@/helper/sendAdminOrderEmail";
 import Product from "@/model/Product";
-import axios from "axios";
 import { getPhonePeClient } from "@/lib/phonepeClient";
 import { sendOrderConfirmation } from "@/helper/whatsappNotifier";
 
@@ -17,13 +14,10 @@ export const POST = async (
   { params }: { params: { orderId: string } }
 ) => {
   try {
-    // We no longer need the client-side 'response' from req.json()
     const { orderId } = params;
 
-    // --- CORRECTION 2: Adopt the more secure server-to-server status check ---
-    // Instead of decoding a payload, we ask PhonePe's server for the true status.
     const phonePeResponse = await getPhonePeClient().getOrderStatus(orderId);
-    const paymentStatus = phonePeResponse?.state; // e.g., "COMPLETED", "FAILED"
+    const paymentStatus = phonePeResponse?.state;
 
     const order = await Order.findOne({ orderId });
 
@@ -34,30 +28,49 @@ export const POST = async (
         { status: 404 }
       );
     }
+    
+    // --- FIX: Prevent reprocessing a completed order ---
+    if (order.paymentStatus === "PAYMENT_SUCCESS") {
+      console.log(`Order ${orderId} has already been processed.`);
+      return NextResponse.json(
+        { success: true, msg: "Order already processed", order },
+        { status: 200 }
+      );
+    }
 
-    // --- CORRECTION 3: Process the order based on the secure status ---
     if (paymentStatus === "COMPLETED") {
-      const paymentDetail = phonePeResponse?.paymentDetails?.[0]; // get the first element
+      const paymentDetail = phonePeResponse?.paymentDetails?.[0];
 
       order.paymentStatus = "PAYMENT_SUCCESS";
       order.paymentMethod = paymentDetail?.paymentMode;
       order.transactionId = paymentDetail?.transactionId;
       order.date = new Date();
 
-      // --- THE FIX: Reverted to the Original, Correct Stock Update Logic ---
-      // The previous logic was designed for products with multiple sizes, each with its own stock.
-      // Your original logic correctly targets a single 'stock' field on the main product document.
-      // We are bringing that simpler, correct logic back.
+      // --- THE CRITICAL FIX: Update stock for the SPECIFIC size purchased ---
       for (const productDetail of order.productDetails) {
         const totalQuantityToDecrement =
           productDetail.count + (productDetail.freeCount || 0);
 
-        await Product.findByIdAndUpdate(productDetail.product, {
-          $inc: {
-            sellCount: totalQuantityToDecrement,
-            stock: -totalQuantityToDecrement, // This correctly decrements the top-level stock field.
+        // This query now finds the product AND the specific size within it to update.
+        const updateResult = await Product.findOneAndUpdate(
+          {
+            _id: productDetail.product,
+            "sizes.size": productDetail.size, // Target the specific size
           },
-        });
+          {
+            $inc: {
+              "sizes.$.stock": -totalQuantityToDecrement, // The '$' updates the matched size's stock
+              sellCount: totalQuantityToDecrement, // Also increment the total sell count
+            },
+          },
+          { new: true } // Return the updated document
+        );
+
+        if (!updateResult) {
+          console.error(
+            `Failed to update stock for product ${productDetail.product} with size "${productDetail.size}". This usually means the 'size' field is missing from the order details or does not match.`
+          );
+        }
       }
 
       const orderDetails: OrderDetails = {
@@ -71,23 +84,21 @@ export const POST = async (
       await sendUserOrderEmail(order);
       await sendAdminOrderEmail(orderDetails);
 
-      // --- CORRECTION 4: Add WhatsApp notifications ---
       try {
         const customerPhone = order.shippingAddress?.mobile || "";
         const customerName = order.shippingAddress?.name || "Customer";
         if (customerPhone) {
           await sendOrderConfirmation(
-             customerName,
-             customerPhone,
-             order.orderId,
-             "Your Merchant Name", // Replace with actual merchant name if available
-             "DTDC" // Or another delivery partner
+            customerName,
+            customerPhone,
+            order.orderId,
+            "Your Merchant Name",
+            "DTDC"
           );
         }
       } catch (waErr) {
         console.error("WhatsApp Confirmation Failed:", waErr);
       }
-
 
       await order.save();
 
@@ -97,13 +108,12 @@ export const POST = async (
       );
     }
 
-    // If payment was not completed (e.g., FAILED, PENDING)
     order.paymentStatus = paymentStatus || "PAYMENT_PENDING";
     await order.save();
 
     return NextResponse.json(
       { success: false, msg: `Payment status: ${order.paymentStatus}`, order },
-      { status: 200 } // Return 200 as the API call itself was successful
+      { status: 200 }
     );
   } catch (error) {
     console.log("Error in hooks/phonepe/payment-status: ", error);
@@ -113,3 +123,4 @@ export const POST = async (
     );
   }
 };
+

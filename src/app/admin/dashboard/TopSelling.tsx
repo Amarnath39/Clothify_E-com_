@@ -22,13 +22,13 @@ import {
 import axios from "axios";
 
 const MostSellingProductsPage = () => {
-  const [products, setProducts] = useState([]);
-  const [displayedProducts, setDisplayedProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortConfig, setSortConfig] = useState<any>({
+  const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: string }>({
     key: null,
     direction: "asc",
   });
@@ -43,8 +43,18 @@ const MostSellingProductsPage = () => {
         },
       });
       if (data.success) {
-        setProducts(data.mostSellingProducts);
-        setDisplayedProducts(data.mostSellingProducts);
+        // --- IMPROVEMENT: Calculate total stock when data is fetched ---
+        const productsWithTotalStock = data.mostSellingProducts.map(
+          (p: any) => ({
+            ...p,
+            totalStock: p.sizes.reduce(
+              (total: number, size: any) => total + (size.stock || 0),
+              0
+            ),
+          })
+        );
+        setProducts(productsWithTotalStock);
+        setDisplayedProducts(productsWithTotalStock);
         setTotalPages(data.totalPages);
       } else {
         console.error(data.msg);
@@ -83,10 +93,14 @@ const MostSellingProductsPage = () => {
       return;
     }
     const sortedProducts = [...products].sort((a: any, b: any) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
+      // Handle nested price sorting
+      const aValue = sortConfig.key === 'offerPrice' ? a.sizes[0]?.offerPrice : a[sortConfig.key];
+      const bValue = sortConfig.key === 'offerPrice' ? b.sizes[0]?.offerPrice : b[sortConfig.key];
+
+      if (aValue < bValue) {
         return sortConfig.direction === "asc" ? -1 : 1;
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
+      if (aValue > bValue) {
         return sortConfig.direction === "asc" ? 1 : -1;
       }
       return 0;
@@ -145,9 +159,9 @@ const MostSellingProductsPage = () => {
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
-                  onClick={() => handleSort("stock")}
+                  onClick={() => handleSort("totalStock")} // <-- Sort by totalStock
                 >
-                  Stock <SortIcon column="stock" />
+                  Total Stock <SortIcon column="totalStock" />
                 </TableHead>
                 <TableHead>Categories</TableHead>
               </TableRow>
@@ -170,8 +184,11 @@ const MostSellingProductsPage = () => {
                   <TableCell className="font-medium">
                     {item.sellCount}
                   </TableCell>
-                  <TableCell>₹ {item?.sizes[0]?.offerPrice?.toFixed(2)}</TableCell>
-                  <TableCell>{item?.sizes[0]?.stock}</TableCell>
+                  <TableCell>
+                    ₹ {item?.sizes[0]?.offerPrice?.toFixed(2)}
+                  </TableCell>
+                  {/* --- IMPROVEMENT: Display total calculated stock --- */}
+                  <TableCell>{item.totalStock}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {item.categories.map((category: any, index: number) => (
@@ -194,7 +211,8 @@ const MostSellingProductsPage = () => {
         <div className="flex justify-center mt-4 space-x-2">
           <Button
             onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-            disabled={page === 1} className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
+            disabled={page === 1}
+            className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
           >
             Previous
           </Button>
@@ -203,7 +221,8 @@ const MostSellingProductsPage = () => {
           </span>
           <Button
             onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={page === totalPages} className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
+            disabled={page === totalPages}
+            className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
           >
             Next
           </Button>
