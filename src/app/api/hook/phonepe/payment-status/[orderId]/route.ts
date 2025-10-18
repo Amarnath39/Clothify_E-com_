@@ -1,236 +1,122 @@
-import { getPhonePeClient } from "@/lib/phonepeClient";
-import { NextResponse } from "next/server";
-import Order from "../../../../../../model/Order";
-import User from "../../../../../../model/User";
-import { connectDB } from "../../../../../../db";
-import { sendUserOrderEmail } from "../../../../../../helper/sendUserOrderEmail";
-import { sendOrderConfirmation } from "../../../../../../helper/whatsappNotifier";
-import mongoose from "mongoose";
+import { NextRequest, NextResponse } from "next/server";
+// --- FIX: All relative paths are now absolute path aliases ---
+import Order from "@/model/Order";
+import { sendUserOrderEmail } from "@/helper/sendUserOrderEmail";
+import {
+  OrderDetails,
+  sendAdminOrderEmail,
+} from "@/helper/sendAdminOrderEmail";
+import Product from "@/model/Product";
 import axios from "axios";
-import Product from "../../../../../../model/Product";
- 
-interface UserType {
-  _id: mongoose.Types.ObjectId;
-  email: string;
-  name?: string;
-  phone?: string;
-  role?: string;
-}
- 
-interface Params {
-  params: { orderId: string }; // frontend sends tempTransactionId
-}
- 
-export async function GET(req: Request, { params }: Params) {
+import { getPhonePeClient } from "@/lib/phonepeClient";
+import { sendOrderConfirmation } from "@/helper/whatsappNotifier";
+
+export const POST = async (
+  req: NextRequest,
+  { params }: { params: { orderId: string } }
+) => {
   try {
-    await connectDB();
- 
+    // We no longer need the client-side 'response' from req.json()
     const { orderId } = params;
-    if (!orderId) {
-      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
-    }
- 
-    // 🔹 Get order
-    const order = await Order.findOne({ tempTransactionId: orderId }).populate(
-      "productDetails.product"
-    );
+
+    // --- CORRECTION 2: Adopt the more secure server-to-server status check ---
+    // Instead of decoding a payload, we ask PhonePe's server for the true status.
+    const phonePeResponse = await getPhonePeClient().getOrderStatus(orderId);
+    const paymentStatus = phonePeResponse?.state; // e.g., "COMPLETED", "FAILED"
+
+    const order = await Order.findOne({ orderId });
+
     if (!order) {
-      return NextResponse.json({ error: "Order not found in database" }, { status: 404 });
+      console.log(`No order found with orderId: ${orderId}`);
+      return NextResponse.json(
+        { success: false, msg: "Order not found" },
+        { status: 404 }
+      );
     }
- 
-    // 🔹 Validate user
-    if (!mongoose.Types.ObjectId.isValid(order.user)) {
-      return NextResponse.json({ error: "Invalid userId in order" }, { status: 400 });
-    }
- 
-    const user = await User.findById(order.user).lean<UserType>();
-    if (!user || !user.email) {
-      return NextResponse.json({ error: "User not found or missing email" }, { status: 404 });
-    }
- 
-    // 🔹 Call PhonePe API
-    const response: any = await getPhonePeClient().getOrderStatus(orderId);
-    console.log("PhonePe Response:", response);
- 
-    const phonePeState = response?.state || "PENDING";
-    const transactionId = response?.orderId || orderId;
- 
-    let paymentStatus = "Pending";
-    let currentStatus = "PENDING";
- 
-    if (phonePeState === "COMPLETED") {
-      paymentStatus = "PAYMENT_SUCCESS";
-      currentStatus = "CONFIRMED";
-    } else if (phonePeState === "FAILED") {
-      paymentStatus = "PAYMENT_ERROR";
-      currentStatus = "FAILED";
-    }
- 
-    // 🔹 Update order in DB
-    const updatedOrder = await Order.findOneAndUpdate(
-      { tempTransactionId: orderId },
-      { paymentStatus, transactionId, currentStatus },
-      { new: true }
-    ).populate("productDetails.product");
- 
-    if (!updatedOrder) {
-      console.error("Order not found for tempTransactionId:", orderId);
-      return { success: false, message: "Order not found" };
-    }
- 
-    // ✅ If payment is successful, reduce stock
-    if (paymentStatus === "PAYMENT_SUCCESS") {
-      console.log("✅ Payment successful, updating product stock...");
- 
-      for (const item of updatedOrder.productDetails) {
-        const product = item?.product;
-        const quantity = item?.quantity || 0;
- 
-        if (product && product._id && quantity > 0) {
-          await Product.findByIdAndUpdate(
-            product._id,
-            { $inc: { stock: -quantity } }, // decrement stock
-            { new: true }
-          );
-          console.log(
-            `🔻 Stock decremented for product ${product._id} by ${quantity}`
+
+    // --- CORRECTION 3: Process the order based on the secure status ---
+    if (paymentStatus === "COMPLETED") {
+      order.paymentStatus = "PAYMENT_SUCCESS";
+      order.paymentMethod = phonePeResponse?.paymentInstrument?.type;
+      order.transactionId = phonePeResponse?.transactionId;
+      order.date = new Date();
+
+      // --- We are KEEPING your superior stock update logic below ---
+      for (const productDetail of order.productDetails) {
+        const totalQuantityToDecrement =
+          productDetail.count + (productDetail.freeCount || 0);
+
+        const updateResult = await Product.findOneAndUpdate(
+          {
+            _id: productDetail.product,
+            "sizes.size": productDetail.size, // Target the specific size
+          },
+          {
+            $inc: {
+              sellCount: totalQuantityToDecrement,
+              "sizes.$.stock": -totalQuantityToDecrement,
+            },
+          }
+        );
+
+        if (!updateResult) {
+          console.error(
+            `Failed to update stock for product ${productDetail.product} with size "${productDetail.size}". This usually means the 'size' field is missing from the order details.`
           );
         }
       }
-    }
- 
-    // if (phonePeState === "COMPLETED") {
-    //   paymentStatus = "PAYMENT_SUCCESS";
-    //   currentStatus = "CONFIRMED";
-    // } else if (phonePeState === "FAILED") {
-    //   paymentStatus = "PAYMENT_ERROR";
-    //   currentStatus = "FAILED";
-    // }
- 
-    // 🔹 Update order
-    // const updatedOrder = await Order.findOneAndUpdate(
-    //   { tempTransactionId: orderId },
-    //   { paymentStatus, transactionId, currentStatus },
-    //   { new: true }
-    // ).populate("productDetails.product");
- 
-    let emailResponse: { success: boolean; message: string; error?: any } | null = null;
- 
-    if (paymentStatus === "PAYMENT_SUCCESS" && updatedOrder) {
-      // ------------------ Email ------------------
-      emailResponse = await sendUserOrderEmail({
-        ...updatedOrder.toObject(),
-        orderId: updatedOrder.orderId || updatedOrder._id.toString(),
-        customerEmail: user.email,
-      });
- 
-      // ------------------ DTDC Integration ------------------
-      // try {
-      //   const customerNo = `CUST${Date.now()}${Math.floor(Math.random() * 10000)}`;
-      //   const consignments = updatedOrder.productDetails.map((v: any) => ({
-      //     customer_code: "OO3609",
-      //     load_type: "NON-DOCUMENT",
-      //     service_type_id: "B2C Priority",
-      //     dimension_unit: "cm",
-      //     length: "1",
-      //     width: "1",
-      //     height: "1",
-      //     weight_unit: "kg",
-      //     weight: "0.25",
-      //     description: v.product.name,
-      //     num_pieces: v.count + (v.freeCount || 0),
-      //     declared_value: v.product.offerPrice || updatedOrder.payablePrice,
-      //     origin_details: {
-      //       name: "Udayaada",
-      //       phone: 8123000558,
-      //       address_line_1: "Thalaserry",
-      //       address_line_2: "Post Palayad",
-      //       pincode: 670102,
-      //       city: "CANNANORE",
-      //       state: "Kerala",
-      //     },
-      //     destination_details: {
-      //       name: updatedOrder.shippingAddress.name,
-      //       phone: updatedOrder.shippingAddress.mobile,
-      //       alternate_phone: updatedOrder.shippingAddress.alternateMobile || "",
-      //       address_line_1: updatedOrder.shippingAddress.address,
-      //       address_line_2: updatedOrder.shippingAddress.addressType || "",
-      //       pincode: updatedOrder.shippingAddress.zipCode,
-      //       city: updatedOrder.shippingAddress.city,
-      //       state: updatedOrder.shippingAddress.state,
-      //     },
-      //     customer_reference_number: customerNo,
-      //     commodity_id: 98,
-      //     reference_number: "",
-      //   }));
- 
-      //   const dtdcPayload = { consignments };
- 
-      //   const dtdcRes = await axios.post(
-      //     `https://dtdcapi.shipsy.io/api/customer/integration/consignment/softdata`,
-      //     dtdcPayload,
-      //     {
-      //       headers: {
-      //         accept: "application/json",
-      //         "Content-Type": "application/json",
-      //         "api-key": "17650e27594130e98548596eeb92aa",
-      //       },
-      //     }
-      //   );
- 
-      //   if (dtdcRes.data?.data?.[0]?.success) {
-      //     await Order.findByIdAndUpdate(
-      //       updatedOrder._id,
-      //       {
-      //         $set: {
-      //           dtdc: {
-      //             referenceNumber: dtdcRes.data.data[0].reference_number,
-      //             customerReferenceNumber: dtdcRes.data.data[0].customer_reference_number,
-      //           },
-      //         },
-      //       },
-      //       { new: true }
-      //     );
-      //   } else {
-      //     console.warn("DTDC integration failed:", dtdcRes.data);
-      //   }
-      // } catch (dtdcErr) {
-      //   console.error("DTDC API Error:", dtdcErr);
-      // }
- 
-      // ------------------ WhatsApp Order Confirmation ------------------
+
+      const orderDetails: OrderDetails = {
+        orderId: order?.orderId,
+        customerName: order?.shippingAddress?.name,
+        customerEmail: order?.user?.email,
+        totalAmount: order?.payablePrice,
+        orderDate: new Date(order?.updatedAt).toLocaleString().split(",")[0],
+      };
+
+      await sendUserOrderEmail(order);
+      await sendAdminOrderEmail(orderDetails);
+
+      // --- CORRECTION 4: Add WhatsApp notifications ---
       try {
-        const customerPhone = updatedOrder.shippingAddress?.mobile || user.phone || "";
-        const customerName = updatedOrder.shippingAddress?.name || user.name || "Customer";
- 
-        const whatsappResp = await sendOrderConfirmation(
-          customerName,
-          customerPhone,
-          updatedOrder.orderId || updatedOrder._id.toString(),
-          order.merchantName || "S.I.S",
-          order.deliveryPartner || "ANY"
-        );
- 
-        console.log("📲 WhatsApp notification result:", whatsappResp);
+        const customerPhone = order.shippingAddress?.mobile || "";
+        const customerName = order.shippingAddress?.name || "Customer";
+        if (customerPhone) {
+          await sendOrderConfirmation(
+             customerName,
+             customerPhone,
+             order.orderId,
+             "Your Merchant Name", // Replace with actual merchant name if available
+             "DTDC" // Or another delivery partner
+          );
+        }
       } catch (waErr) {
-        console.error("❌ WhatsApp Confirmation Failed:", waErr);
+        console.error("WhatsApp Confirmation Failed:", waErr);
       }
+
+
+      await order.save();
+
+      return NextResponse.json(
+        { success: true, msg: "Order updated successfully", order },
+        { status: 200 }
+      );
     }
- 
-    // ------------------ Return Response ------------------
-    return NextResponse.json({
-      success: true,
-      status: phonePeState,
-      paymentStatus,
-      transactionId,
-      order: updatedOrder,
-      email: emailResponse || { success: false, message: "Email not sent (payment not successful)" },
-    });
-  } catch (error: any) {
-    console.error("Payment status check error:", error);
+
+    // If payment was not completed (e.g., FAILED, PENDING)
+    order.paymentStatus = paymentStatus || "PAYMENT_PENDING";
+    await order.save();
+
     return NextResponse.json(
-      { error: "Status check failed", details: error.message },
+      { success: false, msg: `Payment status: ${order.paymentStatus}`, order },
+      { status: 200 } // Return 200 as the API call itself was successful
+    );
+  } catch (error) {
+    console.log("Error in hooks/phonepe/payment-status: ", error);
+    return NextResponse.json(
+      { success: false, msg: "Internal Server Error" },
       { status: 500 }
     );
   }
-}
+};
+
