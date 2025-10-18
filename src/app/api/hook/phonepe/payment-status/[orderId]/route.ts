@@ -72,6 +72,7 @@ export const POST = async (
 
         // Update the Product document where the _id matches and an element
         // in the `sizes` array has a `size` field matching the one from the order.
+        //The corrected code
         await Product.findOneAndUpdate(
           {
             _id: productDetail.product,
