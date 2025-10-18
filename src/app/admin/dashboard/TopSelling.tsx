@@ -87,21 +87,27 @@ const MostSellingProductsPage = () => {
     setSortConfig({ key, direction });
   };
 
+  // --- FIX: Made the sort function type-safe to prevent build errors ---
   const sortProducts = () => {
-    if (!sortConfig.key) {
+    const { key, direction } = sortConfig;
+    if (!key) {
       setDisplayedProducts(products);
       return;
     }
+
     const sortedProducts = [...products].sort((a: any, b: any) => {
-      // Handle nested price sorting
-      const aValue = sortConfig.key === 'offerPrice' ? a.sizes[0]?.offerPrice : a[sortConfig.key];
-      const bValue = sortConfig.key === 'offerPrice' ? b.sizes[0]?.offerPrice : b[sortConfig.key];
+      const aValue = key === 'offerPrice' ? a.sizes[0]?.offerPrice : a[key];
+      const bValue = key === 'offerPrice' ? b.sizes[0]?.offerPrice : b[key];
+
+      // Handle cases where values might be null or undefined for stable sorting
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
 
       if (aValue < bValue) {
-        return sortConfig.direction === "asc" ? -1 : 1;
+        return direction === "asc" ? -1 : 1;
       }
       if (aValue > bValue) {
-        return sortConfig.direction === "asc" ? 1 : -1;
+        return direction === "asc" ? 1 : -1;
       }
       return 0;
     });
