@@ -167,7 +167,7 @@ const MostSellingProductsPage = () => {
                     {item.sellCount}
                   </TableCell>
                   <TableCell>₹ {item?.sizes[0]?.offerPrice?.toFixed(2)}</TableCell>
-                  <TableCell>{item?.sizes[0]?.stock}</TableCell>
+                  <TableCell>{item.stock}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {item.categories.map((category, index) => (
