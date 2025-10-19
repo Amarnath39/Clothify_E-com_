@@ -1,60 +1,60 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  FaSpinner,
-  FaSearch,
-  FaSortAmountDown,
-  FaSortAmountUp,
-} from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { FaSpinner, FaSearch, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
 import axios from "axios";
 
-const MostSellingProductsPage = () => {
-  const [products, setProducts] = useState<any[]>([]);
-  const [displayedProducts, setDisplayedProducts] = useState<any[]>([]);
+type Country = "IND" | "UAE";
+
+interface ProductSize {
+  _id: string;
+  size: string;
+  stock: number;
+  sellCount: number;
+  offerPrice: Record<Country, number>;
+}
+
+interface Product {
+  _id: string;
+  name: string;
+  sellCount: number;
+  sizes: ProductSize[];
+  actualPrice: Record<Country, number>;
+  img: string[];
+  categories: { name: string }[];
+}
+
+const MostSellingProductsPage: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: string }>({
-    key: null,
-    direction: "asc",
-  });
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Product | null; direction: "asc" | "desc" }>({ key: null, direction: "asc" });
+  const [country, setCountry] = useState<Country>("IND");
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
       const { data } = await axios.get("/api/admin/dashboard/mostselling", {
-        params: {
-          page,
-          search: searchTerm,
-        },
+        params: { page, search: searchTerm },
       });
       if (data.success) {
-        // --- IMPROVEMENT: Calculate total stock when data is fetched ---
-        const productsWithTotalStock = data.mostSellingProducts.map(
-          (p: any) => ({
-            ...p,
-            totalStock: p.sizes.reduce(
-              (total: number, size: any) => total + (size.stock || 0),
-              0
-            ),
-          })
-        );
-        setProducts(productsWithTotalStock);
-        setDisplayedProducts(productsWithTotalStock);
+        setProducts(data.mostSellingProducts);
+        setDisplayedProducts(data.mostSellingProducts);
         setTotalPages(data.totalPages);
       } else {
         console.error(data.msg);
@@ -76,104 +76,92 @@ const MostSellingProductsPage = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    setPage(1); // Reset to first page when searching
+    setPage(1);
   };
 
-  const handleSort = (key: string) => {
-    let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
+  const handleSort = (key: keyof Product) => {
+    let direction: "asc" | "desc" = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
     setSortConfig({ key, direction });
   };
 
-  // --- FIX: Made the sort function type-safe to prevent build errors ---
   const sortProducts = () => {
-    const { key, direction } = sortConfig;
-    if (!key) {
+    if (!sortConfig.key) {
       setDisplayedProducts(products);
       return;
     }
 
-    const sortedProducts = [...products].sort((a: any, b: any) => {
-      const aValue = key === 'offerPrice' ? a.sizes[0]?.offerPrice : a[key];
-      const bValue = key === 'offerPrice' ? b.sizes[0]?.offerPrice : b[key];
+    const sorted = [...products].sort((a, b) => {
+      const aValue = a[sortConfig.key!];
+      const bValue = b[sortConfig.key!];
 
-      // Handle cases where values might be null or undefined for stable sorting
-      if (aValue == null) return 1;
-      if (bValue == null) return -1;
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortConfig.direction === "asc" ? aValue - bValue : bValue - aValue;
+      }
 
-      if (aValue < bValue) {
-        return direction === "asc" ? -1 : 1;
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return sortConfig.direction === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
       }
-      if (aValue > bValue) {
-        return direction === "asc" ? 1 : -1;
-      }
+
       return 0;
     });
-    setDisplayedProducts(sortedProducts);
+
+    setDisplayedProducts(sorted);
   };
 
-  const SortIcon = ({ column }: { column: string }) => {
+  const getCurrencySymbol = (country: Country) => (country === "IND" ? "₹" : "AED ");
+
+  const SortIcon: React.FC<{ column: keyof Product }> = ({ column }) => {
     if (sortConfig.key !== column) return null;
-    return sortConfig.direction === "asc" ? (
-      <FaSortAmountUp className="ml-2 inline" />
-    ) : (
-      <FaSortAmountDown className="ml-2 inline" />
-    );
+    return sortConfig.direction === "asc" ? <FaSortAmountUp className="ml-2" /> : <FaSortAmountDown className="ml-2" />;
   };
 
   return (
     <Card className="container mx-auto p-6 mt-8">
       <CardHeader>
-        <CardTitle className="text-3xl font-bold mb-6 text-center text-gray-800">
-          Most Selling Products
-        </CardTitle>
+        <CardTitle className="text-3xl font-bold mb-6 text-center text-gray-800">Most Selling Products</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="mb-4">
-          <Input
-            type="text"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="max-w-sm"
-          />
+        {/* Search + Country Selector */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="pl-10"
+            />
+          </div>
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value as Country)}
+            className="border rounded px-2 py-1"
+          >
+            <option value="IND">India (₹)</option>
+            <option value="UAE">UAE (AED)</option>
+          </select>
         </div>
+
+        {/* Table */}
         <div className="overflow-x-auto min-h-[50vh]">
           <Table>
-            <TableCaption>A list of the most selling products.</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead
-                  className="cursor-pointer"
-                  onClick={() => handleSort("name")}
-                >
-                  Product <SortIcon column="name" />
+                <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>
+                  Product {<SortIcon column="name" />}
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer"
-                  onClick={() => handleSort("sellCount")}
-                >
-                  Sold <SortIcon column="sellCount" />
+                <TableHead className="cursor-pointer" onClick={() => handleSort("sellCount")}>
+                  Sold {<SortIcon column="sellCount" />}
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer"
-                  onClick={() => handleSort("offerPrice")}
-                >
-                  Price <SortIcon column="offerPrice" />
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer"
-                  onClick={() => handleSort("totalStock")} // <-- Sort by totalStock
-                >
-                  Total Stock <SortIcon column="totalStock" />
-                </TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Stock</TableHead>
                 <TableHead>Categories</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayedProducts.map((item: any) => (
+              {displayedProducts.map((item) => (
                 <TableRow key={item._id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
@@ -182,25 +170,25 @@ const MostSellingProductsPage = () => {
                           <img src={item.img[0]} alt={item.name} />
                         </div>
                       </div>
-                      <div>
-                        <div className="font-bold">{item.name}</div>
-                      </div>
+                      <div className="font-bold">{item.name}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="font-medium">
-                    {item.sellCount}
-                  </TableCell>
+                    <TableCell>{item?.sizes?.[0]?.sellCount ?? 0}</TableCell>
                   <TableCell>
-                    ₹ {item?.sizes[0]?.offerPrice?.toFixed(2)}
+                    <span className="text-green-600 font-bold">
+                      {getCurrencySymbol(country)}
+                      {item?.sizes?.[0]?.offerPrice?.[country] ?? 0}
+                    </span>
+                    <span className="text-sm text-gray-500 line-through ml-2">
+                      {getCurrencySymbol(country)}
+                      {item?.actualPrice?.[country] ?? 0}
+                    </span>
                   </TableCell>
-                  {/* --- IMPROVEMENT: Display total calculated stock --- */}
-                  <TableCell>{item.totalStock}</TableCell>
+                  <TableCell>{item?.sizes[0]?.stock}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {item.categories.map((category: any, index: number) => (
-                        <Badge key={index} variant="secondary">
-                          {category?.name}
-                        </Badge>
+                      {item.categories.map((cat, idx) => (
+                        <Badge key={idx} variant="secondary">{cat.name}</Badge>
                       ))}
                     </div>
                   </TableCell>
@@ -209,27 +197,20 @@ const MostSellingProductsPage = () => {
             </TableBody>
           </Table>
         </div>
+
         {loading && (
           <div className="flex justify-center items-center mt-4">
             <FaSpinner className="animate-spin text-blue-500 text-2xl" />
           </div>
         )}
+
+        {/* Pagination */}
         <div className="flex justify-center mt-4 space-x-2">
-          <Button
-            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-            disabled={page === 1}
-            className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
-          >
+          <Button onClick={() => setPage((prev) => Math.max(prev - 1, 1))} disabled={page === 1}>
             Previous
           </Button>
-          <span className="self-center">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={page === totalPages}
-            className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
-          >
+          <span className="self-center">Page {page} of {totalPages}</span>
+          <Button onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))} disabled={page === totalPages}>
             Next
           </Button>
         </div>
@@ -239,4 +220,3 @@ const MostSellingProductsPage = () => {
 };
 
 export default MostSellingProductsPage;
-
