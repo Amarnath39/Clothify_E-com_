@@ -22,13 +22,13 @@ import {
 import axios from "axios";
 
 const MostSellingProductsPage = () => {
-  const [products, setProducts] = useState([]);
-  const [displayedProducts, setDisplayedProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortConfig, setSortConfig] = useState<any>({
+  const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: string }>({
     key: null,
     direction: "asc",
   });
@@ -43,8 +43,18 @@ const MostSellingProductsPage = () => {
         },
       });
       if (data.success) {
-        setProducts(data.mostSellingProducts);
-        setDisplayedProducts(data.mostSellingProducts);
+        // --- IMPROVEMENT: Calculate total stock when data is fetched ---
+        const productsWithTotalStock = data.mostSellingProducts.map(
+          (p: any) => ({
+            ...p,
+            totalStock: p.sizes.reduce(
+              (total: number, size: any) => total + (size.stock || 0),
+              0
+            ),
+          })
+        );
+        setProducts(productsWithTotalStock);
+        setDisplayedProducts(productsWithTotalStock);
         setTotalPages(data.totalPages);
       } else {
         console.error(data.msg);
@@ -64,12 +74,12 @@ const MostSellingProductsPage = () => {
     sortProducts();
   }, [sortConfig, products]);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setPage(1); // Reset to first page when searching
   };
 
-  const handleSort = (key) => {
+  const handleSort = (key: string) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
       direction = "desc";
@@ -77,25 +87,39 @@ const MostSellingProductsPage = () => {
     setSortConfig({ key, direction });
   };
 
+  // --- FIX: Made the sort function type-safe to prevent build errors ---
   const sortProducts = () => {
-    const sortedProducts = [...products].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? -1 : 1;
+    const { key, direction } = sortConfig;
+    if (!key) {
+      setDisplayedProducts(products);
+      return;
+    }
+
+    const sortedProducts = [...products].sort((a: any, b: any) => {
+      const aValue = key === 'offerPrice' ? a.sizes[0]?.offerPrice : a[key];
+      const bValue = key === 'offerPrice' ? b.sizes[0]?.offerPrice : b[key];
+
+      // Handle cases where values might be null or undefined for stable sorting
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
+
+      if (aValue < bValue) {
+        return direction === "asc" ? -1 : 1;
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === "asc" ? 1 : -1;
+      if (aValue > bValue) {
+        return direction === "asc" ? 1 : -1;
       }
       return 0;
     });
     setDisplayedProducts(sortedProducts);
   };
 
-  const SortIcon = ({ column }) => {
+  const SortIcon = ({ column }: { column: string }) => {
     if (sortConfig.key !== column) return null;
     return sortConfig.direction === "asc" ? (
-      <FaSortAmountUp className="ml-2" />
+      <FaSortAmountUp className="ml-2 inline" />
     ) : (
-      <FaSortAmountDown className="ml-2" />
+      <FaSortAmountDown className="ml-2 inline" />
     );
   };
 
@@ -125,25 +149,25 @@ const MostSellingProductsPage = () => {
                   className="cursor-pointer"
                   onClick={() => handleSort("name")}
                 >
-                  Product {<SortIcon column="name" />}
+                  Product <SortIcon column="name" />
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("sellCount")}
                 >
-                  Sold {<SortIcon column="sellCount" />}
+                  Sold <SortIcon column="sellCount" />
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("offerPrice")}
                 >
-                  Price {<SortIcon column="offerPrice" />}
+                  Price <SortIcon column="offerPrice" />
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
-                  onClick={() => handleSort("stock")}
+                  onClick={() => handleSort("totalStock")} // <-- Sort by totalStock
                 >
-                  Stock {<SortIcon column="stock" />}
+                  Total Stock <SortIcon column="totalStock" />
                 </TableHead>
                 <TableHead>Categories</TableHead>
               </TableRow>
@@ -166,13 +190,16 @@ const MostSellingProductsPage = () => {
                   <TableCell className="font-medium">
                     {item.sellCount}
                   </TableCell>
-                  <TableCell>₹ {item.offerPrice.toFixed(2)}</TableCell>
-                  <TableCell>{item.stock}</TableCell>
+                  <TableCell>
+                    ₹ {item?.sizes[0]?.offerPrice?.toFixed(2)}
+                  </TableCell>
+                  {/* --- IMPROVEMENT: Display total calculated stock --- */}
+                  <TableCell>{item.totalStock}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {item.categories.map((category, index) => (
+                      {item.categories.map((category: any, index: number) => (
                         <Badge key={index} variant="secondary">
-                          {category.name}
+                          {category?.name}
                         </Badge>
                       ))}
                     </div>
@@ -191,6 +218,7 @@ const MostSellingProductsPage = () => {
           <Button
             onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
             disabled={page === 1}
+            className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
           >
             Previous
           </Button>
@@ -200,6 +228,7 @@ const MostSellingProductsPage = () => {
           <Button
             onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={page === totalPages}
+            className="bg-black text-white hover:bg-gray-800 disabled:opacity-50"
           >
             Next
           </Button>
@@ -210,3 +239,4 @@ const MostSellingProductsPage = () => {
 };
 
 export default MostSellingProductsPage;
+
