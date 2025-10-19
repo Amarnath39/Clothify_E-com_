@@ -1,119 +1,208 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { getAllProducts } from "@/lib/features/catogary";
 import { useRouter } from "next/navigation";
 import { Quicksand } from "next/font/google";
+import useCountry from "@/lib/useCountry";
+import { Country } from "@/lib/CountryProvider";
 
-import { useAppDispatch } from "@/lib/hooks";
-import { getAllProducts } from "@/lib/features/catogary";
-
-// Style imports
-import "swiper/css/pagination";
-import "swiper/css";
-import "swiper/css/navigation";
-import "./swiper.css";
+/**
+ * Local fallback implementation of getPriceWithCurrency to avoid missing module error.
+ * Formats a numeric price with a simple currency symbol based on selectedCountry.
+ */
+const getPriceWithCurrency = (
+  selectedCountry: Country | string | undefined,
+  price: number | string | undefined
+) => {
+  if (price === undefined || price === null || price === "") return "";
+  const amount = Number(price);
+  if (isNaN(amount)) return String(price);
+  const countryCode =
+    typeof selectedCountry === "string"
+      ? selectedCountry
+      : (selectedCountry && (selectedCountry as any).code) || "IND";
+  const symbolMap: Record<string, string> = {
+    IND: "₹",
+    USA: "$",
+    US: "$",
+    UK: "£",
+    EUR: "€",
+  };
+  const symbol = symbolMap[countryCode] || "₹";
+  return `${symbol}${amount.toFixed(2)}`;
+};
 
 const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
 
-const PRODUCT_CATEGORIES = [
-  { type: "bestsellerProduct", title: "Best Sellers" },
-  { type: "latestProduct", title: "New Arrivals" },
-  { type: "featureProduct", title: "Featured" },
-];
-
-const BestSelling = () => {
-  const [products, setProducts] = useState<any>({}); 
-  
-
-  const [hoveredType, setHoveredType] = useState<string | null>(null);
-  
-
-  const dispatch = useAppDispatch();
+// -------------------- ProductCard --------------------
+const ProductCard = ({
+  product,
+  type,
+  selectedCountry,
+}: {
+  product: any;
+  type: string;
+  selectedCountry: Country;
+}) => {
   const router = useRouter();
+  const baseRoute =
+    type === "bestsellerProduct"
+      ? "/products?bestsellerProduct=true"
+      : type === "latestProduct"
+      ? "/products?latestProduct=true"
+      : "/products?featureProduct=true";
+
+  return (
+    <div
+      onClick={() => router.push(baseRoute)}
+      className="cursor-pointer group w-[14rem] sm:w-[14rem] mx-1"
+    >
+      <div className="h-[19rem] sm:h-[24rem] rounded-2xl relative overflow-hidden shadow hover:shadow-lg transition-all duration-300">
+        <img
+          loading="lazy"
+          src={product?.img?.[0]}
+          alt={product?.name}
+          className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
+
+      <div className="mt-3 text-center">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+          {product?.name}
+        </h3>
+
+        {product?.sizes?.[0] && (
+          <div>
+            <span className="text-green-600 font-bold">
+              {getPriceWithCurrency(
+                selectedCountry,
+                product.sizes[0].offerPrice
+              )}
+            </span>
+            {product.actualPrice && (
+              <span className="text-sm text-gray-500 line-through ml-2">
+                {getPriceWithCurrency(selectedCountry, product.actualPrice)}
+              </span>
+            )}
+          </div>
+        )}
+
+        {product?.sizes?.length > 1 && (
+          <div className="mt-1 flex flex-col gap-1 text-sm">
+            {product.sizes.map((size: any) => (
+              <span key={size._id || `size-${Math.random()}`}>
+                {size.size} | Stock: {size.stock} |{" "}
+                {getPriceWithCurrency(selectedCountry, size.offerPrice)}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// -------------------- BestSelling --------------------
+const BestSelling = () => {
+  const [bestProduct, setBestProduct] = useState<any>(null);
+  const [latestProduct, setLatestProduct] = useState<any>(null);
+  const [featureProduct, setFeatureProduct] = useState<any>(null);
+  const { selectedCountry } = useCountry();
+  const dispatch = useDispatch<any>();
 
   useEffect(() => {
-    const fetchAllProducts = async () => {
+    const fetchProducts = async (
+      filterKey: string,
+      setter: React.Dispatch<React.SetStateAction<any>>
+    ) => {
+      const queryParams = new URLSearchParams({
+        [filterKey]: "true",
+        sort: "newlyArrived",
+        limit: "30",
+      });
+
       try {
-        const productPromises = PRODUCT_CATEGORIES.map((category) => {
-          const queryParams = new URLSearchParams({
-            [category.type]: "true",
-            sort: "newlyArrived",
-            limit: "1",
-          });
-          return dispatch(getAllProducts(queryParams.toString()));
-        });
-
-        const results = await Promise.all(productPromises);
-
-        const fetchedProducts = results.reduce((acc, result, index) => {
-          if (result.payload?.success && result.payload.products.length > 0) {
-            const categoryType = PRODUCT_CATEGORIES[index].type;
-            acc[categoryType] = result.payload.products[0];
-          }
-          return acc;
-        }, {});
-
-        setProducts(fetchedProducts);
+        const { payload } = await dispatch(getAllProducts(queryParams.toString()));
+        if (payload && payload.success && payload.products && payload.products.length > 0) {
+          // Pick the *first product* of each category separately
+          setter(payload.products[0]);
+        }
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     };
 
-    fetchAllProducts();
+    fetchProducts("bestsellerProduct", setBestProduct);
+    fetchProducts("latestProduct", setLatestProduct);
+    fetchProducts("featureProduct", setFeatureProduct);
   }, [dispatch]);
 
   return (
-    <div className={`${quicksand.className} antialiased bg-white py-12 sm:py-16`}>
-      <h1 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-8">
-        Our Collections
-      </h1>
+    <div className={quicksand.className}>
+      {/* Section 1 - Best Seller & Latest */}
+      <div className="bg-white pb-12 overflow-hidden">
+        <h1 className="mt-10 sm:mt-16 mb-8 text-2xl sm:text-4xl font-semibold text-gray-800 text-center animated-underline">
+          The Clothing Corner
+        </h1>
 
-      <div className="w-full h-[85vh] sm:h-[75vh] min-h-[600px] sm:min-h-[500px] max-h-[900px] sm:max-h-[800px] flex flex-col sm:flex-row p-2 gap-2">
-        {PRODUCT_CATEGORIES.map((category) => {
-          const product = products[category.type];
-          const isHovered = hoveredType === category.type;
-          const isAnyHovered = hoveredType !== null;
-
-          const flexValue = isAnyHovered
-            ? isHovered
-              ? "flex-[5]"
-              : "flex-[1]"
-            : "flex-1";
-
-          return (
-            <div
-              key={category.type}
-              className={`relative rounded-2xl overflow-hidden cursor-pointer w-full transition-all duration-700 ease-in-out ${flexValue}`}
-              style={{
-                backgroundImage: `url(${
-                  product?.img?.[0] || "https://placehold.co/800x1200/e2e8f0/e2e8f0"
-                })`,
-                backgroundSize: "auto 100%",
-                backgroundPosition: "center",
-              }}
-              onMouseEnter={() => setHoveredType(category.type)} // This line will now work correctly
-              onMouseLeave={() => setHoveredType(null)}
-              onClick={() => router.push(`/products?${category.type}=true`)}
-            >
-              <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-50 transition-all duration-500"></div>
-
-              <div className="relative w-full h-full flex flex-col justify-end items-start p-6 sm:p-10 text-white">
-                <div
-                  className="w-full transform transition-transform duration-500 ease-out"
-                  style={{ opacity: isHovered ? 1 : 0.95 }}
-                >
-                  <h2 className="text-2xl sm:text-4xl font-bold tracking-tight sm:mb-4">
-                    {category.title}
-                  </h2>
-                  <button className="bg-transparent border-2 border-white text-white font-bold py-2 px-6 rounded-lg hover:bg-white hover:text-black transition-all duration-300 hidden sm:block">
-                    EXPLORE
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        <div className="flex justify-center flex-wrap gap-10 md:mx-auto my-12">
+          {bestProduct && (
+            <ProductCard
+              product={bestProduct}
+              type="bestsellerProduct"
+              selectedCountry={selectedCountry || "IND"}
+            />
+          )}
+          {/* {latestProduct && (
+            <ProductCard
+              product={latestProduct}
+              type="latestProduct"
+              selectedCountry={selectedCountry || "IND"}
+            />
+          )} */}
+        </div>
       </div>
+
+      {/* Section 2 - Featured */}
+      <div className="pb-12 overflow-hidden">
+        <h1 className="mt-10 sm:mt-16 mb-8 text-2xl sm:text-4xl font-semibold text-gray-800 text-center animated-underline">
+          The Jewel Box
+        </h1>
+
+        <div className="flex justify-center flex-wrap gap-10 md:mx-auto my-12">
+          {featureProduct && (
+            <ProductCard
+              product={featureProduct}
+              type="featureProduct"
+              selectedCountry={selectedCountry || "IND"}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Global underline animation */}
+      <style jsx global>{`
+        .animated-underline::after {
+          content: "";
+          display: block;
+          height: 4px;
+          margin: 0.5rem auto 0;
+          border-radius: 9999px;
+          background: linear-gradient(to right, #eab564, #eab664);
+          width: 0;
+          animation: underlineGrow 0.8s ease-out forwards;
+        }
+        @keyframes underlineGrow {
+          from {
+            width: 0;
+          }
+          to {
+            width: 6rem;
+          }
+        }
+      `}</style>
     </div>
   );
 };

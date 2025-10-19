@@ -1,6 +1,8 @@
 import nodemailer from "nodemailer";
 
-export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean; message: string; error?: any }> => {
+export const sendUserOrderEmail = async (
+  order: any
+): Promise<{ success: boolean; message: string; error?: any }> => {
   try {
     // ⚡ ZeptoMail transporter
     const transporter = nodemailer.createTransport({
@@ -8,16 +10,16 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
       port: 587,
       auth: {
         user: "emailapikey", // replace with your ZeptoMail username/API key
-        pass: "PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==", // ZeptoMail API secret
+        pass: "PHtE6r0NS+7qjDQm+xUG4/O+HpHxN9ws+r4yfVVD4oxFXPAEGE1dqdEjwWWz+RguUvFFQfGYnNpgtuvJ5urRIWe4M29ICWqyqK3sx/VYSPOZsbq6x00atlwadEHbUIDodtJo0iDQu9fbNA==", // ZeptoMail API secret
       },
     });
 
-    // HTML template
+    // HTML template (Transaction ID removed)
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; padding:20px; border:1px solid #eee; border-radius:10px;">
-        <h2 style="color:#2E86C1;">✅ Payment Confirmed!</h2>
+        <h2 style="color:#2E86C1;">✅ Order Confirmed!</h2>
         <p>Dear Customer,</p>
-        <p>Your payment has been successfully received. Here are your order details:</p>
+        <p>Your Order has been successfully received. Here are your order details:</p>
 
         <h3>📦 Order Summary</h3>
         <table style="width:100%; border-collapse: collapse;">
@@ -26,30 +28,26 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
             <td style="padding:8px; border:1px solid #ddd;">${order.orderId}</td>
           </tr>
           <tr>
-            <td style="padding:8px; border:1px solid #ddd;">Transaction ID</td>
-            <td style="padding:8px; border:1px solid #ddd;">${order.transactionId}</td>
-          </tr>
-          <tr>
-            <td style="padding:8px; border:1px solid #ddd;">Amount Paid</td>
+            <td style="padding:8px; border:1px solid #ddd;">Price</td>
             <td style="padding:8px; border:1px solid #ddd;">₹${order.payablePrice}</td>
           </tr>
           <tr>
-            <td style="padding:8px; border:1px solid #ddd;">Payment Status</td>
-            <td style="padding:8px; border:1px solid #ddd; color:green;"><b>${order.paymentStatus}</b></td>
+            <td style="padding:8px; border:1px solid #ddd;">Order Status</td>
+            <td style="padding:8px; border:1px solid #ddd; color:green;"><b>${order.OrderStatus}</b></td>
           </tr>
         </table>
 
         <p style="margin-top:20px;">We will process your order shortly and notify you once it is shipped. 🚚</p>
 
-        <p>Thank you for shopping with us! <br/>- <b>Udayaada Team</b></p>
+        <p>Thank you for shopping with us! <br/>- <b>Jewel Essence Team</b></p>
       </div>
     `;
 
     // Send email
     await transporter.sendMail({
-      from: '"Udayaada" <orders@udayaada.in>',
+      from: '"Jewel Essence" <orders@thejewelessence.com>',
       to: order.user?.email || order.customerEmail, // ensure email exists
-      subject: `✅ Payment Confirmed - Order #${order.orderId}`,
+      subject: `✅ Order Confirmed - Order #${order.orderId}`,
       html: htmlTemplate,
     });
 
