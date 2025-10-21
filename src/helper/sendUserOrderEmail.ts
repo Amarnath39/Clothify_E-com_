@@ -14,7 +14,7 @@ export const sendUserOrderEmail = async (
       },
     });
 
-    // HTML template (Transaction ID removed)
+  
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; padding:20px; border:1px solid #eee; border-radius:10px;">
         <h2 style="color:#2E86C1;">✅ Order Confirmed!</h2>
