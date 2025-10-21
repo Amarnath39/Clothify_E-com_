@@ -19,7 +19,7 @@ export const POST = async (
   try {
     // --- 1. Connect to Database ---
     await connectDB();
-    const { orderId } = params;
+    const { orderId } = params; // This is now the MongoDB _id
     const { response } = await req.json(); // Get the base64 response
 
     if (!response) {
@@ -43,12 +43,12 @@ export const POST = async (
     }
 
     // --- 3. Find the Order ---
-    // Use findById if orderId is the MongoDB _id from initiate step
-    // Use findOne({ orderId: orderId }) if orderId is your custom field like "ORD_123"
-    const order = await Order.findOne({ orderId: orderId }); // Adjust if using _id
+    // [FIXED] Use findById to find the order by its MongoDB _id
+    const order = await Order.findById(orderId);
 
     if (!order) {
-      console.log(`Webhook Error: No order found with orderId: ${orderId}`);
+      // [FIXED] Updated log message for clarity
+      console.log(`Webhook Error: No order found with _id: ${orderId}`);
       return NextResponse.json(
         { success: false, msg: "Order not found" },
         { status: 404 }
@@ -60,11 +60,11 @@ export const POST = async (
       
       // --- Prevent processing already completed orders ---
       if (order.paymentStatus === "PAYMENT_SUCCESS") {
-         console.log(`Webhook Info: Order ${orderId} already marked as successful.`);
-         return NextResponse.json(
-           { success: true, msg: "Order already processed." },
-           { status: 200 }
-         );
+        console.log(`Webhook Info: Order ${orderId} already marked as successful.`);
+        return NextResponse.json(
+          { success: true, msg: "Order already processed." },
+          { status: 200 }
+        );
       }
 
       // --- 5. Update Order Status ---
@@ -90,17 +90,16 @@ export const POST = async (
         }
         console.log(`Stock updated for order: ${orderId}`);
       } catch (stockError) {
-         console.error(`Webhook Error: Failed to update stock for order ${orderId}`, stockError);
-         // Decide if you should stop or continue despite stock error
+        console.error(`Webhook Error: Failed to update stock for order ${orderId}`, stockError);
+        // Decide if you should stop or continue despite stock error
       }
-
 
       // --- 7. Send Emails ---
       const user = await User.findById(order.user);
       if (user) {
         try {
           const orderDetails: OrderDetails = {
-            orderId: order.orderId,
+            orderId: order.orderId, // This is your custom orderId field (e.g., ORD-123)
             customerName: user.name || order.shippingAddress?.name,
             customerEmail: user.email,
             totalAmount: order.payablePrice,
@@ -148,9 +147,9 @@ export const POST = async (
       // --- 10. Handle Failed or Pending Payment ---
       // Update status if it's not already successful
       if (order.paymentStatus !== "PAYMENT_SUCCESS") {
-         order.paymentStatus = decodedResponse?.code || "PAYMENT_FAILED";
-         await order.save();
-         console.log(`Webhook Info: Order ${orderId} marked as ${order.paymentStatus}.`);
+        order.paymentStatus = decodedResponse?.code || "PAYMENT_FAILED";
+        await order.save();
+        console.log(`Webhook Info: Order ${orderId} marked as ${order.paymentStatus}.`);
       }
       return NextResponse.json(
         { success: false, msg: `Payment status: ${order.paymentStatus}` },
