@@ -6,167 +6,159 @@ import {
   sendAdminOrderEmail,
 } from "../../../../../../helper/sendAdminOrderEmail";
 import Product from "../../../../../../model/Product";
-import axios from "axios";
-import { getShiprocketToken } from "./shiprocketToken";
+import User from "../../../../../../model/User"; // Import User model
+import { connectDB } from "../../../../../../../db"; // Import connectDB
+// Import axios or other helpers if needed for Shiprocket
+// import axios from "axios";
+// import { getShiprocketToken } from "./shiprocketToken";
 
 export const POST = async (
   req: NextRequest,
   { params }: { params: { orderId: string } }
 ) => {
   try {
-    const { response } = await req.json();
+    // --- 1. Connect to Database ---
+    await connectDB();
     const { orderId } = params;
+    const { response } = await req.json(); // Get the base64 response
 
     if (!response) {
-      console.log("No response in callback response");
+      console.log("Webhook Error: No response payload received.");
       return NextResponse.json(
-        { success: false, msg: "Not response in callback response" },
+        { success: false, msg: "No response payload received." },
         { status: 400 }
       );
     }
 
-    const order = await Order.findOne({ orderId });
+    // --- 2. Decode the response from PhonePe ---
+    let decodedResponse;
+    try {
+      decodedResponse = JSON.parse(atob(response) || "{}");
+    } catch (e) {
+      console.error("Webhook Error: Failed to decode base64 response", e);
+      return NextResponse.json(
+        { success: false, msg: "Invalid response format." },
+        { status: 400 }
+      );
+    }
+
+    // --- 3. Find the Order ---
+    // Use findById if orderId is the MongoDB _id from initiate step
+    // Use findOne({ orderId: orderId }) if orderId is your custom field like "ORD_123"
+    const order = await Order.findOne({ orderId: orderId }); // Adjust if using _id
 
     if (!order) {
-      console.log(`No order found with orderId: ${orderId}`);
+      console.log(`Webhook Error: No order found with orderId: ${orderId}`);
       return NextResponse.json(
         { success: false, msg: "Order not found" },
         { status: 404 }
       );
     }
 
-    const decodedResponse = JSON.parse(atob(response) || "{}");
-
-    // Sample for decoded response
-    // {
-    //    "success": true,
-    //    "code": "PAYMENT_SUCCESS",
-    //     "message": "Your request has been successfully completed.",
-    //     "data": {
-    //       "merchantId": "PGTESTPAYUAT",
-    //       "merchantTransactionId": "MT7850590068188104",
-    //       "transactionId": "T2111221437456190170379",
-    //       "amount": 100,
-    //       "state": "COMPLETED",
-    //       "responseCode": "SUCCESS",
-    //       "paymentInstrument": {
-    //         "type": "UPI",
-    //         "utr": "206378866112"
-    //       }
-    //     }
-    //   }
-
-    // TODO: Follow the same logic from /api/order/[id] down here
+    // --- 4. Check if payment was successful ---
     if (decodedResponse?.code === "PAYMENT_SUCCESS") {
-      // Find the order by ID
-      order.paymentStatus = decodedResponse?.code || "STATUS_UNAVAILABLE";
-
-      order.paymentMethod = decodedResponse?.data?.paymentInstrument?.type;
-      order.transactionId = decodedResponse?.data?.transactionId;
-      order.date = new Date();
-
-      // Increment sell count for each product in the order
-      for (const productDetail of order.productDetails) {
-        await Product.findByIdAndUpdate(productDetail.product, {
-          $inc: {
-            sellCount: productDetail.count + productDetail.freeCount,
-            stock: -(productDetail.count + productDetail.freeCount),
-          },
-        });
+      
+      // --- Prevent processing already completed orders ---
+      if (order.paymentStatus === "PAYMENT_SUCCESS") {
+         console.log(`Webhook Info: Order ${orderId} already marked as successful.`);
+         return NextResponse.json(
+           { success: true, msg: "Order already processed." },
+           { status: 200 }
+         );
       }
 
-      // Send Email
-      const orderDetails: OrderDetails = {
-        orderId: order?.orderId,
-        customerName: order?.shippingAddress?.name,
-        customerEmail: order?.user?.email,
-        totalAmount: order?.payablePrice,
-        orderDate: new Date(order?.updatedAt).toLocaleString().split(",")[0],
-      };
+      // --- 5. Update Order Status ---
+      order.paymentStatus = "PAYMENT_SUCCESS";
+      order.paymentMethod = decodedResponse.data?.paymentInstrument?.type;
+      order.transactionId = decodedResponse.data?.transactionId; // Final PhonePe transaction ID
+      order.date = new Date();
+      order.OrderStatus = "Completed"; // Or "Processing" depending on your flow
+      order.currentStatus = "Processing"; // Update current status too
 
-      await sendUserOrderEmail(order);
-      await sendAdminOrderEmail(orderDetails);
+      // --- 6. Reduce Stock ---
+      try {
+        for (const productDetail of order.productDetails) {
+          const result = await Product.findByIdAndUpdate(productDetail.product, {
+            $inc: {
+              sellCount: productDetail.count + productDetail.freeCount,
+              stock: -(productDetail.count + productDetail.freeCount),
+            },
+          });
+          if (!result) {
+            console.warn(`Webhook Warn: Product ${productDetail.product} not found during stock update for order ${orderId}`);
+          }
+        }
+        console.log(`Stock updated for order: ${orderId}`);
+      } catch (stockError) {
+         console.error(`Webhook Error: Failed to update stock for order ${orderId}`, stockError);
+         // Decide if you should stop or continue despite stock error
+      }
 
-      // shiprocket integration
+
+      // --- 7. Send Emails ---
+      const user = await User.findById(order.user);
+      if (user) {
+        try {
+          const orderDetails: OrderDetails = {
+            orderId: order.orderId,
+            customerName: user.name || order.shippingAddress?.name,
+            customerEmail: user.email,
+            totalAmount: order.payablePrice,
+            orderDate: new Date(order.date).toLocaleString().split(",")[0],
+          };
+          await sendUserOrderEmail(order); // Pass the full order object
+          await sendAdminOrderEmail(orderDetails);
+          console.log(`Emails sent successfully for order: ${orderId}`);
+        } catch (emailError) {
+          console.error(
+            `Webhook Error: Failed to send emails for order ${orderId}`,
+            emailError
+          );
+          // Log error but continue
+        }
+      } else {
+        console.warn(
+          `Webhook Warn: User ${order.user} not found for order ${orderId}. Emails not sent.`
+        );
+      }
+
+      // --- 8. (Optional) Shiprocket Integration ---
       // try {
       //   const shiprocketToken = await getShiprocketToken();
-      //   if (!shiprocketToken) throw new Error("Failed to get Shiprocket token");
-
-      //   const shiprocketPayload = {
-      //     order_id: order.orderId,
-      //     order_date: order.date,
-      //     pickup_location: "primary",
-      //     channel_id: "",
-      //     comment: "",
-      //     billing_customer_name: order?.user?.name,
-      //     billing_last_name: "",
-      //     billing_address: order?.shippingAddress?.address,
-      //     billing_address_2: "",
-      //     billing_city: order?.shippingAddress?.city,
-      //     billing_pincode: order?.shippingAddress?.zipCode,
-      //     billing_state: order?.shippingAddress?.state,
-      //     billing_country: order?.shippingAddress?.country,
-      //     billing_email: order?.user?.email,
-      //     billing_phone: order?.user?.phone,
-      //     shipping_is_billing: true,
-      //     shipping_customer_name: order?.shippingAddress?.name,
-      //     shipping_address: order?.shippingAddress?.address,
-      //     shipping_city: order?.shippingAddress?.city,
-      //     shipping_pincode: order?.shippingAddress?.zipCode,
-      //     shipping_country: order?.shippingAddress?.country,
-      //     shipping_state: order?.shippingAddress?.state,
-      //     shipping_email: order?.user?.email,
-      //     shipping_phone: order?.user?.phone,
-      //     order_items: order?.productDetails?.map((detail) => ({
-      //       name: detail?.product.name,
-      //       sku: detail?.product.sku,
-      //       units: detail?.count,
-      //       selling_price: detail?.size?.offerPrice,
-      //     })),
-      //     payment_method: "Prepaid",
-      //     shipping_charges: 0,
-      //     giftwrap_charges: 0,
-      //     transaction_charges: 0,
-      //     total_discount: 0,
-      //     sub_total: order?.payablePrice,
-      //     length: 10,
-      //     breadth: 15,
-      //     height: 20,
-      //     weight: 2.5,
-      //   };
-      //   console.log(shiprocketPayload, "shiprocketPayload");
-      //   const shiprocketOptions = {
-      //     method: "POST",
-      //     url: `${process.env.SHIPROCKET_API_URL}/orders/create/adhoc`, // Replace with actual Shiprocket API endpoint
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Authorization: `Bearer ${shiprocketToken}`, // Ensure you have the correct Shiprocket API token
-      //     },
-      //     data: shiprocketPayload,
-      //   };
-      //   const shiprocketResponse = await axios.request(shiprocketOptions);
-      //   if (shiprocketResponse) {
-      //     order.shiprocket = shiprocketResponse?.data;
+      //   if (shiprocketToken) {
+      //     // ... Build shiprocketPayload ...
+      //     // ... Make axios request ...
+      //     // order.shiprocket = shiprocketResponse?.data;
       //   }
-      // } catch (error) {}
-      await order.save();
+      // } catch (shiprocketError) {
+      //   console.error(`Webhook Error: Shiprocket integration failed for order ${orderId}`, shiprocketError);
+      // }
 
+      // --- 9. Save Final Order ---
+      await order.save();
+      console.log(`Webhook Success: Order ${orderId} processed successfully.`);
+
+      // --- Respond to PhonePe ---
       return NextResponse.json(
-        { success: true, msg: "Order updated successfully", order },
+        { success: true, msg: "Order updated successfully" },
         { status: 200 }
       );
+
+    } else {
+      // --- 10. Handle Failed or Pending Payment ---
+      // Update status if it's not already successful
+      if (order.paymentStatus !== "PAYMENT_SUCCESS") {
+         order.paymentStatus = decodedResponse?.code || "PAYMENT_FAILED";
+         await order.save();
+         console.log(`Webhook Info: Order ${orderId} marked as ${order.paymentStatus}.`);
+      }
+      return NextResponse.json(
+        { success: false, msg: `Payment status: ${order.paymentStatus}` },
+        { status: 400 } // Use 400 Bad Request for failed payments
+      );
     }
-
-    order.paymentStatus = decodedResponse?.code || "STATUS_UNAVAILABLE";
-
-    await order.save();
-
-    return NextResponse.json(
-      { success: false, msg: "Payment Pending", order },
-      { status: 500 }
-    );
   } catch (error) {
-    console.log("Error in hooks/phonepe/payment-status: ", error);
+    console.error("Webhook Critical Error:", error);
     return NextResponse.json(
       { success: false, msg: "Internal Server Error" },
       { status: 500 }
