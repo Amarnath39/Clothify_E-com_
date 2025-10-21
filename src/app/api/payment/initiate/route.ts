@@ -1,95 +1,77 @@
-// /api/payment/initiate/route.ts
+import { v4 as uuidv4 } from "uuid";
+import { getPhonePeClient } from "@/lib/phonepeClient";
+import { StandardCheckoutPayRequest } from "pg-sdk-node";
 import { NextRequest, NextResponse } from "next/server";
+import User from "../../../../model/User";
 import Order from "../../../../model/Order";
-import { getPhonePeClient } from "@/lib/phonepeClient"; // Your PhonePe lib
-import { nanoid } from "nanoid";
+import { connectDB } from "../../../../../db";
+
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. --- Safety Check: Check for Merchant ID ---
-    const merchantId = process.env.MERCHANT_ID;
-    if (!merchantId) {
-      console.error("MERCHANT_ID is not set in environment variables.");
+    await connectDB();
+    // 1. Get userId from headers
+    const userId = req.headers.get("x-user-id");
+    if (!userId) {
       return NextResponse.json(
-        { success: false, msg: "Payment configuration error." },
-        { status: 500 }
+        { success: false, msg: "Please provide User Id" },
+        { status: 400 }
       );
     }
-    
-    // 2. --- Get Order ---
-    const { orderId } = await req.json();
-    const order = await Order.findById(orderId);
 
+    const user = await User.findById(userId);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized user" }, { status: 401 });
+    }
+
+    
+    const body = await req.json();
+    const { amount, orderId }: { amount: number; orderId: string } = body;
+
+  
+    if (!amount || amount <= 0) {
+      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+    }
+
+    // 5. Verify order exists
+    const order = await Order.findById(orderId);
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // 3. --- Safety Check: Check for Phone Number (Fix for 500 Error) ---
-    const mobileNumber = order.shippingAddress?.phone;
-    if (!mobileNumber) {
-      console.error(
-        `Order ${orderId} is missing a shipping address phone number.`
-      );
-      return NextResponse.json(
-        { success: false, msg: "Shipping address phone number is required." },
-        { status: 400 } // 400 Bad Request
-      );
-    }
+    // 6. Generate merchant order ID
+    const merchantOrderId = `ORDER_${uuidv4()}`;
+    const redirectUrl = `${process.env.MERCHANT_REDIRECT_URL}?orderId=${merchantOrderId}`;
 
-    // 4. --- Create a unique transaction ID for PhonePe ---
-    const merchantTransactionId = `M${nanoid(10)}`;
+    // 7. Build PhonePe payment request
+    const request = StandardCheckoutPayRequest.builder()
+      .merchantOrderId(merchantOrderId)
+      .amount(amount * 100) // amount in paise
+      .redirectUrl(redirectUrl)
+      .build();
 
-    // 5. --- Create the payload for PhonePe ---
-    const paymentPayload = {
-      merchantId: merchantId, // Use the 'safe' variable
-      merchantTransactionId: merchantTransactionId, // Unique ID for this *attempt*
-      merchantUserId: order.user.toString(),
-      amount: order.payablePrice * 100, // Amount in paise
-      
-     
-      redirectUrl: `https://www.siskerala.com/payment-status/${orderId}`,
-      redirectMode: "REDIRECT",
-      callbackUrl: `https://www.siskerala.com/api/hook/phonepe/payment-status/${orderId}`,
- 
+    // 8. Call PhonePe API
+    const response = await getPhonePeClient().pay(request);
 
-      mobileNumber: mobileNumber, // Use the 'safe' variable
-      paymentInstrument: {
-        type: "PAY_PAGE",
-      },
-      merchantOrderId: orderId, // Your internal order ID
-      paymentFlow: "WEB_CHECKOUT", // Specify the flow
-    };
+    // 9. Update order details in DB
+    order.transactionId = merchantOrderId;
+    order.tempTransactionId = merchantOrderId;
+    order.currentStatus = "PENDING";
+    order.paymentStatus = "INITIATED";
+    order.date = new Date();
 
-    // 6. --- Call PhonePe to get the redirect URL ---
-    const phonePeResponse = await getPhonePeClient().pay(paymentPayload as any);
-
-    // 7. --- Get the URL from the response (with safety checks) ---
-    const redirectUrl =
-      (phonePeResponse as any)?.instrumentResponse?.redirectInfo?.url ??
-      (phonePeResponse as any)?.data?.instrumentResponse?.redirectInfo?.url;
-
-    if (!redirectUrl) {
-      console.error("No redirect URL in PhonePe response:", phonePeResponse);
-      return NextResponse.json(
-        {
-          success: false,
-          msg: "Payment gateway did not return a redirect URL.",
-        },
-        { status: 502 }
-      );
-    }
-
-    // 8. --- Save the transaction ID to your order ---
-    order.merchantTransactionId = merchantTransactionId;
     await order.save();
 
-    // 9. --- Send the redirect URL back to the client ---
-    return NextResponse.json({ success: true, url: redirectUrl });
-    
-  } catch (error) {
-    console.error("Failed to initiate payment:", error);
+    // 10. Return response
+    return NextResponse.json({
+      success: true,
+      url: response.redirectUrl,
+      orderId: merchantOrderId,
+    });
+  } catch (error: any) {
+    console.error("Payment initiation error:", error);
     return NextResponse.json(
-      { success: false, msg: "Payment initiation failed" },
+      { error: "Payment initiation failed", details: error.message },
       { status: 500 }
     );
   }
