@@ -8,15 +8,12 @@ import {
 import Product from "../../../../../../model/Product";
 import axios from "axios";
 import { getShiprocketToken } from "./shiprocketToken";
-import { connectDB } from "../../../../../../../db"; // <-- FIX: Import database connection
-import User from "../../../../../../model/User"; // <-- FIX: Import User model
 
 export const POST = async (
   req: NextRequest,
   { params }: { params: { orderId: string } }
 ) => {
   try {
-    await connectDB(); // <-- FIX: Connect to the database
     const { response } = await req.json();
     const { orderId } = params;
 
@@ -40,15 +37,35 @@ export const POST = async (
 
     const decodedResponse = JSON.parse(atob(response) || "{}");
 
+    // Sample for decoded response
+    // {
+    //    "success": true,
+    //    "code": "PAYMENT_SUCCESS",
+    //     "message": "Your request has been successfully completed.",
+    //     "data": {
+    //       "merchantId": "PGTESTPAYUAT",
+    //       "merchantTransactionId": "MT7850590068188104",
+    //       "transactionId": "T2111221437456190170379",
+    //       "amount": 100,
+    //       "state": "COMPLETED",
+    //       "responseCode": "SUCCESS",
+    //       "paymentInstrument": {
+    //         "type": "UPI",
+    //         "utr": "206378866112"
+    //       }
+    //     }
+    //   }
+
+    // TODO: Follow the same logic from /api/order/[id] down here
     if (decodedResponse?.code === "PAYMENT_SUCCESS") {
       // Find the order by ID
       order.paymentStatus = decodedResponse?.code || "STATUS_UNAVAILABLE";
+
       order.paymentMethod = decodedResponse?.data?.paymentInstrument?.type;
       order.transactionId = decodedResponse?.data?.transactionId;
       order.date = new Date();
-      order.OrderStatus = "Completed"; // Mark order as completed
 
-      // Increment sell count for each product in the order (Stock Reduction)
+      // Increment sell count for each product in the order
       for (const productDetail of order.productDetails) {
         await Product.findByIdAndUpdate(productDetail.product, {
           $inc: {
@@ -58,45 +75,80 @@ export const POST = async (
         });
       }
 
-      // --- START: EMAIL LOGIC FIX ---
+      // Send Email
+      const orderDetails: OrderDetails = {
+        orderId: order?.orderId,
+        customerName: order?.shippingAddress?.name,
+        customerEmail: order?.user?.email,
+        totalAmount: order?.payablePrice,
+        orderDate: new Date(order?.updatedAt).toLocaleString().split(",")[0],
+      };
 
-      // 1. Fetch the User from the database using the ID on the order
-      const user = await User.findById(order.user);
-
-      if (user) {
-        // 2. Wrap email sending in a try...catch to prevent a crash
-        try {
-          // 3. Create orderDetails using the fetched user's email and name
-          const orderDetails: OrderDetails = {
-            orderId: order.orderId,
-            customerName: user.name || order.shippingAddress?.name, // Use user's name
-            customerEmail: user.email, // Use user's email
-            totalAmount: order.payablePrice,
-            orderDate: new Date(order.date).toLocaleString().split(",")[0],
-          };
-
-          // 4. Send the emails
-          await sendUserOrderEmail(order);
-          await sendAdminOrderEmail(orderDetails);
-
-          console.log(`Emails sent successfully for order: ${orderId}`);
-        } catch (emailError) {
-          console.error(
-            `Failed to send emails for order: ${orderId}`,
-            emailError
-          );
-          // Do not stop the whole process, just log the error
-        }
-      } else {
-        console.warn(
-          `User ${order.user} not found for order ${orderId}. Emails not sent.`
-        );
-      }
-      // --- END: EMAIL LOGIC FIX ---
+      await sendUserOrderEmail(order);
+      await sendAdminOrderEmail(orderDetails);
 
       // shiprocket integration
-      // ... (your shiprocket code) ...
+      // try {
+      //   const shiprocketToken = await getShiprocketToken();
+      //   if (!shiprocketToken) throw new Error("Failed to get Shiprocket token");
 
+      //   const shiprocketPayload = {
+      //     order_id: order.orderId,
+      //     order_date: order.date,
+      //     pickup_location: "primary",
+      //     channel_id: "",
+      //     comment: "",
+      //     billing_customer_name: order?.user?.name,
+      //     billing_last_name: "",
+      //     billing_address: order?.shippingAddress?.address,
+      //     billing_address_2: "",
+      //     billing_city: order?.shippingAddress?.city,
+      //     billing_pincode: order?.shippingAddress?.zipCode,
+      //     billing_state: order?.shippingAddress?.state,
+      //     billing_country: order?.shippingAddress?.country,
+      //     billing_email: order?.user?.email,
+      //     billing_phone: order?.user?.phone,
+      //     shipping_is_billing: true,
+      //     shipping_customer_name: order?.shippingAddress?.name,
+      //     shipping_address: order?.shippingAddress?.address,
+      //     shipping_city: order?.shippingAddress?.city,
+      //     shipping_pincode: order?.shippingAddress?.zipCode,
+      //     shipping_country: order?.shippingAddress?.country,
+      //     shipping_state: order?.shippingAddress?.state,
+      //     shipping_email: order?.user?.email,
+      //     shipping_phone: order?.user?.phone,
+      //     order_items: order?.productDetails?.map((detail) => ({
+      //       name: detail?.product.name,
+      //       sku: detail?.product.sku,
+      //       units: detail?.count,
+      //       selling_price: detail?.size?.offerPrice,
+      //     })),
+      //     payment_method: "Prepaid",
+      //     shipping_charges: 0,
+      //     giftwrap_charges: 0,
+      //     transaction_charges: 0,
+      //     total_discount: 0,
+      //     sub_total: order?.payablePrice,
+      //     length: 10,
+      //     breadth: 15,
+      //     height: 20,
+      //     weight: 2.5,
+      //   };
+      //   console.log(shiprocketPayload, "shiprocketPayload");
+      //   const shiprocketOptions = {
+      //     method: "POST",
+      //     url: `${process.env.SHIPROCKET_API_URL}/orders/create/adhoc`, // Replace with actual Shiprocket API endpoint
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${shiprocketToken}`, // Ensure you have the correct Shiprocket API token
+      //     },
+      //     data: shiprocketPayload,
+      //   };
+      //   const shiprocketResponse = await axios.request(shiprocketOptions);
+      //   if (shiprocketResponse) {
+      //     order.shiprocket = shiprocketResponse?.data;
+      //   }
+      // } catch (error) {}
       await order.save();
 
       return NextResponse.json(
@@ -105,8 +157,8 @@ export const POST = async (
       );
     }
 
-    // --- Handle Failed Payment ---
     order.paymentStatus = decodedResponse?.code || "STATUS_UNAVAILABLE";
+
     await order.save();
 
     return NextResponse.json(
