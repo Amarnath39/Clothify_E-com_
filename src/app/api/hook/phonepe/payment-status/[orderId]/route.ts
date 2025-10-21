@@ -87,7 +87,7 @@ export const POST = async (
       await sendUserOrderEmail(order);
       await sendAdminOrderEmail(orderDetails);
 
-      
+      // shiprocket integration
       // try {
       //   const shiprocketToken = await getShiprocketToken();
       //   if (!shiprocketToken) throw new Error("Failed to get Shiprocket token");
