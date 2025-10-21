@@ -6,7 +6,7 @@ import { nanoid } from "nanoid";
 
 export async function POST(req: NextRequest) {
   try {
-    // --- ADD THIS CHECK AT THE TOP ---
+    // 1. --- Safety Check: Check for Merchant ID ---
     const merchantId = process.env.MERCHANT_ID;
     if (!merchantId) {
       console.error("MERCHANT_ID is not set in environment variables.");
@@ -15,8 +15,8 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
-    // ------------------------------------
-
+    
+    // 2. --- Get Order ---
     const { orderId } = await req.json();
     const order = await Order.findById(orderId);
 
@@ -24,21 +24,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // 1. Create a unique transaction ID for PhonePe
+    // 3. --- Safety Check: Check for Phone Number (Fix for 500 Error) ---
+    const mobileNumber = order.shippingAddress?.phone;
+    if (!mobileNumber) {
+      console.error(
+        `Order ${orderId} is missing a shipping address phone number.`
+      );
+      return NextResponse.json(
+        { success: false, msg: "Shipping address phone number is required." },
+        { status: 400 } // 400 Bad Request
+      );
+    }
+
+    // 4. --- Create a unique transaction ID for PhonePe ---
     const merchantTransactionId = `M${nanoid(10)}`;
 
-    // 2. Create the payload for PhonePe
+    // 5. --- Create the payload for PhonePe ---
     const paymentPayload = {
-      // --- CHANGE THIS LINE ---
       merchantId: merchantId, // Use the 'safe' variable
-      // ------------------------
       merchantTransactionId: merchantTransactionId, // Unique ID for this *attempt*
       merchantUserId: order.user.toString(),
       amount: order.payablePrice * 100, // Amount in paise
-      redirectUrl: `https://your-website.com/payment-status/${orderId}`,
+      
+     
+      redirectUrl: `https://www.siskerala.com/payment-status/${orderId}`,
       redirectMode: "REDIRECT",
-      callbackUrl: `https://your-website.com/api/hook/phonepe/payment/${orderId}`,
-      mobileNumber: order.shippingAddress.phone,
+      callbackUrl: `https://www.siskerala.com/api/hook/phonepe/payment-status/${orderId}`,
+ 
+
+      mobileNumber: mobileNumber, // Use the 'safe' variable
       paymentInstrument: {
         type: "PAY_PAGE",
       },
@@ -46,10 +60,10 @@ export async function POST(req: NextRequest) {
       paymentFlow: "WEB_CHECKOUT", // Specify the flow
     };
 
-    // 3. Call PhonePe to get the redirect URL
+    // 6. --- Call PhonePe to get the redirect URL ---
     const phonePeResponse = await getPhonePeClient().pay(paymentPayload as any);
 
-    // 4. Get the URL from the response (use the correct shape and guard against missing fields)
+    // 7. --- Get the URL from the response (with safety checks) ---
     const redirectUrl =
       (phonePeResponse as any)?.instrumentResponse?.redirectInfo?.url ??
       (phonePeResponse as any)?.data?.instrumentResponse?.redirectInfo?.url;
@@ -57,18 +71,21 @@ export async function POST(req: NextRequest) {
     if (!redirectUrl) {
       console.error("No redirect URL in PhonePe response:", phonePeResponse);
       return NextResponse.json(
-        { success: false, msg: "Payment gateway did not return a redirect URL." },
+        {
+          success: false,
+          msg: "Payment gateway did not return a redirect URL.",
+        },
         { status: 502 }
       );
     }
 
-    // 5. Save the transaction ID to your order
+    // 8. --- Save the transaction ID to your order ---
     order.merchantTransactionId = merchantTransactionId;
     await order.save();
 
-    // 6. Send the redirect URL back to the client
+    // 9. --- Send the redirect URL back to the client ---
     return NextResponse.json({ success: true, url: redirectUrl });
-
+    
   } catch (error) {
     console.error("Failed to initiate payment:", error);
     return NextResponse.json(
