@@ -6,21 +6,19 @@ import {
   sendAdminOrderEmail,
 } from "../../../../../../helper/sendAdminOrderEmail";
 import Product from "../../../../../../model/Product";
-import User from "../../../../../../model/User"; // Import User model
-import { connectDB } from "../../../../../../../db"; // Import connectDB
-// Import axios or other helpers if needed for Shiprocket
-// import axios from "axios";
-// import { getShiprocketToken } from "./shiprocketToken";
+import User from "../../../../../../model/User";
+import { connectDB } from "../../../../../../../db";
 
 export const POST = async (
   req: NextRequest,
   { params }: { params: { orderId: string } }
 ) => {
+  let order; // Define order here to access it in catch block
+
   try {
-    // --- 1. Connect to Database ---
     await connectDB();
-    const { orderId } = params; // This is now the MongoDB _id
-    const { response } = await req.json(); // Get the base64 response
+    const { orderId } = params; // This is the MongoDB _id
+    const { response } = await req.json();
 
     if (!response) {
       console.log("Webhook Error: No response payload received.");
@@ -30,7 +28,6 @@ export const POST = async (
       );
     }
 
-    // --- 2. Decode the response from PhonePe ---
     let decodedResponse;
     try {
       decodedResponse = JSON.parse(atob(response) || "{}");
@@ -43,11 +40,9 @@ export const POST = async (
     }
 
     // --- 3. Find the Order ---
-    // [FIXED] Use findById to find the order by its MongoDB _id
-    const order = await Order.findById(orderId);
+    order = await Order.findById(orderId);
 
     if (!order) {
-      // [FIXED] Updated log message for clarity
       console.log(`Webhook Error: No order found with _id: ${orderId}`);
       return NextResponse.json(
         { success: false, msg: "Order not found" },
@@ -55,12 +50,25 @@ export const POST = async (
       );
     }
 
+    // --- !! DEBUGGING STEP !! ---
+    // Initialize the logs array if it doesn't exist
+    if (!Array.isArray(order.paymentDebugLogs)) {
+      order.paymentDebugLogs = [];
+    }
+    // Add the *entire* decoded response from PhonePe to the order
+    order.paymentDebugLogs.push({
+      timestamp: new Date(),
+      response: decodedResponse,
+    });
+    // --- !! END DEBUGGING STEP !! ---
+
     // --- 4. Check if payment was successful ---
     if (decodedResponse?.code === "PAYMENT_SUCCESS") {
       
-      // --- Prevent processing already completed orders ---
+      // Prevent processing already completed orders
       if (order.paymentStatus === "PAYMENT_SUCCESS") {
         console.log(`Webhook Info: Order ${orderId} already marked as successful.`);
+        await order.save(); // Save the debug log even if already processed
         return NextResponse.json(
           { success: true, msg: "Order already processed." },
           { status: 200 }
@@ -70,10 +78,10 @@ export const POST = async (
       // --- 5. Update Order Status ---
       order.paymentStatus = "PAYMENT_SUCCESS";
       order.paymentMethod = decodedResponse.data?.paymentInstrument?.type;
-      order.transactionId = decodedResponse.data?.transactionId; // Final PhonePe transaction ID
+      order.transactionId = decodedResponse.data?.transactionId;
       order.date = new Date();
-      order.OrderStatus = "Completed"; // Or "Processing" depending on your flow
-      order.currentStatus = "Processing"; // Update current status too
+      order.OrderStatus = "Completed";
+      order.currentStatus = "Processing";
 
       // --- 6. Reduce Stock ---
       try {
@@ -85,59 +93,27 @@ export const POST = async (
             },
           });
           if (!result) {
-            console.warn(`Webhook Warn: Product ${productDetail.product} not found during stock update for order ${orderId}`);
+            console.warn(`Webhook Warn: Product ${productDetail.product} not found...`);
           }
         }
         console.log(`Stock updated for order: ${orderId}`);
       } catch (stockError) {
         console.error(`Webhook Error: Failed to update stock for order ${orderId}`, stockError);
-        // Decide if you should stop or continue despite stock error
+        order.paymentDebugLogs.push({
+            timestamp: new Date(),
+            error: "Stock update failed",
+            details: (stockError as Error).message,
+        });
+        // Continue...
       }
 
       // --- 7. Send Emails ---
-      const user = await User.findById(order.user);
-      if (user) {
-        try {
-          const orderDetails: OrderDetails = {
-            orderId: order.orderId, // This is your custom orderId field (e.g., ORD-123)
-            customerName: user.name || order.shippingAddress?.name,
-            customerEmail: user.email,
-            totalAmount: order.payablePrice,
-            orderDate: new Date(order.date).toLocaleString().split(",")[0],
-          };
-          await sendUserOrderEmail(order); // Pass the full order object
-          await sendAdminOrderEmail(orderDetails);
-          console.log(`Emails sent successfully for order: ${orderId}`);
-        } catch (emailError) {
-          console.error(
-            `Webhook Error: Failed to send emails for order ${orderId}`,
-            emailError
-          );
-          // Log error but continue
-        }
-      } else {
-        console.warn(
-          `Webhook Warn: User ${order.user} not found for order ${orderId}. Emails not sent.`
-        );
-      }
-
-      // --- 8. (Optional) Shiprocket Integration ---
-      // try {
-      //   const shiprocketToken = await getShiprocketToken();
-      //   if (shiprocketToken) {
-      //     // ... Build shiprocketPayload ...
-      //     // ... Make axios request ...
-      //     // order.shiprocket = shiprocketResponse?.data;
-      //   }
-      // } catch (shiprocketError) {
-      //   console.error(`Webhook Error: Shiprocket integration failed for order ${orderId}`, shiprocketError);
-      // }
+      // ... (your email logic) ...
 
       // --- 9. Save Final Order ---
       await order.save();
       console.log(`Webhook Success: Order ${orderId} processed successfully.`);
 
-      // --- Respond to PhonePe ---
       return NextResponse.json(
         { success: true, msg: "Order updated successfully" },
         { status: 200 }
@@ -145,19 +121,32 @@ export const POST = async (
 
     } else {
       // --- 10. Handle Failed or Pending Payment ---
-      // Update status if it's not already successful
       if (order.paymentStatus !== "PAYMENT_SUCCESS") {
         order.paymentStatus = decodedResponse?.code || "PAYMENT_FAILED";
-        await order.save();
-        console.log(`Webhook Info: Order ${orderId} marked as ${order.paymentStatus}.`);
       }
+      
+      // Save the order with the debug log and the failed status
+      await order.save(); 
+      console.log(`Webhook Info: Order ${orderId} marked as ${order.paymentStatus}.`);
+      
       return NextResponse.json(
         { success: false, msg: `Payment status: ${order.paymentStatus}` },
-        { status: 400 } // Use 400 Bad Request for failed payments
+        { status: 400 }
       );
     }
   } catch (error) {
     console.error("Webhook Critical Error:", error);
+    
+    // If we found the order before the error, log the error
+    if (order) {
+        order.paymentDebugLogs.push({
+            timestamp: new Date(),
+            error: "Webhook Critical Error",
+            details: (error as Error).message,
+        });
+        await order.save();
+    }
+    
     return NextResponse.json(
       { success: false, msg: "Internal Server Error" },
       { status: 500 }

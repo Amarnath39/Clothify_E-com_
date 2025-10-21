@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       .build();
 
     // builder does not expose callbackUrl, set it on the built request object
-    (request as any).callbackUrl = `https://www.siskerala.com/api/hook/phonepe/payment-status/${orderId}`;
+    (request as any).callbackUrl = `${process.env.MERCHANT_CALLBACK_URL}?orderId=${merchantOrderId}`;
 
     // 8. Call PhonePe API
     const response = await getPhonePeClient().pay(request);
