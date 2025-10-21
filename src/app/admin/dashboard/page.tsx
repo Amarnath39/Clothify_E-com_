@@ -94,25 +94,25 @@ const OrdersPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Sales"
-          value={stats.totalSales}
+          value={stats.totalSales?.overall}
           icon={FaChartLine}
           description="Total number of sales"
         />
         <StatCard
           title="Total Revenue"
-          value={stats.totalRevenue}
+          value={stats.totalRevenue?.overall}
           icon={FaDollarSign}
           description="Total revenue generated"
         />
         <StatCard
           title="Total Users"
-          value={stats.totalUsers}
+          value={stats.totalUsers?.overall}
           icon={FaUsers}
           description="Total number of registered users"
         />
         <StatCard
           title="Repeat Orders"
-          value={stats.repeatOrders}
+          value={stats.repeatOrders?.overall}
           icon={FaRedoAlt}
           description="Number of repeat orders"
         />

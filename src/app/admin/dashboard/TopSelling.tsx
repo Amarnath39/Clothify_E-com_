@@ -55,6 +55,7 @@ const MostSellingProductsPage: React.FC = () => {
       if (data.success) {
         setProducts(data.mostSellingProducts);
         setDisplayedProducts(data.mostSellingProducts);
+        console.log(data.mostSellingProducts);
         setTotalPages(data.totalPages);
       } else {
         console.error(data.msg);
@@ -220,3 +221,10 @@ const MostSellingProductsPage: React.FC = () => {
 };
 
 export default MostSellingProductsPage;
+
+
+
+
+
+
+

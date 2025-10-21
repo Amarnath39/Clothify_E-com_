@@ -173,27 +173,27 @@ const MostSellingProductsPage = () => {
             </TableHeader>
             <TableBody>
               {products.map((item) => (
-                <TableRow key={item._id}>
+                <TableRow key={item?._id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <div className="avatar">
                         <div className="mask mask-squircle w-12 h-12">
-                          <img src={item.img} alt={item.name} />
+                          <img src={item?.img} alt={item?.name} />
                         </div>
                       </div>
                       <div>
-                        <div className="font-bold">{item.name}</div>
+                        <div className="font-bold">{item?.name}</div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">
-                    {item.sellCount}
+                    {item?.sellCount}
                   </TableCell>
-                  <TableCell>₹ {item.offerPrice.toFixed(2)}</TableCell>
-                  <TableCell>{item.stock }</TableCell>
+                  <TableCell>₹ {item?.offerPrice?.toFixed(2)}</TableCell>
+                  <TableCell>{item?.stock}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {item.categories.map((category, index) => (
+                      {item?.categories?.map((category, index) => (
                         <Badge key={index} variant="secondary">
                           {category}
                         </Badge>

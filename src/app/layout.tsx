@@ -10,6 +10,7 @@ import { Toaster as Toast2 } from "@/components/ui/toaster";
 import BottomNavbar from "@/components/BottomNavigation";
 import useWindowSize from "@/hooks/useWindowSize";
 // import { SearchProvider } from "@/contexts/SearchContext";
+import CountryProvider from "@/lib/CountryProvider";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -83,7 +84,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/assets/static/logo/favicon.ico" sizes="any" />
         <link
@@ -114,11 +115,13 @@ export default function RootLayout({
         >
           <StoreProvider>
             {/* <SearchProvider> */}
+            <CountryProvider>
               <Toaster />
               <Toast2 />
 
               <CustomeLayout>{children}</CustomeLayout>
               <BottomNavbar />
+            </CountryProvider>
             {/* </SearchProvider> */}
           </StoreProvider>
         </ThemeProvider>
