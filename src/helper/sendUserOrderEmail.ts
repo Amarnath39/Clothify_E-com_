@@ -39,13 +39,13 @@ export const sendUserOrderEmail = async (
 
         <p style="margin-top:20px;">We will process your order shortly and notify you once it is shipped. 🚚</p>
 
-        <p>Thank you for shopping with us! <br/>- <b>Jewel Essence Team</b></p>
+        <p>Thank you for shopping with us! <br/>- <b>SIS Team</b></p>
       </div>
     `;
 
     // Send email
     await transporter.sendMail({
-      from: '"Jewel Essence" <orders@thejewelessence.com>',
+      from: '"SIS" <orders@sis.com>',
       to: order.user?.email || order.customerEmail, // ensure email exists
       subject: `✅ Order Confirmed - Order #${order.orderId}`,
       html: htmlTemplate,
