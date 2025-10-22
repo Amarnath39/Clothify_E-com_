@@ -71,7 +71,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
     try {
       const response: any = await axios.post(
         // 👇 FIX 1: The API URL is corrected
-        `/api/payment/create-sdk-order`,
+        `/api/payment/initiate`,
         // 👇 FIX 2: The body now sends `userId` as the backend expects
         {
           amount: orderDetails.payablePrice,
