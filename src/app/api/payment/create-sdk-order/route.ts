@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
+    // This part is now correct
     const { amount, userId }: { amount: number; userId: string } =
       await req.json();
 
@@ -16,29 +17,28 @@ export async function POST(req: Request) {
     const redirectUrl = `${process.env.MERCHANT_REDIRECT_URL}?orderId=${merchantOrderId}`;
     const callbackUrl = process.env.MERCHANT_CALLBACK_URL;
 
-    // 1. Use the builder ONLY for properties it supports
     const baseRequest = CreateSdkOrderRequest.StandardCheckoutBuilder()
       .merchantOrderId(merchantOrderId)
       .amount(amount * 100)
       .redirectUrl(redirectUrl)
-      // .merchantUserId(userId) <-- REMOVED FROM HERE
       .build();
       
-    // 2. Manually add ALL other required properties
     const finalRequest = {
       ...baseRequest,
       callbackUrl: callbackUrl,
-      merchantUserId: userId, // <-- ADDED HERE
+      merchantUserId: userId,
     };
 
-    // 3. Call the SDK method with our complete request object
-    const response = await getPhonePeClient().createSdkOrder(finalRequest as any);
-
+    // This 'response' object contains the redirectUrl from PhonePe
+const response: any = await getPhonePeClient().createSdkOrder(finalRequest as any);
+    // 👇 CORRECTED RETURN STATEMENT
+    // 'response.data.redirectUrl' contains the PhonePe URL
+    // We send it back as 'url' to match what the frontend expects.
     return NextResponse.json({
       success: true,
-      token: response.token,
-      orderId: merchantOrderId,
+      url: response.redirectUrl, // <-- THE CRITICAL FIX
     });
+
   } catch (error: any) {
     console.error("SDK order creation error:", error);
     return NextResponse.json(

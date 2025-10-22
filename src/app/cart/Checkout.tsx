@@ -57,7 +57,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
 
     try {
       const response: any = await axios.post(
-        `/api/payment/initiate`,
+        `/api/payment/create-sdk-order`,
         {
           amount: orderDetails.payablePrice,
           orderId: orderDetails._id,
