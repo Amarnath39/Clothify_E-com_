@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
     const merchantOrderId = `ORDER_${uuidv4()}`;
     const redirectUrl = `${process.env.MERCHANT_REDIRECT_URL}?orderId=${merchantOrderId}`;
-    const callbackUrl = `${process.env.MERCHANT_CALLBACK_URL}/${merchantOrderId}`;
+    const callbackUrl = process.env.MERCHANT_CALLBACK_URL;
 
     // 1. Use the builder ONLY for properties it supports
     const baseRequest = CreateSdkOrderRequest.StandardCheckoutBuilder()

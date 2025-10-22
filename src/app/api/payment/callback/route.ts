@@ -1,193 +1,127 @@
-import { NextResponse } from "next/server";
-import { getPhonePeClient } from "@/lib/phonepeClient";
-
-// Imports from your original "hook" file
+import { NextRequest, NextResponse } from "next/server";
 import Order from "../../../../model/Order";
+import Product from "../../../../model/Product";
 import { sendUserOrderEmail } from "../../../../helper/sendUserOrderEmail";
 import {
   OrderDetails,
   sendAdminOrderEmail,
 } from "../../../../helper/sendAdminOrderEmail";
-import Product from "../../../../model/Product";
-import User from "../../../../model/User";
-import { connectDB } from "../../../../../db";
+import { getPhonePeClient } from "@/lib/phonepeClient";
 
-export async function POST(req: Request) {
-  let order; // Define order here to access it in the final catch block
-
+// The handler for a static route does not have the 'params' object
+export const POST = async (req: NextRequest) => {
   try {
-    const authorizationHeader = req.headers.get("authorization") || "";
-    
-    // 1. Get the raw body text for validation
-    // The validation function needs the raw string, not the parsed JSON
-    const bodyText = await req.text();
+    // ===================================================================
+    // 🔒 STEP 1: VALIDATE THE WEBHOOK
+    // ===================================================================
+    const rawBody = await req.text();
+    const body = JSON.parse(rawBody);
+    const checksum = req.headers.get("x-verify") || "";
+    const saltKey = process.env.PHONEPE_SALT_KEY as string;
+    const saltIndex = process.env.PHONEPE_SALT_INDEX as string;
 
-    // 2. Validate the callback
-    const isValid = await getPhonePeClient().validateCallback(
-      process.env.MERCHANT_USERNAME as string,
-      process.env.MERCHANT_PASSWORD as string,
-      authorizationHeader,
-      bodyText // Use the raw text for validation
-    );
+    const isGenuine = getPhonePeClient().validateCallback(rawBody, checksum, saltKey, saltIndex);
 
-    if (!isValid) {
-      console.error("Invalid callback received");
-      return NextResponse.json({ error: "Invalid callback" }, { status: 401 });
-    }
-
-    // 3. Parse the JSON now that it's validated
-    const callbackData = JSON.parse(bodyText);
-
-    // --- Logic from your "hook" file begins here ---
-
-    // 4. Get Order ID and payload
-    const orderId = callbackData.payload.merchantOrderId as string;
-    // 'decodedResponse' from your hook is 'callbackData.payload' here
-    const decodedResponse = callbackData.payload; 
-
-    if (!orderId) {
-        console.error("Callback Error: merchantOrderId not found in payload.");
-        return NextResponse.json({ error: "Invalid payload: missing merchantOrderId" }, { status: 400 });
-    }
-
-    await connectDB();
-
-    // 5. Find the Order
-    order = await Order.findById(orderId);
-
-    if (!order) {
-      console.log(`Callback Error: No order found with _id: ${orderId}`);
-      // We return 404, but PhonePe might not understand this.
-      // It's mainly for our own logging.
+    if (!isGenuine) {
+      console.error("Invalid PhonePe webhook signature received.");
       return NextResponse.json(
-        { success: false, msg: "Order not found" },
-        { status: 404 }
+        { success: false, msg: "Invalid signature" },
+        { status: 401 }
       );
     }
 
-    // 6. Debugging Step: Log the entire callback
-    if (!Array.isArray(order.paymentDebugLogs)) {
-      order.paymentDebugLogs = [];
+    const { response } = body;
+    if (!response) {
+      console.log("No response field in callback body");
+      return NextResponse.json(
+        { success: false, msg: "No response field found in callback" },
+        { status: 400 }
+      );
     }
-    order.paymentDebugLogs.push({
-      timestamp: new Date(),
-      response: callbackData, // Log the *entire* validated callback data
-    });
 
-    // 7. Check payment status using the callback 'type'
-    switch (callbackData.type) {
-      case "PAYMENT_SUCCESS":
-        console.log("Payment successful for:", orderId);
+    const decodedResponse = JSON.parse(atob(response) || "{}");
+    
+    // ===================================================================
+    // ✅ STEP 2: PROCESS THE VALIDATED WEBHOOK
+    // ===================================================================
+    
+    // 👇 THIS IS THE KEY CHANGE: Get orderId from the response body
+    const orderId = decodedResponse.data.merchantTransactionId;
 
-        // 8. Idempotency Check: Prevent processing already completed orders
-        if (order.paymentStatus === "PAYMENT_SUCCESS") {
-          console.log(`Callback Info: Order ${orderId} already marked as successful.`);
-          await order.save(); // Save the new debug log
-          return new Response("OK", { status: 200 }); // Acknowledge success
-        }
+    if (!orderId) {
+        console.error("No merchantTransactionId found in the decoded response.");
+        return NextResponse.json({ success: false, msg: "Order ID not found in response" }, { status: 400 });
+    }
 
-        // 9. Update Order Status
-        order.paymentStatus = "PAYMENT_SUCCESS";
-        order.paymentMethod = decodedResponse.data?.paymentInstrument?.type;
-        order.transactionId = decodedResponse.data?.transactionId;
-        order.date = new Date();
-        order.OrderStatus = "Completed";
-        order.currentStatus = "Processing";
+    const order = await Order.findOne({ orderId });
 
-        // 10. Reduce Stock
-        try {
-          for (const productDetail of order.productDetails) {
-            const result = await Product.findByIdAndUpdate(productDetail.product, {
-              $inc: {
-                sellCount: productDetail.count + productDetail.freeCount,
-                stock: -(productDetail.count + productDetail.freeCount),
-              },
-            });
-            if (!result) {
-              console.warn(`Callback Warn: Product ${productDetail.product} not found...`);
-            }
+    if (!order) {
+      console.log(`Webhook Error: No order found with orderId: ${orderId}`);
+      return NextResponse.json(
+        { success: true, msg: "Webhook received but order not found" },
+        { status: 200 }
+      );
+    }
+    
+    if (order.paymentStatus === "PAYMENT_SUCCESS") {
+       return NextResponse.json(
+        { success: true, msg: "Order already processed" },
+        { status: 200 }
+      );
+    }
+
+    if (decodedResponse?.code === "PAYMENT_SUCCESS") {
+      // Update order details
+      order.paymentStatus = "PAYMENT_SUCCESS";
+      order.paymentMethod = decodedResponse?.data?.paymentInstrument?.type;
+      order.transactionId = decodedResponse?.data?.transactionId;
+      order.date = new Date();
+
+      // Atomically update stock for each product
+      for (const item of order.productDetails) {
+        const totalOrderedCount = (item.count || 0) + (item.freeCount || 0);
+        const productId = item.product._id;
+        const sizeName = item.size.size;
+        
+        await Product.updateOne(
+          { _id: productId, "sizes.size": sizeName },
+          {
+            $inc: {
+              "sizes.$.stock": -totalOrderedCount,
+              "sizes.$.sellCount": totalOrderedCount,
+            },
           }
-          console.log(`Stock updated for order: ${orderId}`);
-        } catch (stockError) {
-          console.error(`Callback Error: Failed to update stock for order ${orderId}`, stockError);
-          order.paymentDebugLogs.push({
-            timestamp: new Date(),
-            error: "Stock update failed",
-            details: (stockError as Error).message,
-          });
-          // We still continue to save the order
-        }
-
-        // 11. Send Emails (Your logic here)
-        try {
-          // const user = await User.findById(order.user);
-          // if (user) {
-          //   await sendUserOrderEmail(user.email, order);
-          //   const adminOrderDetails: OrderDetails = { ... };
-          //   await sendAdminOrderEmail(adminOrderDetails);
-          // }
-        } catch (emailError) {
-            console.error(`Callback Error: Failed to send emails for order ${orderId}`, emailError);
-            order.paymentDebugLogs.push({
-                timestamp: new Date(),
-                error: "Email sending failed",
-                details: (emailError as Error).message,
-            });
-        }
-
-
-        // 12. Save Final Order
-        await order.save();
-        console.log(`Callback Success: Order ${orderId} processed successfully.`);
-
-        // 13. Acknowledge the S2S callback
-        return new Response("OK", { status: 200 });
-
-      case "PAYMENT_ERROR":
-      case "PAYMENT_DECLINED":
-      default:
-        // 14. Handle Failed or Pending Payment
-        console.log(`Payment status for ${orderId}: ${callbackData.type}`);
-        
-        // Only update status if it wasn't already successful
-        if (order.paymentStatus !== "PAYMENT_SUCCESS") {
-          order.paymentStatus = callbackData.type || decodedResponse?.state || "PAYMENT_FAILED";
-        }
-        
-        // Save the order with the debug log and the failed status
-        await order.save(); 
-        console.log(`Callback Info: Order ${orderId} marked as ${order.paymentStatus}.`);
-        
-        // Acknowledge the S2S callback.
-        // We return "OK" because *we successfully received* the "failed" status.
-        // Returning an error would make PhonePe try to send it again.
-        return new Response("OK", { status: 200 });
-    }
-
-  } catch (error: any) {
-    console.error("Callback Critical Error:", error);
-    
-    // 15. Global Error: Try to log to the order if we found it
-    if (order) {
-      try {
-        if (!Array.isArray(order.paymentDebugLogs)) {
-            order.paymentDebugLogs = [];
-        }
-        order.paymentDebugLogs.push({
-            timestamp: new Date(),
-            error: "Callback Critical Error",
-            details: (error as Error).message,
-        });
-        await order.save();
-      } catch (saveError) {
-          console.error("Failed to save critical error log to order:", saveError);
+        );
       }
+
+      // Send confirmation emails
+      await sendUserOrderEmail(order);
+      const adminOrderDetails: OrderDetails = {
+        orderId: order?.orderId,
+        customerName: order?.shippingAddress?.name,
+        customerEmail: order?.user?.email,
+        totalAmount: order?.payablePrice,
+        orderDate: new Date(order?.updatedAt).toLocaleString().split(",")[0],
+      };
+      await sendAdminOrderEmail(adminOrderDetails);
+
+      await order.save();
+      console.log(`Successfully processed payment for order: ${orderId}`);
+      return NextResponse.json({ success: true, msg: "Order processed successfully" });
+
+    } else {
+      // Handle failed or pending payments
+      order.paymentStatus = decodedResponse?.code || "PAYMENT_FAILED";
+      await order.save();
+      console.log(`Payment failed or pending for order: ${orderId}. Status: ${order.paymentStatus}`);
+      return NextResponse.json({ success: true, msg: "Payment status updated to failed/pending" });
     }
-    
-    // Return a 500 error. PhonePe will see this and likely retry the callback.
+
+  } catch (error) {
+    console.error("Error in PhonePe webhook: ", error);
     return NextResponse.json(
-      { error: "Callback processing failed", details: error.message },
+      { success: false, msg: "Internal Server Error" },
       { status: 500 }
     );
   }
-}
+};
