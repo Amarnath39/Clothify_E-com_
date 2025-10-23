@@ -6,7 +6,7 @@ import { connectDB } from "../../../../../../db";
 import { sendUserOrderEmail } from "../../../../../helper/sendUserOrderEmail";
 import { sendOrderConfirmation } from "../../../../../helper/whatsappNotifier";
 import mongoose from "mongoose";
-import axios from "axios";
+import Product from "../../../../../model/Product";
 
 interface UserType {
   _id: mongoose.Types.ObjectId;
@@ -17,7 +17,7 @@ interface UserType {
 }
 
 interface Params {
-  params: { orderId: string }; // frontend sends tempTransactionId
+  params: { orderId: string };
 }
 
 export async function GET(req: Request, { params }: Params) {
@@ -26,7 +26,10 @@ export async function GET(req: Request, { params }: Params) {
 
     const { orderId } = params;
     if (!orderId) {
-      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Order ID is required" },
+        { status: 400 }
+      );
     }
 
     // 🔹 Get order
@@ -34,17 +37,26 @@ export async function GET(req: Request, { params }: Params) {
       "productDetails.product"
     );
     if (!order) {
-      return NextResponse.json({ error: "Order not found in database" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Order not found in database" },
+        { status: 404 }
+      );
     }
 
     // 🔹 Validate user
     if (!mongoose.Types.ObjectId.isValid(order.user)) {
-      return NextResponse.json({ error: "Invalid userId in order" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid userId in order" },
+        { status: 400 }
+      );
     }
 
     const user = await User.findById(order.user).lean<UserType>();
     if (!user || !user.email) {
-      return NextResponse.json({ error: "User not found or missing email" }, { status: 404 });
+      return NextResponse.json(
+        { error: "User not found or missing email" },
+        { status: 404 }
+      );
     }
 
     // 🔹 Call PhonePe API
@@ -65,108 +77,72 @@ export async function GET(req: Request, { params }: Params) {
       currentStatus = "FAILED";
     }
 
-    // 🔹 Update order
+    // 🔹 Update order in DB
     const updatedOrder = await Order.findOneAndUpdate(
       { tempTransactionId: orderId },
       { paymentStatus, transactionId, currentStatus },
       { new: true }
     ).populate("productDetails.product");
 
-    let emailResponse: { success: boolean; message: string; error?: any } | null = null;
+    if (!updatedOrder) {
+      console.error("Order not found for tempTransactionId:", orderId);
+      return NextResponse.json(
+        { success: false, message: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    // ✅ Reduce stock if payment is successful
+    if (paymentStatus === "PAYMENT_SUCCESS") {
+      console.log("✅ Payment successful, updating product stock...");
+
+      for (const item of order.productDetails) {
+        const totalOrderedCount = (item.count || 0) + (item.freeCount || 0);
+
+        const productId = item.product._id;
+        const sizeName = item.size.size;
+
+        const product = await Product.findById(productId);
+        if (!product) continue;
+
+        const sizeObj = product.sizes.find((s) => s.size === sizeName);
+        if (!sizeObj) continue;
+
+        sizeObj.stock = Math.max(0, sizeObj.stock - totalOrderedCount);
+        sizeObj.sellCount = (sizeObj.sellCount || 0) + totalOrderedCount;
+
+        await product.save();
+      }
+    }
+
+    // 🔹 Send email and WhatsApp if payment succeeded
+    let emailResponse: {
+      success: boolean;
+      message: string;
+      error?: any;
+    } | null = null;
 
     if (paymentStatus === "PAYMENT_SUCCESS" && updatedOrder) {
-      // ------------------ Email ------------------
+      // Email
       emailResponse = await sendUserOrderEmail({
         ...updatedOrder.toObject(),
         orderId: updatedOrder.orderId || updatedOrder._id.toString(),
         customerEmail: user.email,
       });
 
-      // ------------------ DTDC Integration ------------------
+      // WhatsApp
       try {
-        const customerNo = `CUST${Date.now()}${Math.floor(Math.random() * 10000)}`;
-        const consignments = updatedOrder.productDetails.map((v: any) => ({
-          customer_code: "OO3609",
-          load_type: "NON-DOCUMENT",
-          service_type_id: "B2C Priority",
-          dimension_unit: "cm",
-          length: "1",
-          width: "1",
-          height: "1",
-          weight_unit: "kg",
-          weight: "0.25",
-          description: v.product.name,
-          num_pieces: v.count + (v.freeCount || 0),
-          declared_value: v.product.offerPrice || updatedOrder.payablePrice,
-          origin_details: {
-            name: "Udayaada",
-            phone: 8123000558,
-            address_line_1: "Thalaserry",
-            address_line_2: "Post Palayad",
-            pincode: 670102,
-            city: "CANNANORE",
-            state: "Kerala",
-          },
-          destination_details: {
-            name: updatedOrder.shippingAddress.name,
-            phone: updatedOrder.shippingAddress.mobile,
-            alternate_phone: updatedOrder.shippingAddress.alternateMobile || "",
-            address_line_1: updatedOrder.shippingAddress.address,
-            address_line_2: updatedOrder.shippingAddress.addressType || "",
-            pincode: updatedOrder.shippingAddress.zipCode,
-            city: updatedOrder.shippingAddress.city,
-            state: updatedOrder.shippingAddress.state,
-          },
-          customer_reference_number: customerNo,
-          commodity_id: 98,
-          reference_number: "",
-        }));
-
-        const dtdcPayload = { consignments };
-
-        const dtdcRes = await axios.post(
-          `https://dtdcapi.shipsy.io/api/customer/integration/consignment/softdata`,
-          dtdcPayload,
-          {
-            headers: {
-              accept: "application/json",
-              "Content-Type": "application/json",
-              "api-key": "17650e27594130e98548596eeb92aa",
-            },
-          }
-        );
-
-        if (dtdcRes.data?.data?.[0]?.success) {
-          await Order.findByIdAndUpdate(
-            updatedOrder._id,
-            {
-              $set: {
-                dtdc: {
-                  referenceNumber: dtdcRes.data.data[0].reference_number,
-                  customerReferenceNumber: dtdcRes.data.data[0].customer_reference_number,
-                },
-              },
-            },
-            { new: true }
-          );
-        } else {
-          console.warn("DTDC integration failed:", dtdcRes.data);
-        }
-      } catch (dtdcErr) {
-        console.error("DTDC API Error:", dtdcErr);
-      }
-
-      // ------------------ WhatsApp Order Confirmation ------------------
-      try {
-        const customerPhone = updatedOrder.shippingAddress?.mobile || user.phone || "";
-        const customerName = updatedOrder.shippingAddress?.name || user.name || "Customer";
+        const customerPhone =
+          updatedOrder.shippingAddress?.mobile || user.phone || "";
+        const customerName =
+          updatedOrder.shippingAddress?.name || user.name || "Customer";
 
         const whatsappResp = await sendOrderConfirmation(
           customerName,
           customerPhone,
           updatedOrder.orderId || updatedOrder._id.toString(),
-          order.merchantName || "UDAYAADA",
-          order.deliveryPartner || "DTDC"
+          order.merchantName || "S.I.S",
+          order.deliveryPartner || "ANY"
         );
 
         console.log("📲 WhatsApp notification result:", whatsappResp);
@@ -175,14 +151,17 @@ export async function GET(req: Request, { params }: Params) {
       }
     }
 
-    // ------------------ Return Response ------------------
+    // ✅ Return success response
     return NextResponse.json({
       success: true,
       status: phonePeState,
       paymentStatus,
       transactionId,
       order: updatedOrder,
-      email: emailResponse || { success: false, message: "Email not sent (payment not successful)" },
+      email: emailResponse || {
+        success: false,
+        message: "Email not sent (payment not successful)",
+      },
     });
   } catch (error: any) {
     console.error("Payment status check error:", error);

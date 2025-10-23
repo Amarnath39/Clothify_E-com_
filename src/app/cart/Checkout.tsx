@@ -75,7 +75,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
         // 👇 FIX 2: The body now sends `userId` as the backend expects
         {
           amount: orderDetails.payablePrice,
-          userId: user._id,
+          orderId: orderDetails._id,
         },
         {
           headers: {

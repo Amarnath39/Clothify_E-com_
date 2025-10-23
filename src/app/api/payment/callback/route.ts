@@ -1,127 +1,48 @@
-import { NextRequest, NextResponse } from "next/server";
-import Order from "../../../../model/Order";
-import Product from "../../../../model/Product";
-import { sendUserOrderEmail } from "../../../../helper/sendUserOrderEmail";
-import {
-  OrderDetails,
-  sendAdminOrderEmail,
-} from "../../../../helper/sendAdminOrderEmail";
 import { getPhonePeClient } from "@/lib/phonepeClient";
+import { NextResponse } from "next/server";
 
-// The handler for a static route does not have the 'params' object
-export const POST = async (req: NextRequest) => {
+export async function POST(req: Request) {
   try {
-    // ===================================================================
-    // 🔒 STEP 1: VALIDATE THE WEBHOOK
-    // ===================================================================
-    const rawBody = await req.text();
-    const body = JSON.parse(rawBody);
-    const checksum = req.headers.get("x-verify") || "";
-    const saltKey = process.env.PHONEPE_SALT_KEY as string;
-    const saltIndex = process.env.PHONEPE_SALT_INDEX as string;
+    const authorizationHeader = req.headers.get("authorization") || "";
+    const body = await req.json();
+    const responseBody = JSON.stringify(body);
 
-    const isGenuine = getPhonePeClient().validateCallback(rawBody, checksum, saltKey, saltIndex);
+    const isValid = await getPhonePeClient().validateCallback(
+      process.env.MERCHANT_USERNAME as string,
+      process.env.MERCHANT_PASSWORD as string,
+      authorizationHeader,
+      responseBody
+    );
 
-    if (!isGenuine) {
-      console.error("Invalid PhonePe webhook signature received.");
-      return NextResponse.json(
-        { success: false, msg: "Invalid signature" },
-        { status: 401 }
-      );
+    if (!isValid) {
+      console.error("Invalid callback received");
+      return NextResponse.json({ error: "Invalid callback" }, { status: 401 });
     }
 
-    const { response } = body;
-    if (!response) {
-      console.log("No response field in callback body");
-      return NextResponse.json(
-        { success: false, msg: "No response field found in callback" },
-        { status: 400 }
-      );
+    const callbackData = body;
+    const orderId = callbackData.payload.merchantOrderId as string;
+    const status = callbackData.payload.state as string;
+
+    // TODO: update DB with orderId + status
+    console.log(callbackData);
+
+    switch (callbackData.type) {
+      case "PAYMENT_SUCCESS":
+        console.log("Payment successful for:", orderId);
+        break;
+      case "PAYMENT_ERROR":
+        console.log("Payment failed for:", orderId);
+        break;
+      default:
+        console.log("Unknown callback type:", callbackData.type);
     }
 
-    const decodedResponse = JSON.parse(atob(response) || "{}");
-    
-    // ===================================================================
-    // ✅ STEP 2: PROCESS THE VALIDATED WEBHOOK
-    // ===================================================================
-    
-    // 👇 THIS IS THE KEY CHANGE: Get orderId from the response body
-    const orderId = decodedResponse.data.merchantTransactionId;
-
-    if (!orderId) {
-        console.error("No merchantTransactionId found in the decoded response.");
-        return NextResponse.json({ success: false, msg: "Order ID not found in response" }, { status: 400 });
-    }
-
-    const order = await Order.findOne({ orderId });
-
-    if (!order) {
-      console.log(`Webhook Error: No order found with orderId: ${orderId}`);
-      return NextResponse.json(
-        { success: true, msg: "Webhook received but order not found" },
-        { status: 200 }
-      );
-    }
-    
-    if (order.paymentStatus === "PAYMENT_SUCCESS") {
-       return NextResponse.json(
-        { success: true, msg: "Order already processed" },
-        { status: 200 }
-      );
-    }
-
-    if (decodedResponse?.code === "PAYMENT_SUCCESS") {
-      // Update order details
-      order.paymentStatus = "PAYMENT_SUCCESS";
-      order.paymentMethod = decodedResponse?.data?.paymentInstrument?.type;
-      order.transactionId = decodedResponse?.data?.transactionId;
-      order.date = new Date();
-
-      // Atomically update stock for each product
-      for (const item of order.productDetails) {
-        const totalOrderedCount = (item.count || 0) + (item.freeCount || 0);
-        const productId = item.product._id;
-        const sizeName = item.size.size;
-        
-        await Product.updateOne(
-          { _id: productId, "sizes.size": sizeName },
-          {
-            $inc: {
-              "sizes.$.stock": -totalOrderedCount,
-              "sizes.$.sellCount": totalOrderedCount,
-            },
-          }
-        );
-      }
-
-      // Send confirmation emails
-      await sendUserOrderEmail(order);
-      const adminOrderDetails: OrderDetails = {
-        orderId: order?.orderId,
-        customerName: order?.shippingAddress?.name,
-        customerEmail: order?.user?.email,
-        totalAmount: order?.payablePrice,
-        orderDate: new Date(order?.updatedAt).toLocaleString().split(",")[0],
-      };
-      await sendAdminOrderEmail(adminOrderDetails);
-
-      await order.save();
-      console.log(`Successfully processed payment for order: ${orderId}`);
-      return NextResponse.json({ success: true, msg: "Order processed successfully" });
-
-    } else {
-      // Handle failed or pending payments
-      order.paymentStatus = decodedResponse?.code || "PAYMENT_FAILED";
-      await order.save();
-      console.log(`Payment failed or pending for order: ${orderId}. Status: ${order.paymentStatus}`);
-      return NextResponse.json({ success: true, msg: "Payment status updated to failed/pending" });
-    }
-
-  } catch (error) {
-    console.error("Error in PhonePe webhook: ", error);
+    return new Response("OK", { status: 200 });
+  } catch (error: any) {
+    console.error("Callback handling error:", error);
     return NextResponse.json(
-      { success: false, msg: "Internal Server Error" },
+      { error: "Callback processing failed", details: error.message },
       { status: 500 }
     );
   }
-};
+}
