@@ -488,7 +488,7 @@ const InstagramPage: React.FC = () => {
 
       <div className="text-center lg:mt-10 md:mt-7 mt-3 sm:mt-5">
         <a
-          href="https://www.instagram.com/udayaada_.in_2025/"
+          href="https://www.instagram.com/sis_by_mp/"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block bg-gradient-to-r bg-black text-white font-bold text-lg py-2 px-10 rounded-full hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl"
