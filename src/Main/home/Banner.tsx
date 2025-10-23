@@ -10,7 +10,7 @@ import "../../hooks/style.css";
 // --- Marquee Strip ---
 const MarqueeStrip = () => {
   const marqueeText =
-    "4L+ Happy Customers | Gifts For Her @ 50% OFF | Ships in 24 hours | ✨ New Arrivals Every Week | Free Shipping on All Orders Over $50";
+    "Free Shipping all over India| Ships in 24 hours | ✨ New Arrivals Every Week";
   const repeatedText = `${marqueeText} - ${marqueeText} - ${marqueeText}`;
 
   return (
