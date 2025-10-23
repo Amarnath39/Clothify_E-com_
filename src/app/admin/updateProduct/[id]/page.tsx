@@ -120,7 +120,7 @@ const UpdateProduct = ({ params }) => {
     try {
       const allProductsPromises = product.categories.map(async (categoryId) => {
         const queryParams = new URLSearchParams({ categoryId });
-        const { payload } = await dispatch(getAllProducts(queryParams));
+        const { payload } = await dispatch(getAllProducts(queryParams.toString()));
         return payload.success ? payload.products : [];
       });
  
