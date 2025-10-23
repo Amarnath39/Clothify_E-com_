@@ -1,5 +1,5 @@
 "use client";
-
+ 
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Input } from "@/components/ui/input";
@@ -13,11 +13,11 @@ import {
   getAllProducts,
   getProductsById,
 } from "@/lib/features/catogary";
-
+ 
 import toast from "react-hot-toast";
 import { ColorVariantSelector } from "../../addProduct/Colorsvarianet";
 import { CategorySelector } from "../../addProduct/Selector";
-
+ 
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
+ 
 import axios from "axios";
 import RulesSelector from "../RulesSelector";
 import {
@@ -36,20 +36,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSearchParams } from "next/navigation";
-
+ 
 enum OfferStatus {
   ACTIVE = "Active",
   INACTIVE = "Inactive",
 }
-
 const UpdateProduct = ({ params }) => {
   const { id } = params;
   const dispatch = useDispatch<any>();
-
+ 
   const [product, setProduct] = useState<any>({
     name: "",
     description: "",
-    actualPrice: { IND: "", UAE: "" },
+    actualPrice: "",
     width: "",
     height: "",
     material: [],
@@ -60,21 +59,20 @@ const UpdateProduct = ({ params }) => {
     bestsellerProduct: false,
     latestProduct: false,
     color: "",
-    rating: 0,
-    ratedBy: 0,
+    rating: "",
+    ratedBy: "",
     categories: [],
     colors: [],
     returnRules: [],
     sizes: [],
     additionalFields: [],
   });
-
   const [categories, setCategories] = useState([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [rules, setRules] = useState<any>([]);
-  const [rating, setRating] = useState(0);
-  const [ratedBy, setRatedBy] = useState(0);
+  const [rating, setRating] = useState(product.rating || 0);
+  const [ratedBy, setRatedBy] = useState(product.ratedBy || 0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [newOffer, setNewOffer] = useState<any>({
@@ -88,59 +86,56 @@ const UpdateProduct = ({ params }) => {
     useState(false);
   const [newField, setNewField] = useState({ key: "", value: "" });
   const searchParams = useSearchParams();
-  const isDuplicate = searchParams.get("duplicate") === "true";
-
-  const [editingSizeIndex, setEditingSizeIndex] = useState<number | null>(
-    null
-  );
-  const [sizeError, setSizeError] = useState("");
-  const [newSize, setNewSize] = useState<any>({
-    size: "",
-    stock: "",
-    offerPrice: { IND: "", UAE: "" },
-  });
-
-  useEffect(() => {
-    // Handle duplicate product
-    if (isDuplicate) {
-      const duplicateProduct = JSON.parse(
-        localStorage.getItem("editDuplicateProduct") || "{}"
-      );
-      if (duplicateProduct && duplicateProduct._id) {
-        const { _id, isDuplicate, ...productData } = duplicateProduct;
-        setProduct(productData);
-        localStorage.removeItem("editDuplicateProduct");
-      }
-    }
-  }, [isDuplicate]);
-
-  const handleOfferChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const isDuplicate = searchParams.get('duplicate') === 'true';
+ 
+  const handleOfferChange = (e) => {
     const { name, value } = e.target;
     setNewOffer((prev) => ({ ...prev, [name]: value }));
   };
-
+ 
+  useEffect(() => {
+    // Check if we're editing a duplicate product
+    if (isDuplicate) {
+      const duplicateProduct = JSON.parse(localStorage.getItem('editDuplicateProduct') || '{}');
+     
+      if (duplicateProduct && duplicateProduct._id) {
+        // Remove the temporary ID and isDuplicate flag
+        const { _id, isDuplicate, ...productData } = duplicateProduct;
+       
+        // Set the form data with the duplicate product data
+        setProduct(productData);
+       
+        // Clear the localStorage after using it
+        localStorage.removeItem('editDuplicateProduct');
+      }
+    }
+  }, [isDuplicate]);
+ 
   const fetchOfferProducts = async () => {
     if (product.categories.length === 0) {
       toast.error("Please select at least one category first");
       return;
     }
+ 
     try {
       const allProductsPromises = product.categories.map(async (categoryId) => {
         const queryParams = new URLSearchParams({ categoryId });
-        const { payload } = await dispatch(getAllProducts(queryParams.toString()));
+        const { payload } = await dispatch(getAllProducts(queryParams));
         return payload.success ? payload.products : [];
       });
+ 
       const allProductsArrays = await Promise.all(allProductsPromises);
       const allProducts = Array.from(new Set(allProductsArrays.flat())).filter(
         (p) => p._id !== product._id
       );
+ 
       setOfferProducts(allProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast.error("Failed to fetch products. Please try again.");
     }
   };
-
+ 
   const handleProductSelection = (productId: any) => {
     setNewOffer((prev: any) => {
       const updatedProducts = prev.freeProduct.includes(productId)
@@ -149,7 +144,7 @@ const UpdateProduct = ({ params }) => {
       return { ...prev, freeProduct: updatedProducts };
     });
   };
-
+ 
   const handleAddOffer = () => {
     if (
       newOffer.purchaseQuantity &&
@@ -159,7 +154,7 @@ const UpdateProduct = ({ params }) => {
       setProduct((prev) => ({
         ...prev,
         offers: [
-          ...(prev.offers || []),
+          ...prev.offers,
           {
             purchaseQuantity: parseInt(newOffer.purchaseQuantity),
             freeQuantity: parseInt(newOffer.freeQuantity),
@@ -183,15 +178,15 @@ const UpdateProduct = ({ params }) => {
       );
     }
   };
-
-  const removeOffer = (index: number) => {
+ 
+  const removeOffer = (index) => {
     setProduct((prev) => ({
       ...prev,
       offers: prev.offers.filter((_, i) => i !== index),
     }));
   };
-
-  const toggleOfferStatus = (index: number) => {
+ 
+  const toggleOfferStatus = (index) => {
     setProduct((prev) => ({
       ...prev,
       offers: prev.offers.map((offer, i) =>
@@ -207,15 +202,15 @@ const UpdateProduct = ({ params }) => {
       ),
     }));
   };
-
-  const handleRatingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+ 
+  const handleRatingChange = (e) => {
     setRating(Number(e.target.value));
   };
-
-  const handleRatedByChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+ 
+  const handleRatedByChange = (e) => {
     setRatedBy(Number(e.target.value));
   };
-
+ 
   useEffect(() => {
     const fetchProductAndCategories = async () => {
       try {
@@ -223,41 +218,20 @@ const UpdateProduct = ({ params }) => {
           dispatch(getProductsById(id)),
           dispatch(getAllCategories()),
         ]);
-
+ 
         if (productResponse.payload.success) {
           const fetchedProduct = productResponse.payload.product;
-
           setProduct({
             ...fetchedProduct,
             categories: fetchedProduct.categories.map((cat) => cat._id),
           });
-          setRating(fetchedProduct.rating?.star || 0);
-          setRatedBy(fetchedProduct.rating?.ratedBy || 0);
+          setRating(fetchedProduct.rating.star);
+          setRatedBy(fetchedProduct.rating.ratedBy);
           setExistingImages(fetchedProduct.img);
-
-          // Ensure actualPrice is an object
-          if (typeof fetchedProduct.actualPrice !== "object") {
-            setProduct((prev) => ({
-              ...prev,
-              actualPrice: { IND: fetchedProduct.actualPrice, UAE: 0 },
-            }));
-          }
-
-          // Ensure sizes offerPrice is an object
-          setProduct((prev) => ({
-            ...prev,
-            sizes: prev.sizes.map((size: any) => ({
-              ...size,
-              offerPrice:
-                typeof size.offerPrice === "object"
-                  ? size.offerPrice
-                  : { IND: size.offerPrice, UAE: 0 },
-            })),
-          }));
         } else {
           toast.error("Failed to fetch product");
         }
-
+ 
         if (categoriesResponse.payload.success) {
           setCategories(categoriesResponse.payload.categories);
         } else {
@@ -268,74 +242,74 @@ const UpdateProduct = ({ params }) => {
         toast.error("An error occurred while fetching data");
       }
     };
-
+ 
     fetchProductAndCategories();
   }, [id, dispatch]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+ 
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-
-    // Handle multi-currency actualPrice
-    if (name === "actualPriceIND") {
-      setProduct((prev) => ({
-        ...prev,
-        actualPrice: { ...prev.actualPrice, IND: value },
-      }));
-    } else if (name === "actualPriceUAE") {
-      setProduct((prev) => ({
-        ...prev,
-        actualPrice: { ...prev.actualPrice, UAE: value },
-      }));
-    } else {
-      setProduct({ ...product, [name]: value });
-    }
+    setProduct({ ...product, [name]: value });
   };
-
-  const handleCheckboxChange = (name: string) => {
+ 
+  const handleCheckboxChange = (name) => {
     setProduct({ ...product, [name]: !product[name] });
   };
-
-  const handleMaterialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+ 
+  const handleMaterialChange = (e) => {
     setProduct({ ...product, material: e.target.value.split(",") });
   };
-
-  const handleCategoryChange = (selectedCategories: string[]) => {
+ 
+  const handleCategoryChange = (selectedCategories) => {
     setProduct({ ...product, categories: selectedCategories });
   };
-
-   const handleColorVariantsChange = (newVariants: string[]) => {
+ 
+  const handleColorVariantsChange = (newVariants) => {
     setProduct((prev) => ({ ...prev, colors: newVariants }));
   };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []) as File[];
+ 
+  const handleImageUpload = (e: any) => {
+    const files = Array.from(e.target.files) as File[];
     setNewImages((prevImages) => [...prevImages, ...files]);
   };
-
+ 
   const removeExistingImage = (imgPath: string) => {
     setExistingImages((prevImages) =>
       prevImages.filter((img) => img !== imgPath)
     );
   };
-
+ 
   const removeNewImage = (index: number) => {
     setNewImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
-
+  const [editingSizeIndex, setEditingSizeIndex] = useState(null);
+  const [sizeError, setSizeError] = useState("");
+  const [newSize, setNewSize] = useState({
+    size: "",
+    stock: "",
+    offerPrice: "",
+    _id: "",
+    // deliveryPrice: "",
+  });
+ 
   const handleAddSize = () => {
     if (
       newSize.size &&
       newSize.stock &&
-      newSize.offerPrice.IND &&
-      newSize.offerPrice.UAE
+      newSize.offerPrice
     ) {
       if (editingSizeIndex !== null) {
-        // Editing existing size
+        // Editing existing size - preserve the original _id
         setProduct((prevProduct) => ({
           ...prevProduct,
           sizes: prevProduct.sizes.map((size, index) =>
             index === editingSizeIndex
-              ? { ...newSize, _id: prevProduct.sizes[editingSizeIndex]._id }
+              ? {
+                  // deliveryPrice: newSize.deliveryPrice,
+                  size: newSize.size,
+                  stock: newSize.stock,
+                  offerPrice: newSize.offerPrice,
+                  _id: prevProduct.sizes[editingSizeIndex]._id, // Keep original _id
+                }
               : size
           ),
         }));
@@ -346,31 +320,37 @@ const UpdateProduct = ({ params }) => {
           setSizeError("This size is already present.");
           return;
         }
+ 
+        // Adding new size - omit _id
+        const { _id, ...sizeWithoutId } = newSize;
         setProduct((prevProduct) => ({
           ...prevProduct,
-          sizes: [...prevProduct.sizes, newSize],
+          sizes: [...prevProduct.sizes, sizeWithoutId],
         }));
       }
-
+ 
+      // Reset form
       setNewSize({
         size: "",
         stock: "",
-        offerPrice: { IND: "", UAE: "" },
+        offerPrice: "",
+        _id: "",
+        // deliveryPrice: "",
       });
-      setSizeError("");
+      setSizeError(""); // Clear any previous error
       setIsModalOpen(false);
     } else {
-      toast.error("Please fill all size details with both IND and UAE prices");
+      toast.error("Please fill all size details");
     }
   };
-
+ 
   const removeSize = (index: number) => {
     setProduct((prevProduct) => ({
       ...prevProduct,
       sizes: prevProduct.sizes.filter((_, i) => i !== index),
     }));
   };
-
+ 
   const handleAddAdditionalField = () => {
     if (newField.key && newField.value) {
       setProduct((prevProduct) => ({
@@ -386,19 +366,20 @@ const UpdateProduct = ({ params }) => {
       toast.error("Please fill both key and value");
     }
   };
-
-  const removeAdditionalField = (keyToRemove: string) => {
+ 
+  const removeAdditionalField = (keyToRemove) => {
     setProduct((prevProduct) => {
       const updatedFields = { ...prevProduct.additionalFields };
       delete updatedFields[keyToRemove];
       return { ...prevProduct, additionalFields: updatedFields };
     });
   };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+ 
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-
+    const formData: any = new FormData();
+ 
+    // Append all fields to formData
     Object.keys(product).forEach((key) => {
       if (
         key === "categories" ||
@@ -407,39 +388,57 @@ const UpdateProduct = ({ params }) => {
         Array.isArray(product[key])
       ) {
         formData.append(key, JSON.stringify(product[key]));
-      } else {
+      } else if (key !== "images") {
+        // Skip 'images' as we'll handle them separately
         formData.append(key, product[key]);
       }
     });
-
-    // formData.append("rating", rating);
-    // formData.append("ratedBy", ratedBy);
+ 
+    formData.delete("rating");
+    // Append rating and ratedBy to the formData
+    formData.append("rating", rating);
+    formData.append("ratedBy", ratedBy);
+    // Append existing images
     formData.append("existingImages", JSON.stringify(existingImages));
-    newImages.forEach((file) => formData.append("file", file));
-
+ 
+    // Append new images
+    newImages.forEach((file) => {
+      formData.append("file", file);
+    });
+ 
     try {
+      // Replace with actual product ID if dynamic
       const response = await fetch(`/api/admin/products/${id}`, {
-        method: "PATCH",
+        method: "PATCH", // Use PUT for updates
         body: formData,
         headers: {
-          "x-admin-id": "your-admin-id-here",
+          "x-admin-id": "your-admin-id-here", // Replace with actual admin ID
         },
       });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
+ 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+ 
       const data = await response.json();
       if (data.success) {
-        toast.success("Product updated successfully");
+        toast.success("updated successfully");
       } else {
         toast.error(data.msg);
       }
+ 
+      // Handle success (e.g., show a success message, reset form, redirect, etc.)
+      // For example:
+      // showSuccessMessage("Product updated successfully!");
+      // router.push('/admin/products');
     } catch (error) {
       console.error("Error updating product:", error);
-      toast.error("Failed to update product");
+      // Handle error (e.g., show error message)
+      // For example:
+      // showErrorMessage("Failed to update product. Please try again.");
     }
   };
-
+ 
   const fetchRules = async () => {
     try {
       const response = await axios.get("/api/rules");
@@ -448,18 +447,16 @@ const UpdateProduct = ({ params }) => {
       toast.error("Failed to fetch rules");
     }
   };
-
+ 
   useEffect(() => {
     fetchRules();
   }, []);
-
+ 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Update Product</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Images, Name, Description, SKU, Prices, Rating */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Existing Images & Upload */}
           <div className="col-span-2">
             <Label>Existing Images</Label>
             <div className="flex flex-wrap gap-2 mt-2">
@@ -480,23 +477,6 @@ const UpdateProduct = ({ params }) => {
                 </div>
               ))}
             </div>
-
-            <Label className="mt-4">Actual Price (IND & UAE)</Label>
-            <div className="flex gap-2">
-              <Input
-                name="actualPriceIND"
-                value={product.actualPrice.IND}
-                onChange={handleInputChange}
-                placeholder="IND"
-              />
-              <Input
-                name="actualPriceUAE"
-                value={product.actualPrice.UAE}
-                onChange={handleInputChange}
-                placeholder="UAE"
-              />
-            </div>
-
             <Label className="mt-4">Add New Images</Label>
             <div className="flex items-center space-x-2 mt-2">
               <Input
@@ -508,12 +488,12 @@ const UpdateProduct = ({ params }) => {
               />
               <Button
                 type="button"
-                onClick={() => document.getElementById("newImages")?.click()}
+                // @ts-ignore
+                onClick={() => document.getElementById("newImages").click()}
               >
                 <FiUpload className="mr-2" /> Upload New Images
               </Button>
             </div>
-
             <div className="flex flex-wrap gap-2 mt-2">
               {newImages.map((file, index) => (
                 <div key={index} className="relative">
@@ -533,8 +513,6 @@ const UpdateProduct = ({ params }) => {
               ))}
             </div>
           </div>
-
-          {/* Other Inputs */}
           <div>
             <Label htmlFor="name">Name</Label>
             <Input
@@ -551,12 +529,10 @@ const UpdateProduct = ({ params }) => {
               id="description"
               name="description"
               value={product.description}
-              // onChange={handleInputChange}
+              onChange={handleInputChange}
               required
             />
           </div>
-
-          {/* SKU, Rating, Color */}
           <div>
             <Label htmlFor="sku">SKU</Label>
             <Input
@@ -567,6 +543,18 @@ const UpdateProduct = ({ params }) => {
               required
             />
           </div>
+          <div>
+            <Label htmlFor="actualPrice">Actual Price</Label>
+            <Input
+              id="actualPrice"
+              name="actualPrice"
+              type="number"
+              value={product.actualPrice}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+ 
           <div>
             <Label htmlFor="rating">Stars</Label>
             <Input
@@ -610,13 +598,325 @@ const UpdateProduct = ({ params }) => {
               currentProductId={product._id}
             />
           </div>
+          <div className="col-span-1">
+            <Label htmlFor="rules">Return Rules</Label>
+            <RulesSelector
+              rules={rules}
+              selectedRules={product.returnRules}
+              onChange={(selectedRules) =>
+                setProduct({ ...product, returnRules: selectedRules })
+              }
+            />
+          </div>
+          <div>
+            <Label htmlFor="width">Width</Label>
+            <Input
+              id="width"
+              name="width"
+              value={product.width}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="height">Length</Label>
+            <Input
+              id="height"
+              name="height"
+              value={product.height}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="material">Materials (comma-separated)</Label>
+            <Input
+              id="material"
+              name="material"
+              value={product.material.join(",")}
+              onChange={handleMaterialChange}
+              required
+            />
+          </div>
+ 
+          <div>
+            <Label htmlFor="washCare">Wash Care</Label>
+            <Input
+              id="washCare"
+              name="washCare"
+              value={product.washCare}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="note">Note</Label>
+            <Textarea
+              id="note"
+              name="note"
+              value={product.note}
+              onChange={handleInputChange}
+            />
+          </div>
+          <CategorySelector
+            categories={categories}
+            selectedCategories={product.categories}
+            onChange={handleCategoryChange}
+          />
         </div>
-
-        {/* Submit Button */}
-        <Button type="submit">Update Product</Button>
+ 
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="featureProduct"
+              checked={product.featureProduct}
+              onCheckedChange={() => handleCheckboxChange("featureProduct")}
+            />
+            <label htmlFor="featureProduct">Feature Product</label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="bestsellerProduct"
+              checked={product.bestsellerProduct}
+              onCheckedChange={() => handleCheckboxChange("bestsellerProduct")}
+            />
+            <label htmlFor="bestsellerProduct">Bestseller Product</label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="latestProduct"
+              checked={product.latestProduct}
+              onCheckedChange={() => handleCheckboxChange("latestProduct")}
+            />
+            <label htmlFor="latestProduct">Latest Product</label>
+          </div>
+        </div>
+ 
+        {/* <div>
+          <Label>Offers</Label>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {product?.offers?.map((offer, index) => (
+              <div
+                key={index}
+                className="bg-gray-100 p-2 rounded flex items-center"
+              >
+                <span
+                  className={
+                    offer.status === OfferStatus.ACTIVE
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }
+                >
+                  Buy {offer.purchaseQuantity}, Get {offer.freeQuantity} Free
+                </span>
+                <button
+                  type="button"
+                  onClick={() => toggleOfferStatus(index)}
+                  className="ml-2 text-sm"
+                >
+                  {offer.status === OfferStatus.ACTIVE
+                    ? "Deactivate"
+                    : "Activate"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeOffer(index)}
+                  className="ml-2 text-red-500"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </div> */}
+ 
+        <div>
+          <Label>Sizes</Label>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {product.sizes.map((size, index) => (
+              <div key={index} className="bg-gray-100 p-2 rounded">
+                {size.size} - Stock: {size.stock}, Price: {size.offerPrice}
+               
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewSize(size);
+                    setEditingSizeIndex(index);
+                    setIsModalOpen(true);
+                  }}
+                  className="ml-2 text-blue-500"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeSize(index)}
+                  className="ml-2 text-red-500"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button  type="button" className="mt-2">
+                {"Add Size"}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-white">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingSizeIndex !== null ? "Edit Size" : "Add Size"}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="size">Size</Label>
+                  <Select
+                    onValueChange={(value) => {
+                      setNewSize({ ...newSize, size: value });
+                      setSizeError(""); // Clear error when a new size is selected
+                    }}
+                    value={newSize.size}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[
+                        "S",
+                        "M",
+                        "L",
+                        "XL",
+                        "XXL",
+                        "3XL",
+                        "4XL",
+                        "5XL",
+                        "6XL",
+                        "Others",
+                        "Freesize",
+                      ].map((size) => (
+                        <SelectItem key={size} value={size}>
+                          {size}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {sizeError && (
+                    <p className="text-red-500 mt-1">{sizeError}</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="stock">Stock</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    value={newSize.stock}
+                    onChange={(e) =>
+                      setNewSize({ ...newSize, stock: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="offerPrice">Offer Price</Label>
+                  <Input
+                    id="offerPrice"
+                    type="number"
+                    value={newSize.offerPrice}
+                    onChange={(e) =>
+                      setNewSize({ ...newSize, offerPrice: e.target.value })
+                    }
+                  />
+                </div>
+                {/* <div>
+                  <Label htmlFor="deliveryPrice">deliveryPrice</Label>
+                  <Input
+                    id="deliveryPrice"
+                    type="number"
+                    value={newSize.deliveryPrice}
+                    onChange={(e) =>
+                      setNewSize({ ...newSize, deliveryPrice: e.target.value })
+                    }
+                  />
+                </div> */}
+                <Button  type="button" onClick={handleAddSize}>
+                  {editingSizeIndex !== null ? "Update Size" : "Add Size"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+        <div>
+          <Label>Additional Fields</Label>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {product?.additionalFields &&
+              Object.entries(product.additionalFields).map(
+                ([key, value]: any) => (
+                  <div key={key} className="bg-gray-100 p-2 rounded">
+                    {key}: {value}
+                    <button
+                      type="button"
+                      onClick={() => removeAdditionalField(key)}
+                      className="ml-2 text-red-500"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )
+              )}
+          </div>
+          <Dialog
+            open={isAdditionalFieldModalOpen}
+            onOpenChange={setIsAdditionalFieldModalOpen}
+          >
+            <DialogTrigger asChild>
+              <Button  type="button" className="mt-2">
+                Add Additional Field
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-white">
+              <DialogHeader>
+                <DialogTitle>Add Additional Field</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="fieldKey">Field Key</Label>
+                  <Input
+                    id="fieldKey"
+                    value={newField.key}
+                    onChange={(e) =>
+                      setNewField({ ...newField, key: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="fieldValue">Field Value</Label>
+                  <Input
+                    id="fieldValue"
+                    value={newField.value}
+                    onChange={(e) =>
+                      setNewField({ ...newField, value: e.target.value })
+                    }
+                  />
+                </div>
+                <Button
+             
+                  type="button"
+                  onClick={handleAddAdditionalField}
+                >
+                  Add Field
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+ 
+        <Button type="submit" className="w-full">
+          Update Product
+        </Button>
       </form>
     </div>
   );
 };
-
+ 
 export default UpdateProduct;
+ 
+ 
