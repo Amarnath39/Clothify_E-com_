@@ -51,12 +51,32 @@ import { processCartOffers } from "@/helpers/helpers";
 import { setAddressState } from "@/lib/features/address";
 import { RootState } from "@/lib/store";
 
+// ✅ NEW: Defined an interface for the products in your cart
+interface CartProduct {
+  _id: string;
+  name: string;
+  img: string[];
+  color: string;
+  actualPrice: number;
+  description: string;
+  size: {
+    _id: string;
+    size: string;
+    stock: number;
+    offerPrice: number;
+    deliveryPrice?: number;
+  } | null;
+  count: number;
+}
+
 const Cart = () => {
   const dispatch = useDispatch<any>();
   const cartItems = useSelector((state: any) => state.cart.items);
-  const [cartProducts, setCartProducts] = useState([]);
+  // ✅ UPDATED: Provided the CartProduct interface to useState
+  const [cartProducts, setCartProducts] = useState<CartProduct[]>([]);
   const [visibleCoupons, setVisibleCoupons] = useState<any[]>([]);
-  const [appliedCoupons, setAppliedCoupons] = useState<any>([]);
+  // ✅ UPDATED: Correctly typed the appliedCoupons state as an array
+  const [appliedCoupons, setAppliedCoupons] = useState<any[]>([]);
   const { currentOrder } = useSelector((state: any) => state.order);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [createdOrderDetails, setCreatedOrderDetails] = useState({});
@@ -122,7 +142,7 @@ const Cart = () => {
                 count: cartItem?.count || 1,
               };
             })
-            .filter(Boolean) // Remove any null entries
+            .filter(Boolean) as CartProduct[] // Ensure the filtered array is of the correct type
         );
       } else {
         toast.error(payload.msg);
@@ -148,7 +168,7 @@ const Cart = () => {
     }
   };
 
-  const calculateDeliveryFee = (cartItems, cartProducts) => {
+  const calculateDeliveryFee = (cartItems: any[], cartProducts: CartProduct[]) => {
     const totalQuantity =
       cartItems?.reduce((sum, item) => sum + Number(item.count), 0) || 0;
 
@@ -168,23 +188,18 @@ const Cart = () => {
 
   const { subtotal, tax, finalTotal, promotions, deliveryFee } = useMemo(() => {
     const subtotal = cartItems?.reduce((sum, item: any) => {
-      const product: any = cartProducts.find(
-        (p: any) => p?._id === item?.id && p?.size?._id === item?.size?._id
+      const product = cartProducts.find(
+        (p) => p?._id === item?.id && p?.size?._id === item?.size?._id
       );
       return sum + (product?.actualPrice || 0) * item.count;
     }, 0);
 
-    const offerPrice = cartItems?.reduce((sum, item) => {
-      const product: any = cartProducts?.find(
-        (p: any) => p._id === item?.id && p?.size?._id === item?.size?._id
+    const offerPrice = cartItems?.reduce((sum, item: any) => {
+      const product = cartProducts?.find(
+        (p) => p._id === item?.id && p?.size?._id === item?.size?._id
       );
       return sum + (product?.size?.offerPrice || 0) * item?.count;
     }, 0);
-
-    const totalQuantity = cartItems?.reduce(
-      (sum, item) => sum + item?.count,
-      0
-    );
 
     const promotions = subtotal - offerPrice;
 
@@ -215,9 +230,8 @@ const Cart = () => {
       const { payload } = await dispatch(getUserDetails());
 
       if (payload.success) {
-        // ✅ Get deliveryFee from root, not user
         const deliveryFeeFromApi = payload?.deliveryFee || 0;
-        setUserDeliveryFee(deliveryFeeFromApi); // ✅ Set correctly
+        setUserDeliveryFee(deliveryFeeFromApi);
 
         if (payload?.user?.defaultAddress) {
           dispatch(setAddressState(payload?.user?.defaultAddress?.state));
@@ -234,7 +248,7 @@ const Cart = () => {
     callGetAllAddress();
   }, []);
 
-  const handleApplyCoupon = async (code) => {
+  const handleApplyCoupon = async (code: string) => {
     if (!token) {
       router.push("/login");
       return;
@@ -268,36 +282,34 @@ const Cart = () => {
   };
 
   useEffect(() => {
-    callGetCartItems();
+    if (cartItems.length > 0) {
+        callGetCartItems();
+    } else {
+        setCartProducts([]);
+    }
     callGetVisibleCoupons();
-  }, []);
+  }, [cartItems]);
 
   useEffect(() => {
-    // Remove applied coupons when cart changes
     setAppliedCoupons([]);
     setDiscountAmount(0);
 
-    // Recheck coupon validity if there was a previously applied coupon
     if (appliedCoupons.length > 0) {
       handleApplyCoupon(appliedCoupons[0].couponCode);
     }
   }, [cartItems]);
 
-  const handleRemoveItem = (id, sizeId) => {
+  const handleRemoveItem = (id: string, sizeId: string) => {
     dispatch(removeFromCart({ id, sizeId }));
-    setCartProducts((prevProducts: any) =>
-      prevProducts.filter((product) => {
-        return !(product._id === id && product.size._id === sizeId);
-      })
-    );
   };
-  const handleQuantityChange = (id, sizeId, action) => {
-    const currentProduct: any = cartProducts.find(
-      (product: any) => product._id === id && product.size._id == sizeId
+  
+  const handleQuantityChange = (id: string, sizeId: string, action: 'increase' | 'decrease') => {
+    const currentProduct = cartProducts.find(
+      (product) => product._id === id && product.size?._id === sizeId
     );
 
     const currentItem = cartItems.find(
-      (item) => item.id === id && item.size._id == sizeId
+      (item: any) => item.id === id && item.size._id === sizeId
     );
     if (action === "decrease") {
       if (currentItem && currentItem.count === 1) {
@@ -305,10 +317,9 @@ const Cart = () => {
         return;
       }
     } else if (action === "increase") {
-      // Check if increasing would exceed the stock
-      if (currentItem.count >= currentProduct?.size?.stock) {
+      if (currentProduct && currentItem.count >= currentProduct.size!.stock) {
         toast.error(
-          `Sorry, only ${currentProduct?.size?.stock} item(s) available in stock.`
+          `Sorry, only ${currentProduct.size!.stock} item(s) available in stock.`
         );
         return;
       }
@@ -319,34 +330,19 @@ const Cart = () => {
         ? increaseCount({ id, sizeId })
         : decreaseCount({ id, sizeId })
     );
-
-    setCartProducts((prevProducts: any) =>
-      prevProducts.map((product) => {
-        if (product._id === id) {
-          const newQuantity =
-            action === "increase"
-              ? Math.min(product.quantity + 1, product.stock)
-              : Math.max(product.quantity - 1, 0);
-          return {
-            ...product,
-            quantity: newQuantity,
-          };
-        }
-        return product;
-      })
-    );
   };
 
   const callProceedToCheckoutApi = async () => {
     setCheckoutLoading(true);
     const payloadApi = {
-      productDetails: cartItems.map((item) => {
-        return {
-          product: item.id,
-          count: item?.count,
-          size: item?.size?._id,
-        };
-      }),
+      productDetails: cartItems.map((item: any) => ({
+        product: item.id,
+        count: item.count,
+        sizeId: item.size._id,
+        sizeLabel: item.size.size,
+        actualPrice: cartProducts.find(p => p._id === item.id)?.actualPrice || 0,
+        offerPrice: item.size.offerPrice || 0,
+      })),
       couponCode: appliedCoupons[0]?.couponCode || null,
       orderId:
         orderDate &&
@@ -354,7 +350,7 @@ const Cart = () => {
           24 * 60 * 60 * 1000
           ? orderId
           : null,
-      shippingCost: deliveryFee, // ✅ send shipping/delivery price
+      shippingCost: deliveryFee,
     };
 
     try {
@@ -362,7 +358,6 @@ const Cart = () => {
       if (payload.success) {
         setIsCheckoutModal(true);
         setCreatedOrderDetails(payload.orderDetails);
-
         dispatch(
           setOrderId({
             orderId: payload.orderDetails._id,
@@ -405,20 +400,17 @@ const Cart = () => {
     <div className="min-h-screen">
       <CheckoutModal
         isOpen={isCheckoutModal}
-        onClose={setIsCheckoutModal}
+        onClose={() => setIsCheckoutModal(false)}
         orderDetails={createdOrderDetails}
         deliveryFee={deliveryFee}
       />
       {loading ? (
         <CartSkeletonLoader />
       ) : cartProducts.length > 0 ? (
-        // ✅ THIS LINE WAS CHANGED
         <div className="container mx-auto px-4 pt-40 pb-8">
           <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* cart mobile and web view */}
             <div className="lg:w-7/12">
-              {/* Cart Header - Only visible on desktop */}
               <div className="hidden md:grid md:grid-cols-[2fr,1fr,1fr,auto] gap-4 px-6 py-3 bg-gray-50 rounded-t-lg">
                 <div className="text-sm font-medium text-gray-600">Product</div>
                 <div className="text-sm font-medium text-gray-600">
@@ -427,29 +419,22 @@ const Cart = () => {
                 <div className="text-sm font-medium text-gray-600 text-right">
                   Price
                 </div>
-                <div className="w-8"></div> {/* Space for delete button */}
+                <div className="w-8"></div>
               </div>
 
-              {/* Cart Items */}
               <div className="bg-white rounded-b-lg shadow-sm">
-                {cartProducts?.map((item: any, index) => (
+                {cartProducts?.map((item) => (
                   <div
-                    key={item._id}
+                    key={`${item._id}-${item.size?._id}`}
                     className="border-b last:border-b-0 hover:bg-gray-50 transition-colors"
                   >
                     <div className="grid md:grid-cols-[2fr,1fr,1fr,auto] gap-4 p-4 items-center">
-                      {/* Product Info */}
                       <div className="flex gap-4 items-center">
                         <img
-                          src={item?.img[0]}
+                          src={item.img[0]}
                           alt={item.name}
-                          className="w-20 h-20 object-cover rounded-md"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            window.location.href = `/product-details/${
-                              item._id
-                            }/${item.name.split(" ").join("-")}`;
-                          }}
+                          className="w-20 h-20 object-cover rounded-md cursor-pointer"
+                          onClick={() => router.push(`/product-details/${item._id}/${item.name.split(" ").join("-")}`)}
                         />
                         <div>
                           <h3 className="font-medium line-clamp-1">
@@ -457,58 +442,46 @@ const Cart = () => {
                           </h3>
                           <p className="text-sm text-gray-500">
                             Size:{" "}
-                            {item?.size?.size === "Others"
+                            {item.size?.size === "Others"
                               ? "Default"
-                              : item?.size?.size}
+                              : item.size?.size}
                           </p>
                         </div>
                       </div>
 
-                      {/* Quantity Controls */}
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={(e) =>
-                            handleQuantityChange(
-                              item._id,
-                              item.size._id,
-                              "decrease"
-                            )
-                          }
+                          onClick={() => handleQuantityChange(item._id, item.size!._id, "decrease")}
                           className="p-1 rounded-md hover:bg-gray-100"
                         >
                           <FaMinus className="h-3 w-3" />
                         </button>
                         <span className="w-8 text-center font-medium">
-                          {cartItems?.find(
-                            (cartItem) =>
+                          {cartItems.find(
+                            (cartItem: any) =>
                               cartItem.id === item._id &&
-                              cartItem.size._id === item.size._id
+                              cartItem.size._id === item.size?._id
                           )?.count || 0}
                         </span>
                         <button
-                          onClick={(e) =>
-                            handleQuantityChange(
-                              item._id,
-                              item.size._id,
-                              "increase"
-                            )
-                          }
+                          onClick={() => handleQuantityChange(item._id, item.size!._id, "increase")}
                           className="p-1 rounded-md hover:bg-gray-100"
                         >
                           <FaPlus className="h-3 w-3" />
                         </button>
                       </div>
 
-                      {/* Price */}
                       <div className="text-right font-medium">
-                        ₹{(item.size.offerPrice * item.count).toFixed(2)}
+                        ₹{(item.size!.offerPrice * (cartItems.find(
+                            (ci: any) =>
+                              ci.id === item._id &&
+                              ci.size._id === item.size?._id
+                          )?.count || 1)
+                        ).toFixed(2)}
                       </div>
 
-                      {/* Delete Button */}
                       <button
-                        onClick={(e) =>
-                          handleRemoveItem(item._id, item.size._id)
-                        }
+                        onClick={() => handleRemoveItem(item._id, item.size!._id)}
                         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                       >
                         <FaTrash className="h-4 w-4" />
@@ -520,8 +493,7 @@ const Cart = () => {
             </div>
 
             <div className="lg:w-5/12">
-              <div className="sticky top-10 bg-gray-50 rounded-xl p-4">
-                {/* Coupon Selector */}
+              <div className="sticky top-28 bg-gray-50 rounded-xl p-4">
                 <div className="mt-2">
                   <CouponSelector
                     visibleCoupons={visibleCoupons}
@@ -537,11 +509,10 @@ const Cart = () => {
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">
                     ({cartItems.length}
-                    {cartItems.length > 1 ? "items" : "item"})
+                    {cartItems.length > 1 ? " items" : " item"})
                   </p>
                 </div>
 
-                {/* Price Breakdown */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between py-1">
                     <span className="text-gray-600">Subtotal</span>
@@ -559,10 +530,9 @@ const Cart = () => {
 
                   <div className="flex items-center justify-between py-1 text-green-600">
                     <span>Product Discounts</span>
-                    <span className="font-medium">-₹{promotions}</span>
+                    <span className="font-medium">-₹{promotions.toFixed(2)}</span>
                   </div>
 
-                  {/* Applied Coupons */}
                   {appliedCoupons.length > 0 && (
                     <div className="bg-green-50 p-4 rounded-lg">
                       <span className="text-green-700 font-medium block mb-2">
@@ -579,14 +549,13 @@ const Cart = () => {
                             </span>
                           </div>
                           <span className="font-medium">
-                            -₹{discountAmount}
+                            -₹{discountAmount.toFixed(2)}
                           </span>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  {/* Total */}
                   <div className="border-t border-gray-200 mt-4 pt-4">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold">Order Total</span>
@@ -596,8 +565,7 @@ const Cart = () => {
                     </div>
                   </div>
                 </div>
-                
-                {/* Checkout Button */}
+
                 <div className="mt-6">
                   <button
                     onClick={handleProceedToCheckout}
