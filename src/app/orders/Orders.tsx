@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FiChevronRight, FiRefreshCw, FiUser } from "react-icons/fi";
+import { FiChevronRight } from "react-icons/fi";
 import { useDispatch } from "react-redux";
 import { getOrdersData } from "@/lib/features/order";
 import { formatDate } from "@/helpers/helpers";
@@ -51,7 +50,6 @@ const OrderCard = ({ order }: any) => {
               <p className="text-xs sm:text-sm text-gray-500">
                 Placed on: {formatDate(order.date)}
               </p>
-              {/* ✅ CORRECTED: Use order.currentStatus */}
               <p className="text-xs sm:text-sm text-gray-500 mt-1 flex flex-wrap gap-1 items-center">
                 Order Status:
                 <Badge
@@ -81,7 +79,6 @@ const OrderCard = ({ order }: any) => {
                     <DialogHeader>
                         <DialogTitle>Order Details</DialogTitle>
                     </DialogHeader>
-                    {/* Assuming OrderDetails component can handle this 'order' structure */}
                     <OrderDetails order={order} />
                     </DialogContent>
                 </Dialog>
@@ -94,16 +91,20 @@ const OrderCard = ({ order }: any) => {
         <div className="space-y-4">
             <h3 className="text-base font-semibold">Products</h3>
             <div className="grid grid-cols-1 gap-4">
-                {/* ✅ CORRECTED: Loop through order.productDetails */}
                 {order.productDetails.map((productItem: any) => (
                     <div key={productItem._id} className="flex items-center space-x-4">
+                        {/* ✅ CORRECTED: Added a check for product images */}
                         <img
-                            src={productItem.product.img[0]}
-                            alt={productItem.product.name}
+                            src={
+                                productItem.product && productItem.product.img && productItem.product.img.length > 0
+                                ? productItem.product.img[0]
+                                : "/android-chrome-192x192.png" // IMPORTANT: Add a placeholder image to your `public` folder
+                            }
+                            alt={productItem.product ? productItem.product.name : "Product Image"}
                             className="w-16 h-16 object-cover rounded-md"
                         />
                         <div className="flex-grow text-sm">
-                            <h4 className="font-medium">{productItem.product.name}</h4>
+                            <h4 className="font-medium">{productItem.product ? productItem.product.name : "Product not found"}</h4>
                             <p className="text-gray-500">Qty: {productItem.count}</p>
                             <p className="text-gray-500">Size: {productItem.sizeLabel}</p>
                         </div>
@@ -119,9 +120,7 @@ const OrderCard = ({ order }: any) => {
   );
 };
 
-// Main Orders Component
 const Orders = () => {
-  const [sortBy, setSortBy] = useState<string>("date");
   const dispatch = useDispatch<any>();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,8 +130,6 @@ const Orders = () => {
       setLoading(true);
       const { payload } = await dispatch(getOrdersData());
       if (payload.success) {
-        // ✅ SIMPLIFIED: No need to re-map the data if the API response is already good.
-        // The API populates product details, so we can use it directly.
         setOrders(payload.orders);
       }
     } catch (error) {
