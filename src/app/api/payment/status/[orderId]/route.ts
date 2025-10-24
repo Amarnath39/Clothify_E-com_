@@ -61,6 +61,8 @@ export async function GET(req: Request, { params }: Params) {
 
     // 🔹 Call PhonePe API
     const response: any = await getPhonePeClient().getOrderStatus(orderId);
+    // ✅ ADD THIS LINE TO DEBUG
+console.log("RAW PHONEPE API RESPONSE:", JSON.stringify(response, null, 2));
     console.log("PhonePe Response:", response);
 
     const phonePeState = response?.state || "PENDING";
@@ -93,30 +95,47 @@ export async function GET(req: Request, { params }: Params) {
     }
 
     // ✅ Reduce stock if payment is successful
-    if (paymentStatus === "PAYMENT_SUCCESS") {
-      console.log("✅ Payment successful, updating product stock...");
+  // ✅ Reduce stock if payment is successful
+if (paymentStatus === "PAYMENT_SUCCESS") {
+  console.log("✅ Payment successful, updating product stock...");
 
-      for (const item of order.productDetails) {
-        const totalOrderedCount = (item.count || 0) + (item.freeCount || 0);
+  for (const item of updatedOrder.productDetails) {
+    console.log("DEBUG: Inspecting item:", JSON.stringify(item, null, 2));
 
-        const productId = item.product._id;
-        const sizeName = item.size.size;
-
-        const product = await Product.findById(productId);
-        if (!product) continue;
-
-        const sizeObj = product.sizes.find((s) => s.size === sizeName);
-        if (!sizeObj) continue;
-
-        sizeObj.stock = Math.max(0, sizeObj.stock - totalOrderedCount);
-        sizeObj.sellCount = (sizeObj.sellCount || 0) + totalOrderedCount;
-
-        await product.save();
-      }
+    // 💡 ROBUST CHECK: Use the new fields from your schema.
+    if (!item.sizeId) {
+      console.error(
+        `Skipping stock reduction for product ${item.product._id} in order ${updatedOrder.orderId} due to missing sizeId.`
+      );
+      continue; // Skip to the next item in the loop
     }
 
+    const totalOrderedCount = (item.count || 0) + (item.freeCount || 0);
+
+    // The product is already populated, no need to fetch it again.
+    const product = item.product;
+    if (!product) continue;
+
+    // Find the size using the reliable sizeId.
+    const sizeObj = product.sizes.find((s) => s._id.equals(item.sizeId));
+
+    if (!sizeObj) {
+      console.error(`Size with ID ${item.sizeId} not found in product ${product._id}. Stock not updated.`);
+      continue; // Skip if the specific size isn't found in the product
+    }
+
+    // Update stock and sell count
+    sizeObj.stock = Math.max(0, sizeObj.stock - totalOrderedCount);
+    sizeObj.sellCount = (sizeObj.sellCount || 0) + totalOrderedCount;
+
+    // This is a method on the parent document, so we save the whole product.
+    await product.save();
+    console.log(`✅ Stock updated for product ${product._id}, size ${sizeObj.size}. New stock: ${sizeObj.stock}`);
+  }
+}
+
+
     // 🔹 Send email and WhatsApp if payment succeeded
-    //time
     let emailResponse: {
       success: boolean;
       message: string;
