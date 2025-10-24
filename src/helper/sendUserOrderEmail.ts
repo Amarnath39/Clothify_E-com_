@@ -10,7 +10,7 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
       port: 587,
       auth: {
          user: "emailapikey", // replace with your ZeptoMail username/API key
-        pass: "PHtE6r0NS+7qjDQm+xUG4/O+HpHxN9ws+r4yfVVD4oxFXPAEGE1dqdEjwWWz+RguUvFFQfGYnNpgtuvJ5urRIWe4M29ICWqyqK3sx/VYSPOZsbq6x00atlwadEHbUIDodtJo0iDQu9fbNA==", // ZeptoMail API secret
+        pass: "PHtE6r0OFO/qiGEq9kIA7ffpFsSmZN9/+79iJVFP44dAXPYAS01VrNEoxjfjqE0vXaZDEKWdnYtusOnNte6BJGy7NzkZW2qyqK3sx/VYSPOZsbq6x00YtF0fd0XaV4Hmdt5s1SfQv9jcNA==", // ZeptoMail API secret
       },
     });
 
