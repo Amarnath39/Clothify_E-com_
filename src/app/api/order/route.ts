@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../db";
-import Order from "../../../model/Order"; // Corrected path assuming model folder is at root/model
-import Coupon from "../../../model/Coupon"; // Corrected path
-import Product from "../../../model/Product"; // Corrected path
-import User from "../../../model/User"; // Corrected path
-import "../../../../model/Address"; // Corrected path
-import "../../../../model/Exchange"; // Corrected path
-import Address from "../../../model/Address"; // Corrected path
+import Order from "../../../model/Order";
+import Coupon from "../../../model/Coupon";
+import Product from "../../../model/Product";
+import User from "../../../model/User";
+import Address from "../../../model/Address";
+import Exchange from "../../../model/Exchange";
+
 
 connectDB();
 
