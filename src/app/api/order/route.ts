@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../db";
-import Order from "../../../model/Order";
-import Coupon from "../../../model/Coupon";
-import Product from "../../../model/Product";
-import User from "../../../model/User";
-import "../../../model/Address";
-import "../../../model/Exchange";
-import Address from "../../../model/Address";
+import Order from "../../../model/Order"; // Corrected path assuming model folder is at root/model
+import Coupon from "../../../model/Coupon"; // Corrected path
+import Product from "../../../model/Product"; // Corrected path
+import User from "../../../model/User"; // Corrected path
+import "../../../../model/Address"; // Corrected path
+import "../../../../model/Exchange"; // Corrected path
+import Address from "../../../model/Address"; // Corrected path
 
 connectDB();
 
@@ -23,7 +23,6 @@ const generateOrderId = async (): Promise<string> => {
       }
     ).select("orderSeq");
 
-    // console.log(lastOrder?.orderSeq, "sequence::::");
     const orderNumber = lastOrder?.orderSeq || 0;
 
     return `ON-${orderNumber.toString().padStart(6, "0")}`;
@@ -52,7 +51,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     const body = await req.json();
-    const { productDetails, couponCode, orderId, shippingCost = 0 } = body; // ✅ shippingCost comes from frontend
+    const { productDetails, couponCode, orderId, shippingCost = 0 } = body;
 
     // Validate input
     if (
@@ -92,11 +91,28 @@ export const POST = async (req: NextRequest) => {
         const product = products.find((p) => p._id.toString() === pd.product);
         if (product) {
           const quantity = pd.count || 1;
-          const selectedSize = pd.size;
+          const selectedSizeId = pd.size; // The size ID from the frontend
+
+          // ✅ START: ADDED DEBUG LOGS
+          console.log("--- DEBUGGING STOCK CHECK ---");
+          console.log("Frontend sent this Size ID:", selectedSizeId);
+          console.log(
+            "Product's available sizes in the database:",
+            JSON.stringify(product.sizes, null, 2)
+          );
+          // ✅ END: ADDED DEBUG LOGS
 
           const sizeObj = product.sizes.find(
-            (size: any) => size._id.toString() === selectedSize
+            (size: any) => size._id.toString() === selectedSizeId
           );
+
+          // ✅ START: ADDED DEBUG LOGS
+          console.log(
+            "Result of finding the size in the database:",
+            sizeObj
+          );
+          console.log("----------------------------");
+          // ✅ END: ADDED DEBUG LOGS
 
           if (!sizeObj || sizeObj.stock < quantity) {
             outOfStockProducts.push(product._id.toString());
@@ -108,10 +124,15 @@ export const POST = async (req: NextRequest) => {
           }
           totalQuantity += quantity;
 
+          // Return the structure needed for saving to DB (ensure this matches your schema)
           return {
-            product: product,
-            size: sizeObj,
+            product: product._id, // Store only the ID
             count: quantity,
+            sizeId: sizeObj._id, // Correct field for schema
+            sizeLabel: sizeObj.size, // Correct field for schema
+            actualPrice: product.actualPrice, // Correct field for schema
+            offerPrice: sizeObj.offerPrice || product.actualPrice, // Correct field for schema
+            // Include other fields required by your schema if any
           };
         }
         return null;
@@ -176,7 +197,7 @@ export const POST = async (req: NextRequest) => {
             payablePrice: totalPayablePrice,
             off: discount,
             shippingAddress,
-            shippingCost, // ✅ frontend shipping cost
+            shippingCost,
           },
         },
         { new: true }
@@ -190,7 +211,7 @@ export const POST = async (req: NextRequest) => {
         payablePrice: totalPayablePrice,
         off: discount,
         shippingAddress,
-        shippingCost, // ✅ frontend shipping cost
+        shippingCost,
       });
 
       await newOrder.save();
@@ -212,7 +233,6 @@ export const POST = async (req: NextRequest) => {
     );
   }
 };
-
 
 export const GET = async (req: NextRequest) => {
   try {
