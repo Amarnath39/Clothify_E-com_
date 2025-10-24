@@ -9,7 +9,7 @@ interface SendOrderConfirmationResponse {
 
 
 export const sendOrderConfirmation = async (
-customerName: string, phoneNumber: string, orderId: string, merchantName: string = "S.I.S", deliveryPartner: string = "DTDC", p0: any): Promise<SendOrderConfirmationResponse> => {
+customerName: string, phoneNumber: string, orderId: string, merchantName: string = "S.I.S", deliveryPartner: string = "",): Promise<SendOrderConfirmationResponse> => {
   try {
     const countryCode = "91";
 

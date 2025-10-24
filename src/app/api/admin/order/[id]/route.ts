@@ -73,7 +73,6 @@ export const PATCH = async (
         order.user.phone,         // phoneNumber
         order._id.toString(),     // orderId
         order.trackingId || "",   // trackingId
-        "",                       // invoiceUrl (optional here)
         order.deliveryPartner || "" // deliveryPartner
       );
 
