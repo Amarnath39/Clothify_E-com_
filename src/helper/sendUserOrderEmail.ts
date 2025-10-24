@@ -39,7 +39,7 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
           </tr>
         </table>
         <p style="margin-top:20px;">We will process your order shortly and notify you once it is shipped. 🚚</p>
-        <p>Thank you for shopping with us! <br/>- <b>Your Team Name</b></p>
+        <p>Thank you for shopping with us! <br/>- <b>SIS TEAM</b></p>
       </div>
     `;
 
