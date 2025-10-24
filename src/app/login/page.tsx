@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState ,useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -330,6 +330,14 @@ setTimeout(() => {
     }
   };
 
+  // Auto-submit when 6-digit OTP entered
+  useEffect(() => {
+    if (smsData.otp.length === 6) handleVerifyOtp({ preventDefault: () => {} } as React.FormEvent);
+  }, [smsData.otp]);
+
+  useEffect(() => {
+    if (emailData.otp.length === 6) handleVerifyEmailOtp({ preventDefault: () => {} });
+  }, [emailData.otp]);
 
 
 
@@ -647,5 +655,7 @@ setTimeout(() => {
 
 
 export default Login;
+
+
 
 
