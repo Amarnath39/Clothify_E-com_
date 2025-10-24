@@ -119,6 +119,7 @@ const OrderCard = ({ order }: any) => {
   );
 };
 
+// Main Orders Component
 const Orders = () => {
   const [sortBy, setSortBy] = useState<string>("date");
   const dispatch = useDispatch<any>();
