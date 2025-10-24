@@ -46,7 +46,7 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
     console.log("--- DEBUG: Attempting to send email via ZeptoMail...");
     
     await transporter.sendMail({
-      from: '"Your Brand Name" <your-from-address@yourdomain.com>', // Use a valid "from" address
+      from: '"Your Brand Name" <orders@siskerala.com>', // Use a valid "from" address
       to: order.customerEmail,
       subject: `✅ Payment Confirmed - Order #${order.orderId}`,
       html: htmlTemplate,
