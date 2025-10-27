@@ -634,7 +634,7 @@ const OrdersPage = () => {
                                       className="flex items-start space-x-4 bg-gray-50 p-4 rounded-lg"
                                     >
                                       <img
-                                        src={detail?.product?.img[0]}
+                                        src={detail?.product?.img?.[0]}
                                         alt={detail?.product?.name}
                                         className="w-20 h-20 object-cover rounded"
                                       />
