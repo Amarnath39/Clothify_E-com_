@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../db";
-import Order from "../../../model/Order";
-import Coupon from "../../../model/Coupon";
-import Product from "../../../model/Product";
-import User from "../../../model/User";
-import Address from "../../../model/Address";
-import Exchange from "../../../model/Exchange";
-
+import Order from "../../../../model/Order";
+import Coupon from "../../../../model/Coupon";
+import Product from "../../../../model/Product";
+import User from "../../../../model/User";
+import "../../../../model/Address";
+import "../../../../model/Exchange";
+import Address from "../../../../model/Address";
 
 connectDB();
 
@@ -23,6 +23,7 @@ const generateOrderId = async (): Promise<string> => {
       }
     ).select("orderSeq");
 
+    // console.log(lastOrder?.orderSeq, "sequence::::");
     const orderNumber = lastOrder?.orderSeq || 0;
 
     return `ON-${orderNumber.toString().padStart(6, "0")}`;
@@ -51,7 +52,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     const body = await req.json();
-    const { productDetails, couponCode, orderId, shippingCost = 0 } = body;
+    const { productDetails, couponCode, orderId, shippingCost = 0 } = body; // ✅ shippingCost comes from frontend
 
     // Validate input
     if (
@@ -91,28 +92,11 @@ export const POST = async (req: NextRequest) => {
         const product = products.find((p) => p._id.toString() === pd.product);
         if (product) {
           const quantity = pd.count || 1;
-          const selectedSizeId = pd.size; // The size ID from the frontend
-
-          // ✅ START: ADDED DEBUG LOGS
-          console.log("--- DEBUGGING STOCK CHECK ---");
-          console.log("Frontend sent this Size ID:", selectedSizeId);
-          console.log(
-            "Product's available sizes in the database:",
-            JSON.stringify(product.sizes, null, 2)
-          );
-          // ✅ END: ADDED DEBUG LOGS
+          const selectedSize = pd.size;
 
           const sizeObj = product.sizes.find(
-            (size: any) => size._id.toString() === selectedSizeId
+            (size: any) => size._id.toString() === selectedSize
           );
-
-          // ✅ START: ADDED DEBUG LOGS
-          console.log(
-            "Result of finding the size in the database:",
-            sizeObj
-          );
-          console.log("----------------------------");
-          // ✅ END: ADDED DEBUG LOGS
 
           if (!sizeObj || sizeObj.stock < quantity) {
             outOfStockProducts.push(product._id.toString());
@@ -124,16 +108,14 @@ export const POST = async (req: NextRequest) => {
           }
           totalQuantity += quantity;
 
-          // Return the structure needed for saving to DB (ensure this matches your schema)
-          return {
-            product: product._id, // Store only the ID
-            count: quantity,
-            sizeId: sizeObj._id, // Correct field for schema
-            sizeLabel: sizeObj.size, // Correct field for schema
-            actualPrice: product.actualPrice, // Correct field for schema
-            offerPrice: sizeObj.offerPrice || product.actualPrice, // Correct field for schema
-            // Include other fields required by your schema if any
-          };
+         return {
+  product: product._id, // ✅ Store only the product's ID
+  count: quantity,
+  sizeId: sizeObj._id,   // ✅ Save sizeId
+  sizeLabel: sizeObj.size, // ✅ Save sizeLabel
+  actualPrice: product.actualPrice, // ✅ Save actualPrice
+  offerPrice: sizeObj.offerPrice || product.actualPrice, // ✅ Save offerPrice
+};
         }
         return null;
       })
@@ -197,7 +179,7 @@ export const POST = async (req: NextRequest) => {
             payablePrice: totalPayablePrice,
             off: discount,
             shippingAddress,
-            shippingCost,
+            shippingCost, // ✅ frontend shipping cost
           },
         },
         { new: true }
@@ -211,7 +193,7 @@ export const POST = async (req: NextRequest) => {
         payablePrice: totalPayablePrice,
         off: discount,
         shippingAddress,
-        shippingCost,
+        shippingCost, // ✅ frontend shipping cost
       });
 
       await newOrder.save();
@@ -234,11 +216,17 @@ export const POST = async (req: NextRequest) => {
   }
 };
 
+
 export const GET = async (req: NextRequest) => {
   try {
     const userId = req.headers.get("x-user-id");
 
-    const orders = await Order.find({ user: userId }).populate(["user"]).lean();
+    const orders = await Order.find({ user: userId }).populate(["user"]).populate("productDetails.product").lean();
+
+    console.log("--- DEBUG: Populated Orders in API ---");
+    console.log(JSON.stringify(orders, null, 2));
+    console.log("-------------------------------------");
+    
     return NextResponse.json(
       { success: true, msg: "Success", orders },
       { status: 200 }
