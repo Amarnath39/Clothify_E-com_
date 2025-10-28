@@ -47,7 +47,7 @@ const CategoryList = () => {
     >
       {/* ===== TITLE ===== */}
       <h1 className="relative text-3xl mb-32 text-center block mx-auto animated-underline font-semibold tracking-wide">
-        SHOP BY CATEGORY
+        BUY BY CATEGORY
       </h1>
 
       {/* ===== CAROUSEL ===== */}
