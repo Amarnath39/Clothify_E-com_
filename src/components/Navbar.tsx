@@ -36,11 +36,7 @@ const Navbar = () => {
   const token = useSelector((state: any) => state.auth.token);
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isDesktopSheetOpen, setIsDesktopSheetOpen] = useState<any>(false);
   const [isModalOpen, setIsModalOpen] = useState<any>(false);
-  const [topPosition, setTopPosition] = useState("top-10");
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [isScrollingUp, setIsScrollingUp] = useState(false);
 
   useEffect(() => {
     callGetAllCategories();
@@ -75,37 +71,13 @@ const Navbar = () => {
     }
   };
 
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          const scrollDelta = currentScrollY - lastScrollY;
-          const isScrollingUpward = scrollDelta < -5;
-
-          if (isScrollingUpward) setIsScrollingUp(true);
-          else if (scrollDelta > 5) setIsScrollingUp(false);
-
-          setTopPosition(
-            currentScrollY <= 0 ? "top-10" : currentScrollY <= 10 ? (isScrollingUpward ? "top-10" : "top-0") : "top-0"
-          );
-
-          setLastScrollY(currentScrollY);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY, isScrollingUp]);
 
   return (
     <nav
-      className={`bg-[#ffffff] fixed w-full navbar-main transition-all duration-300 pt-5 ${topPosition}`}
+      // 🚀 CHANGE: Updated from 'pt-4' to 'pt-6' for increased top spacing
+      className={`bg-[#ffffff] fixed w-full navbar-main transition-all duration-300 top-0 pt-5`}
       style={{
-        zIndex: isDesktopSheetOpen ? 0 : 100,
+        zIndex: 100, 
         transform: "translate3d(0,0,0)",
         willChange: "transform",
       }}
