@@ -21,16 +21,16 @@ export const sendSubscribeEmail = async (email: string): Promise<void> => {
     const template = fs.readFileSync(templatePath, 'utf-8');
 
     const emailContent = template
-      .replaceAll('{{Your Company Name}}', 'Udayaada')
-      .replace('[Your Website URL]', 'https://www.udayaada.in/')
-      .replace('[Your Support Email]', 'Udayaada.in')
+      .replaceAll('{{Your Company Name}}', 'siskerala')
+      .replace('[Your Website URL]', 'https://www.siskerala.com/')
+      .replace('[Your Support Email]', 'support@siskerala.com')
       .replace('[Year]', new Date().getFullYear().toString());
 
     // Email details
     const mailOptions = {
-      from: '"Udayaada" <orders@udayaada.in>', // Verified sender in ZeptoMail
+      from: '"siskerala" <orders@siskerala.com>', // Verified sender in ZeptoMail
       to: email,
-      subject: '🎉 Welcome to Udayaada!',
+      subject: '🎉 Welcome to siskerala!',
       html: emailContent,
     };
 

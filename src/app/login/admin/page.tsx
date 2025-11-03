@@ -115,9 +115,9 @@ const ForgotPasswordDialog = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="link" className="px-0 font-normal">
+        {/* <Button variant="link" className="px-0 font-normal">
           Forgot password?
-        </Button>
+        </Button> */}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

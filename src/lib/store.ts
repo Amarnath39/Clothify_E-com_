@@ -25,7 +25,7 @@ import addressSlice from "./features/address";
 
 // Define the persist config
 const persistConfig = {
-  key: "Udayaada",
+  key: "siskerala",
   storage,
   whitelist: ["cart", "auth", "wishlist", "order"],
 };

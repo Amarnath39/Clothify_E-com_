@@ -28,7 +28,7 @@ export const getOrderInvoicePDF = async (orderId) => {
     }
 
     const companyDetails = {
-      name: "Udayaada",
+      name: "S.I.S",
       address: " KERALA, 670661",
     };
 

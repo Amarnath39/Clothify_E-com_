@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Order from "../../../../../model/Order";
 import Admin from "../../../../../model/Admin";
 import { sendOrderShippedEmail } from "../../../../../helper/sendOrderShippedEmail";
-import { sendOrderConfirmation } from "../../../../../helper/whatsappNotifier"; // ✅ Import your first function
+import { sendOrderConfirmation, sendOrderTracking } from "../../../../../helper/whatsappNotifier"; // ✅ Import your first function
 
 export const PATCH = async (
   req: NextRequest,
@@ -67,11 +67,10 @@ export const PATCH = async (
       // ✅ Send email
       await sendOrderShippedEmail(emailDetails);
 
-      // ✅ Send WhatsApp confirmation (using your first function)
-      const whatsappResp = await sendOrderConfirmation(
+      // ✅ Send WhatsApp tracking details (using your first function)
+      const whatsappResp = await sendOrderTracking(
         order.user.name,          // customerName
         order.user.phone,         // phoneNumber
-        order._id.toString(),     // orderId
         order.trackingId || "",   // trackingId
         order.deliveryPartner || "" // deliveryPartner
       );

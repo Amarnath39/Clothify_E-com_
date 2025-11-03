@@ -32,7 +32,7 @@ export default function MessageLogin() {
       const response = await axios.post("/api/send-otp", {
         phoneNumber,
         apiKey: API_KEY,
-        var1Value: "Udayaada",
+        var1Value: "siskerala",
       });
 
       if (response.data.Status === "Success") {

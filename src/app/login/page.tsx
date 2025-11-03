@@ -48,7 +48,7 @@ const showModal = (title: string, description?: string, type: 'success' | 'error
   setModalContent({ title, description, type });
   setModalOpen(true);
 };
-
+const [agree, setAgree] = useState(false);
 
   const [emailData, setEmailData] = useState<{
     email: string;
@@ -426,8 +426,27 @@ setTimeout(() => {
 </div>
 
                       </div>
+                      <div className="flex items-start gap-2 mt-3">
+    <input
+      type="checkbox"
+      id="agree-email"
+      checked={agree}
+      onChange={(e) => setAgree(e.target.checked)}
+      className="mt-1 cursor-pointer"
+    />
+    <label htmlFor="agree-email" className="text-sm text-gray-700 leading-tight">
+      I agree to the{" "}
+      <a href="/policy/privacy-policy" className="text-blue-600 hover:underline">
+        Privacy Policy
+      </a>{" "}
+      and{" "}
+      <a href="/policy/terms-condition" className="text-blue-600 hover:underline">
+        Terms & Conditions
+      </a>
+    </label>
+  </div>
                       <Button type="submit" className="w-full h-12 bg-black text-white  hover:bg-black font-semibold rounded-lg" 
- disabled={isLoading}>
+ disabled={isLoading || !agree}>
                         {isLoading ? 'Sending OTP...' : 'Send OTP'}
                       </Button>
                     </form>
@@ -603,12 +622,31 @@ setTimeout(() => {
         }
         numInputs={6}
       />
+      <div className="flex items-start gap-2 mt-3">
+    <input
+      type="checkbox"
+      id="agree-email"
+      checked={agree}
+      onChange={(e) => setAgree(e.target.checked)}
+      className="mt-1 cursor-pointer"
+    />
+    <label htmlFor="agree-email" className="text-sm text-gray-700 leading-tight">
+      I agree to the{" "}
+      <a href="/policy/privacy-policy" className="text-blue-600 hover:underline">
+        Privacy Policy
+      </a>{" "}
+      and{" "}
+      <a href="/policy/terms-condition" className="text-blue-600 hover:underline">
+        Terms & Conditions
+      </a>
+    </label>
+  </div>
 
       <Button
         type="submit"
         className="w-full h-12 text-white font-semibold rounded-lg"
         style={{ background: 'linear-gradient(to right, #380e10, #380e10)' }}
-        disabled={isLoading}
+        disabled={isLoading || !agree}
       >
         {isLoading ? 'Verifying...' : 'Verify & Sign In'}
       </Button>
