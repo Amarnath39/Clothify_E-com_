@@ -73,9 +73,9 @@ customerName: string, phoneNumber: string, trackingId: string, merchantName: str
       phoneNumberID: "627218387152627",
       botTemplateID: "200027",
       "templateVariable-variable1-1": customerName || "Customer",
-      "templateVariable-variable2-2": merchantName,
+      "templateVariable-variable2-2": deliveryPartner,
       "templateVariable-variable3-3": trackingId || "N/A",
-      "templateVariable-variable4-4": deliveryPartner,
+      "templateVariable-variable4-4": merchantName,
       sendToPhoneNumber: formattedPhoneNumber,
     });
 
@@ -106,4 +106,4 @@ customerName: string, phoneNumber: string, trackingId: string, merchantName: str
       error: error.response?.data || error.message,
     };
   }
-};
+}

@@ -373,7 +373,7 @@ if (status === null) {
           onClick={onClick}
           className={`bg-${iconColor.replace('text-', '')} hover:bg-${iconColor
             .replace('text-', '')
-            .replace('-600', '-700')} text-white font-semibold px-6 py-2 rounded-lg shadow transition-transform duration-300 transform hover:scale-105 hover:shadow-lg animate-fade-in-delay`}
+            .replace('-600', '-700')} text-black font-semibold px-6 py-2 rounded-lg shadow transition-transform duration-300 transform hover:scale-105 hover:shadow-lg animate-fade-in-delay`}
         >
           {buttonText}
         </button>

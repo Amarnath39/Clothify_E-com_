@@ -29,7 +29,7 @@ export const PATCH = async (
 
     const { id } = params;
     const body = await req.json();
-    const { status, trackingId, deliveryPartner } = body;
+    const { status, trackingId, deliveryPartner ,merchantName } = body;
 
     if (!id)
       return NextResponse.json(
@@ -72,7 +72,8 @@ export const PATCH = async (
         order.user.name,          // customerName
         order.user.phone,         // phoneNumber
         order.trackingId || "",   // trackingId
-        order.deliveryPartner || "" // deliveryPartner
+        order.deliveryPartner || "",  // deliveryPartner
+        order.merchantName || "S.I.S"
       );
 
       console.log("📲 WhatsApp notification result:", whatsappResp);
