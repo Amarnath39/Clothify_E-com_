@@ -24,7 +24,8 @@ export const GET = async (req: NextRequest) => {
       );
     }
 
-    const STATUS = "COMPLETED"; // ✅ Changed to COMPLETED
+    // Use Regex for case-insensitive matching and to include potential variations
+    const STATUS = /^(PAYMENT_SUCCESS|succeeded|COMPLETED)$/i;
 
     // ✅ Total Sales
     const totalSales = await Order.countDocuments({ paymentStatus: STATUS });
