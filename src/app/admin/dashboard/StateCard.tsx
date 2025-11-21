@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const StatCard = ({ title, value, icon: Icon, description }) => {
   // Handle cases where value might be an object or null
   const getDisplayValue = () => {
-    if (!value) return "—";
+    if (value === undefined || value === null) return "—";
 
     if (typeof value === "object" && value.overall !== undefined) {
       return value.overall; // show only overall
