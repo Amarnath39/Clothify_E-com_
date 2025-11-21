@@ -305,7 +305,7 @@ const AddProduct = () => {
 
   const validateForm = () => {
     const errors: any = {};
-    if (product.sizes.length === 0) {
+    if ((product.sizes || []).length === 0) {
       errors.sizes = "At least one size is required";
     }
     // Add other validations as needed
@@ -316,14 +316,14 @@ const AddProduct = () => {
   const handleAddSize = () => {
     if (newSize.size && newSize.stock && newSize.offerPrice) {
       // Check if the size already exists
-      if (product.sizes.some((size) => size.size === newSize.size)) {
+      if ((product.sizes || []).some((size) => size.size === newSize.size)) {
         setSizeError("This size is already present.");
         return;
       }
 
       setProduct((prevProduct) => ({
         ...prevProduct,
-        sizes: [...prevProduct.sizes, newSize],
+        sizes: [...(prevProduct.sizes || []), newSize],
       }));
       setNewSize({ size: "", stock: "", offerPrice: "" });
       setSizeError(""); // Clear any previous error
@@ -336,7 +336,7 @@ const AddProduct = () => {
   const removeSize = (index: number) => {
     setProduct((prevProduct) => ({
       ...prevProduct,
-      sizes: prevProduct.sizes.filter((_, i) => i !== index),
+      sizes: (prevProduct.sizes || []).filter((_, i) => i !== index),
     }));
   };
 
@@ -690,7 +690,7 @@ const AddProduct = () => {
         <div>
           <Label>Sizes (Required)</Label>
           <div className="flex flex-wrap gap-2 mt-2">
-            {product?.sizes?.map((size, index) => (
+            {(product?.sizes || []).map((size, index) => (
               <div key={index} className="bg-gray-100 p-2 rounded">
                 {size.size} - Stock: {size.stock}, Price: {size.offerPrice}
                 <button

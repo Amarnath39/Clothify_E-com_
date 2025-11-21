@@ -178,10 +178,16 @@ export const POST = async (req: NextRequest) => {
       { success: true, msg: "Success", product: finalProduct },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.log("Error to create product", error);
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { success: false, msg: "Product with this SKU already exists" },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
-      { success: false, msg: "Internal Server Error" },
+      { success: false, msg: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }
