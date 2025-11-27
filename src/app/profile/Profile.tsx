@@ -272,6 +272,12 @@ const Profile = () => {
   const isProfileIncomplete =
     !personalInfo.name || !personalInfo.email || !personalInfo.phone;
 
+  const isNameValid = personalInfo.name && personalInfo.name.trim().length > 0;
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalInfo.email);
+  const isPhoneValid = /^\d{10}$/.test(personalInfo.phone);
+
+  const isFormValid = isNameValid && isEmailValid && isPhoneValid;
+
   return (
     <div className="container mx-auto p-6 space-y-6 mt-20">
       <div className=" mx-auto py-8 sm:min-w-[70vw]">
@@ -339,7 +345,7 @@ const Profile = () => {
           <Button
             onClick={handleUpdateProfile}
             className="w-full py-6 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 max-w-96"
-            disabled={profileUpdating}
+            disabled={profileUpdating || !isFormValid}
           >
             {profileUpdating ? (
               <>

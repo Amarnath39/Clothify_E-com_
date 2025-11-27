@@ -288,9 +288,9 @@ const ProductDetails = ({
           </h1>
           <div className="text-2xl font-semibold">
             ₹{selectedSize ? selectedSize.offerPrice : productData.actualPrice}
-            <span className="ml-2 text-lg text-gray-500 line-through">
+            {/* <span className="ml-2 text-lg text-gray-500 line-through">
               ₹{productData.actualPrice}
-            </span>
+            </span> */}
           </div>
 
           {/* Tabs with Border Bottom Effect */}

@@ -240,9 +240,9 @@ const Page = () => {
                     <span className="text-green-600 font-bold">
                       ₹{product?.sizes[0]?.offerPrice}
                     </span>
-                    <span className="text-sm text-gray-500 line-through ml-2">
+                    {/* <span className="text-sm text-gray-500 line-through ml-2">
                       ₹{product.actualPrice}
-                    </span>
+                    </span> */}
                   </TableCell>
 
                   <TableCell>

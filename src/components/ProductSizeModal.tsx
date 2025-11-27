@@ -96,11 +96,11 @@ const ProductSizeModal = ({
                     ₹{currentPrice?.toFixed(2)}
                   </span>
                 )}
-                {product?.discountedPrice && (
+                {/* {product?.discountedPrice && (
                   <span className="text-base md:text-lg text-gray-500 line-through">
                     ₹{product?.discountedPrice?.toFixed(2)}
                   </span>
-                )}
+                )} */}
               </div>
               <div className="flex items-center space-x-1">
                 {[...Array(5)].map((_, i) => (

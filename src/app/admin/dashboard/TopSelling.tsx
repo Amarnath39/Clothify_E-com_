@@ -181,12 +181,12 @@ const MostSellingProductsPage: React.FC = () => {
       ? item?.sizes?.[0]?.offerPrice?.[country] ?? 0
       : item?.sizes?.[0]?.offerPrice ?? 0}
   </span>
-  <span className="text-sm text-gray-500 line-through ml-2">
+  {/* <span className="text-sm text-gray-500 line-through ml-2">
     {getCurrencySymbol(country)}
     {typeof item?.actualPrice === "object"
       ? item?.actualPrice?.[country] ?? 0
       : item?.actualPrice ?? 0}
-  </span>
+  </span> */}
 </TableCell>
 
                   <TableCell>{item?.sizes[0]?.stock}</TableCell>
