@@ -99,7 +99,7 @@ export default function VideoList() {
           <div className="w-full flex justify-center">
             <div
               ref={scrollContainerRef}
-              className="inline-flex overflow-x-auto no-scrollbar space-x-6 px-10 min-w-fit"
+              className="inline-flex overflow-x-hidden no-scrollbar space-x-6 px-10 w-full"
             >
               {videos.map((video, index) => (
                 <video
