@@ -41,7 +41,7 @@ export const POST = async (req: NextRequest) => {
     const token = jwt.sign(
       { id: admin._id, role: admin.role },
       process.env.JWT_SECRET as string,
-      { expiresIn: "30d" }
+      { expiresIn: "1d" }
     );
 
     console.log("✅ JWT generated successfully");

@@ -96,7 +96,7 @@ function AdminLayout({ children }) {
       roles: ["SuperAdmin", "Admin"],
     },
     {
-      href: "/admin/coupan",
+      href: "/admin/coupon",
       title: "Coupons",
       icon: <FaTag size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin"],

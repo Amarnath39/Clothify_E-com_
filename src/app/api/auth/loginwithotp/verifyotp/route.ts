@@ -39,13 +39,13 @@ export const POST = async (req: NextRequest) => {
       const token = jwt.sign(
         { id: user._id.toString(), role: user.role },
         JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "1d" }
       );
 
       const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        maxAge: 24 * 60 * 60, // 1 day
+        maxAge: 1 * 24 * 60 * 60, // 1 day
         path: "/",
         domain: process.env.NODE_ENV === "production" ? "siskerala.com" : "localhost",
       };
@@ -92,13 +92,13 @@ export const POST = async (req: NextRequest) => {
       const token = jwt.sign(
         { id: user._id.toString(), role: user.role },
         JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "1d" }
       );
 
       const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        maxAge: 24 * 60 * 60,
+        maxAge: 1 * 24 * 60 * 60,
         path: "/",
         domain: process.env.NODE_ENV === "production" ? "siskerala.com" : "localhost",
       };
