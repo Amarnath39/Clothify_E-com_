@@ -109,6 +109,8 @@ import "./globals.css";
  
 const CustomLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
+  // Exclude /login/admin from isAdminRoute so Navbar/Footer show up there
+  const isAdminRoute = pathname.startsWith("/admin") || pathname.startsWith("/adminLogin");
  
   useEffect(() => {
     // Optional: Initialize AOS if you're using animations
@@ -117,8 +119,8 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
  
   return (
     <>
-      {/* ✅ Show gold bar only if NOT in admin */}
-      {!pathname.includes("/admin") && (
+      {/* ✅ Show gold bar only if NOT an admin route */}
+      {!isAdminRoute && (
         <div className="text-brown text-center text-sm fixed top-0 left-0 w-full z-50 gold-bar">
           {/* <p className="max-w-6xl mx-auto py-3 px-2">
             Timeless Kerala Sarees for the Modern Woman
@@ -162,14 +164,15 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
       )}
  
       {/* Padding to push content below fixed bars (only if gold bar is shown) */}
-      <div className={pathname.includes("/admin") ? "" : "pt-[52px]"}>
-        <Navbar />
+      <div className={isAdminRoute ? "" : ""}>
+        {/* ✅ Conditionally render Navbar */}
+        {!isAdminRoute && <Navbar />}
  
-        <div className="pb-[1px]">
+        <div className={!isAdminRoute ? "pt-[18px] md:pt-[75px] pb-[1px]" : "pb-[1px]"}>
           {children}
  
           {/* WhatsApp Button (hidden on /admin routes) */}
-          {!pathname.includes("/admin") && (
+          {!isAdminRoute && (
             <div className="fixed z-50 w-[48px] h-[48px] sm:w-[54px] sm:h-[54px] bottom-16 sm:bottom-6 right-4 rounded-full opacity-80 hover:scale-105 hover:opacity-100 transition-all ease-linear hover:shadow-lg">
               <a
                 href="https://wa.me/+916282667959?text=Hi!"
@@ -186,7 +189,8 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
           )}
         </div>
  
-        <Footer />
+        {/* Footer Section */}
+        {!isAdminRoute && <Footer />}
       </div>
     </>
   );

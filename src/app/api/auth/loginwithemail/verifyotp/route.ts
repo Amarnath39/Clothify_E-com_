@@ -33,14 +33,14 @@ export const POST = async (req: NextRequest) => {
 
       const token = jwt.sign(
         { id: user._id.toString(), email: user.email, role: user.role },
-        process.env.JWT_SECRET || "temporarySecretForNow",
-        { expiresIn: "1h" }
+        process.env.JWT_SECRET as string,
+        { expiresIn: "1d" }
       );
 
       const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        maxAge: 24 * 60 * 60,
+        maxAge: 1 * 24 * 60 * 60,
         path: "/",
         domain: process.env.NODE_ENV === "production" ? "siskerala.com" : "localhost",
       };
@@ -80,14 +80,14 @@ export const POST = async (req: NextRequest) => {
 
     const token = jwt.sign(
       { id: user._id.toString(), email: user.email, role: user.role },
-      process.env.JWT_SECRET || "temporarySecretForNow",
-      { expiresIn: "1h" }
+      process.env.JWT_SECRET as string,
+      { expiresIn: "1d" }
     );
 
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60,
+      maxAge: 1 * 24 * 60 * 60,
       path: "/",
       domain: process.env.NODE_ENV === "production" ? "siskerala.com" : "localhost",
     };

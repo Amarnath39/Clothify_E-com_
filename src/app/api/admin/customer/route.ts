@@ -19,7 +19,7 @@ export const GET = async (req: NextRequest) => {
         { status: 401 }
       );
     }
-    const users = await User.find().populate(['address', 'defaultAddress']);
+    const users = await User.find().populate(['address', 'defaultAddress']).sort({ createdAt: -1 });
     return NextResponse.json({ success: true, msg: "Success", users }, { status: 200 })
   } catch (error) {
     console.log("Error to get all user details", error);

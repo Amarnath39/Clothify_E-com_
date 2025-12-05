@@ -133,7 +133,7 @@ const ProductSizeModal = ({
                       onClick={() => handleSizeChange(size)}
                       // disabled={size.stock <= 0}
                       variant={selectedSize === size ? "default" : "outline"}
-                      className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base  bg-black${
+                      className={`px-3 py-1 md:px-4 md:py-2 text-sm md:text-base ${
                         size.stock <= 0 ? "opacity-50" : ""
                       }`}
                     >

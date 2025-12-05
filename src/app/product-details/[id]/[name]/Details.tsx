@@ -427,7 +427,7 @@ const ProductDetails = ({
                         ? "default"
                         : "outline"
                     }
-                    className={`px-3 py-1 bg-black ${
+                    className={`px-3 py-1 ${
                       size.stock === 0 ? "opacity-50 " : ""
                     }`}
                     onClick={() => setSelectedSize(size)}

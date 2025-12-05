@@ -196,10 +196,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useAppDispatch } from '@/lib/hooks';
+import { emptyCart } from '@/lib/features/cart';
 
 export default function PaymentStatusPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const orderId = searchParams.get('orderId');
 
   const [status, setStatus] = useState<'success' | 'failed' | 'pending' | null>(null);
@@ -253,6 +256,7 @@ export default function PaymentStatusPage() {
   // Auto-redirect when payment is successful
   useEffect(() => {
     if (status === 'success') {
+      dispatch(emptyCart());
       const timer = setTimeout(() => {
         setCountdown((prev) => prev - 1);
       }, 1000);
@@ -263,7 +267,7 @@ export default function PaymentStatusPage() {
 
       return () => clearTimeout(timer);
     }
-  }, [status, countdown, router]);
+  }, [status, countdown, router, dispatch]);
 
   // No orderId found in URL
   if (!orderId) {

@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
 
   if (
     request.nextUrl.pathname.startsWith("/admin/roles") ||
-    request.nextUrl.pathname.startsWith("/admin/coupan") // Typo: Should be "coupon" based on config?
+    request.nextUrl.pathname.startsWith("/admin/coupon")
   ) {
     const checkSuperAdmin = await checkSuperAdminMiddleware(request);
     // If checkSuperAdminMiddleware returns a redirect or error, return it immediately.

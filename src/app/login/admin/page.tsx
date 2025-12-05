@@ -195,9 +195,16 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-[130vh] flex items-center justify-center p-4 bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-100">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-4">
+            <img
+              src="/assets/static/logo/SIS-LOGO.png"
+              alt="SIS Logo"
+              className="h-[100px] w-auto object-contain"
+            />
+          </div>
           <CardTitle className="text-2xl font-bold text-center">
             Admin Login
           </CardTitle>
