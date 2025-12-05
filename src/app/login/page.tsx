@@ -29,7 +29,7 @@ const Login = () => {
 
   const [otp, setOtp] = useState('');
 const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'sms' | 'email'>('sms');
+  const [activeTab, setActiveTab] = useState<"email" | "sms">("email");
   const [emailLoginType, setEmailLoginType] = useState<'password' | 'otp'>('password');
 
 //pop up
@@ -348,7 +348,7 @@ setTimeout(() => {
 <div className="flex items-center justify-center w-full md:w-1/2 px-4" style={{ backgroundColor: '#fffff' }}>
         <div className="w-full max-w-md">
           <div className="text-center mb-8" >
-            <h1 className="text-4xl font-bold bg-[#380e10] bg-clip-text text-transparent mb-2">
+            <h1 className="text-4xl font-bold bg-[#380e10] bg-clip-text text-transparent">
               Welcome Back
             </h1>
             <p className="text-gray-700 font-medium">Choose your preferred login method</p>
@@ -368,17 +368,17 @@ setTimeout(() => {
               <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'email' | 'sms')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100">
                <TabsTrigger
-  value="sms"
+  value="email"
   className="flex items-center gap-2 text-gray-800  data-[state=active]:bg-[#ede8c9ff]"
 >
-  <Phone className="w-4 h-4" /> SMS
+  <Phone className="w-4 h-4" /> Email
 </TabsTrigger>
 
 <TabsTrigger
-  value="email"
+  value="sms"
   className="flex items-center gap-2 text-gray-800 data-[state=active]:bg-[#ede8c9ff]"
 >
-  <Mail className="w-4 h-4" /> Email
+  <Mail className="w-4 h-4" /> SMS
 </TabsTrigger>
 
 
@@ -587,11 +587,30 @@ setTimeout(() => {
           className="pl-10 h-12 border-gray-200 text-gray-800 bg-white" 
         required
       />
+                 <div className="flex items-start gap-2 mt-3">
+    <input
+      type="checkbox"
+      id="agree-email"
+      checked={agree}
+      onChange={(e) => setAgree(e.target.checked)}
+      className="mt-1 cursor-pointer"
+    />
+    <label htmlFor="agree-email" className="text-sm text-gray-700 leading-tight">
+      I agree to the{" "}
+      <a href="/policy/privacy-policy" className="text-blue-600 hover:underline">
+        Privacy Policy
+      </a>{" "}
+      and{" "}
+      <a href="/policy/terms-condition" className="text-blue-600 hover:underline">
+        Terms & Conditions
+      </a>
+    </label>
+  </div>
       <Button
         type="submit"
         className="w-full h-12 text-white bg-black hover:bg-black font-semibold rounded-lg"
        
-        disabled={isLoading}
+        disabled={isLoading || !agree}
       >
         {isLoading ? 'Sending OTP...' : 'Send Email OTP'}
       </Button>
