@@ -286,11 +286,17 @@ const ProductDetails = ({
           <h1 className="text-2xl sm:text-4xl font-medium capitalize tracking-wide text-primaryRed">
             {productData?.name}
           </h1>
-          <div className="text-2xl font-semibold">
-            ₹{selectedSize ? selectedSize.offerPrice : productData.actualPrice}
-            {/* <span className="ml-2 text-lg text-gray-500 line-through">
-              ₹{productData.actualPrice}
-            </span> */}
+          <div className="flex items-baseline space-x-2 text-2xl font-semibold">
+            {selectedSize && selectedSize.offerPrice < productData.actualPrice ? (
+              <>
+                <span>₹{selectedSize.offerPrice.toFixed(2)}</span>
+                <span className="ml-2 text-lg text-gray-500 line-through">
+                  ₹{productData.actualPrice.toFixed(2)}
+                </span>
+              </>
+            ) : (
+              <span>₹{productData.actualPrice.toFixed(2)}</span>
+            )}
           </div>
 
           {/* Tabs with Border Bottom Effect */}

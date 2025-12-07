@@ -213,11 +213,11 @@ const MainProducts = () => {
             <span className="text-xl font-semibold text-gray-900">
               ₹{product.sizes[0].offerPrice.toFixed(2)}
             </span>
-            {/* {product.actualPrice && (
+            {product.actualPrice && product.sizes[0].offerPrice < product.actualPrice && (
               <span className="text-sm text-gray-500 line-through">
-                ₹{product.actualPrice}
+                ₹{product.actualPrice.toFixed(2)}
               </span>
-            )} */}
+            )}
             {product?.off > 0 && (
               <span className="text-sm font-medium text-red-600">
                 {Math.round(product?.off)}% OFF

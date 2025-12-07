@@ -342,7 +342,7 @@ setTimeout(() => {
 
 
   return (
-    <div className="flex min-h-screen bg-white justify-center">
+    <div className="flex min-h-screen bg-white justify-center pt-24 md:pt-32">
      
 
 <div className="flex items-center justify-center w-full md:w-1/2 px-4" style={{ backgroundColor: '#fffff' }}>

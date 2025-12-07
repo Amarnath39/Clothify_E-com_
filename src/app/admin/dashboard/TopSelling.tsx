@@ -175,19 +175,22 @@ const MostSellingProductsPage: React.FC = () => {
                   </TableCell>
                     <TableCell>{item?.sizes?.[0]?.sellCount ?? 0}</TableCell>
                   <TableCell>
-  <span className="text-green-600 font-bold">
-    {getCurrencySymbol(country)}
-    {typeof item?.sizes?.[0]?.offerPrice === "object"
-      ? item?.sizes?.[0]?.offerPrice?.[country] ?? 0
-      : item?.sizes?.[0]?.offerPrice ?? 0}
-  </span>
-  {/* <span className="text-sm text-gray-500 line-through ml-2">
-    {getCurrencySymbol(country)}
-    {typeof item?.actualPrice === "object"
-      ? item?.actualPrice?.[country] ?? 0
-      : item?.actualPrice ?? 0}
-  </span> */}
-</TableCell>
+                    <span className="text-green-600 font-bold">
+                        {getCurrencySymbol(country)}
+                        {typeof item?.actualPrice === "object"
+                            ? item?.actualPrice?.[country] ?? 0
+                            : item?.actualPrice ?? 0}
+                    </span>
+                    {typeof item?.sizes?.[0]?.offerPrice === "object" &&
+                     (item?.sizes?.[0]?.offerPrice?.[country] ?? 0) < (item?.actualPrice?.[country] ?? 0) && (
+                        <span className="text-sm text-gray-500 line-through ml-2">
+                            {getCurrencySymbol(country)}
+                            {typeof item?.sizes?.[0]?.offerPrice === "object"
+                                ? item?.sizes?.[0]?.offerPrice?.[country] ?? 0
+                                : item?.sizes?.[0]?.offerPrice ?? 0}
+                        </span>
+                    )}
+                  </TableCell>
 
                   <TableCell>{item?.sizes[0]?.stock}</TableCell>
                   <TableCell>

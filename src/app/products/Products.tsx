@@ -285,11 +285,11 @@ const Products = () => {
                               <span className="text-lg sm:text-xl font-semibold text-gray-900">
                                 ₹{product.sizes[0].offerPrice.toFixed(2)}
                               </span>
-                              {/* {product.actualPrice && (
+                              {product.actualPrice && product.sizes[0].offerPrice < product.actualPrice && (
                                 <span className="text-xs text-gray-500 line-through">
-                                  ₹{product.actualPrice}
+                                  ₹{product.actualPrice.toFixed(2)}
                                 </span>
-                              )} */}
+                              )}
                             </div>
                             {product.sizes.length > 1 && (
                               <span className="text-sm text-gray-600">
