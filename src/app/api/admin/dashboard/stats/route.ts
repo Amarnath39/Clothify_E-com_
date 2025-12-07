@@ -59,7 +59,7 @@ export const GET = async (req: NextRequest) => {
     ]);
     const indRevenue = indRevenueResult[0]?.indRevenue || 0;
 
-    // ✅ Total Users
+    // ✅ Total User
     const totalUsers = await User.countDocuments();
 
     // ✅ Repeat Orders
