@@ -288,7 +288,12 @@ const Cart = () => {
                                     <div className="flex-grow">
                                         <h3 className="font-medium">{item.name}</h3>
                                         <p className="text-sm text-gray-500">Size: {item.size?.size}</p>
-                                        <p className="md:hidden font-semibold">₹{item.size?.offerPrice.toFixed(2)}</p>
+                                        <div className="md:hidden flex items-baseline space-x-2">
+                                        <p className="font-semibold">₹{item.size?.offerPrice.toFixed(2)}</p>
+                                        {item.actualPrice && item.size?.offerPrice < item.actualPrice && (
+                                            <p className="text-sm text-gray-500 line-through">₹{item.actualPrice.toFixed(2)}</p>
+                                        )}
+                                    </div>
                                     </div>
                                     <div className="hidden md:flex items-center space-x-2">
                                          <button onClick={() => handleQuantityChange(item._id, item.size!._id, "decrease")} className="p-1 rounded-md hover:bg-gray-100">
@@ -299,7 +304,12 @@ const Cart = () => {
                                             <FaPlus className="h-3 w-3" />
                                         </button>
                                     </div>
-                                    <div className="hidden md:block text-right font-medium">₹{(item.size!.offerPrice * item.count).toFixed(2)}</div>
+                                    <div className="hidden md:flex flex-col items-end">
+                                        <span className="font-medium">₹{(item.size!.offerPrice * item.count).toFixed(2)}</span>
+                                        {item.actualPrice && item.size?.offerPrice < item.actualPrice && (
+                                            <span className="text-sm text-gray-500 line-through">₹{(item.actualPrice * item.count).toFixed(2)}</span>
+                                        )}
+                                    </div>
                                     <button onClick={() => handleRemoveItem(item._id, item.size!._id)} className="p-2 text-gray-400 hover:text-red-500">
                                         <FaTrash />
                                     </button>

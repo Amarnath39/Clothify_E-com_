@@ -23,9 +23,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllCategories } from "@/lib/features/catogary";
 import toast from "react-hot-toast";
 import NavigationMobile from "./NavigationMobile";
-import UserMenu from "./UserMenu";
 import useWindowSize from "@/hooks/useWindowSize";
 import { logoutApi } from "@/lib/features/auth";
+import { LucideUserRound } from "lucide-react";
 
 const Navbar = () => {
   const dispatch = useDispatch<any>();
@@ -84,7 +84,7 @@ const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
         {/* Main header section for logo and icons */}
-        <div className="flex items-center justify-between h-20 md:h-24">
+        <div className="flex items-center justify-between h-28 md:h-32">
 
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
@@ -118,7 +118,15 @@ const Navbar = () => {
           )}
 
           {/* Desktop Icons */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-4">
+            <Link href="/wishlist">
+              {wishlistItems.length === 0 ? (
+                <FaRegHeart size={28} style={{ color: "#020101" }} />
+              ) : (
+                <FaHeart size={28} style={{ color: "#020101" }} />
+              )}
+            </Link>
+
             <div
               title="cart"
               onClick={() => router.push("/cart")}
@@ -132,7 +140,9 @@ const Navbar = () => {
               )}
             </div>
 
-            <UserMenu setIsSheetOpen={setIsSheetOpen} />
+            <Link href={token ? "/profile" : "/login"}>
+              <LucideUserRound size={30} style={{ color: "#020101" }} />
+            </Link>
           </div>
 
           {/* Mobile Icons */}
@@ -185,7 +195,11 @@ const Navbar = () => {
         </div>
         
         {/* Category Navigation Bar - Below search */}
-        <div className="hidden md:flex items-center justify-center gap-x-8 py-3 border-t border-gray-200">
+      </div> {/* This closes the max-w-7xl div from above */}
+      
+      {/* Category Navigation Bar - Below search (full width line) */}
+      <div className="hidden md:block border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 flex items-center justify-center gap-x-8 py-3">
           {categories.map((category: any) => (
             <Link
               key={category._id}
@@ -196,7 +210,6 @@ const Navbar = () => {
             </Link>
           ))}
         </div>
-
       </div>
     </nav>
   );
