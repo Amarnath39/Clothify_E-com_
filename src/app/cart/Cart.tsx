@@ -290,7 +290,7 @@ const Cart = () => {
                                         <p className="text-sm text-gray-500">Size: {item.size?.size}</p>
                                         <div className="md:hidden flex items-baseline space-x-2">
                                         <p className="font-semibold">₹{item.size?.offerPrice.toFixed(2)}</p>
-                                        {item.actualPrice && item.size?.offerPrice < item.actualPrice && (
+                                        {item.actualPrice && item.size && item.size.offerPrice < item.actualPrice && (
                                             <p className="text-sm text-gray-500 line-through">₹{item.actualPrice.toFixed(2)}</p>
                                         )}
                                     </div>
@@ -306,7 +306,7 @@ const Cart = () => {
                                     </div>
                                     <div className="hidden md:flex flex-col items-end">
                                         <span className="font-medium">₹{(item.size!.offerPrice * item.count).toFixed(2)}</span>
-                                        {item.actualPrice && item.size?.offerPrice < item.actualPrice && (
+                                        {item.actualPrice && item.size && item.size.offerPrice < item.actualPrice && (
                                             <span className="text-sm text-gray-500 line-through">₹{(item.actualPrice * item.count).toFixed(2)}</span>
                                         )}
                                     </div>
