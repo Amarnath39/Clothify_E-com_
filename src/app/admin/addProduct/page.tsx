@@ -730,7 +730,7 @@ const AddProduct = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Select size" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[9999]">
                       {[
                         "M",
                         "L",
