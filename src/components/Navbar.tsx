@@ -8,7 +8,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { IoBagOutline } from "react-icons/io5";
 import {
@@ -143,6 +142,16 @@ const Navbar = () => {
             <Link href={token ? "/profile" : "/login"}>
               <LucideUserRound size={30} style={{ color: "#020101" }} />
             </Link>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-transparent cursor-pointer"
+              style={{ color: "#020101" }}
+              onClick={() => setIsSheetOpen(true)}
+            >
+              <FaBars size={28} />
+            </Button>
           </div>
 
           {/* Mobile Icons */}
@@ -159,40 +168,39 @@ const Navbar = () => {
               )}
             </Link>
 
-            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hover:bg-transparent cursor-pointer"
-                  style={{ color: "#020101" }}
-                >
-                  <FaBars className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-
-              <SheetContent
-                side="right"
-                className="w-[300px] sm:w-[400px] bg-white text-black"
-                style={{ zIndex: 9999 }}
-              >
-                {token && (
-                  <div>
-                    <Button onClick={handleLogout} style={{ color: "#255255255", backgroundColor:"black" }}>
-                      Logout
-                    </Button>
-                  </div>
-                )}
-                <SheetHeader>
-                  <SheetTitle className="text-navbarBackground mt-12">Menu</SheetTitle>
-                </SheetHeader>
-                <div className="py-4 space-y-4 overflow-y-scroll">
-                  <NavigationMobile categories={categories} onNavigate={closeSheet} />
-                </div>
-              </SheetContent>
-            </Sheet>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-transparent cursor-pointer"
+              style={{ color: "#020101" }}
+              onClick={() => setIsSheetOpen(true)}
+            >
+              <FaBars className="h-5 w-5" />
+            </Button>
           </div>
         </div>
+
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetContent
+            side="right"
+            className="w-[300px] sm:w-[400px] bg-white text-black"
+            style={{ zIndex: 9999 }}
+          >
+            {token && (
+              <div>
+                <Button onClick={handleLogout} style={{ color: "#255255255", backgroundColor: "black" }}>
+                  Logout
+                </Button>
+              </div>
+            )}
+            <SheetHeader>
+              <SheetTitle className="text-navbarBackground mt-12">Menu</SheetTitle>
+            </SheetHeader>
+            <div className="py-4 space-y-4 overflow-y-scroll">
+              <NavigationMobile categories={categories} onNavigate={closeSheet} />
+            </div>
+          </SheetContent>
+        </Sheet>
         
         {/* Category Navigation Bar - Below search */}
       </div> {/* This closes the max-w-7xl div from above */}
@@ -200,7 +208,7 @@ const Navbar = () => {
       {/* Category Navigation Bar - Below search (full width line) */}
       <div className="hidden md:block border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 flex items-center justify-center gap-x-8 py-3">
-          {categories.map((category: any) => (
+          {categories.filter((c: any) => c.parentCategory.length === 0).map((category: any) => (
             <Link
               key={category._id}
               href={`/categories/${category._id || category.name.toLowerCase().replace(/ /g, '-')}`}
