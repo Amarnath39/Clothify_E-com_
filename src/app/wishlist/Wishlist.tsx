@@ -51,7 +51,7 @@ const WishList = () => {
   }
 
   return (
-    <div className="container  min-h-screen mx-auto p-4 py-8 mt-16">
+    <div className="container min-h-screen mx-auto p-4 py-8 mt-32 sm:mt-40 md:mt-48">
       <h1 className="text-3xl font-bold mb-8 text-center">My Wishlist</h1>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         {wishListItems.map((item, index) => (

@@ -53,7 +53,7 @@ const CatgeoryProducts = ({ params }) => {
         sort: filters?.sort || "newlyArrived",
         colors: JSON.stringify(filters.color || []),
         percentageOff: filters?.discount?.value?.toString() || "",
-        material: JSON.stringify(filters.material || []),
+        filterCategories: JSON.stringify(filters.category || []),
         minPrice: filters?.price?.[0]?.toString() || "0",
         maxPrice: filters?.price?.[1]?.toString() || "100000",
       });

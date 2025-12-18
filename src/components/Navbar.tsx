@@ -17,7 +17,7 @@ import {
 } from "react-icons/fa";
 import AnimatedSearchInput from "./AnimateSearchInput";
 import { IoMdSearch } from "react-icons/io";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllCategories } from "@/lib/features/catogary";
 import toast from "react-hot-toast";
@@ -30,6 +30,7 @@ const Navbar = () => {
   const dispatch = useDispatch<any>();
   const [categories, setCategories] = useState<any>([]);
   const router = useRouter();
+  const pathname = usePathname();
   const cartItems = useSelector((state: any) => state.cart.items);
   const wishlistItems = useSelector((state: any) => state.wishlist.items);
   const token = useSelector((state: any) => state.auth.token);
@@ -81,7 +82,7 @@ const Navbar = () => {
         willChange: "transform",
       }}
     >
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+      <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-8">
         {/* Main header section for logo and icons */}
         <div className="flex items-center justify-between h-28 md:h-32">
 
@@ -207,16 +208,26 @@ const Navbar = () => {
       
       {/* Category Navigation Bar - Below search (full width line) */}
       <div className="hidden md:block border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 flex items-center justify-center gap-x-8 py-3">
-          {categories.filter((c: any) => c.parentCategory.length === 0).map((category: any) => (
-            <Link
-              key={category._id}
-              href={`/categories/${category._id || category.name.toLowerCase().replace(/ /g, '-')}`}
-              className="text-sm font-medium tracking-wide uppercase text-gray-700 hover:text-black transition-colors duration-200"
-            >
-              {category.name}
-            </Link>
-          ))}
+        <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-8 flex items-center justify-center gap-x-8 py-3">
+          {categories
+            .filter((c: any) => c.parentCategory.length === 0)
+            .map((category: any) => {
+              const isActive = pathname.includes(category._id);
+              return (
+                <Link
+                  key={category._id}
+                  href={`/categories/${category._id}`}
+                  className={`text-sm tracking-wide uppercase transition-all duration-200 relative
+                  ${
+                    isActive
+                      ? "text-black font-bold border-b-2 border-black pb-1"
+                      : "text-gray-600 font-medium hover:text-black hover:font-semibold"
+                  }`}
+                >
+                  {category.name}
+                </Link>
+              );
+            })}
         </div>
       </div>
     </nav>

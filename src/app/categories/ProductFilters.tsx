@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+"use client";
+import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { getAllCategories } from "@/lib/features/catogary";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -25,11 +28,29 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
+  const dispatch = useDispatch<any>();
+  const [categories, setCategories] = useState<any[]>([]);
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(10000);
-  const [selectedMaterials, setSelectedMaterials] = useState<any[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
   const [showAll, setShowAll] = useState(false);
+  const [sort, setSort] = useState("newlyArrived");
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { payload } = await dispatch(getAllCategories());
+      if (payload.success) {
+        setCategories(payload.categories);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   const allColors = [
     "red",
@@ -72,6 +93,9 @@ const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
   const [localFilters, setLocalFilters] = useState({});
 
   const handleFilterChange = (filterType, value) => {
+    if (filterType === "sort") {
+      setSort(value);
+    }
     setLocalFilters((prev) => ({ ...prev, [filterType]: value }));
     onFilterChange(filterType, value);
   };
@@ -83,10 +107,13 @@ const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
     setPriceRange([0, 10000]);
     setMinPrice(0);
     setMaxPrice(10000);
-    setSelectedMaterials([]);
+    setSelectedCategories([]);
     setSelectedColors([]);
+    setSort("newlyArrived");
     // ... reset other filter-specific states
   };
+
+
 
   return (
     <div
@@ -117,7 +144,7 @@ const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-gray-900">Sort By</h3>
             <RadioGroup
-              defaultValue="newlyArrived"
+              value={sort}
               onValueChange={(value) => handleFilterChange("sort", value)}
               className="space-y-2"
             >
@@ -224,33 +251,33 @@ const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
             </div>
           </div> */}
 
-          {/* Materials */}
+          {/* Categories */}
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-900">Material</h3>
+            <h3 className="text-sm font-medium text-gray-900">Categories</h3>
             <div className="space-y-2">
-              {["Cotton", "Silk", "Wool", "Polyester", "Linen"].map(
-                (material) => (
-                  <div key={material} className="flex items-center">
+              {categories
+                .filter((cat) => cat.parentCategory.length === 0)
+                .map((category) => (
+                  <div key={category._id} className="flex items-center">
                     <Checkbox
-                      id={`material-${material}`}
-                      checked={selectedMaterials.includes(material)}
+                      id={`category-${category._id}`}
+                      checked={selectedCategories.includes(category._id)}
                       onCheckedChange={(checked) => {
-                        const updatedMaterials = checked
-                          ? [...selectedMaterials, material]
-                          : selectedMaterials.filter((m) => m !== material);
-                        setSelectedMaterials(updatedMaterials);
-                        handleFilterChange("material", updatedMaterials);
+                        const updatedCategories = checked
+                          ? [...selectedCategories, category._id]
+                          : selectedCategories.filter((id) => id !== category._id);
+                        setSelectedCategories(updatedCategories);
+                        handleFilterChange("category", updatedCategories);
                       }}
                     />
                     <label
-                      htmlFor={`material-${material}`}
+                      htmlFor={`category-${category._id}`}
                       className="ml-2 text-sm text-gray-600"
                     >
-                      {material}
+                      {category.name}
                     </label>
                   </div>
-                )
-              )}
+                ))}
             </div>
           </div>
         </div>

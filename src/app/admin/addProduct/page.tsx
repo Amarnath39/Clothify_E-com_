@@ -683,7 +683,7 @@ const AddProduct = () => {
               checked={product.latestProduct}
               onCheckedChange={() => handleCheckboxChange("latestProduct")}
             />
-            <label htmlFor="latestProduct">Latest Product</label>
+            <label htmlFor="latestProduct">New Arrivals</label>
           </div>
         </div>
 
@@ -786,7 +786,7 @@ const AddProduct = () => {
                     }
                   />
                 </div> */}
-                <Button  className="bg-black text-white hover:bg-black"  type="button" onClick={handleAddSize}>
+                <Button className="bg-black text-white hover:bg-black" type="button" onClick={handleAddSize}>
                   Add Size
                 </Button>
               </div>
@@ -800,31 +800,31 @@ const AddProduct = () => {
             {product?.additionalFields &&
               (Array.isArray(product.additionalFields)
                 ? product.additionalFields.map((field, index) => (
+                  <div key={index} className="bg-gray-100 p-2 rounded">
+                    {field.key}: {field.value}
+                    <button
+                      type="button"
+                      onClick={() => removeAdditionalField(index)}
+                      className="ml-2 text-red-500"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))
+                : Object.entries(product.additionalFields).map(
+                  ([key, value]: any, index) => (
                     <div key={index} className="bg-gray-100 p-2 rounded">
-                      {field.key}: {field.value}
+                      {key}: {value}
                       <button
                         type="button"
-                        onClick={() => removeAdditionalField(index)}
+                        onClick={() => removeAdditionalField(key)}
                         className="ml-2 text-red-500"
                       >
                         ×
                       </button>
                     </div>
-                  ))
-                : Object.entries(product.additionalFields).map(
-                    ([key, value]: any, index) => (
-                      <div key={index} className="bg-gray-100 p-2 rounded">
-                        {key}: {value}
-                        <button
-                          type="button"
-                          onClick={() => removeAdditionalField(key)}
-                          className="ml-2 text-red-500"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )
-                  ))}
+                  )
+                ))}
           </div>
           <Dialog
             open={isAdditionalFieldModalOpen}
@@ -860,7 +860,7 @@ const AddProduct = () => {
                     }
                   />
                 </div>
-                <Button  className="bg-black text-white hover:bg-black"   type="button" onClick={handleAddAdditionalField}>
+                <Button className="bg-black text-white hover:bg-black" type="button" onClick={handleAddAdditionalField}>
                   Add Field
                 </Button>
               </div>

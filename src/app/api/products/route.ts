@@ -23,6 +23,7 @@ export const GET = async (req: NextRequest) => {
     const bestsellerProduct = url.searchParams.get("bestsellerProduct") as string;
     const latestProduct = url.searchParams.get("latestProduct") as string;
     const sizes = JSON.parse((url.searchParams.get("sizes") as string) || "[]") as string[];
+    const filterCategories = JSON.parse((url.searchParams.get("filterCategories") as string) || "[]") as string[];
 
     const searchCriteria: any = {};
     if (search) {
@@ -32,7 +33,9 @@ export const GET = async (req: NextRequest) => {
 
     searchCriteria.sizes = { $elemMatch: {} };
 
-    if (categoryId) {
+    if (filterCategories.length > 0) {
+      searchCriteria.categories = { $in: filterCategories };
+    } else if (categoryId) {
       searchCriteria.categories = categoryId;
     }
 
@@ -75,8 +78,8 @@ export const GET = async (req: NextRequest) => {
 
     let sortCriteria = {};
     if (sort === "newlyArrived") sortCriteria = { createdAt: -1 };
-    else if (sort === "priceHighToLow") sortCriteria = { offerPrice: -1 };
-    else if (sort === "priceLowToHigh") sortCriteria = { offerPrice: 1 };
+    else if (sort === "priceHighToLow") sortCriteria = { "sizes.offerPrice": -1 };
+    else if (sort === "priceLowToHigh") sortCriteria = { "sizes.offerPrice": 1 };
 
     const skip = (page - 1) * limit;
 

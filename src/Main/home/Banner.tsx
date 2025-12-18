@@ -142,7 +142,7 @@ const Banner = () => {
 
   return (
     <>
-      <div className="flex justify-center overflow-x-hidden mt-16 sm:mt-20 md:mt-24"></div>
+      <div className="flex justify-center overflow-x-hidden mt-32 sm:mt-36 md:mt-40"></div>
 
       <div className="relative w-full h-[30vh] sm:h-[60vh] md:h-[85vh] overflow-hidden mt-0">
         <div className="absolute top-0 left-0 w-full h-full cursor-pointer" onClick={handleBannerClick}>

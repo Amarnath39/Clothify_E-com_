@@ -250,7 +250,7 @@ const Footer = () => {
 //   );
 return (
   <footer className="relative w-full bg-white pt-8 pb-8 footer-main mb-16 md:mb-0">
-    <div className="mx-auto w-full max-w-7xl px-4 sm:px-8">
+    <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-8">
       {/* Footer Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
         {/* Logo Section */}

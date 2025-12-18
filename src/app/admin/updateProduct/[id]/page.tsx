@@ -685,7 +685,7 @@ const UpdateProduct = ({ params }) => {
               checked={product.latestProduct}
               onCheckedChange={() => handleCheckboxChange("latestProduct")}
             />
-            <label htmlFor="latestProduct">Latest Product</label>
+            <label htmlFor="latestProduct">New Arrivals</label>
           </div>
         </div>
  

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import {
   decreaseCount,
@@ -23,6 +24,7 @@ import {
   removeFromCart,
   setTotalAmount,
 } from "@/lib/features/cart";
+import { addItem } from "@/lib/features/wishlist";
 import {
   FaArrowRight,
   FaChevronDown,
@@ -30,6 +32,7 @@ import {
   FaMinus,
   FaPlus,
   FaTrash,
+  FaHeart,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { CheckIcon } from "@radix-ui/react-icons";
@@ -72,6 +75,7 @@ interface CartProduct {
 const Cart = () => {
   const dispatch = useDispatch<any>();
   const cartItems = useSelector((state: any) => state.cart.items);
+  const wishlistItems = useSelector((state: any) => state.wishlist.items);
   const [cartProducts, setCartProducts] = useState<CartProduct[]>([]);
   const [visibleCoupons, setVisibleCoupons] = useState<any[]>([]);
   const [appliedCoupons, setAppliedCoupons] = useState<any[]>([]);
@@ -90,6 +94,9 @@ const Cart = () => {
     (state: RootState) => state.order
   );
   const [userDeliveryFee, setUserDeliveryFee] = useState(0);
+
+  // Selection State
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   const callGetCartItems = useCallback(async () => {
     if (cartItems.length === 0) {
@@ -200,6 +207,7 @@ const Cart = () => {
 
   const handleRemoveItem = (id: string, sizeId: string) => {
     dispatch(removeFromCart({ id, sizeId }));
+    setSelectedItems((prev) => prev.filter((item) => item !== `${id}-${sizeId}`));
   };
 
   const handleQuantityChange = (id: string, sizeId: string, action: 'increase' | 'decrease') => {
@@ -262,6 +270,80 @@ const Cart = () => {
     // You might want to re-fetch user details here if needed, or rely on initial load
     callProceedToCheckoutApi();
   };
+
+  // --- New Handlers for Selection and Move to Wishlist ---
+
+  const handleToggleSelect = (id: string, sizeId: string) => {
+    const key = `${id}-${sizeId}`;
+    setSelectedItems((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedItems.length === cartProducts.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(cartProducts.map((item) => `${item._id}-${item.size?._id}`));
+    }
+  };
+
+  const handleMoveToWishlist = (item: CartProduct) => {
+    const isInWishlist = wishlistItems.some((w: any) => w.id === item._id);
+    if (!isInWishlist) {
+      dispatch(
+        addItem({
+          id: item._id,
+          name: item.name,
+          colors: item.color ? [item.color] : [], // Adjust based on your data structure
+          img: item.img,
+          description: item.description,
+          amount: item.size?.offerPrice || 0,
+        })
+      );
+      toast.success("Moved to wishlist");
+    } else {
+      toast.success("Already in wishlist, removed from cart");
+    }
+    handleRemoveItem(item._id, item.size!._id);
+  };
+
+  const handleBulkRemove = () => {
+    selectedItems.forEach((key) => {
+      const [id, sizeId] = key.split("-");
+      dispatch(removeFromCart({ id, sizeId }));
+    });
+    setSelectedItems([]);
+    toast.success("Selected items removed");
+  };
+
+  const handleBulkMoveToWishlist = () => {
+    let movedCount = 0;
+    selectedItems.forEach((key) => {
+      const [id, sizeId] = key.split("-");
+      const item = cartProducts.find((p) => p._id === id && p.size?._id === sizeId);
+      if (item) {
+        const isInWishlist = wishlistItems.some((w: any) => w.id === item._id);
+        if (!isInWishlist) {
+            dispatch(
+                addItem({
+                  id: item._id,
+                  name: item.name,
+                  colors: item.color ? [item.color] : [],
+                  img: item.img,
+                  description: item.description,
+                  amount: item.size?.offerPrice || 0,
+                })
+              );
+        }
+        dispatch(removeFromCart({ id, sizeId }));
+        movedCount++;
+      }
+    });
+    setSelectedItems([]);
+    toast.success(`${movedCount} items moved to wishlist`);
+  };
+
   
   // Render logic...
   return (
@@ -277,13 +359,45 @@ const Cart = () => {
       ) : cartProducts.length > 0 ? (
         <div className="container mx-auto px-4 pt-40 pb-8">
             <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+            
+            {/* Bulk Actions Bar */}
+            {selectedItems.length > 0 && (
+              <div className="bg-gray-100 p-4 rounded-lg mb-4 flex justify-between items-center animate-in fade-in slide-in-from-top-2">
+                <span className="font-medium">{selectedItems.length} items selected</span>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleBulkMoveToWishlist} className="bg-white hover:bg-gray-200 text-black border-gray-300">
+                    <FaHeart className="mr-2 h-4 w-4" /> Move to Wishlist
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={handleBulkRemove} className="bg-red-600 hover:bg-red-700 text-white">
+                    <FaTrash className="mr-2 h-4 w-4" /> Delete Selected
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col lg:flex-row gap-8">
                 <div className="lg:w-7/12">
+                    {/* Select All Checkbox */}
+                    <div className="flex items-center gap-2 mb-2 px-4">
+                        <Checkbox 
+                            id="select-all" 
+                            checked={selectedItems.length === cartProducts.length && cartProducts.length > 0}
+                            onCheckedChange={handleSelectAll}
+                        />
+                        <Label htmlFor="select-all" className="cursor-pointer">Select All</Label>
+                    </div>
+
                     {/* Cart Items */}
                     <div className="bg-white rounded-lg shadow-sm">
                         {cartProducts.map((item) => (
                             <div key={`${item._id}-${item.size?._id}`} className="border-b last:border-b-0">
-                                <div className="grid grid-cols-[auto,1fr,auto] md:grid-cols-[100px,1fr,auto,auto,auto] gap-4 p-4 items-center">
+                                <div className="grid grid-cols-[auto,auto,1fr,auto] md:grid-cols-[auto,100px,1fr,auto,auto,auto] gap-4 p-4 items-center">
+                                    {/* Checkbox */}
+                                    <Checkbox 
+                                        checked={selectedItems.includes(`${item._id}-${item.size?._id}`)}
+                                        onCheckedChange={() => handleToggleSelect(item._id, item.size!._id)}
+                                    />
+                                    
                                     <img src={item.img[0]} alt={item.name} className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-md"/>
                                     <div className="flex-grow">
                                         <h3 className="font-medium">{item.name}</h3>
@@ -310,9 +424,22 @@ const Cart = () => {
                                             <span className="text-sm text-gray-500 line-through">₹{(item.actualPrice * item.count).toFixed(2)}</span>
                                         )}
                                     </div>
-                                    <button onClick={() => handleRemoveItem(item._id, item.size!._id)} className="p-2 text-gray-400 hover:text-red-500">
-                                        <FaTrash />
-                                    </button>
+                                    <div className="flex flex-col gap-2">
+                                        <button 
+                                            onClick={() => handleRemoveItem(item._id, item.size!._id)} 
+                                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                            title="Remove from Cart"
+                                        >
+                                            <FaTrash />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleMoveToWishlist(item)} 
+                                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                            title="Move to Wishlist"
+                                        >
+                                            <FaHeart />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
