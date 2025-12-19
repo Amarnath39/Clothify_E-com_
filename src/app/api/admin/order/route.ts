@@ -76,18 +76,18 @@ export const GET = async (req: NextRequest) => {
     }
 
     const orders = await Order.find(searchCriteria)
-      // .populate({
-      //   path: "productDetails.product",
-      //   model: "Product",
-      // })
-      // .populate({
-      //   path: "user",
-      //   model: "User",
-      //   populate: {
-      //     path: "defaultAddress",
-      //     model: "Address",
-      //   },
-      // })
+      .populate({
+        path: "productDetails.product",
+        model: "Product",
+      })
+      .populate({
+        path: "user",
+        model: "User",
+        populate: {
+          path: "defaultAddress",
+          model: "Address",
+        },
+      })
       .populate(["user", "exchangeReason"])
       .sort({ createdAt: -1 }).lean();
     return NextResponse.json(

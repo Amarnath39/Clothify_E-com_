@@ -21,7 +21,7 @@ export const sendAdminOrderEmail = async (orderDetails: OrderDetails): Promise<v
       secure: false,
       auth: {
         user: "emailapikey",
-        pass: "PHtE6r1ZF+3pjGd8p0IBtvfrE8amZI54rO5vKwREsYsRXqMGTE1cqI8rlWOyrxwjUPdGRv+Syohv5e6a4rjRJD7vPWZLW2qyqK3sx/VYSPOZsbq6x00Zs1kZdkPUXYLtc9Jt0iHfud/aNA==",
+        pass: "PHtE6r0OFO/qiGEq9kIA7ffpFsSmZN9/+79iJVFP44dAXPYAS01VrNEoxjfjqE0vXaZDEKWdnYtusOnNte6BJGy7NzkZW2qyqK3sx/VYSPOZsbq6x00YtF0fd0XaV4Hmdt5s1SfQv9jcNA==",
       }
     });
 
@@ -37,7 +37,7 @@ export const sendAdminOrderEmail = async (orderDetails: OrderDetails): Promise<v
     // Prepare mail options
     const mailOptions = {
       from: '"siskerala" <orders@siskerala.com>',
-      to: process.env.REC_EMAIL || 'sandeshgirish@gmail.com',
+      to: process.env.REC_EMAIL || 'sisbymridhulaparvathy@gmail.com',
       subject: '🛒 New Order Received',
       html: emailContent,
     };
