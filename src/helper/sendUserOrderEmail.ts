@@ -54,7 +54,7 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
     
     await transporter.sendMail({
       from: '"Siskerala" <orders@siskerala.com>', // Use a valid "from" address
-      to: order.user?.email || order.customerEmail,
+      to: `${order.user?.email || order.customerEmail},sisbymridhulaparvathy@gmail.com`,
       subject: `✅ Payment Confirmed - Order #${order.orderId}`,
       html: htmlTemplate,
     });
