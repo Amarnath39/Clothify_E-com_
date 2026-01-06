@@ -116,12 +116,15 @@ const CreateOfflineOrderPage = () => {
 
         setIsSearching(true);
         try {
-            const response = await axios.get("/api/admin/products", {
-                params: { search: productSearch, limit: 10 },
+            // Use public products API with search parameter
+            const response = await axios.get("/api/products", {
+                params: { search: productSearch },
             });
 
             if (response.data.success) {
-                setSearchResults(response.data.products || []);
+                // Limit to 10 results for better UX
+                const products = (response.data.products || []).slice(0, 10);
+                setSearchResults(products);
             } else {
                 toast.error("Failed to search products");
             }
