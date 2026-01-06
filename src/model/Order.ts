@@ -87,6 +87,19 @@ const OrderSchema = new mongoose.Schema(
       referenceNumber: { type: String },
       customerReferenceNumber: { type: String },
     },
+
+    // ✅ NEW: Optional fields for offline orders (backward-compatible)
+    orderSource: {
+      type: String,
+      enum: ["ADMIN_OFFLINE"],
+      // No default - undefined for online orders
+    },
+
+    createdByAdminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      // No required - only set for offline orders
+    },
   },
   { timestamps: true }
 );

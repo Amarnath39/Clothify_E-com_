@@ -59,6 +59,17 @@ function AdminLayout({ children }) {
       icon: <FaShoppingCart size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin", "Sales person"],
     },
+    // ✅ NEW: Offline Order Creation (feature-flagged)
+    ...(process.env.NEXT_PUBLIC_ENABLE_ADMIN_OFFLINE_ORDERS === "true"
+      ? [
+        {
+          href: "/admin/offline-order",
+          title: "Create Offline Order",
+          icon: <FaPlus size={24} className="text-white" />,
+          roles: ["SuperAdmin", "Admin"],
+        },
+      ]
+      : []),
     {
       href: "/admin/customers",
       title: "All Customers",
@@ -197,60 +208,59 @@ function AdminLayout({ children }) {
           </div>
         </aside>
       )} */}
-{showSidebar && (
-  <aside className="w-64 bg-gray-900 text-white fixed left-0 h-screen overflow-y-scroll">
-    <div
-      onClick={() => setShowSidebar(false)}
-      className="p-4 flex justify-between cursor-pointer"
-    >
-      <h2 className="text-2xl font-semibold">Admin Panel</h2>
-      <FaHamburger size={24} />
-    </div>
+      {showSidebar && (
+        <aside className="w-64 bg-gray-900 text-white fixed left-0 h-screen overflow-y-scroll">
+          <div
+            onClick={() => setShowSidebar(false)}
+            className="p-4 flex justify-between cursor-pointer"
+          >
+            <h2 className="text-2xl font-semibold">Admin Panel</h2>
+            <FaHamburger size={24} />
+          </div>
 
-    <nav className="mt-0">
-      {filteredAdminCards.map((card, index) => (
-        // <Link
-        //   key={index}
-        //   href={card.href}
-        //   className={`flex items-center px-4 py-3 text-sm transition-all duration-200 ${
-        //     pathname === card.href
-        //       ? "bg-black text-white border-l-4 border-white"
-        //       : "text-gray-300 hover:bg-gray-800 hover:text-white hover:border-l-4 hover:border-gray-400"
-        //   }`}
-        // >
-        //   <span className="mr-3">{card.icon}</span>
-        //   {card.title}
-        // </Link>
-  <Link
-  key={index}
-  href={card.href}
-  className={`flex items-center px-4 py-3 text-sm transition-all duration-200
-    ${
-      pathname === card.href
-        ? "bg-gray-800 text-white border-l-4 border-white"
-        : "text-gray-300 hover:bg-gray-800 hover:text-white hover:border-l-4 hover:border-gray-400"
-    } visited:text-gray-300 focus:bg-gray-800 active:bg-gray-800
+          <nav className="mt-0">
+            {filteredAdminCards.map((card, index) => (
+              // <Link
+              //   key={index}
+              //   href={card.href}
+              //   className={`flex items-center px-4 py-3 text-sm transition-all duration-200 ${
+              //     pathname === card.href
+              //       ? "bg-black text-white border-l-4 border-white"
+              //       : "text-gray-300 hover:bg-gray-800 hover:text-white hover:border-l-4 hover:border-gray-400"
+              //   }`}
+              // >
+              //   <span className="mr-3">{card.icon}</span>
+              //   {card.title}
+              // </Link>
+              <Link
+                key={index}
+                href={card.href}
+                className={`flex items-center px-4 py-3 text-sm transition-all duration-200
+    ${pathname === card.href
+                    ? "bg-gray-800 text-white border-l-4 border-white"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-white hover:border-l-4 hover:border-gray-400"
+                  } visited:text-gray-300 focus:bg-gray-800 active:bg-gray-800
   `}
->
-  <span className="mr-3">{card.icon}</span>
-  {card.title}
-</Link>
+              >
+                <span className="mr-3">{card.icon}</span>
+                {card.title}
+              </Link>
 
-      ))}
-    </nav>
+            ))}
+          </nav>
 
-    <div className="mt-1 p-4 text-base text-white border-gray-800 text-center mb-1">
-      Powered by <br />
-      <Link
-        href="https://www.webgeon.com/"
-        target="_blank"
-        className="mt-2 hover:text-blue-500"
-      >
-        Webgeon Results
-      </Link>
-    </div>
-  </aside>
-)}
+          <div className="mt-1 p-4 text-base text-white border-gray-800 text-center mb-1">
+            Powered by <br />
+            <Link
+              href="https://www.webgeon.com/"
+              target="_blank"
+              className="mt-2 hover:text-blue-500"
+            >
+              Webgeon Results
+            </Link>
+          </div>
+        </aside>
+      )}
 
       <ConfirmationModal
         isOpen={showLogoutModal}
@@ -260,29 +270,28 @@ function AdminLayout({ children }) {
         message="Are you sure you want to log out?"
       />
       <main
-        className={`flex-1 transition-all ease-in-out duration-300 p-8 ${
-          showSidebar ? "pl-[300px]" : "pl-8"
-        }`}
+        className={`flex-1 transition-all ease-in-out duration-300 p-8 ${showSidebar ? "pl-[300px]" : "pl-8"
+          }`}
       >
         <div className="flex justify-between items-center">
-  {/* Left: Logo */}
-  <div className="flex items-center">
-    <img
-      src="/assets/static/logo/fyncartlogo.png"
-      alt="Logo"
-      className="h-10 w-auto object-contain"
-    />
-  </div>
+          {/* Left: Logo */}
+          <div className="flex items-center">
+            <img
+              src="/assets/static/logo/fyncartlogo.png"
+              alt="Logo"
+              className="h-10 w-auto object-contain"
+            />
+          </div>
 
-  {/* Right: Welcome + Logout */}
-  <div className="flex items-center gap-4">
-    <h2 className="text-xl">
-      Welcome{" "}
-      <span className="font-bold  cursor-pointer">{user.name}</span>
-    </h2>
-    <Button onClick={() => setShowLogoutModal(true)}className="bg-black text-white hover:bg-gray-800">Logout</Button>
-  </div>
-</div>
+          {/* Right: Welcome + Logout */}
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl">
+              Welcome{" "}
+              <span className="font-bold  cursor-pointer">{user.name}</span>
+            </h2>
+            <Button onClick={() => setShowLogoutModal(true)} className="bg-black text-white hover:bg-gray-800">Logout</Button>
+          </div>
+        </div>
 
         {children}
       </main>

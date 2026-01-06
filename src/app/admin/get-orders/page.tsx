@@ -56,6 +56,7 @@ const OrdersPage = () => {
   const [paymentStatus, setPaymentStatus] = useState("all");
   const [loading, setLoading] = useState(true);
   const [orderStatus, setOrderStatus] = useState("all");
+  const [orderSource, setOrderSource] = useState("all"); // ✅ NEW: Filter by order source
   const [newStatuses, setNewStatuses] = useState<{ [key: string]: string }>({});
   const [dateRange, setDateRange] = useState<any>([null, null]);
   const [startDate, endDate] = dateRange;
@@ -94,6 +95,7 @@ const OrdersPage = () => {
           search: searchTerm,
           paymentStatus: paymentStatus !== "all" ? paymentStatus : undefined,
           orderStatus: orderStatus !== "all" ? orderStatus : undefined,
+          orderSource: orderSource !== "all" ? orderSource : undefined, // ✅ NEW
           startDate: startDate?.toISOString(),
           endDate: endDate?.toISOString(),
           limit: 500,
@@ -124,7 +126,7 @@ const OrdersPage = () => {
 
   useEffect(() => {
     callGetOrdersApi();
-  }, [searchTerm, paymentStatus, orderStatus, endDate, currentPage]);
+  }, [searchTerm, paymentStatus, orderStatus, orderSource, endDate, currentPage]); // ✅ Added orderSource
 
   const validateShippingDetails = (order) => {
     const newStatus = newStatuses[order._id];
@@ -267,7 +269,7 @@ const OrdersPage = () => {
       // console.log(payload, "refresh");
       toast(payload?.msg ?? "refresh");
       callGetOrdersApi();
-    } catch (error) {}
+    } catch (error) { }
   };
 
   if (loading) {
@@ -299,7 +301,7 @@ const OrdersPage = () => {
               setSearchTerm(e.target.value);
             }}
             className="w-full"
-            // icon={<FaSearch className="text-gray-400" />}
+          // icon={<FaSearch className="text-gray-400" />}
           />
         </div>
         <Select value={paymentStatus} onValueChange={setPaymentStatus}>
@@ -338,6 +340,17 @@ const OrdersPage = () => {
             <SelectItem value="Applied for exchange">
               Applied for exchange
             </SelectItem>
+          </SelectContent>
+        </Select>
+        {/* ✅ NEW: Order Source Filter */}
+        <Select value={orderSource} onValueChange={setOrderSource}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Order Source" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Sources</SelectItem>
+            <SelectItem value="online">Online Orders</SelectItem>
+            <SelectItem value="offline">Offline Orders</SelectItem>
           </SelectContent>
         </Select>
         <div className="relative">
@@ -387,7 +400,17 @@ const OrdersPage = () => {
               {orders.map((order) => (
                 <React.Fragment key={order._id}>
                   <TableRow>
-                    <TableCell>{order.orderId}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {order.orderId}
+                        {/* ✅ NEW: Show OFFLINE badge for admin-created orders */}
+                        {order.orderSource === "ADMIN_OFFLINE" && (
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
+                            OFFLINE
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {new Date(order?.createdAt).toLocaleDateString()}
                     </TableCell>
@@ -427,24 +450,23 @@ const OrdersPage = () => {
                     </TableCell>
                     <TableCell>
                       {order.currentStatus !== "CHECKOUT" &&
-                      (() => {
-                        const now: any = new Date();
-                        const twentyFourHoursAgo = new Date(
-                          now - 24 * 60 * 60 * 1000
-                        );
-                        const orderDate = new Date(order.date);
-                        return (
-                          orderDate >= twentyFourHoursAgo && orderDate <= now
-                        );
-                      })() ? (
+                        (() => {
+                          const now: any = new Date();
+                          const twentyFourHoursAgo = new Date(
+                            now - 24 * 60 * 60 * 1000
+                          );
+                          const orderDate = new Date(order.date);
+                          return (
+                            orderDate >= twentyFourHoursAgo && orderDate <= now
+                          );
+                        })() ? (
                         <div className="flex items-center gap-2">
                           <div
                             className={`w-3 h-3 rounded-full animate-[pulse_1.5s_ease-in-out_infinite] 
-                          ${
-                            order.paymentStatus === "PAYMENT_SUCCESS"
-                              ? "bg-green-500"
-                              : "bg-red"
-                          }`}
+                          ${order.paymentStatus === "PAYMENT_SUCCESS"
+                                ? "bg-green-500"
+                                : "bg-red"
+                              }`}
                           ></div>
                         </div>
                       ) : null}
@@ -649,8 +671,8 @@ const OrdersPage = () => {
                                           Color: {detail?.product?.color}
                                         </p>
                                         <p className="text-sm text-gray-600">
-                                            Size: {detail?.sizeLabel || "N/A"}
-                                          </p>
+                                          Size: {detail?.sizeLabel || "N/A"}
+                                        </p>
 
                                         <p className="text-sm text-gray-600">
                                           Unit Price: ₹{" "}
@@ -671,9 +693,9 @@ const OrdersPage = () => {
                                           ).toFixed(2)}
                                         </p> */}
                                         <p className="font-bold text-lg">
-                                      ₹ {order.payablePrice?.toFixed(2)}
-                                    </p>
-                                    
+                                          ₹ {order.payablePrice?.toFixed(2)}
+                                        </p>
+
                                       </div>
                                     </div>
                                   ))}
@@ -848,9 +870,8 @@ const OrdersPage = () => {
                                               <DialogTrigger>
                                                 <img
                                                   src={item}
-                                                  alt={`Exchange image ${
-                                                    index + 1
-                                                  }`}
+                                                  alt={`Exchange image ${index + 1
+                                                    }`}
                                                   className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                                                   onClick={() =>
                                                     setSelectedImage(item)

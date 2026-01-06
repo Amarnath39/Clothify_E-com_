@@ -62,6 +62,17 @@ export const GET = async (req: NextRequest) => {
       searchCriteria.currentStatus = regex;
     }
 
+    // ✅ NEW: Order Source Filter
+    const orderSource = url.searchParams.get("orderSource");
+    if (orderSource) {
+      if (orderSource === "offline") {
+        searchCriteria.orderSource = "ADMIN_OFFLINE";
+      } else if (orderSource === "online") {
+        // Online orders don't have orderSource field set
+        searchCriteria.orderSource = { $exists: false };
+      }
+    }
+
     // Date filter based on updatedAt
     if (startDate || endDate) {
       searchCriteria.date = {};
