@@ -220,8 +220,8 @@ export const POST = async (req: NextRequest) => {
             }
         }
 
-        // ✅ DTDC Integration (conditional)
-        if (shippingMethod === "DTDC" && dtdcDetails) {
+        // ✅ DTDC Integration (conditional - only when payment is completed)
+        if (shippingMethod === "DTDC" && dtdcDetails && paymentStatus === "Paid") {
             try {
                 const axios = require("axios");
                 const { generateRandomId } = require("../../../../helper/generateRandomId");
