@@ -40,7 +40,7 @@ const BestSelling = () => {
             sort: "newlyArrived",
             limit: "1",
           });
-          return dispatch(getAllProducts(queryParams.toString()));
+          return dispatch(getAllProducts(queryParams.toString()) as any);
         });
 
         const results = await Promise.all(productPromises);

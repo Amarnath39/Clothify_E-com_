@@ -85,6 +85,7 @@ const Cart = () => {
   const latestTotalRef = useRef(0);
   const { addressState } = useSelector((state: any) => state.address);
   const { width } = useWindowSize();
+  const [couponDiscount, setCouponDiscount] = useState(0);
   const [isCheckoutModal, setIsCheckoutModal] = useState(false);
   const { token } = useSelector((state: any) => state.auth);
   const [loading, setLoading] = useState(true); // Start with loading true
@@ -162,7 +163,7 @@ const Cart = () => {
   }, [callGetCartItems]);
 
 
-  const { subtotal, tax, finalTotal, promotions, deliveryFee } = useMemo(() => {
+  const { subtotal, tax, finalTotal, promotions, deliveryFee, offerPriceTotal } = useMemo(() => {
     const subtotal = cartProducts.reduce((sum, item) => {
         return sum + (item.actualPrice || 0) * item.count;
     }, 0);
@@ -174,12 +175,11 @@ const Cart = () => {
     const promotions = subtotal - offerPriceTotal;
     const deliveryFee = 0; // Replace with your actual delivery fee logic
     const tax = 0;
-    const finalTotal = offerPriceTotal + deliveryFee + tax - discountAmount;
+    const finalTotal = offerPriceTotal + deliveryFee + tax - couponDiscount;
     
     dispatch(setTotalAmount(finalTotal));
-    return { subtotal, tax, finalTotal, promotions, deliveryFee };
-  }, [cartProducts, discountAmount, dispatch]);
-
+    return { subtotal, tax, finalTotal, promotions, deliveryFee, offerPriceTotal };
+  }, [cartProducts, couponDiscount, dispatch]);
 
   const callGetAllAddress = async () => {
     try {
@@ -196,14 +196,74 @@ const Cart = () => {
       console.log(error);
     }
   };
-
-  const handleApplyCoupon = async (code: string) => {
-    // ... your existing coupon logic
+  
+  const calculateCouponDiscount = (coupon: any, cartTotal: number) => {
+    let discount = 0;
+    const discountValue = parseFloat(coupon.amount) || 0;
+    const maxCap = parseFloat(coupon.maxDiscount) || null;
+    
+    if (coupon.type === "percentage") {
+      discount = (cartTotal * discountValue) / 100;
+      if (maxCap && maxCap > 0) {
+        discount = Math.min(discount, maxCap);
+      }
+    } else if (coupon.type === "flat") {
+      discount = discountValue;
+    }
+    
+    discount = Math.min(discount, cartTotal);
+    return Math.abs(discount);
   };
+
+const handleApplyCoupon = useCallback(async (code) => {
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+    try {
+      const { payload }: any = await dispatch(
+        getCouponById({ 
+          code: code, 
+          totalPrice: offerPriceTotal
+        })
+      );
+
+      if (payload.success && payload.coupon) {
+        if (payload.coupon.isValid === false) {
+          toast.error(payload.coupon.errorMsg || "Coupon is not valid");
+          return;
+        }
+
+        const discount = calculateCouponDiscount(payload.coupon, offerPriceTotal);  // ✅ Calculate on ₹134
+        setAppliedCoupons([payload.coupon]);
+        setCouponDiscount(discount);
+        toast.success("Coupon applied successfully!");
+      } else {
+        toast.error(payload.msg || "Coupon not found");
+      }
+    } catch (error) {
+      console.error("Coupon error:", error);
+      toast.error("Failed to apply coupon.");
+    }
+  }, [token, router, offerPriceTotal, dispatch]);  // ✅ Changed dependency
 
   const handleRemoveCoupon = () => {
-    // ... your existing coupon logic
+    setAppliedCoupons([]);
+    setCouponDiscount(0);
+    toast.success("Coupon removed successfully!");
   };
+
+  useEffect(() => {
+    if (cartItems.length === 0 || offerPriceTotal <= 0) return;
+    
+    const previousCouponCode = appliedCoupons[0]?.couponCode;
+    setAppliedCoupons([]);
+    setCouponDiscount(0);
+
+    if (previousCouponCode) {
+      setTimeout(() => handleApplyCoupon(previousCouponCode), 100);
+    }
+  }, [cartItems, offerPriceTotal, handleApplyCoupon]);
 
   const handleRemoveItem = (id: string, sizeId: string) => {
     dispatch(removeFromCart({ id, sizeId }));
@@ -228,6 +288,8 @@ const Cart = () => {
   // ✅ THIS IS THE CORRECTED FUNCTION
   const callProceedToCheckoutApi = async () => {
     setCheckoutLoading(true);
+    const couponToSend = appliedCoupons[0]?.couponCode || null;
+
     const payloadApi = {
       productDetails: cartProducts.map((item) => {
         return {
@@ -236,7 +298,7 @@ const Cart = () => {
           size: item.size?._id, // Sending the size ID
         };
       }),
-      couponCode: appliedCoupons[0]?.couponCode || null,
+      couponCode: couponToSend || null,
       orderId: orderId,
       shippingCost: deliveryFee,
     };
@@ -447,6 +509,15 @@ const Cart = () => {
                 </div>
                 <div className="lg:w-5/12">
                     <div className="sticky top-28 bg-gray-50 rounded-xl p-6">
+                        <div className="mt-2">
+                          <CouponSelector
+                            visibleCoupons={visibleCoupons}
+                            appliedCoupons={appliedCoupons}
+                            handleApplyCoupon={handleApplyCoupon}
+                            handleRemoveCoupon={handleRemoveCoupon}
+                            discountAmount={couponDiscount}
+                          />
+                        </div>
                         <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
                         {/* Price Breakdown */}
                         <div className="space-y-2">
@@ -454,6 +525,17 @@ const Cart = () => {
                             <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{promotions.toFixed(2)}</span></div>
                             <div className="flex justify-between"><span>Delivery Fee</span><span>₹{deliveryFee.toFixed(2)}</span></div>
                             <Separator className="my-2"/>
+                            {appliedCoupons.length > 0 && (
+                              <div className="bg-green-50 p-4 rounded-lg">
+                                <span className="text-green-700 font-medium block mb-2">Applied Coupons</span>
+                                {appliedCoupons.map((coupon) => (
+                                  <div key={coupon._id} className="flex justify-between text-green-600 items-center">
+                                    <span className="text-sm font-medium">{coupon.couponCode}</span>
+                                    <span className="font-medium">-₹{couponDiscount.toFixed(2)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                             <div className="flex justify-between font-bold text-lg"><span>Total</span><span>₹{finalTotal.toFixed(2)}</span></div>
                         </div>
                         <div className="mt-6">

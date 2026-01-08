@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     const response = await getPhonePeClient().pay(request);
 
     // 9. Update order details in DB
+    order.orderId = merchantOrderId;
     order.transactionId = merchantOrderId;
     order.tempTransactionId = merchantOrderId;
     order.currentStatus = "PENDING";

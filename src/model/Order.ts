@@ -8,7 +8,10 @@ const OrderSchema = new mongoose.Schema(
     payablePrice: { type: Number },
     off: { type: Number },
     shippingCost: { type: Number, default: 0 },
-
+    couponCode: {
+      type: String,
+      default: null,
+    },
     shippingAddress: {
       type: Object,
     },

@@ -173,7 +173,7 @@ const MostSellingProductsPage: React.FC = () => {
                       <div className="font-bold">{item.name}</div>
                     </div>
                   </TableCell>
-                    <TableCell>{item?.sizes?.[0]?.sellCount ?? 0}</TableCell>
+                    <TableCell>{item.sizes.reduce((sum, s) => sum + (s.sellCount || 0), 0)}</TableCell>
                   <TableCell>
                     <span className="text-green-600 font-bold">
                         {getCurrencySymbol(country)}
@@ -192,7 +192,7 @@ const MostSellingProductsPage: React.FC = () => {
                     )}
                   </TableCell>
 
-                  <TableCell>{item?.sizes[0]?.stock}</TableCell>
+                  <TableCell>{item.sizes.reduce((sum, s) => sum + (s.stock || 0), 0)}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {item.categories.map((cat, idx) => (

@@ -135,7 +135,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
               <div className="flex justify-between text-green-600">
                 <span>Product Discounts:</span>
                 <span>
-                  ₹{orderDetails.totalPrice + deliveryFee - orderDetails.payablePrice}
+                  -₹{orderDetails.off}
                 </span>
               </div>
               {orderDetails.off > 0 && (

@@ -21,14 +21,21 @@ export const getCartItems = createAsyncThunk<any, any, AppThunkConfig>(
   }
 );
 
-export const getVisibleCoupons = createAsyncThunk<any, void, AppThunkConfig>(
-  "cart/getVisibleCoupons",
+export const getVisibleCoupons = createAsyncThunk(
+  "/coupon",
   async (_, { rejectWithValue, getState }) => {
-    const state = getState();
-    const token = selectToken(state);
-    
+    const state: any = getState();
+    const userId = state.auth?.user?._id; // Get current user ID
+
     try {
-      const response = await apiConnector("get", "/api/coupon", null, {}, null);
+      const response = await apiConnector(
+        "get",
+        "/api/coupon",
+        null,
+        { "x-user-id": userId }, // Pass user ID in header
+        null
+      );
+
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data);
@@ -36,22 +43,34 @@ export const getVisibleCoupons = createAsyncThunk<any, void, AppThunkConfig>(
   }
 );
 
-export const getCouponById = createAsyncThunk<any, { code: string; amount: number }, AppThunkConfig>(
-  "cart/getCouponById",
-  async (data, { rejectWithValue, getState }) => {
-    const state = getState();
-    const token = selectToken(state);
-    
+export const getCouponById = createAsyncThunk(
+  "/couponByid",
+  async (data: any, { rejectWithValue, getState }) => {
+    const state: any = getState();
+    const userId = state.auth?.user?._id || state.auth?.userId;
+
+    if (!userId) {
+      return rejectWithValue({
+        success: false,
+        msg: "User not authenticated",
+      });
+    }
+
     try {
       const response = await apiConnector(
-        "get",
-        `/api/coupon/${data.code}?totalPrice=${data.amount}`,
-        null,
-        {},
+        "post",
+        `/api/coupon/${encodeURIComponent(data.code)}`,
+        { totalPrice: data.totalPrice },  // 🔥 BODY (Backend expects JSON)
+        {
+          "x-user-id": userId,           // 🔥 HEADER
+        },
         null
       );
+
+      console.log("✅ Coupon response:", response.data);
       return response.data;
     } catch (error: any) {
+      console.error("❌ Coupon error:", error);
       return rejectWithValue(error.response?.data);
     }
   }

@@ -131,8 +131,9 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    // Apply coupon
+    // Apply coupon - calculate discount only (increment happens in webhook)
     let discount = 0;
+    let appliedCoupon = null; // Store coupon reference for order
     if (couponCode) {
       const coupon = await Coupon.findOne({ couponCode });
       if (coupon) {
@@ -152,12 +153,7 @@ export const POST = async (req: NextRequest) => {
             discount = Math.min(discount, coupon.amount);
           }
           discount = Math.max(discount, 1);
-
-          if (!coupon.multiUse) {
-            coupon.user.push(userId);
-          }
-          coupon.userCount += 1;
-          await coupon.save();
+          appliedCoupon = couponCode;
         }
       }
     }
@@ -179,6 +175,7 @@ export const POST = async (req: NextRequest) => {
             off: discount,
             shippingAddress,
             shippingCost, // ✅ frontend shipping cost
+            couponCode: appliedCoupon,
           },
         },
         { new: true }
@@ -193,6 +190,7 @@ export const POST = async (req: NextRequest) => {
         off: discount,
         shippingAddress,
         shippingCost, // ✅ frontend shipping cost
+        couponCode: appliedCoupon,
       });
 
       await newOrder.save();

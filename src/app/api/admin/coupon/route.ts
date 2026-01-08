@@ -1,3 +1,4 @@
+// src/app/api/admin/coupon/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import Coupon from "../../../../model/Coupon";
 import { connectDB } from "../../../../../db";
@@ -31,34 +32,75 @@ export const POST = async (req: NextRequest) => {
       off,
       availableFor,
       amount,
+      maxDiscount,      // ✅ ADDED: Extract maxDiscount from body
       purchaseAmount,
       visible,
       multiUse,
     } = body;
 
+    // console.log("📝 Creating coupon:", {
+    //   couponCode,
+    //   type,
+    //   amount,
+    //   maxDiscount,
+    // });
+
     const date = new Date(validity);
 
-    // Store in DB
-    const coupon = await Coupon.create({
-      couponCode,
+    // ✅ FIX: Prepare coupon data with proper maxDiscount handling
+    const couponData: any = {
+      couponCode: couponCode.toUpperCase(),
       validity: date,
-      description,
+      description: description || "",
       type,
-      off,
+      off: off || "0",
       availableFor,
-      multiUse,
-      amount,
-      purchaseAmount,
-      visible,
-      validOnCategories: categories,
-    });
+      multiUse: multiUse || false,
+      amount: parseFloat(amount),
+      purchaseAmount: parseFloat(purchaseAmount) || 0,
+      visible: visible || false,
+      validOnCategories: categories || [],
+    };
+
+    // ✅ CRITICAL: Handle maxDiscount based on type
+    if (type === "percentage") {
+      // For percentage coupons, set maxDiscount if provided
+      couponData.maxDiscount = maxDiscount !== undefined && maxDiscount !== "" && maxDiscount !== null
+        ? parseFloat(maxDiscount) 
+        : null;
+    } else {
+      // For flat coupons, always set to null
+      couponData.maxDiscount = null;
+    }
+
+    // console.log("💾 Coupon data to save:", couponData);
+
+    // Store in DB
+    const coupon = await Coupon.create(couponData);
+
+    // console.log("✅ Coupon created:", {
+    //   id: coupon._id,
+    //   code: coupon.couponCode,
+    //   type: coupon.type,
+    //   amount: coupon.amount,
+    //   maxDiscount: coupon.maxDiscount,
+    // });
 
     return NextResponse.json(
       { success: true, msg: "Success", coupon },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.log("Error to create coupon", error);
+    
+    // Handle duplicate coupon code error
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { success: false, msg: "Coupon code already exists" },
+        { status: 409 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, msg: "Internal Server Error" },
       { status: 500 }
@@ -66,4 +108,4 @@ export const POST = async (req: NextRequest) => {
   }
 };
 
-export const dynamic = "force-dynamic"
+export const dynamic = "force-dynamic";
