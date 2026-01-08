@@ -5,27 +5,19 @@ import Coupon from "../../../model/Coupon";
 import Product from "../../../model/Product";
 import User from "../../../model/User";
 import Address from "../../../model/Address";
-import Exchange from "../../../model/Exchange";
 
 connectDB();
 
 const generateOrderId = async (): Promise<string> => {
   try {
-    // Use findOneAndUpdate to atomically get and increment the latest order number
-    const lastOrder = await Order.findOneAndUpdate(
-      {},
-      { $inc: { orderSeq: 1 } }, // Increment the sequence atomically
-      {
-        sort: { orderSeq: -1 },
-        upsert: true,
-        new: true,
-      }
-    ).select("orderSeq");
+    const lastOrder = await Order.findOne()
+      .sort({ orderSeq: -1 })
+      .select("orderSeq")
+      .lean() as { orderSeq: number } | null;
 
-    // console.log(lastOrder?.orderSeq, "sequence::::");
-    const orderNumber = lastOrder?.orderSeq || 0;
-
-    return `ON-${orderNumber.toString().padStart(6, "0")}`;
+    const nextSeq = (lastOrder?.orderSeq || 1799) + 1;
+    
+    return `ON-${nextSeq.toString().padStart(6, "0")}`;
   } catch (error) {
     console.error("Error generating order ID:", error);
     throw error;
@@ -35,6 +27,8 @@ const generateOrderId = async (): Promise<string> => {
 export const POST = async (req: NextRequest) => {
   try {
     const userId = req.headers.get("x-user-id");
+    console.log("📍 Step 1: User ID received:", userId);
+    
     if (!userId) {
       return NextResponse.json(
         { success: false, msg: "Please provide User Id" },
@@ -43,6 +37,8 @@ export const POST = async (req: NextRequest) => {
     }
 
     const user = await User.findById(userId);
+    console.log("📍 Step 2: User found:", user ? "Yes" : "No");
+    
     if (!user) {
       return NextResponse.json(
         { success: false, msg: "Unauthorized" },
@@ -51,40 +47,35 @@ export const POST = async (req: NextRequest) => {
     }
 
     const body = await req.json();
-    const { productDetails, couponCode, orderId, shippingCost = 0 } = body; // ✅ shippingCost comes from frontend
+    console.log("📍 Step 3: Request body:", JSON.stringify(body, null, 2));
+    const { productDetails, couponCode, orderId, shippingCost = 0 } = body;
+    console.log("📍 Step 4: Extracted data - Products:", productDetails?.length, "Coupon:", couponCode, "OrderId:", orderId);
 
     // Validate input
-    if (
-      !userId ||
-      !productDetails ||
-      !Array.isArray(productDetails) ||
-      productDetails.length === 0
-    ) {
-      return NextResponse.json(
-        { success: false, msg: "Invalid input" },
-        { status: 400 }
-      );
+    if (!userId || !productDetails || !Array.isArray(productDetails) || productDetails.length === 0) {
+      console.log("❌ Validation failed");
+      return NextResponse.json({ success: false, msg: "Invalid input" }, { status: 400 });
     }
 
-    const uniqueProductIds = [
-      ...new Set(productDetails.map((pd) => pd.product)),
-    ];
+    const uniqueProductIds = [...new Set(productDetails.map((pd) => pd.product))];
+    console.log("📍 Step 5: Unique product IDs:", uniqueProductIds);
 
     const products = await Product.find({ _id: { $in: uniqueProductIds } });
+    console.log("📍 Step 6: Products found:", products.length);
 
     if (products.length !== uniqueProductIds.length) {
-      return NextResponse.json(
-        { success: false, msg: "Some products not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, msg: "Some products not found" }, { status: 404 });
     }
 
-    // Calculate total actual price and total offer price
+    // Calculate prices
     let totalActualPrice = 0;
     let totalOfferPrice = 0;
     let totalQuantity = 0;
     const outOfStockProducts: string[] = [];
+    
+    console.log("📍 Step 7: Fetching shipping address for:", user.defaultAddress);
     const shippingAddress = await Address.findById(user.defaultAddress);
+    console.log("📍 Step 7.5: Shipping address found:", shippingAddress ? "Yes" : "No");
 
     const processedProductDetails = productDetails
       .map((pd) => {
@@ -92,80 +83,83 @@ export const POST = async (req: NextRequest) => {
         if (product) {
           const quantity = pd.count || 1;
           const selectedSize = pd.size;
-
-          const sizeObj = product.sizes.find(
-            (size: any) => size._id.toString() === selectedSize
-          );
+          const sizeObj = product.sizes.find((size: any) => size._id.toString() === selectedSize);
 
           if (!sizeObj || sizeObj.stock < quantity) {
             outOfStockProducts.push(product._id.toString());
             return null;
-          } else {
-            totalActualPrice += product.actualPrice * quantity;
-            totalOfferPrice +=
-              (sizeObj.offerPrice || product.actualPrice) * quantity;
           }
+          
+          totalActualPrice += product.actualPrice * quantity;
+          totalOfferPrice += (sizeObj.offerPrice || product.actualPrice) * quantity;
           totalQuantity += quantity;
 
-         return {
-  product: product._id, // ✅ Store only the product's ID
-  count: quantity,
-  sizeId: sizeObj._id,   // ✅ Save sizeId
-  sizeLabel: sizeObj.size, // ✅ Save sizeLabel
-  actualPrice: product.actualPrice, // ✅ Save actualPrice
-  offerPrice: sizeObj.offerPrice || product.actualPrice, // ✅ Save offerPrice
-};
+          return {
+            product: product._id,
+            count: quantity,
+            sizeId: sizeObj._id,
+            sizeLabel: sizeObj.size,
+            actualPrice: product.actualPrice,
+            offerPrice: sizeObj.offerPrice || product.actualPrice,
+          };
         }
         return null;
       })
       .filter((pd) => pd !== null);
 
+    console.log("📍 Step 8: Processed products:", processedProductDetails.length, "Out of stock:", outOfStockProducts.length);
+
     if (outOfStockProducts.length > 0) {
       return NextResponse.json(
-        {
-          success: false,
-          msg: "Some products are out of stock",
-          outOfStockProducts,
-        },
+        { success: false, msg: "Some products are out of stock", outOfStockProducts },
         { status: 400 }
       );
     }
 
-    // Apply coupon - calculate discount only (increment happens in webhook)
+    console.log(totalActualPrice, totalOfferPrice, "price details::::");
+
+    // Apply coupon
     let discount = 0;
-    let appliedCoupon = null; // Store coupon reference for order
+    let appliedCoupon = null;
     if (couponCode) {
       const coupon = await Coupon.findOne({ couponCode });
+      console.log(coupon, "coupon details::::");
+      
       if (coupon) {
         const isValid =
           coupon.validity &&
           new Date(coupon.validity) > new Date() &&
           coupon.availableFor > coupon.userCount &&
           coupon.purchaseAmount <= totalOfferPrice;
-
+          
         const hasUserUsedCoupon = coupon.user.includes(userId);
         if (isValid && (!hasUserUsedCoupon || coupon.multiUse)) {
           if (coupon.type === "percentage") {
-            discount = (totalOfferPrice * coupon.off) / 100;
-            discount = Math.min(discount, coupon.amount);
+            const percentageDiscount = (totalOfferPrice * parseFloat(coupon.off)) / 100;
+            discount = Math.min(percentageDiscount, coupon.amount);
+            console.log(percentageDiscount, coupon.amount, "percentage discount::::");
           } else if (coupon.type === "flat") {
-            discount = coupon.off;
-            discount = Math.min(discount, coupon.amount);
+            discount = coupon.amount;
+            console.log(discount, "flat discount::::");
           }
-          discount = Math.max(discount, 1);
+          discount = Math.max(discount, 0);
           appliedCoupon = couponCode;
         }
       }
     }
 
-    // Final payable price (offer - discount + shipping)
+    console.log(discount, "final discount::::");
+
     let totalPayablePrice = totalOfferPrice - discount + shippingCost;
     totalPayablePrice = Math.max(totalPayablePrice, 1);
 
     let newOrder;
+    
+    // ✅ CRITICAL FIX: Handle order update/create properly
     if (orderId) {
-      newOrder = await Order.findByIdAndUpdate(
-        orderId,
+      console.log("📍 Step 11: Attempting to update existing order:", orderId);
+      newOrder = await Order.findOneAndUpdate(
+        { orderId: orderId },
         {
           $set: {
             user: userId,
@@ -174,51 +168,113 @@ export const POST = async (req: NextRequest) => {
             payablePrice: totalPayablePrice,
             off: discount,
             shippingAddress,
-            shippingCost, // ✅ frontend shipping cost
+            shippingCost,
             couponCode: appliedCoupon,
           },
         },
         { new: true }
       );
+      console.log("📍 Step 11.5: Order found and updated:", newOrder ? "Yes" : "No");
+      
+      // ✅ If order not found with that orderId, create new one
+      if (!newOrder) {
+        console.log("📍 Step 11.6: Order not found, creating new order instead");
+        const lastOrder = await Order.findOne().sort({ orderSeq: -1 }).select("orderSeq").lean() as { orderSeq: number } | null;
+        const nextSeq = (lastOrder?.orderSeq || 1799) + 1;
+
+        newOrder = new Order({
+          orderId: await generateOrderId(),
+          orderSeq: nextSeq,
+          user: userId,
+          productDetails: processedProductDetails,
+          totalPrice: totalActualPrice,
+          payablePrice: totalPayablePrice,
+          off: discount,
+          shippingAddress,
+          shippingCost,
+          couponCode: appliedCoupon,
+        });
+
+        await newOrder.save();
+        console.log("📍 Step 11.7: New order created with ID:", newOrder._id);
+      }
     } else {
+      console.log("📍 Step 12: Creating new order (no orderId provided)");
+      const lastOrder = await Order.findOne().sort({ orderSeq: -1 }).select("orderSeq").lean() as { orderSeq: number } | null;
+      const nextSeq = (lastOrder?.orderSeq || 1799) + 1;
+      console.log("📍 Step 12.5: Next sequence:", nextSeq);
+
       newOrder = new Order({
         orderId: await generateOrderId(),
+        orderSeq: nextSeq,
         user: userId,
         productDetails: processedProductDetails,
         totalPrice: totalActualPrice,
         payablePrice: totalPayablePrice,
         off: discount,
         shippingAddress,
-        shippingCost, // ✅ frontend shipping cost
+        shippingCost,
         couponCode: appliedCoupon,
       });
 
       await newOrder.save();
+      console.log("📍 Step 12.6: Order saved with ID:", newOrder._id);
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        msg: "Order created successfully",
-        orderDetails: newOrder,
+    console.log("📍 Step 13: Preparing response");
+    
+    // ✅ Final safety check
+    if (!newOrder) {
+      console.error("❌ newOrder is still null!");
+      return NextResponse.json({ success: false, msg: "Failed to create or update order" }, { status: 500 });
+    }
+
+    const response = {
+      success: true,
+      msg: "Order created successfully",
+      orderDetails: {
+        _id: newOrder._id,
+        orderId: newOrder.orderId,
+        totalPrice: totalActualPrice,
+        payablePrice: totalPayablePrice,
+        off: discount,
+        shippingCost: shippingCost,
+        productDiscount: totalActualPrice - totalOfferPrice,
+        productDetails: processedProductDetails,
+        shippingAddress: newOrder.shippingAddress,
+        couponCode: appliedCoupon,
+        createdAt: newOrder.createdAt,
       },
-      { status: 200 }
-    );
+    };
+    
+    console.log("✅ Step 14: Success! Returning order:", newOrder.orderId);
+    return NextResponse.json(response, { status: 200 });
+    
   } catch (error) {
-    console.log("Error to create order", error);
+    console.error("❌ ERROR in Order API:", error);
+    console.error("❌ Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error("❌ Error message:", error instanceof Error ? error.message : String(error));
+    
     return NextResponse.json(
-      { success: false, msg: "Internal Server Error" },
+      { 
+        success: false, 
+        msg: "Internal Server Error",
+        error: error instanceof Error ? error.message : String(error),
+        stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
+      },
       { status: 500 }
     );
   }
 };
 
-
 export const GET = async (req: NextRequest) => {
   try {
     const userId = req.headers.get("x-user-id");
 
-    const orders = await Order.find({ user: userId }).populate(["user"]).populate("productDetails.product").lean();
+    const orders = await Order.find({ user: userId })
+      .populate(["user"])
+      .populate("productDetails.product")
+      .lean();
 
     console.log("--- DEBUG: Populated Orders in API ---");
     console.log(JSON.stringify(orders, null, 2));

@@ -340,7 +340,7 @@ const ProductDetails = ({
                     : "border-transparent"
                 }`}
               >
-                Other Infornation
+                Other Information
               </TabsTrigger>
             </TabsList>
             <TabsContent value="description" className="pt-4">
