@@ -5,8 +5,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { smsLogin } from "@/lib/features/auth/actions";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/lib/hooks";
-
+import { useAppDispatch } from "@/lib/store";
 export default function MessageLogin() {
   const [step, setStep] = useState(1);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -72,8 +71,18 @@ export default function MessageLogin() {
         response.data.Details === "OTP Matched"
       ) {
         toast.success("OTP verified successfully!");
-        await dispatch(smsLogin({ phone: phoneNumber }));
-        router.push("/");
+        
+        // ✅ Use type assertion as a workaround
+        const resultAction = await dispatch(
+          smsLogin({ phone: phoneNumber }) as any
+        );
+        
+        if (smsLogin.fulfilled.match(resultAction)) {
+          router.push("/");
+        } else if (smsLogin.rejected.match(resultAction)) {
+          toast.error("Login failed. Please try again.");
+          console.error("Login error:", resultAction.payload);
+        }
       } else {
         toast.error("Invalid OTP. Please try again.");
       }

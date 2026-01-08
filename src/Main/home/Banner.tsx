@@ -47,7 +47,7 @@ const Banner = () => {
   useEffect(() => {
     const callGetAllBanner = async () => {
       try {
-        const { payload }: any = await dispatch(getAllBanner());
+        const { payload }: any = await dispatch(getAllBanner() as any);
         if (payload.success) {
           const bannerData = payload.banners.map((item) => ({
             id: item._id,

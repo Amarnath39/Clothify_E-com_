@@ -147,7 +147,23 @@ export const PATCH = async (
     if (categories.length > 0) updateData.categories = categories;
     if (description !== null) updateData.description = description;
     if (actualPrice !== null) updateData.actualPrice = parseFloat(actualPrice);
-    if (sizes !== null && sizes.length > 0) updateData.sizes = sizes;
+    if (sizes !== null && sizes.length > 0) {
+      // Preserve sellCount when updating sizes
+      const existingProduct = await Product.findById(id);
+      if (existingProduct && existingProduct.sizes) {
+        updateData.sizes = sizes.map((newSize: any) => {
+          const existingSize = existingProduct.sizes.find(
+            (s: any) => s._id.toString() === newSize._id || s.size === newSize.size
+          );
+          return {
+            ...newSize,
+            sellCount: existingSize?.sellCount || newSize.sellCount || 0, // Preserve sellCount
+          };
+        });
+      } else {
+        updateData.sizes = sizes;
+      }
+    }
     if (width !== null) updateData.width = width;
     if (height !== null) updateData.height = height;
     if (material !== null && material.length > 0)

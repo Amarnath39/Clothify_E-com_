@@ -1,68 +1,75 @@
+// src/app/api/coupon/[code]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import Coupon from "../../../../model/Coupon";
 import { connectDB } from "../../../../../db";
 
 connectDB();
 
-export const GET = async (
-  req: NextRequest,
-  { params }: { params: { code: string } }
+export const POST = async (
+  req: NextRequest, 
+  { params }: { params: Promise<{ code: string }> }
 ) => {
   try {
-    const userId = req.headers.get("x-user-id");
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, msg: "Please provide User Id" },
-        { status: 400 }
-      );
-    }
-    const couponCode = params.code;
-    const url = new URL(req.url);
-    const totalOfferPrice = url.searchParams.get("totalPrice");
-    if (!couponCode || !totalOfferPrice) {
-      return NextResponse.json(
-        { success: false, msg: "Please provide Coupon Code" },
-        { status: 400 }
-      );
-    }
-    const coupon = await Coupon.findOne({ couponCode: couponCode });
+    const { code } = await params;
+    const { totalPrice } = await req.json();
 
-    if (coupon) {
-      const isValid =
-        coupon.validity &&
-        new Date(coupon.validity) > new Date() &&
-        coupon.availableFor > coupon.userCount &&
-        coupon.purchaseAmount <= totalOfferPrice;
+    // Find coupon (case-insensitive)
+    const coupon: any = await Coupon.findOne({
+      couponCode: code.toUpperCase(),
+    });
 
-      const hasUserUsedCoupon = coupon.user.includes(userId);
-      const check = isValid && (!hasUserUsedCoupon || coupon.multiUse);
-
-      const couponDetails = {
-        ...JSON.parse(JSON.stringify(coupon)),
-        isValid: check,
-      };
-      console.log(
-        { success: true, msg: "Success", coupon: couponDetails },
-        "details"
-      );
-
-      return NextResponse.json(
-        { success: true, msg: "Success", coupon: couponDetails },
-        { status: 200 }
-      );
-    } else {
+    if (!coupon) {
       return NextResponse.json(
         { success: false, msg: "Coupon not found" },
         { status: 404 }
       );
     }
-  } catch (error) {
-    console.log("Error to get coupon details", error);
+
+    const now = new Date();
+    let isValid = true;
+    let errorMsg = "";
+
+    // Check expiry - coupon valid until end of day (23:59:59)
+    if (!coupon.validity) {
+      isValid = false;
+      errorMsg = "Coupon has no validity date";
+    } else {
+      const validityDate = new Date(coupon.validity);
+      validityDate.setHours(23, 59, 59, 999);
+      if (validityDate < now) {
+        isValid = false;
+        errorMsg = "Coupon has expired";
+      }
+    }
+    // Check usage limit
+    if (isValid && coupon.userCount >= coupon.availableFor) {
+      isValid = false;
+      errorMsg = "Coupon usage limit reached";
+    }
+    // Check minimum purchase
+    if (isValid && totalPrice < coupon.purchaseAmount) {
+      isValid = false;
+      errorMsg = `Minimum purchase of ₹${coupon.purchaseAmount} required`;
+    }
+
     return NextResponse.json(
-      { success: false, msg: "Internal Server Error" },
+      {
+        success: true,
+        coupon: {
+          ...coupon.toObject(),
+          isValid,
+          errorMsg,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("❌ Error validating coupon:", error);
+    return NextResponse.json(
+      { success: false, msg: "Internal Server Error", error: error.message },
       { status: 500 }
     );
   }
 };
 
-export const dynamic = "force-dynamic"
+export const dynamic = "force-dynamic";

@@ -7,6 +7,8 @@ import AuthSlice from "./features/auth";
 import categorySlice from "./features/catogary";
 import instaSlice from "./features/insta";
 import cartSlice from "./features/cart";
+import { useDispatch, useSelector } from "react-redux"; // ✅ ADD THIS IMPORT
+import type { TypedUseSelectorHook } from "react-redux"; // ✅ ADD THIS IMPORT
 import {
   FLUSH,
   PAUSE,
@@ -62,7 +64,7 @@ export const makeStore = () => {
 
 // No changes to these types
 export type AppStore = ReturnType<typeof makeStore>;
-export type RootState = ReturnType<AppStore["getState"]>;
+export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = AppStore["dispatch"];
 
 // --- ADD THIS NEW TYPE ---
@@ -72,3 +74,7 @@ export type AppThunkConfig = {
   dispatch: AppDispatch;
   rejectValue: string; // Or a more specific error type
 };
+
+// ✅ ADD THESE TYPED HOOKS AT THE END
+export const useAppDispatch: () => AppDispatch = useDispatch;
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

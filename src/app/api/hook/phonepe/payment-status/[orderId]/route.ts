@@ -1,3 +1,4 @@
+// src/app/api/hook/phonepe/payment-status/[orderId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import Order from "../../../../../../model/Order";
 import Product from "../../../../../../model/Product";
@@ -7,6 +8,7 @@ import {
   sendAdminOrderEmail,
 } from "../../../../../../helper/sendAdminOrderEmail";
 import { getPhonePeClient } from "@/lib/phonepeClient";
+import Coupon from "../../../../../../model/Coupon";
 
 // The handler now accepts a 'params' object because of the [orderId] in the folder name
 export const POST = async (
@@ -52,7 +54,9 @@ export const POST = async (
     // 👇 THIS IS THE KEY CHANGE: Get orderId from the URL params
     const { orderId } = params;
 
-    const order = await Order.findOne({ orderId });
+    const order = await Order.findOne({ orderId })
+  .populate("user")
+  .populate("productDetails.product");
 
     if (!order) {
       console.log(`Webhook Error: No order found with orderId: ${orderId}`);
@@ -76,6 +80,135 @@ export const POST = async (
       order.transactionId = decodedResponse?.data?.transactionId;
       order.date = new Date();
 
+        // ═════════════════════════════════════════════════════════════════════
+        // ⭐ CONSUME COUPON (After payment success, before stock update)
+        // ═════════════════════════════════════════════════════════════════════
+        if (order.couponCode) {
+        const code = order.couponCode.toUpperCase();
+        console.log("🎫 ===== WEBHOOK: Starting coupon consumption =====");
+        console.log("🎫 Coupon code:", code);
+        console.log("🎫 Order ID:", order._id);
+        console.log("🎫 User ID:", order.user._id);
+        
+        try {
+            const coupon = await Coupon.findOne({ couponCode: code });
+
+            if (!coupon) {
+            console.warn("⚠️ WEBHOOK: Coupon not found:", code);
+            order.paymentLogs.push({
+                status: "COUPON_WARNING",
+                timestamp: new Date(),
+                details: { couponCode: code, message: "Coupon not found in DB" },
+            });
+            } else {
+            console.log("🎫 Coupon found:", {
+                code: coupon.couponCode,
+                currentUserCount: coupon.userCount,
+                availableFor: coupon.availableFor,
+                multiUse: coupon.multiUse,
+                currentUsers: coupon.user.length
+            });
+
+            // Atomic update: only increment if usage limit not exceeded
+            const filter: any = {
+                couponCode: code,
+                userCount: { $lt: coupon.availableFor },
+            };
+
+            // ✅ FIX: For single-use coupons, check user hasn't used it
+            if (!coupon.multiUse) {
+                filter.user = { $ne: order.user._id };
+                console.log("🎫 Single-use coupon - checking if user already used it");
+            } else {
+                console.log("🎫 Multi-use coupon - user can use multiple times");
+            }
+
+            const update: any = { 
+                $inc: { userCount: 1 },
+                // ✅ FIX: ALWAYS add user to array (for tracking)
+                $addToSet: { user: order.user._id }
+            };
+
+            console.log("🎫 Update filter:", JSON.stringify(filter));
+            console.log("🎫 Update operation:", JSON.stringify(update));
+
+            const result = await Coupon.updateOne(filter, update);
+
+            console.log("🎫 Update result:", {
+                matchedCount: result.matchedCount,
+                modifiedCount: result.modifiedCount,
+                acknowledged: result.acknowledged
+            });
+
+            if (result.modifiedCount === 0) {
+                console.warn("⚠️ WEBHOOK: Coupon could not be consumed:", code);
+                
+                // ✅ Better error detection
+                const existingCoupon = await Coupon.findOne({ couponCode: code });
+                let errorReason = "Unknown";
+                
+                if (existingCoupon) {
+                console.log("🎫 Checking why update failed:", {
+                    currentUserCount: existingCoupon.userCount,
+                    limit: existingCoupon.availableFor,
+                    userAlreadyInArray: existingCoupon.user.includes(order.user._id),
+                    multiUse: existingCoupon.multiUse
+                });
+
+                if (existingCoupon.userCount >= existingCoupon.availableFor) {
+                    errorReason = "Usage limit reached";
+                    console.error("❌ WEBHOOK: Usage limit reached!");
+                } else if (!existingCoupon.multiUse && existingCoupon.user.includes(order.user._id)) {
+                    errorReason = "User already used this single-use coupon";
+                    console.error("❌ WEBHOOK: User already used this single-use coupon!");
+                } else {
+                    console.error("❌ WEBHOOK: Unknown reason for failure");
+                }
+                }
+                
+                order.paymentLogs.push({
+                status: "COUPON_LIMIT_REACHED",
+                timestamp: new Date(),
+                details: { 
+                    couponCode: code, 
+                    message: errorReason,
+                    currentCount: existingCoupon?.userCount,
+                    limit: existingCoupon?.availableFor
+                },
+                });
+            } else {
+                console.log("✅ WEBHOOK: Coupon consumed successfully:", code);
+                console.log("✅ New user count:", coupon.userCount + 1);
+                console.log("✅ User added to array:", order.user._id);
+                
+                order.paymentLogs.push({
+                status: "COUPON_CONSUMED",
+                timestamp: new Date(),
+                details: {
+                    couponCode: code,
+                    newUserCount: coupon.userCount + 1,
+                    multiUse: coupon.multiUse,
+                    userId: order.user._id
+                },
+                });
+            }
+            }
+        } catch (err: any) {
+            console.error("❌ WEBHOOK: Coupon consumption error:", err.message);
+            console.error("❌ WEBHOOK: Full error:", err);
+            order.paymentLogs.push({
+            status: "COUPON_ERROR",
+            timestamp: new Date(),
+            details: { couponCode: order.couponCode, error: err.message },
+            });
+        }
+        
+        console.log("🎫 ===== WEBHOOK: Finished coupon consumption =====");
+        }
+
+      // ═════════════════════════════════════════════════════════════════════
+      // ⭐ UPDATE STOCK LEVELS
+      // ═════════════════════════════════════════════════════════════════════
       // Atomically update stock for each product
       for (const item of order.productDetails) {
         const totalOrderedCount = (item.count || 0) + (item.freeCount || 0);

@@ -23,7 +23,7 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { payload } = await dispatch(getAllCategories());
+        const { payload } = await dispatch(getAllCategories() as any);
         if (payload.success) {
           setTrendingItems(shuffleArray(payload.categories).slice(0, 4));
         }
@@ -44,7 +44,7 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
 
       try {
         setIsLoading(true);
-        const { payload } = await dispatch(getSearchSuggestion(value));
+        const { payload } = await dispatch(getSearchSuggestion(value) as any);
         if (payload.success) {
           setSearchResults(payload.suggestion);
         }
