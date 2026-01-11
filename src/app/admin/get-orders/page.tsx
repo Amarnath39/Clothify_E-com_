@@ -59,6 +59,8 @@ const OrdersPage = () => {
   const [orderSource, setOrderSource] = useState("all"); // ✅ NEW: Filter by order source
   const [newStatuses, setNewStatuses] = useState<{ [key: string]: string }>({});
   const [dateRange, setDateRange] = useState<any>([null, null]);
+  const [labelError, setLabelError] = useState<{ [key: string]: string }>({});
+  const [labelLoading, setLabelLoading] = useState<{ [key: string]: boolean }>({});
   const [startDate, endDate] = dateRange;
   const [ordersSuccess, setOrderSuccess] = useState(0);
   const dispatch = useDispatch<any>();
@@ -270,6 +272,81 @@ const OrdersPage = () => {
       toast(payload?.msg ?? "refresh");
       callGetOrdersApi();
     } catch (error) { }
+  };
+
+  // ✅ NEW: Handle shipping label print
+  const handlePrintLabel = async (orderId: string) => {
+    setLabelLoading({ ...labelLoading, [orderId]: true });
+    setLabelError({ ...labelError, [orderId]: "" });
+
+    try {
+      const response = await fetch(`/api/admin/shipping-label/${orderId}`);
+      if (!response.ok) {
+        const error = await response.json();
+        setLabelError({ ...labelError, [orderId]: error.error || "Failed to fetch label" });
+        toast.error(error.error || "Failed to fetch shipping label");
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      // Create iframe for printing
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+
+      iframe.onload = () => {
+        iframe.contentWindow?.print();
+      };
+
+      // Clean up after a delay
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        window.URL.revokeObjectURL(url);
+      }, 1000);
+
+      toast.success("Shipping label ready for printing");
+    } catch (error) {
+      console.error("Print label error:", error);
+      setLabelError({ ...labelError, [orderId]: "Error printing label" });
+      toast.error("Error printing label");
+    } finally {
+      setLabelLoading({ ...labelLoading, [orderId]: false });
+    }
+  };
+
+  // ✅ NEW: Handle shipping label download
+  const handleDownloadLabel = async (orderId: string) => {
+    setLabelLoading({ ...labelLoading, [orderId]: true });
+    setLabelError({ ...labelError, [orderId]: "" });
+
+    try {
+      const response = await fetch(`/api/admin/shipping-label/${orderId}`);
+      if (!response.ok) {
+        const error = await response.json();
+        setLabelError({ ...labelError, [orderId]: error.error || "Failed to fetch label" });
+        toast.error(error.error || "Failed to fetch shipping label");
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `shipping-label-${orderId}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Shipping label downloaded successfully");
+    } catch (error) {
+      console.error("Download label error:", error);
+      setLabelError({ ...labelError, [orderId]: "Error downloading label" });
+      toast.error("Error downloading label");
+    } finally {
+      setLabelLoading({ ...labelLoading, [orderId]: false });
+    }
   };
 
   if (loading) {
@@ -764,6 +841,56 @@ const OrdersPage = () => {
                                   </Button>
                                 </CardContent>
                               </Card>
+
+                              {/* ✅ NEW: Shipping Label Section */}
+                              {order.paymentStatus === "PAYMENT_SUCCESS" && order.dtdc?.referenceNumber && (
+                                <Card className="shadow-sm">
+                                  <CardHeader>
+                                    <CardTitle className="text-lg flex items-center">
+                                      🖨️ Shipping Label
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="space-y-3">
+                                    <div className="bg-gray-50 p-3 rounded">
+                                      <p className="text-sm text-gray-600">
+                                        <strong>AWB Number:</strong> {order.dtdc.referenceNumber}
+                                      </p>
+                                      <p className="text-sm text-gray-600">
+                                        <strong>Courier:</strong> DTDC
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <Button
+                                        variant="default"
+                                        onClick={() => handlePrintLabel(order._id)}
+                                        disabled={labelLoading[order._id]}
+                                        className="flex-1"
+                                      >
+                                        {labelLoading[order._id] ? (
+                                          <LuLoader className="mr-2 animate-spin" />
+                                        ) : (
+                                          <span>🖨️</span>
+                                        )}
+                                        {labelLoading[order._id] ? "Loading..." : "Print Label"}
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => handleDownloadLabel(order._id)}
+                                        disabled={labelLoading[order._id]}
+                                        className="flex-1"
+                                      >
+                                        <FaDownload className="mr-2" />
+                                        Download PDF
+                                      </Button>
+                                    </div>
+                                    {labelError[order._id] && (
+                                      <p className="text-red-500 text-sm mt-2">
+                                        {labelError[order._id]}
+                                      </p>
+                                    )}
+                                  </CardContent>
+                                </Card>
+                              )}
 
                               <Card className="shadow-sm">
                                 <CardHeader>

@@ -63,6 +63,8 @@ const OrderSchema = new mongoose.Schema(
       default: "NOT_INITIATED",
     },
     paymentMethod: { type: String },
+    paymentVerifiedAt: { type: Date },
+    phonePeReferenceId: { type: String },
 
     currentStatus: {
       type: String,

@@ -86,11 +86,39 @@ const SuccessOrder = () => {
             </div>
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mt-6">
-            Payment Successful
+            ✅ Payment Successful
           </h2>
           <p className="text-gray-500 mt-4">
-            Congratulations! Your order has been processed successfully.
+            Your order has been successfully placed.
           </p>
+          <p className="text-green-600 font-medium mt-2">
+            💳 Payment confirmed via PhonePe.
+          </p>
+          <p className="text-gray-600 mt-1">
+            🚚 Shipment is being prepared.
+          </p>
+
+          {/* ✅ NEW: Tracking Details Section */}
+          {currentOrder.dtdc?.referenceNumber && (
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg text-left">
+              <p className="text-gray-700 font-semibold mb-2">Shipping Details:</p>
+              <p className="text-sm text-gray-600">
+                <strong>Courier Partner:</strong> DTDC
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>Tracking Number:</strong> {currentOrder.dtdc.referenceNumber}
+              </p>
+              <a
+                href="https://www.dtdc.in/tracking.asp"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 underline inline-block mt-2 hover:text-blue-700"
+              >
+                Track Your Shipment →
+              </a>
+            </div>
+          )}
+
           <div className="flex justify-center mt-6">
             <button
               className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg"
@@ -117,7 +145,10 @@ const SuccessOrder = () => {
             Order Not Confirmed
           </h2>
           <p className="text-gray-500 mt-2">
-            Your payment is still being processed. Please wait for a while.
+            ⏳ Payment is under verification.
+          </p>
+          <p className="text-gray-600 mt-1 font-medium">
+            Please do not refresh the page.
           </p>
           <p className="text-gray-500 mt-4">
             If the issue persists, please contact our customer care team for

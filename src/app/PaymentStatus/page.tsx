@@ -207,50 +207,51 @@ export default function PaymentStatusPage() {
 
   const [status, setStatus] = useState<'success' | 'failed' | 'pending' | null>(null);
   const [countdown, setCountdown] = useState(3);
+  const [orderData, setOrderData] = useState<any>(null);
 
   // Fetch payment status from API
   useEffect(() => {
-  if (!orderId) return;
+    if (!orderId) return;
 
-  const fetchStatus = async () => {
-    try {
-      // ✅ Get userId from localStorage (or wherever you store user info)
-      const storedUser = localStorage.getItem("user");
-      const user = storedUser ? JSON.parse(storedUser) : null;
+    const fetchStatus = async () => {
+      try {
+        // ✅ Get userId from localStorage (or wherever you store user info)
+        const storedUser = localStorage.getItem("user");
+        const user = storedUser ? JSON.parse(storedUser) : null;
 
-      const res = await fetch(`/api/payment/status/${orderId}`, {
-        method: "GET",
-        cache: "no-store",
-        headers: {
-          "x-user-id": user?._id || "", // ✅ send user._id in header
-        },
-      });
+        const res = await fetch(`/api/payment/status/${orderId}`, {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            "x-user-id": user?._id || "", // ✅ send user._id in header
+          },
+        });
 
-      const data = await res.json();
 
-      if (res.ok && data?.status) {
-        switch (data.status) {
-          case "COMPLETED":
-          case "SUCCESS":
+        const data = await res.json();
+
+        if (res.ok && data?.success) {
+          setOrderData(data.order); // Store order data for tracking display
+
+          // Check paymentStatus field for verification
+          if (data.paymentStatus === "PAYMENT_SUCCESS" || data.order?.paymentStatus === "PAYMENT_SUCCESS") {
             setStatus("success");
-            break;
-          case "FAILED":
+          } else if (data.paymentStatus === "PAYMENT_ERROR" || data.order?.paymentStatus === "PAYMENT_ERROR") {
             setStatus("failed");
-            break;
-          default:
+          } else {
             setStatus("pending");
+          }
+        } else {
+          setStatus("failed");
         }
-      } else {
+      } catch (err) {
+        console.error("Error fetching payment status:", err);
         setStatus("failed");
       }
-    } catch (err) {
-      console.error("Error fetching payment status:", err);
-      setStatus("failed");
-    }
-  };
+    };
 
-  fetchStatus();
-}, [orderId]);
+    fetchStatus();
+  }, [orderId]);
 
 
   // Auto-redirect when payment is successful
@@ -280,45 +281,45 @@ export default function PaymentStatusPage() {
   }
 
 
- // Don't render until status is fetched
-if (status === null) {
-  return (
-    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-green-400 to-green-600 relative overflow-hidden">
-      {/* Floating dots for background effect */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(30)].map((_, i) => (
-          <span
-            key={i}
-            className="absolute rounded-full bg-white/10 animate-float"
-            style={{
-              width: `${Math.random() * 6 + 4}px`,
-              height: `${Math.random() * 6 + 4}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${Math.random() * 10 + 5}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Card */}
-      <div className="relative z-10 bg-white rounded-xl shadow-xl p-10 w-96 flex flex-col items-center text-center animate-fade-in space-y-5">
-        {/* Spinner inside circle */}
-        <div className="w-20 h-20 flex items-center justify-center rounded-full bg-green-100 animate-pop">
-          <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+  // Don't render until status is fetched
+  if (status === null) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-green-400 to-green-600 relative overflow-hidden">
+        {/* Floating dots for background effect */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(30)].map((_, i) => (
+            <span
+              key={i}
+              className="absolute rounded-full bg-white/10 animate-float"
+              style={{
+                width: `${Math.random() * 6 + 4}px`,
+                height: `${Math.random() * 6 + 4}px`,
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${Math.random() * 10 + 5}s`,
+              }}
+            />
+          ))}
         </div>
 
-        <h2 className="text-2xl font-bold text-green-600 animate-fade-in-delay">
-          Checking Payment Status
-        </h2>
-        <p className="text-gray-600 animate-fade-in-delay">
-          Please wait while we confirm your transaction...
-        </p>
+        {/* Card */}
+        <div className="relative z-10 bg-white rounded-xl shadow-xl p-10 w-96 flex flex-col items-center text-center animate-fade-in space-y-5">
+          {/* Spinner inside circle */}
+          <div className="w-20 h-20 flex items-center justify-center rounded-full bg-green-100 animate-pop">
+            <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+
+          <h2 className="text-2xl font-bold text-green-600 animate-fade-in-delay">
+            Checking Payment Status
+          </h2>
+          <p className="text-gray-600 animate-fade-in-delay">
+            Please wait while we confirm your transaction...
+          </p>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 
   const renderFloatingDots = () => (
@@ -391,7 +392,7 @@ if (status === null) {
       'bg-green-100',
       'M5 13l4 4L19 7',
       'Payment Successful!',
-      'Thank you for your purchase. Your transaction has been completed successfully.',
+      '✅ Your order has been successfully placed. 💳 Payment confirmed via PhonePe. 🚚 Shipment is being prepared.',
       'Go to Home Page',
       () => router.push('/'),
       <div className="text-sm text-gray-500 animate-fade-in-delay">
@@ -419,7 +420,7 @@ if (status === null) {
       'bg-yellow-100',
       'M12 8v4m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z',
       'Payment Pending...',
-      'Your payment is still being processed. Please wait a moment or refresh later.',
+      '⏳ Payment is under verification. Please do not refresh the page.',
       'Refresh',
       () => router.refresh()
     );

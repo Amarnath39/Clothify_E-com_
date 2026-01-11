@@ -61,30 +61,85 @@ export async function GET(req: Request, { params }: Params) {
       );
     }
 
+    // 🔹 Idempotency check - if already processed, return existing data
+    if (order.paymentStatus === "PAYMENT_SUCCESS") {
+      console.log(`Order ${orderId} already processed. Returning existing data.`);
+      return NextResponse.json({
+        success: true,
+        status: "COMPLETED",
+        paymentStatus: "PAYMENT_SUCCESS",
+        transactionId: order.transactionId,
+        order: order,
+        email: { success: true, message: "Already processed" },
+      });
+    }
+
     // 🔹 Call PhonePe API
     const response: any = await getPhonePeClient().getOrderStatus(orderId);
-    // ✅ ADD THIS LINE TO DEBUG
     console.log("RAW PHONEPE API RESPONSE:", JSON.stringify(response, null, 2));
-    console.log("PhonePe Response:", response);
 
     const phonePeState = response?.state || "PENDING";
-    const transactionId = response?.orderId || orderId;
+    const phonePeCode = response?.code || "";
+    const phonePeAmount = response?.amount ? response.amount / 100 : 0; // Convert from paise to rupees
+    const transactionId = response?.transactionId || response?.orderId || orderId;
+    const phonePeReferenceId = response?.merchantTransactionId || response?.referenceId || "";
 
     let paymentStatus = "Pending";
     let currentStatus = "PENDING";
+    let paymentVerifiedAt: Date | undefined = undefined;
 
-    if (phonePeState === "COMPLETED") {
+    // ✅ CRITICAL: Verify BOTH state and code, AND validate amount
+    if (phonePeState === "COMPLETED" && phonePeCode === "PAYMENT_SUCCESS") {
+      // Validate amount matches order total (allow 1 rupee tolerance for rounding)
+      const amountDifference = Math.abs(phonePeAmount - order.payablePrice);
+      if (amountDifference > 1) {
+        console.error(
+          `⚠️ AMOUNT MISMATCH for order ${orderId}:`,
+          `PhonePe amount: ₹${phonePeAmount}, Order amount: ₹${order.payablePrice}`
+        );
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Payment amount mismatch",
+            details: {
+              phonePeAmount,
+              orderAmount: order.payablePrice,
+              difference: amountDifference,
+            },
+          },
+          { status: 400 }
+        );
+      }
+
       paymentStatus = "PAYMENT_SUCCESS";
       currentStatus = "CONFIRMED";
-    } else if (phonePeState === "FAILED") {
+      paymentVerifiedAt = new Date();
+      console.log(`✅ Payment verified for order ${orderId}. Amount: ₹${phonePeAmount}`);
+    } else if (phonePeState === "FAILED" || phonePeCode === "PAYMENT_ERROR") {
       paymentStatus = "PAYMENT_ERROR";
       currentStatus = "FAILED";
+      console.log(`❌ Payment failed for order ${orderId}. State: ${phonePeState}, Code: ${phonePeCode}`);
+    } else {
+      console.log(`⏳ Payment pending for order ${orderId}. State: ${phonePeState}, Code: ${phonePeCode}`);
     }
 
-    // 🔹 Update order in DB
+    // 🔹 Update order in DB with verification timestamp
+    const updateData: any = {
+      paymentStatus,
+      transactionId,
+      currentStatus,
+    };
+
+    if (paymentVerifiedAt) {
+      updateData.paymentVerifiedAt = paymentVerifiedAt;
+    }
+    if (phonePeReferenceId) {
+      updateData.phonePeReferenceId = phonePeReferenceId;
+    }
+
     const updatedOrder = await Order.findOneAndUpdate(
       { tempTransactionId: orderId },
-      { paymentStatus, transactionId, currentStatus },
+      updateData,
       { new: true }
     ).populate("productDetails.product");
 

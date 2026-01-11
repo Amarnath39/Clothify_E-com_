@@ -26,20 +26,39 @@ export async function POST(req: Request) {
     const orderId = callbackData.payload.merchantOrderId as string;
     const status = callbackData.payload.state as string;
 
-    // Update DB with orderId + status
-    console.log(callbackData);
+    console.log("PhonePe Callback received:", callbackData);
+
+    // ✅ Idempotency check - prevent duplicate processing
+    const existingOrder = await Order.findOne({ tempTransactionId: orderId });
+    if (!existingOrder) {
+      console.warn(`Callback received for non-existent order: ${orderId}`);
+      return new Response("OK", { status: 200 }); // Return OK to prevent retries
+    }
+
+    if (existingOrder.paymentStatus === "PAYMENT_SUCCESS") {
+      console.log(`Order ${orderId} already processed. Ignoring duplicate callback.`);
+      return new Response("OK", { status: 200 });
+    }
 
     switch (callbackData.code) {
       case "PAYMENT_SUCCESS":
         console.log("Payment successful for:", orderId);
+
+        const updateData: any = {
+          paymentStatus: "PAYMENT_SUCCESS",
+          transactionId: callbackData.payload.transactionId,
+          currentStatus: "CONFIRMED",
+          paymentMethod: callbackData.payload.paymentInstrument?.type || "ONLINE",
+          paymentVerifiedAt: new Date(),
+        };
+
+        if (callbackData.payload.merchantTransactionId) {
+          updateData.phonePeReferenceId = callbackData.payload.merchantTransactionId;
+        }
+
         await Order.findOneAndUpdate(
           { tempTransactionId: orderId },
-          {
-            paymentStatus: "SUCCESS",
-            transactionId: callbackData.payload.transactionId,
-            currentStatus: "ORDER_PLACED",
-            paymentMethod: "ONLINE", // Or extract from payload if available
-          }
+          updateData
         );
         break;
       case "PAYMENT_ERROR":
@@ -47,7 +66,8 @@ export async function POST(req: Request) {
         await Order.findOneAndUpdate(
           { tempTransactionId: orderId },
           {
-            paymentStatus: "FAILED",
+            paymentStatus: "PAYMENT_ERROR",
+            currentStatus: "FAILED",
           }
         );
         break;
