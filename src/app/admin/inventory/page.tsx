@@ -145,7 +145,7 @@ const InventoryPage = () => {
                 <TableHead>SKU</TableHead>
                 <TableHead>Total Stock</TableHead>
                 <TableHead>Available</TableHead>
-                <TableHead>Reserved</TableHead>
+                <TableHead>Sold Stock</TableHead>
                 <TableHead>Threshold</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Action</TableHead>
@@ -170,7 +170,7 @@ const InventoryPage = () => {
                     <TableCell>{item.sku}</TableCell>
                     <TableCell>{item.totalStock}</TableCell>
                     <TableCell className="font-bold">{item.availableStock}</TableCell>
-                    <TableCell>{item.reservedStock}</TableCell>
+                    <TableCell>{item.soldStock}</TableCell>
                     <TableCell>{item.lowStockThreshold}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusColor(item.status) as any}>

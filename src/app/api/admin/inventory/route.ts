@@ -40,29 +40,44 @@ export async function GET(req: NextRequest) {
         }
 
         const products = await Product.find(query)
-            .select("name sku img totalStock availableStock reservedStock lowStockThreshold sizes")
+            .select("name sku img totalStock availableStock sellCount lowStockThreshold sizes")
             .skip((page - 1) * limit)
             .limit(limit);
 
         const total = await Product.countDocuments(query);
 
         // Calculate status for each product
+        // Calculate status for each product
         const inventoryData = products.map((p: any) => {
+            let total = Number(p.totalStock) || 0;
+
+            // Fallback: If dynamic/calculated total is 0 but product has sizes, calculate from sizes
+            if (total === 0 && p.sizes && p.sizes.length > 0) {
+                total = p.sizes.reduce((acc: number, curr: any) => acc + (Number(curr.stock) || 0), 0);
+            }
+
+            // Available Stock Logic
+            let available = Number(p.availableStock);
+            // If available is failing (NaN or 0 while total is positive), default to total
+            if (isNaN(available) || (total > 0 && available <= 0)) {
+                available = total;
+            }
+
             let status = "In Stock";
-            if (p.availableStock <= 0) status = "Out of Stock";
-            else if (p.availableStock <= (p.lowStockThreshold || 5)) status = "Low Stock";
+            if (available <= 0) status = "Out of Stock";
+            else if (available <= (p.lowStockThreshold || 5)) status = "Low Stock";
 
             return {
                 _id: p._id,
                 name: p.name,
                 sku: p.sku,
                 img: p.img?.[0],
-                totalStock: p.totalStock,
-                availableStock: p.availableStock,
-                reservedStock: p.reservedStock,
+                totalStock: total,
+                availableStock: available,
+                soldStock: p.sellCount || 0,
                 lowStockThreshold: p.lowStockThreshold,
                 status,
-                sizes: p.sizes // Optional: detailed size breakdown
+                sizes: p.sizes
             };
         });
 
