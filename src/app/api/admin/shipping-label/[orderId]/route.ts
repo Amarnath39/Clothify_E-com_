@@ -67,7 +67,7 @@ export async function GET(req: NextRequest, { params }: Params) {
         dtdcApiUrl.searchParams.set("label_format", "pdf");
 
         // Debug: Check if API key is available
-        const apiKey = process.env.DTDC_API_KEY;
+        const apiKey = process.env.DTDC_API_KEY || "52256c0d05c94bda4c897dce29a485";
         console.log(`🔑 DTDC API Key present: ${apiKey ? 'YES (length: ' + apiKey.length + ')' : 'NO - MISSING!'}`);
         console.log(`📡 Calling DTDC API: ${dtdcApiUrl.toString()}`);
 
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest, { params }: Params) {
             method: "GET",
             headers: {
                 "Accept": "application/pdf",
-                "api-key": apiKey || "",
+                "api-key": apiKey,
             },
         });
 
@@ -104,6 +104,29 @@ export async function GET(req: NextRequest, { params }: Params) {
         console.log(
             `✅ Shipping label fetched successfully for order ${orderId}`
         );
+
+        // ✅ Trigger Shipping Notification Email (if not sent yet)
+        if (!order.isShippingEmailSent) {
+            console.log("📧 Sending shipping notification email for the first time...");
+
+            // Send email asynchronously without blocking the PDF download
+            // We use Promise.allSettled to ensure we don't crash if email fails, 
+            // though ideally we'd want to await it to ensure DB update happens.
+            // Since this is a critical flow, we'll await a quick DB update.
+
+            try {
+                // 1. Send Email
+                const { sendShippingNotificationEmail } = await import("@/helper/sendShippingNotificationEmail");
+                await sendShippingNotificationEmail(order);
+
+                // 2. Mark as sent in DB
+                await Order.findByIdAndUpdate(order._id, { isShippingEmailSent: true });
+                console.log("✅ Marked shipping email as sent in DB");
+
+            } catch (emailErr) {
+                console.error("⚠️ Failed to send shipping email in background:", emailErr);
+            }
+        }
 
         return new NextResponse(pdfBlob, {
             status: 200,

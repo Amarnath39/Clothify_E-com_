@@ -105,6 +105,10 @@ const OrderSchema = new mongoose.Schema(
       ref: "User",
       // No required - only set for offline orders
     },
+    isShippingEmailSent: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
