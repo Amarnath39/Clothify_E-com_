@@ -12,12 +12,12 @@ export async function GET() {
                 email: "sangeet.s@webgeon.com"
             },
             shippingAddress: {
-                fullname: "Sangeet Shaji",
-                houseNumber: "GF 42, United Arcade Building",
-                area: "Attapur",
-                district: "K.V.Rangareddy",
+                name: "Sangeet Shaji",
+                address: "GF 42, United Arcade Building, Attapur",
+                city: "K.V.Rangareddy",
                 state: "Telangana",
-                pincode: "500048"
+                zipCode: "500048",
+                phone: "07306205146"
             },
             dtdc: {
                 referenceNumber: "8677597922" // Sample AWB number
