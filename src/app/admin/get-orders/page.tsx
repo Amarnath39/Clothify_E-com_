@@ -856,21 +856,27 @@ const OrdersPage = () => {
                                         <div className="p-3 bg-purple-50 text-purple-700 rounded-md text-sm mb-2">
                                           <strong>AWB Generated:</strong> {order.dtdc.referenceNumber}
                                         </div>
-                                        <Button
-                                          className="w-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center gap-2"
-                                          onClick={() => handlePrintLabel(order.orderId || order._id)}
-                                          disabled={labelLoading[order.orderId || order._id]}
-                                        >
-                                          {labelLoading[order.orderId || order._id] ? (
-                                            <>
-                                              <LuLoader className="animate-spin" /> Preparing PDF...
-                                            </>
-                                          ) : (
-                                            <>
-                                              <FaDownload /> Download / Print Label
-                                            </>
-                                          )}
-                                        </Button>
+                                        <div className="flex gap-3">
+                                          <Button
+                                            variant="outline"
+                                            className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
+                                            onClick={() => window.open(`/api/admin/shipping-label/${order.orderId || order._id}`, '_blank')}
+                                          >
+                                            <FaSearch className="mr-2" /> View Label
+                                          </Button>
+                                          <Button
+                                            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                                            onClick={() => handlePrintLabel(order.orderId || order._id)}
+                                            disabled={labelLoading[order.orderId || order._id]}
+                                          >
+                                            {labelLoading[order.orderId || order._id] ? (
+                                              <LuLoader className="animate-spin" />
+                                            ) : (
+                                              <FaDownload className="mr-2" />
+                                            )}
+                                            Download
+                                          </Button>
+                                        </div>
                                       </>
                                     ) : (
                                       <div className="text-center p-4 border border-dashed border-red-200 rounded-lg bg-red-50">
