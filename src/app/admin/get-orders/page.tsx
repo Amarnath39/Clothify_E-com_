@@ -368,8 +368,8 @@ const OrdersPage = () => {
         </div>
       </div>
 
-      <div className="flex space-x-4 mb-4">
-        <div className="flex-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="w-full">
           <Input
             placeholder="Search orders..."
             value={searchTerm}
@@ -378,11 +378,10 @@ const OrdersPage = () => {
               setSearchTerm(e.target.value);
             }}
             className="w-full"
-          // icon={<FaSearch className="text-gray-400" />}
           />
         </div>
         <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Payment Status" />
           </SelectTrigger>
           <SelectContent>
@@ -399,7 +398,7 @@ const OrdersPage = () => {
           </SelectContent>
         </Select>
         <Select value={orderStatus} onValueChange={setOrderStatus}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Order Status" />
           </SelectTrigger>
           <SelectContent>
@@ -421,7 +420,7 @@ const OrdersPage = () => {
         </Select>
         {/* ✅ NEW: Order Source Filter */}
         <Select value={orderSource} onValueChange={setOrderSource}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Order Source" />
           </SelectTrigger>
           <SelectContent>
@@ -430,7 +429,8 @@ const OrdersPage = () => {
             <SelectItem value="offline">Offline Orders</SelectItem>
           </SelectContent>
         </Select>
-        <div className="relative">
+
+        <div className="relative w-full">
           <DatePicker
             selectsRange={true}
             startDate={startDate}
@@ -439,8 +439,8 @@ const OrdersPage = () => {
               setDateRange(update);
             }}
             customInput={
-              <Button variant="outline" className="w-[200px]">
-                <FaCalendarAlt className="mr-2" />
+              <Button variant="outline" className="w-full justify-start text-left font-normal">
+                <FaCalendarAlt className="mr-2 h-4 w-4" />
                 {startDate
                   ? startDate.toLocaleDateString()
                   : "Select Date Range"}
@@ -450,599 +450,600 @@ const OrdersPage = () => {
         </div>
       </div>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="mt-[2px]">Orders</CardTitle>
-          <CardTitle className="text-yellow font-semibold">
-            Please Refresh the Failed or pending transaction to see Accurate
-            data
-          </CardTitle>
+        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+          <CardTitle className="mt-[2px]">Orders List</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Refresh pending transactions for accurate data
+          </p>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Created Date</TableHead>
-                <TableHead>Order Date</TableHead>
-                <TableHead>Phone no.</TableHead>
-                <TableHead>Total Price</TableHead>
-                <TableHead>Payment Status</TableHead>
-                <TableHead>Current Status</TableHead>
-                <TableHead>Refresh T. </TableHead>
-                <TableHead>Indicators </TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.map((order) => (
-                <React.Fragment key={order._id}>
-                  <TableRow>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {order.orderId}
-                        {/* ✅ NEW: Show OFFLINE badge for admin-created orders */}
-                        {order.orderSource === "ADMIN_OFFLINE" && (
-                          <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
-                            OFFLINE
-                          </Badge>
+        <CardContent className="p-0 md:p-6">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order ID</TableHead>
+                  <TableHead>Created Date</TableHead>
+                  <TableHead>Order Date</TableHead>
+                  <TableHead>Phone no.</TableHead>
+                  <TableHead>Total Price</TableHead>
+                  <TableHead>Payment Status</TableHead>
+                  <TableHead>Current Status</TableHead>
+                  <TableHead>Refresh T. </TableHead>
+                  <TableHead>Indicators </TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {orders.map((order) => (
+                  <React.Fragment key={order._id}>
+                    <TableRow>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {order.orderId}
+                          {/* ✅ NEW: Show OFFLINE badge for admin-created orders */}
+                          {order.orderSource === "ADMIN_OFFLINE" && (
+                            <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
+                              OFFLINE
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(order?.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {order?.date &&
+                          new Date(order?.date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>{order?.user?.phone}</TableCell>
+                      <TableCell>₹ {order?.payablePrice?.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            order.paymentStatus === "succeeded"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {order.paymentStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{order.currentStatus}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {order.tempTransactionId && (
+                          <div
+                            onClick={() =>
+                              refreshTransactionState(
+                                order._id,
+                                order.tempTransactionId
+                              )
+                            }
+                          >
+                            <IoIosRefresh color="green" size={24} />
+                          </div>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(order?.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {order?.date &&
-                        new Date(order?.date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>{order?.user?.phone}</TableCell>
-                    <TableCell>₹ {order?.payablePrice?.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          order.paymentStatus === "succeeded"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {order.paymentStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{order.currentStatus}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {order.tempTransactionId && (
-                        <div
+                      </TableCell>
+                      <TableCell>
+                        {order.currentStatus !== "CHECKOUT" &&
+                          (() => {
+                            const now: any = new Date();
+                            const twentyFourHoursAgo = new Date(
+                              now - 24 * 60 * 60 * 1000
+                            );
+                            const orderDate = new Date(order.date);
+                            return (
+                              orderDate >= twentyFourHoursAgo && orderDate <= now
+                            );
+                          })() ? (
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`w-3 h-3 rounded-full animate-[pulse_1.5s_ease-in-out_infinite] 
+                          ${order.paymentStatus === "PAYMENT_SUCCESS"
+                                  ? "bg-green-500"
+                                  : "bg-red"
+                                }`}
+                            ></div>
+                          </div>
+                        ) : null}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() =>
-                            refreshTransactionState(
-                              order._id,
-                              order.tempTransactionId
+                            setExpandedOrder(
+                              expandedOrder === order._id ? null : order._id
                             )
                           }
                         >
-                          <IoIosRefresh color="green" size={24} />
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {order.currentStatus !== "CHECKOUT" &&
-                        (() => {
-                          const now: any = new Date();
-                          const twentyFourHoursAgo = new Date(
-                            now - 24 * 60 * 60 * 1000
-                          );
-                          const orderDate = new Date(order.date);
-                          return (
-                            orderDate >= twentyFourHoursAgo && orderDate <= now
-                          );
-                        })() ? (
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-3 h-3 rounded-full animate-[pulse_1.5s_ease-in-out_infinite] 
-                          ${order.paymentStatus === "PAYMENT_SUCCESS"
-                                ? "bg-green-500"
-                                : "bg-red"
-                              }`}
-                          ></div>
-                        </div>
-                      ) : null}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setExpandedOrder(
-                            expandedOrder === order._id ? null : order._id
-                          )
-                        }
-                      >
-                        {expandedOrder === order._id ? (
-                          <FaChevronUp />
-                        ) : (
-                          <FaChevronDown />
-                        )}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                  {expandedOrder === order._id && (
-                    <TableRow>
-                      <TableCell colSpan={10}>
-                        <Card className="mt-4">
-                          <CardContent className="space-y-6 mt-4 ">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                              <Card className="shadow-sm">
-                                <CardHeader>
-                                  <CardTitle className="text-lg flex items-center">
-                                    <FaUser className="mr-2" /> User Details
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="overflow-x-scroll ml-0">
-                                  <div className="space-y-2">
-                                    <p>
-                                      <span className="font-semibold">
-                                        Name:
-                                      </span>{" "}
-                                      {order?.user?.name}
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold">
-                                        Phone:
-                                      </span>{" "}
-                                      {order?.user?.phone}
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold">
-                                        Email:
-                                      </span>
-                                      {order?.user?.email}
-                                    </p>
-                                  </div>
-                                </CardContent>
-                              </Card>
+                          {expandedOrder === order._id ? (
+                            <FaChevronUp />
+                          ) : (
+                            <FaChevronDown />
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {expandedOrder === order._id && (
+                      <TableRow>
+                        <TableCell colSpan={10}>
+                          <Card className="mt-4">
+                            <CardContent className="space-y-6 mt-4 ">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <Card className="shadow-sm">
+                                  <CardHeader>
+                                    <CardTitle className="text-lg flex items-center">
+                                      <FaUser className="mr-2" /> User Details
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="overflow-x-scroll ml-0">
+                                    <div className="space-y-2">
+                                      <p>
+                                        <span className="font-semibold">
+                                          Name:
+                                        </span>{" "}
+                                        {order?.user?.name}
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold">
+                                          Phone:
+                                        </span>{" "}
+                                        {order?.user?.phone}
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold">
+                                          Email:
+                                        </span>
+                                        {order?.user?.email}
+                                      </p>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+
+                                <Card className="shadow-sm">
+                                  <CardHeader>
+                                    <CardTitle className="text-lg flex items-center">
+                                      <FaMapMarkerAlt className="mr-2" /> Shipping
+                                      Address
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <div className="space-y-2">
+                                      <p>{order?.shippingAddress?.name}</p>
+                                      <p>{order?.shippingAddress?.address}</p>
+                                      <p>
+                                        {order?.shippingAddress?.state},{" "}
+                                        {order?.shippingAddress?.zipCode}
+                                      </p>
+                                      <p>{order?.shippingAddress?.country}</p>
+                                      <p>{order?.shippingAddress?.mobile}</p>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+
+                                <Card className="shadow-sm">
+                                  <CardHeader>
+                                    <CardTitle className="text-lg flex items-center">
+                                      <FaCreditCard className="mr-2" /> Payment
+                                      Details
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <div className="space-y-2">
+                                      <p>
+                                        <span className="font-semibold">
+                                          Status:
+                                        </span>{" "}
+                                        {order?.paymentStatus}
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold">
+                                          Method:
+                                        </span>{" "}
+                                        {order?.paymentMethod}
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold">
+                                          Merchant Reference ID:
+                                        </span>{" "}
+                                        {order?.tempTransactionId}
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold">
+                                          Total:
+                                        </span>{" "}
+                                        ₹ {order?.payablePrice?.toFixed(2)}
+                                      </p>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </div>
 
                               <Card className="shadow-sm">
                                 <CardHeader>
                                   <CardTitle className="text-lg flex items-center">
-                                    <FaMapMarkerAlt className="mr-2" /> Shipping
-                                    Address
+                                    <FaBox className="mr-2" /> Order Details
                                   </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                  <div className="space-y-2">
-                                    <p>{order?.shippingAddress?.name}</p>
-                                    <p>{order?.shippingAddress?.address}</p>
-                                    <p>
-                                      {order?.shippingAddress?.state},{" "}
-                                      {order?.shippingAddress?.zipCode}
-                                    </p>
-                                    <p>{order?.shippingAddress?.country}</p>
-                                    <p>{order?.shippingAddress?.mobile}</p>
+                                  <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                      <p className="font-semibold">Order Date:</p>
+                                      <p>
+                                        {new Date(
+                                          order?.createdAt
+                                        ).toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold">Order ID:</p>
+                                      <p>{order.orderId}</p>
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold">
+                                        Total Price:
+                                      </p>
+                                      <p>₹ {order.totalPrice?.toFixed(2)}</p>
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold">Discount:</p>
+                                      <p>₹ {order.off.toFixed(2)}</p>
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold">
+                                        Payable Price:
+                                      </p>
+                                      <p className="font-bold text-lg">
+                                        ₹ {order.payablePrice?.toFixed(2)}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold">
+                                        TransactionId:
+                                      </p>
+                                      <p className="font-bold text-lg">
+                                        {order.transactionId}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold">
+                                        Reference Tracking Number :
+                                      </p>
+                                      <p className="font-bold text-lg">
+                                        {order?.dtdc?.referenceNumber}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold">
+                                        Tracking Customer Reference Number :
+                                      </p>
+                                      <p className="font-bold text-lg">
+                                        {order?.dtdc?.customerReferenceNumber}
+                                      </p>
+                                    </div>
                                   </div>
-                                </CardContent>
-                              </Card>
-
-                              <Card className="shadow-sm">
-                                <CardHeader>
-                                  <CardTitle className="text-lg flex items-center">
-                                    <FaCreditCard className="mr-2" /> Payment
-                                    Details
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-2">
-                                    <p>
-                                      <span className="font-semibold">
-                                        Status:
-                                      </span>{" "}
-                                      {order?.paymentStatus}
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold">
-                                        Method:
-                                      </span>{" "}
-                                      {order?.paymentMethod}
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold">
-                                        Merchant Reference ID:
-                                      </span>{" "}
-                                      {order?.tempTransactionId}
-                                    </p>
-                                    <p>
-                                      <span className="font-semibold">
-                                        Total:
-                                      </span>{" "}
-                                      ₹ {order?.payablePrice?.toFixed(2)}
-                                    </p>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            </div>
-
-                            <Card className="shadow-sm">
-                              <CardHeader>
-                                <CardTitle className="text-lg flex items-center">
-                                  <FaBox className="mr-2" /> Order Details
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
-                                  <div>
-                                    <p className="font-semibold">Order Date:</p>
-                                    <p>
-                                      {new Date(
-                                        order?.createdAt
-                                      ).toLocaleDateString()}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold">Order ID:</p>
-                                    <p>{order.orderId}</p>
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold">
-                                      Total Price:
-                                    </p>
-                                    <p>₹ {order.totalPrice?.toFixed(2)}</p>
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold">Discount:</p>
-                                    <p>₹ {order.off.toFixed(2)}</p>
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold">
-                                      Payable Price:
-                                    </p>
-                                    <p className="font-bold text-lg">
-                                      ₹ {order.payablePrice?.toFixed(2)}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold">
-                                      TransactionId:
-                                    </p>
-                                    <p className="font-bold text-lg">
-                                      {order.transactionId}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold">
-                                      Reference Tracking Number :
-                                    </p>
-                                    <p className="font-bold text-lg">
-                                      {order?.dtdc?.referenceNumber}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold">
-                                      Tracking Customer Reference Number :
-                                    </p>
-                                    <p className="font-bold text-lg">
-                                      {order?.dtdc?.customerReferenceNumber}
-                                    </p>
-                                  </div>
-                                </div>
-                                <Separator className="my-4" />
-                                <h4 className="font-semibold mb-2">Products</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                  {order?.productDetails.map((detail) => (
-                                    <div
-                                      key={detail._id}
-                                      className="flex items-start space-x-4 bg-gray-50 p-4 rounded-lg"
-                                    >
-                                      <img
-                                        src={detail?.product?.img?.[0]}
-                                        alt={detail?.product?.name}
-                                        className="w-20 h-20 object-cover rounded"
-                                      />
-                                      <div className="flex-grow">
-                                        <p className="font-medium">
-                                          {detail?.product?.name}
-                                        </p>
-                                        <p className="text-sm text-gray-600">
-                                          Quantity: {detail?.count}
-                                        </p>
-                                        <p className="text-sm text-gray-600">
-                                          Color: {detail?.product?.color}
-                                        </p>
-                                        <p className="text-sm text-gray-600">
-                                          Size: {detail?.sizeLabel || "N/A"}
-                                        </p>
-
-                                        <p className="text-sm text-gray-600">
-                                          Unit Price: ₹{" "}
-                                          {detail?.product?.actualPrice?.toFixed(
-                                            2
-                                          )}
-                                        </p>
-                                        {detail?.product?.off > 0 && (
-                                          <p className="text-sm text-green-600">
-                                            Discount: {detail?.product?.off}%
+                                  <Separator className="my-4" />
+                                  <h4 className="font-semibold mb-2">Products</h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {order?.productDetails.map((detail) => (
+                                      <div
+                                        key={detail._id}
+                                        className="flex items-start space-x-4 bg-gray-50 p-4 rounded-lg"
+                                      >
+                                        <img
+                                          src={detail?.product?.img?.[0]}
+                                          alt={detail?.product?.name}
+                                          className="w-20 h-20 object-cover rounded"
+                                        />
+                                        <div className="flex-grow">
+                                          <p className="font-medium">
+                                            {detail?.product?.name}
                                           </p>
-                                        )}
-                                        {/* <p className="text-sm font-semibold mt-1">
+                                          <p className="text-sm text-gray-600">
+                                            Quantity: {detail?.count}
+                                          </p>
+                                          <p className="text-sm text-gray-600">
+                                            Color: {detail?.product?.color}
+                                          </p>
+                                          <p className="text-sm text-gray-600">
+                                            Size: {detail?.sizeLabel || "N/A"}
+                                          </p>
+
+                                          <p className="text-sm text-gray-600">
+                                            Unit Price: ₹{" "}
+                                            {detail?.product?.actualPrice?.toFixed(
+                                              2
+                                            )}
+                                          </p>
+                                          {detail?.product?.off > 0 && (
+                                            <p className="text-sm text-green-600">
+                                              Discount: {detail?.product?.off}%
+                                            </p>
+                                          )}
+                                          {/* <p className="text-sm font-semibold mt-1">
                                           Subtotal: ₹{" "}
                                           {(
                                             detail.count *
                                             detail?.product?.offerPrice
                                           ).toFixed(2)}
                                         </p> */}
-                                        <p className="font-bold text-lg">
-                                          ₹ {order.payablePrice?.toFixed(2)}
-                                        </p>
+                                          <p className="font-bold text-lg">
+                                            ₹ {order.payablePrice?.toFixed(2)}
+                                          </p>
 
+                                        </div>
                                       </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </CardContent>
-                            </Card>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <Card className="shadow-sm">
-                                <CardHeader>
-                                  <CardTitle className="text-lg flex items-center">
-                                    <FaTruck className="mr-2" /> Shipping
-                                    Details
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                  <Select
-                                    value={order.deliveryPartner || ""}
-                                    onValueChange={(value) =>
-                                      handleShippingPartnerChange(
-                                        order._id,
-                                        value
-                                      )
-                                    }
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select delivery partner" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="fedex">
-                                        FedEx
-                                      </SelectItem>
-                                      <SelectItem value="Delhivery">
-                                        Delhivery
-                                      </SelectItem>
-                                      <SelectItem value="Ecom Express">
-                                        Ecom Express
-                                      </SelectItem>
-                                      <SelectItem value="Blue Dart">
-                                        Blue Dart
-                                      </SelectItem>
-                                      <SelectItem value="XpressBees">
-                                        XpressBees
-                                      </SelectItem>
-                                      <SelectItem value="Ekart Logistics">
-                                        Ekart Logistics
-                                      </SelectItem>
-                                      <SelectItem value="DTDC">DTDC</SelectItem>
-                                      <SelectItem value="UPS">UPS</SelectItem>
-                                      <SelectItem value="DHL">DHL</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <Input
-                                    placeholder="Enter tracking ID"
-                                    value={order.trackingId || ""}
-                                    onChange={(e) =>
-                                      handleTrackingIdChange(
-                                        order._id,
-                                        e.target.value
-                                      )
-                                    }
-                                  />
-                                  <Button
-                                    onClick={() => updateOrderApi(order._id)}
-                                  >
-                                    Update Shipping
-                                  </Button>
+                                    ))}
+                                  </div>
                                 </CardContent>
                               </Card>
-
-                              {/* ✅ Shipping Label Section (Strict AWB Logic) */}
-                              {order.paymentStatus === "PAYMENT_SUCCESS" && (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <Card className="shadow-sm">
                                   <CardHeader>
                                     <CardTitle className="text-lg flex items-center">
-                                      🖨️ Shipping Label
+                                      <FaTruck className="mr-2" /> Shipping
+                                      Details
                                     </CardTitle>
                                   </CardHeader>
                                   <CardContent className="space-y-4">
-                                    {order.dtdc?.referenceNumber ? (
-                                      <>
-                                        <div className="p-3 bg-purple-50 text-purple-700 rounded-md text-sm mb-2">
-                                          <strong>AWB Generated:</strong> {order.dtdc.referenceNumber}
-                                        </div>
-                                        <div className="flex gap-3">
-                                          <Button
-                                            variant="outline"
-                                            className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
-                                            onClick={() => window.open(`/api/admin/shipping-label/${order.orderId || order._id}`, '_blank')}
-                                          >
-                                            <FaSearch className="mr-2" /> View Label
-                                          </Button>
-                                          <Button
-                                            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                                            onClick={() => handlePrintLabel(order.orderId || order._id)}
-                                            disabled={labelLoading[order.orderId || order._id]}
-                                          >
-                                            {labelLoading[order.orderId || order._id] ? (
-                                              <LuLoader className="animate-spin" />
-                                            ) : (
-                                              <FaDownload className="mr-2" />
-                                            )}
-                                            Download
-                                          </Button>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <div className="text-center p-4 border border-dashed border-red-200 rounded-lg bg-red-50">
-                                        <p className="text-red-600 font-medium text-sm">
-                                          Shipping label unavailable – shipment not created
-                                        </p>
-                                        <p className="text-xs text-red-500 mt-1">
-                                          AWB Reference Number missing.
-                                        </p>
-                                        <Button
-                                          variant="outline"
-                                          className="mt-3 w-full opacity-50 cursor-not-allowed"
-                                          disabled
-                                        >
-                                          <FaDownload className="mr-2" /> Download Label
-                                        </Button>
-                                      </div>
-                                    )}
-
-                                    {labelError[order.orderId || order._id] && (
-                                      <p className="text-sm text-red-600 mt-2 bg-red-50 p-2 rounded">
-                                        ⚠️ {labelError[order.orderId || order._id]}
-                                      </p>
-                                    )}
+                                    <Select
+                                      value={order.deliveryPartner || ""}
+                                      onValueChange={(value) =>
+                                        handleShippingPartnerChange(
+                                          order._id,
+                                          value
+                                        )
+                                      }
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select delivery partner" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="fedex">
+                                          FedEx
+                                        </SelectItem>
+                                        <SelectItem value="Delhivery">
+                                          Delhivery
+                                        </SelectItem>
+                                        <SelectItem value="Ecom Express">
+                                          Ecom Express
+                                        </SelectItem>
+                                        <SelectItem value="Blue Dart">
+                                          Blue Dart
+                                        </SelectItem>
+                                        <SelectItem value="XpressBees">
+                                          XpressBees
+                                        </SelectItem>
+                                        <SelectItem value="Ekart Logistics">
+                                          Ekart Logistics
+                                        </SelectItem>
+                                        <SelectItem value="DTDC">DTDC</SelectItem>
+                                        <SelectItem value="UPS">UPS</SelectItem>
+                                        <SelectItem value="DHL">DHL</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <Input
+                                      placeholder="Enter tracking ID"
+                                      value={order.trackingId || ""}
+                                      onChange={(e) =>
+                                        handleTrackingIdChange(
+                                          order._id,
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                    <Button
+                                      onClick={() => updateOrderApi(order._id)}
+                                    >
+                                      Update Shipping
+                                    </Button>
                                   </CardContent>
                                 </Card>
-                              )}
 
-                              <Card className="shadow-sm">
-                                <CardHeader>
-                                  <CardTitle className="text-lg flex items-center">
-                                    Order Status
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                  <Select
-                                    value={
-                                      newStatuses[order._id] ||
-                                      order.currentStatus
-                                    }
-                                    onValueChange={(value) =>
-                                      setNewStatuses((prev) => ({
-                                        ...prev,
-                                        [order._id]: value,
-                                      }))
-                                    }
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="PENDING">
-                                        PENDING
-                                      </SelectItem>
-                                      <SelectItem value="Processing">
-                                        Processing
-                                      </SelectItem>
-                                      <SelectItem value="Shipped">
-                                        Shipped
-                                      </SelectItem>
-                                      <SelectItem value="Delivered">
-                                        Delivered
-                                      </SelectItem>
-                                      <SelectItem value="Cancelled">
-                                        Cancelled
-                                      </SelectItem>
-                                      <SelectItem value="Exchange Approved">
-                                        Exchange Approved
-                                      </SelectItem>
-                                      <SelectItem value="Exchange Cancelled">
-                                        Exchange Cancelled
-                                      </SelectItem>
-                                      <SelectItem
-                                        hidden
-                                        unselectable="on"
-                                        aria-readonly
-                                        value="Applied for exchange"
-                                        disabled
-                                      >
-                                        Applied for exchange
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  {/* <Button onClick={() => updateOrderApi(order._id)}>Update Status</Button> */}
-                                  <Button
-                                    className="w-full"
-                                    onClick={() => {
-                                      if (
-                                        order?.paymentStatus !==
-                                        "PAYMENT_SUCCESS"
-                                      ) {
-                                        toast(
-                                          "Cannot Change Status Payment is Not completed"
-                                        );
-                                        return;
-                                      }
-
-                                      handleStatusChange(
-                                        order._id,
-                                        newStatuses[order._id]
-                                      );
-                                    }}
-                                  >
-                                    Submit
-                                  </Button>
-                                  <Button
-                                    className="w-full"
-                                    onClick={() => downloadInvoice(order._id)}
-                                  >
-                                    <FaDownload className="mr-2" /> Download
-                                    Invoice
-                                  </Button>
-                                </CardContent>
-                              </Card>
-                              {order.exchangeReason && (
-                                <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-                                  <Card className="mt-6">
+                                {/* ✅ Shipping Label Section (Strict AWB Logic) */}
+                                {order.paymentStatus === "PAYMENT_SUCCESS" && (
+                                  <Card className="shadow-sm">
                                     <CardHeader>
-                                      <CardTitle className="text-xl font-semibold">
-                                        Exchange Details
+                                      <CardTitle className="text-lg flex items-center">
+                                        🖨️ Shipping Label
                                       </CardTitle>
                                     </CardHeader>
-                                    <CardContent>
-                                      <p className="mb-4">
-                                        {order.exchangeReason.reason}
-                                      </p>
-                                      <div className="grid grid-cols-3 gap-4">
-                                        {order.exchangeReason.img.map(
-                                          (item, index) => (
-                                            <Dialog key={index}>
-                                              <DialogTrigger>
-                                                <img
-                                                  src={item}
-                                                  alt={`Exchange image ${index + 1
-                                                    }`}
-                                                  className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                                                  onClick={() =>
-                                                    setSelectedImage(item)
-                                                  }
-                                                />
-                                              </DialogTrigger>
-                                              <DialogContent className="max-w-3xl max-h-[80vh]">
-                                                <img
-                                                  src={selectedImage}
-                                                  alt="Full size exchange image"
-                                                  className="w-full h-full object-contain max-h-[76vh]"
-                                                />
-                                              </DialogContent>
-                                            </Dialog>
-                                          )
-                                        )}
-                                      </div>
+                                    <CardContent className="space-y-4">
+                                      {order.dtdc?.referenceNumber ? (
+                                        <>
+                                          <div className="p-3 bg-purple-50 text-purple-700 rounded-md text-sm mb-2">
+                                            <strong>AWB Generated:</strong> {order.dtdc.referenceNumber}
+                                          </div>
+                                          <div className="flex gap-3">
+                                            <Button
+                                              variant="outline"
+                                              className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
+                                              onClick={() => window.open(`/api/admin/shipping-label/${order.orderId || order._id}`, '_blank')}
+                                            >
+                                              <FaSearch className="mr-2" /> View Label
+                                            </Button>
+                                            <Button
+                                              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                                              onClick={() => handlePrintLabel(order.orderId || order._id)}
+                                              disabled={labelLoading[order.orderId || order._id]}
+                                            >
+                                              {labelLoading[order.orderId || order._id] ? (
+                                                <LuLoader className="animate-spin" />
+                                              ) : (
+                                                <FaDownload className="mr-2" />
+                                              )}
+                                              Download
+                                            </Button>
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <div className="text-center p-4 border border-dashed border-red-200 rounded-lg bg-red-50">
+                                          <p className="text-red-600 font-medium text-sm">
+                                            Shipping label unavailable – shipment not created
+                                          </p>
+                                          <p className="text-xs text-red-500 mt-1">
+                                            AWB Reference Number missing.
+                                          </p>
+                                          <Button
+                                            variant="outline"
+                                            className="mt-3 w-full opacity-50 cursor-not-allowed"
+                                            disabled
+                                          >
+                                            <FaDownload className="mr-2" /> Download Label
+                                          </Button>
+                                        </div>
+                                      )}
+
+                                      {labelError[order.orderId || order._id] && (
+                                        <p className="text-sm text-red-600 mt-2 bg-red-50 p-2 rounded">
+                                          ⚠️ {labelError[order.orderId || order._id]}
+                                        </p>
+                                      )}
                                     </CardContent>
                                   </Card>
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </React.Fragment>
-              ))}
-            </TableBody>
-          </Table>
+                                )}
+
+                                <Card className="shadow-sm">
+                                  <CardHeader>
+                                    <CardTitle className="text-lg flex items-center">
+                                      Order Status
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="space-y-4">
+                                    <Select
+                                      value={
+                                        newStatuses[order._id] ||
+                                        order.currentStatus
+                                      }
+                                      onValueChange={(value) =>
+                                        setNewStatuses((prev) => ({
+                                          ...prev,
+                                          [order._id]: value,
+                                        }))
+                                      }
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select status" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="PENDING">
+                                          PENDING
+                                        </SelectItem>
+                                        <SelectItem value="Processing">
+                                          Processing
+                                        </SelectItem>
+                                        <SelectItem value="Shipped">
+                                          Shipped
+                                        </SelectItem>
+                                        <SelectItem value="Delivered">
+                                          Delivered
+                                        </SelectItem>
+                                        <SelectItem value="Cancelled">
+                                          Cancelled
+                                        </SelectItem>
+                                        <SelectItem value="Exchange Approved">
+                                          Exchange Approved
+                                        </SelectItem>
+                                        <SelectItem value="Exchange Cancelled">
+                                          Exchange Cancelled
+                                        </SelectItem>
+                                        <SelectItem
+                                          hidden
+                                          unselectable="on"
+                                          aria-readonly
+                                          value="Applied for exchange"
+                                          disabled
+                                        >
+                                          Applied for exchange
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    {/* <Button onClick={() => updateOrderApi(order._id)}>Update Status</Button> */}
+                                    <Button
+                                      className="w-full"
+                                      onClick={() => {
+                                        if (
+                                          order?.paymentStatus !==
+                                          "PAYMENT_SUCCESS"
+                                        ) {
+                                          toast(
+                                            "Cannot Change Status Payment is Not completed"
+                                          );
+                                          return;
+                                        }
+
+                                        handleStatusChange(
+                                          order._id,
+                                          newStatuses[order._id]
+                                        );
+                                      }}
+                                    >
+                                      Submit
+                                    </Button>
+                                    <Button
+                                      className="w-full"
+                                      onClick={() => downloadInvoice(order._id)}
+                                    >
+                                      <FaDownload className="mr-2" /> Download
+                                      Invoice
+                                    </Button>
+                                  </CardContent>
+                                </Card>
+                                {order.exchangeReason && (
+                                  <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+                                    <Card className="mt-6">
+                                      <CardHeader>
+                                        <CardTitle className="text-xl font-semibold">
+                                          Exchange Details
+                                        </CardTitle>
+                                      </CardHeader>
+                                      <CardContent>
+                                        <p className="mb-4">
+                                          {order.exchangeReason.reason}
+                                        </p>
+                                        <div className="grid grid-cols-3 gap-4">
+                                          {order.exchangeReason.img.map(
+                                            (item, index) => (
+                                              <Dialog key={index}>
+                                                <DialogTrigger>
+                                                  <img
+                                                    src={item}
+                                                    alt={`Exchange image ${index + 1
+                                                      }`}
+                                                    className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                                    onClick={() =>
+                                                      setSelectedImage(item)
+                                                    }
+                                                  />
+                                                </DialogTrigger>
+                                                <DialogContent className="max-w-3xl max-h-[80vh]">
+                                                  <img
+                                                    src={selectedImage}
+                                                    alt="Full size exchange image"
+                                                    className="w-full h-full object-contain max-h-[76vh]"
+                                                  />
+                                                </DialogContent>
+                                              </Dialog>
+                                            )
+                                          )}
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent >
       </Card >
       {totalPages > 1 && (
