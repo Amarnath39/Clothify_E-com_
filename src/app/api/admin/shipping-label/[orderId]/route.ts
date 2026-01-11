@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, { params }: Params) {
         const { orderId } = params;
 
         // ✅ Fetch order and validate
-        const order = await Order.findById(orderId);
+        const order = await Order.findOne({ tempTransactionId: orderId });
         if (!order) {
             return NextResponse.json(
                 { success: false, error: "Order not found" },
