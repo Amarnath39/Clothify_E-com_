@@ -77,7 +77,7 @@ const Navbar = () => {
       // 🚀 CHANGE: Updated from 'pt-4' to 'pt-6' for increased top spacing
       className={`bg-[#ffffff] fixed w-full navbar-main transition-all duration-300 top-0 pt-5`}
       style={{
-        zIndex: 100, 
+        zIndex: 100,
         transform: "translate3d(0,0,0)",
         willChange: "transform",
       }}
@@ -139,6 +139,28 @@ const Navbar = () => {
                 </span>
               )}
             </div>
+
+            {/* ✅ NEW: My Orders Link */}
+            <Link href="/orders" title="My Orders">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#020101"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                <polyline points="9 11 9 17" />
+                <polyline points="12 14 9 17 6 14" />
+              </svg>
+            </Link>
 
             <Link href={token ? "/profile" : "/login"}>
               <LucideUserRound size={30} style={{ color: "#020101" }} />
@@ -202,10 +224,10 @@ const Navbar = () => {
             </div>
           </SheetContent>
         </Sheet>
-        
+
         {/* Category Navigation Bar - Below search */}
       </div> {/* This closes the max-w-7xl div from above */}
-      
+
       {/* Category Navigation Bar - Below search (full width line) */}
       <div className="hidden md:block border-t border-gray-200">
         <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-8 flex items-center justify-center gap-x-8 py-3">
@@ -218,11 +240,10 @@ const Navbar = () => {
                   key={category._id}
                   href={`/categories/${category._id}`}
                   className={`text-sm tracking-wide uppercase transition-all duration-200 relative
-                  ${
-                    isActive
+                  ${isActive
                       ? "text-black font-bold border-b-2 border-black pb-1"
                       : "text-gray-600 font-medium hover:text-black hover:font-semibold"
-                  }`}
+                    }`}
                 >
                   {category.name}
                 </Link>
