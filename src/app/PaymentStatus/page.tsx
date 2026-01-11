@@ -208,14 +208,19 @@ export default function PaymentStatusPage() {
   const [status, setStatus] = useState<'success' | 'failed' | 'pending' | null>(null);
   const [countdown, setCountdown] = useState(3);
   const [orderData, setOrderData] = useState<any>(null);
+  const [attemptCount, setAttemptCount] = useState(0);
+  const MAX_ATTEMPTS = 40; // Poll for up to 2 minutes (40 * 3 seconds)
 
-  // Fetch payment status from API
+  // Fetch payment status from API with auto-polling
   useEffect(() => {
     if (!orderId) return;
 
+    let pollInterval: NodeJS.Timeout;
+
     const fetchStatus = async () => {
       try {
-        // ✅ Get userId from localStorage (or wherever you store user info)
+        console.log(`🔄 Checking payment status (Attempt ${attemptCount + 1}/${MAX_ATTEMPTS})...`);
+
         const storedUser = localStorage.getItem("user");
         const user = storedUser ? JSON.parse(storedUser) : null;
 
@@ -223,35 +228,71 @@ export default function PaymentStatusPage() {
           method: "GET",
           cache: "no-store",
           headers: {
-            "x-user-id": user?._id || "", // ✅ send user._id in header
+            "x-user-id": user?._id || "",
           },
         });
-
 
         const data = await res.json();
 
         if (res.ok && data?.success) {
-          setOrderData(data.order); // Store order data for tracking display
+          setOrderData(data.order);
 
           // Check paymentStatus field for verification
           if (data.paymentStatus === "PAYMENT_SUCCESS" || data.order?.paymentStatus === "PAYMENT_SUCCESS") {
+            console.log("✅ Payment confirmed!");
             setStatus("success");
+            if (pollInterval) clearInterval(pollInterval); // Stop polling on success
           } else if (data.paymentStatus === "PAYMENT_ERROR" || data.order?.paymentStatus === "PAYMENT_ERROR") {
+            console.log("❌ Payment failed!");
             setStatus("failed");
+            if (pollInterval) clearInterval(pollInterval); // Stop polling on failure
           } else {
+            console.log("⏳ Payment still pending, will retry...");
             setStatus("pending");
+            setAttemptCount(prev => prev + 1);
           }
         } else {
+          console.error("❌ API Error:", data);
           setStatus("failed");
+          if (pollInterval) clearInterval(pollInterval);
         }
       } catch (err) {
         console.error("Error fetching payment status:", err);
-        setStatus("failed");
+        setAttemptCount(prev => prev + 1);
+
+        // Only set to failed if we've tried many times
+        if (attemptCount >= MAX_ATTEMPTS - 5) {
+          setStatus("failed");
+          if (pollInterval) clearInterval(pollInterval);
+        }
       }
     };
 
+    // Initial fetch
     fetchStatus();
-  }, [orderId]);
+
+    // Set up polling every 3 seconds
+    pollInterval = setInterval(() => {
+      if (attemptCount >= MAX_ATTEMPTS) {
+        console.log("⏰ Max polling attempts reached");
+        clearInterval(pollInterval);
+        setStatus("failed");
+        return;
+      }
+
+      // Only continue polling if status is still pending or null
+      if (status === "pending" || status === null) {
+        fetchStatus();
+      } else {
+        clearInterval(pollInterval);
+      }
+    }, 3000); // Poll every 3 seconds
+
+    // Cleanup
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [orderId, status, attemptCount]);
 
 
   // Auto-redirect when payment is successful
@@ -419,8 +460,8 @@ export default function PaymentStatusPage() {
       'text-yellow-600',
       'bg-yellow-100',
       'M12 8v4m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z',
-      'Payment Pending...',
-      '⏳ Payment is under verification. Please do not refresh the page.',
+      'Processing Your Payment...',
+      `⏳ We are verifying your payment with PhonePe. Please wait a moment while we confirm your transaction. This usually takes 10-30 seconds. Do not close this window.`,
       'Refresh',
       () => router.refresh()
     );
