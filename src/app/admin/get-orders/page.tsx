@@ -626,12 +626,45 @@ const OrdersPage = () => {
                                 </Card>
                               </div>
                               <Separator />
-                              {/* Shipping Actions & Order Items (Rest of desktop view) */}
-                              {/* ... (Logic for shipping update, label, status remains same as before but inside desktop view) ... */}
-                              {/* NOTE: To save context length, I am assuming the expanded content logic is shared or duplicate. 
-                                    For cleaner code, I should extract 'OrderDetailsExpanded' component but for now I will inline the essential parts 
-                                    to ensure the Desktop view remains fully functional as it was. 
-                                */ }
+                              {/* ✅ Product Details Section */}
+                              <Card className="shadow-sm mb-6">
+                                <CardHeader>
+                                  <CardTitle className="text-lg flex items-center">
+                                    <FaBox className="mr-2" /> Ordered Items ({order.productDetails?.length || 0})
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="space-y-4">
+                                    {order.productDetails?.map((item: any, idx: number) => (
+                                      <div key={idx} className="flex flex-col md:flex-row items-start md:items-center gap-4 border-b last:border-0 pb-4 last:pb-0">
+                                        <div className="flex items-center gap-4 flex-1">
+                                          {item.product?.img?.[0] ? (
+                                            <img
+                                              src={item.product.img[0]}
+                                              alt={item.product.name}
+                                              className="w-16 h-16 object-cover rounded-md border"
+                                            />
+                                          ) : (
+                                            <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
+                                              No Img
+                                            </div>
+                                          )}
+                                          <div>
+                                            <p className="font-semibold text-gray-800">{item.product?.name || "Unknown Product"}</p>
+                                            <div className="text-sm text-gray-500 mt-1 flex gap-2">
+                                              <Badge variant="outline" className="text-xs">Size: {item.sizeLabel}</Badge>
+                                              <Badge variant="outline" className="text-xs">Qty: {item.count}</Badge>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="font-bold text-lg md:text-right">
+                                          ₹{item.offerPrice} <span className="text-xs font-normal text-gray-500">x {item.count}</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CardContent>
+                              </Card>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Shipping Update Panel */}
                                 <Card className="shadow-sm">
@@ -788,6 +821,39 @@ const OrdersPage = () => {
                   {expandedOrder === order._id && (
                     <div className="mt-4 space-y-4 border-t pt-4 animate-in fade-in slide-in-from-top-2">
                       {/* Compact Mobile Details sections */}
+                      <div className="bg-white border rounded p-3 shadow-sm">
+                        <p className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+                          <FaBox className="text-purple-600" /> Items ({order.productDetails?.length || 0})
+                        </p>
+                        <div className="space-y-3">
+                          {order.productDetails?.map((item: any, idx: number) => (
+                            <div key={idx} className="flex gap-3 border-b pb-3 last:border-0 last:pb-0">
+                              {item?.product?.img?.[0] ? (
+                                <img
+                                  src={item.product.img[0]}
+                                  className="w-12 h-12 object-cover rounded bg-gray-100"
+                                  alt=""
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-xs">
+                                  No Img
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm truncate">
+                                  {item?.product?.name || "Unknown Product"}
+                                </p>
+                                <div className="flex justify-between mt-1 text-xs text-gray-500">
+                                  <span>Qty: {item.count} | Size: {item.sizeLabel}</span>
+                                  <span className="font-bold text-gray-900">₹{item.offerPrice}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Delivery Address */}
                       <div className="space-y-1 text-sm bg-gray-50 p-3 rounded">
                         <p className="font-bold text-gray-700 mb-1">📍 Delivery To:</p>
                         <p>{order?.shippingAddress?.name}</p>
