@@ -102,6 +102,10 @@ export const POST = async (req: NextRequest) => {
 
     // const off = ((actualPrice - offerPrice) / actualPrice) * 100;
 
+    // Calculate inventory fields
+    const totalStock = sizes.reduce((acc, curr) => acc + parseInt(curr.stock || "0"), 0);
+    const availableStock = totalStock; // Assuming 0 reserved initially
+
     // Store in DB
     const newProduct = await Product.create({
       name,
@@ -117,6 +121,9 @@ export const POST = async (req: NextRequest) => {
       note,
       color,
       sizes,
+      totalStock,      // ✅ NEW
+      availableStock,  // ✅ NEW
+      reservedStock: 0,// ✅ NEW
       colors: [],
       offers,
       returnRules,

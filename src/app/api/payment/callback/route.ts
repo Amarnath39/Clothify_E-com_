@@ -56,20 +56,44 @@ export async function POST(req: Request) {
           updateData.phonePeReferenceId = callbackData.payload.merchantTransactionId;
         }
 
-        await Order.findOneAndUpdate(
+        const updatedOrder = await Order.findOneAndUpdate(
           { tempTransactionId: orderId },
-          updateData
-        );
+          updateData,
+          { new: true }
+        ).populate("user").populate("productDetails.product"); // Populate for notification details
+
+        if (updatedOrder) {
+          // ✅ Trigger Stock Reduction
+          const { reduceStock } = await import("@/lib/inventory");
+          await reduceStock(updatedOrder._id);
+
+          // ✅ Notify Admin
+          const { sendAdminNotification } = await import("@/lib/notifications");
+          await sendAdminNotification("ORDER_PLACED", {
+            orderId: updatedOrder.orderId,
+            customerName: updatedOrder.user?.name || "Guest",
+            amount: updatedOrder.payablePrice
+          })
+        }
         break;
       case "PAYMENT_ERROR":
         console.log("Payment failed for:", orderId);
-        await Order.findOneAndUpdate(
+        const failedOrder = await Order.findOneAndUpdate(
           { tempTransactionId: orderId },
           {
             paymentStatus: "PAYMENT_ERROR",
             currentStatus: "FAILED",
-          }
+          },
+          { new: true } // Return updated doc
         );
+
+        if (failedOrder) {
+          const { sendAdminNotification } = await import("@/lib/notifications");
+          await sendAdminNotification("PAYMENT_FAILED", {
+            orderId: failedOrder.orderId,
+            reason: callbackData.payload?.responseCode || "Payment Error",
+          });
+        }
         break;
       default:
         console.log("Unknown callback type:", callbackData.code);

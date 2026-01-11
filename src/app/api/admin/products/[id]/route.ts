@@ -219,6 +219,24 @@ export const PATCH = async (
       { $pull: { colors: { varientId: id } } }
     );
 
+    // ✅ NEW: Recalculate Inventory Fields if sizes or other affecting fields are updated
+    if (updateData.sizes) {
+      const totalStock = updateData.sizes.reduce((acc: any, curr: any) => acc + parseInt(curr.stock || "0"), 0);
+      updateData.totalStock = totalStock;
+
+      // Preserve reserved stock (fetch current if not available in updateData/calculation)
+      // Since we don't have reservedStock in form data, we need to defer this or fetch.
+      // Easiest is to handle "availableStock" logic after fetching existing product or assume reserved is unchanged.
+      // But `reservedStock` is new, likely 0. 
+      // Let's assume calculated totalStock - existingReserved.
+
+      // We need to fetch the document first if we want accurate availableStock calculation while preserving reserved.
+      // We already fetched `prevProduct` (at line 206) but it might be slightly stale if we want to be super precise, but fine for now.
+      const existingReserved = prevProduct?.reservedStock || 0;
+      updateData.availableStock = totalStock - existingReserved;
+    }
+
+
     const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
       new: true,
     });

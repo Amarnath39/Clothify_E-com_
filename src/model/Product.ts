@@ -124,6 +124,23 @@ const Product = new mongoose.Schema(
         default: 1,
       },
     },
+    // ✅ NEW: Inventory Management Fields
+    totalStock: {
+      type: Number,
+      default: 0,
+    },
+    availableStock: {
+      type: Number,
+      default: 0, // totalStock - reservedStock
+    },
+    reservedStock: {
+      type: Number,
+      default: 0,
+    },
+    lowStockThreshold: {
+      type: Number,
+      default: 5, // Default threshold for low stock alert
+    },
     additionalFields: { type: Object },
     returnRules: [
       {

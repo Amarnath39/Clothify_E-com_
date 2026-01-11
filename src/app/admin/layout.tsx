@@ -14,6 +14,7 @@ import {
   FaSalesforce,
   FaHamburger,
   FaInstagram,
+  FaBoxOpen,
 } from "react-icons/fa";
 import { SiSublimetext } from "react-icons/si";
 import { FcRules } from "react-icons/fc";
@@ -98,6 +99,12 @@ function AdminLayout({ children }) {
       href: "/admin/products",
       title: "All Products",
       icon: <FaList size={24} className="text-white" />,
+      roles: ["SuperAdmin", "Admin", "Sales person"],
+    },
+    {
+      href: "/admin/inventory",
+      title: "Inventory",
+      icon: <FaBoxOpen size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin", "Sales person"],
     },
     {

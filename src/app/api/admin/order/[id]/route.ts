@@ -29,7 +29,7 @@ export const PATCH = async (
 
     const { id } = params;
     const body = await req.json();
-    const { status, trackingId, deliveryPartner ,merchantName } = body;
+    const { status, trackingId, deliveryPartner, merchantName } = body;
 
     if (!id)
       return NextResponse.json(
@@ -77,7 +77,19 @@ export const PATCH = async (
       );
 
       console.log("📲 WhatsApp notification result:", whatsappResp);
-     }
+    }
+
+    // ✅ Stock Management Integration
+    const confirmationStatuses = ["Processing", "Shipped", "Delivered", "COMPLETED"];
+    if (confirmationStatuses.includes(status) && !order.stockReduced) {
+      // Try to reduce stock for COD orders or manual confirmations
+      const { reduceStock } = await import("@/lib/inventory");
+      await reduceStock(order._id);
+    } else if (status === "Cancelled" && order.stockReduced) {
+      // Restore stock for cancellations
+      const { restoreStock } = await import("@/lib/inventory");
+      await restoreStock(order._id);
+    }
 
     return NextResponse.json({ success: true, msg: "Success", order }, { status: 200 });
   } catch (error) {
