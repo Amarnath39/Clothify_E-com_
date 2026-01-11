@@ -52,43 +52,39 @@ export async function GET(req: NextRequest, { params }: Params) {
         }
 
         const referenceNumber = order.dtdc.referenceNumber;
-        const customerReferenceNumber = order.dtdc.customerReferenceNumber;
 
-        // Helper function to fetch label
-        const fetchLabel = async (paramName: string, paramValue: string) => {
-            const dtdcApiUrl = new URL(
-                "/api/customer/integration/consignment/shippinglabel/stream",
-                "https://dtdcapi.shipsy.io"
-            );
-            dtdcApiUrl.searchParams.set(paramName, paramValue);
-            dtdcApiUrl.searchParams.set("label_code", "SHIP_LABEL_4X6");
-            dtdcApiUrl.searchParams.set("label_format", "pdf");
+        // ✅ Call DTDC Shipping Label API strictly with Reference Number (AWB)
+        console.log(
+            `📄 Fetching shipping label for order ${orderId}, AWB: ${referenceNumber}`
+        );
 
-            // Debug: Check if API key is available
-            const apiKey = process.env.DTDC_API_KEY || "52256c0d05c94bda4c897dce29a485";
-            console.log(`📡 Fetching Label | Param: ${paramName}=${paramValue} | Key Length: ${apiKey?.length}`);
+        const dtdcApiUrl = new URL(
+            "/api/customer/integration/consignment/shippinglabel/stream",
+            "https://dtdcapi.shipsy.io"
+        );
+        dtdcApiUrl.searchParams.set("reference_number", referenceNumber);
+        dtdcApiUrl.searchParams.set("label_code", "SHIP_LABEL_4X6");
+        dtdcApiUrl.searchParams.set("label_format", "pdf");
 
-            return fetch(dtdcApiUrl.toString(), {
-                method: "GET",
-                headers: {
-                    "Accept": "application/pdf",
-                    "api-key": apiKey,
-                },
-            });
-        };
+        // Debug: Check if API key is available
+        const apiKey = process.env.DTDC_API_KEY || "52256c0d05c94bda4c897dce29a485";
+        console.log(`📡 Calling DTDC API: ${dtdcApiUrl.toString()}`);
 
-        // 1️⃣ Try fetching by AWB (reference_number)
-        let dtdcResponse = await fetchLabel("reference_number", referenceNumber);
-
-        // 2️⃣ If failed, try fetching by Customer Reference Number
-        if (!dtdcResponse.ok && customerReferenceNumber) {
-            console.warn(`⚠️ Fetch by reference_number failed. Retrying with customer_reference_number: ${customerReferenceNumber}`);
-            dtdcResponse = await fetchLabel("customer_reference_number", customerReferenceNumber);
-        }
+        const dtdcResponse = await fetch(dtdcApiUrl.toString(), {
+            method: "GET",
+            headers: {
+                "Accept": "application/pdf",
+                "api-key": apiKey,
+            },
+        });
 
         if (!dtdcResponse.ok) {
             const errorText = await dtdcResponse.text();
-            console.error(`❌ DTDC API Final Failure for order ${orderId}:`, errorText);
+            console.error(
+                `❌ DTDC API error for order ${orderId}:`,
+                dtdcResponse.status,
+                errorText
+            );
 
             return NextResponse.json(
                 {
@@ -96,8 +92,6 @@ export async function GET(req: NextRequest, { params }: Params) {
                     error: "Failed to fetch shipping label from DTDC",
                     details: errorText,
                     dtdcStatus: dtdcResponse.status,
-                    triedAwb: referenceNumber,
-                    triedCustomerRef: customerReferenceNumber
                 },
                 { status: dtdcResponse.status }
             );

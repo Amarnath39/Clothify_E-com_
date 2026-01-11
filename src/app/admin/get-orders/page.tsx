@@ -842,50 +842,57 @@ const OrdersPage = () => {
                                 </CardContent>
                               </Card>
 
-                              {/* ✅ NEW: Shipping Label Section */}
-                              {order.paymentStatus === "PAYMENT_SUCCESS" && order.dtdc?.referenceNumber && (
+                              {/* ✅ Shipping Label Section (Strict AWB Logic) */}
+                              {order.paymentStatus === "PAYMENT_SUCCESS" && (
                                 <Card className="shadow-sm">
                                   <CardHeader>
                                     <CardTitle className="text-lg flex items-center">
                                       🖨️ Shipping Label
                                     </CardTitle>
                                   </CardHeader>
-                                  <CardContent className="space-y-3">
-                                    <div className="bg-gray-50 p-3 rounded">
-                                      <p className="text-sm text-gray-600">
-                                        <strong>AWB Number:</strong> {order.dtdc.referenceNumber}
-                                      </p>
-                                      <p className="text-sm text-gray-600">
-                                        <strong>Courier:</strong> DTDC
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                      <Button
-                                        variant="default"
-                                        onClick={() => handlePrintLabel(order._id)}
-                                        disabled={labelLoading[order._id]}
-                                        className="flex-1"
-                                      >
-                                        {labelLoading[order._id] ? (
-                                          <LuLoader className="mr-2 animate-spin" />
-                                        ) : (
-                                          <span>🖨️</span>
-                                        )}
-                                        {labelLoading[order._id] ? "Loading..." : "Print Label"}
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        onClick={() => handleDownloadLabel(order._id)}
-                                        disabled={labelLoading[order._id]}
-                                        className="flex-1"
-                                      >
-                                        <FaDownload className="mr-2" />
-                                        Download PDF
-                                      </Button>
-                                    </div>
-                                    {labelError[order._id] && (
-                                      <p className="text-red-500 text-sm mt-2">
-                                        {labelError[order._id]}
+                                  <CardContent className="space-y-4">
+                                    {order.dtdc?.referenceNumber ? (
+                                      <>
+                                        <div className="p-3 bg-purple-50 text-purple-700 rounded-md text-sm mb-2">
+                                          <strong>AWB Generated:</strong> {order.dtdc.referenceNumber}
+                                        </div>
+                                        <Button
+                                          className="w-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center gap-2"
+                                          onClick={() => handlePrintLabel(order.orderId || order._id)}
+                                          disabled={labelLoading[order.orderId || order._id]}
+                                        >
+                                          {labelLoading[order.orderId || order._id] ? (
+                                            <>
+                                              <LuLoader className="animate-spin" /> Preparing PDF...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <FaDownload /> Download / Print Label
+                                            </>
+                                          )}
+                                        </Button>
+                                      </>
+                                    ) : (
+                                      <div className="text-center p-4 border border-dashed border-red-200 rounded-lg bg-red-50">
+                                        <p className="text-red-600 font-medium text-sm">
+                                          Shipping label unavailable – shipment not created
+                                        </p>
+                                        <p className="text-xs text-red-500 mt-1">
+                                          AWB Reference Number missing.
+                                        </p>
+                                        <Button
+                                          variant="outline"
+                                          className="mt-3 w-full opacity-50 cursor-not-allowed"
+                                          disabled
+                                        >
+                                          <FaDownload className="mr-2" /> Download Label
+                                        </Button>
+                                      </div>
+                                    )}
+
+                                    {labelError[order.orderId || order._id] && (
+                                      <p className="text-sm text-red-600 mt-2 bg-red-50 p-2 rounded">
+                                        ⚠️ {labelError[order.orderId || order._id]}
                                       </p>
                                     )}
                                   </CardContent>
@@ -1030,8 +1037,8 @@ const OrdersPage = () => {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </CardContent >
+      </Card >
       {totalPages > 1 && (
         <div className="mt-8 flex justify-center">
           <Pagination
@@ -1041,7 +1048,7 @@ const OrdersPage = () => {
           />
         </div>
       )}
-    </div>
+    </div >
   );
 };
 
