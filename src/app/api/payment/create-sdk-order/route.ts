@@ -11,7 +11,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
 
-    const merchantOrderId = `ORDER_${uuidv4()}`;
+    // Generate short, customer-friendly order ID
+    // Format: SIS-YYMMDD-XXXX (e.g., SIS-260111-4729)
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const randomDigits = Math.floor(1000 + Math.random() * 9000);
+
+    const merchantOrderId = `SIS-${year}${month}${day}-${randomDigits}`;
     const redirectUrl = `${process.env.MERCHANT_REDIRECT_URL}?orderId=${merchantOrderId}`;
 
     const request = CreateSdkOrderRequest.StandardCheckoutBuilder()
