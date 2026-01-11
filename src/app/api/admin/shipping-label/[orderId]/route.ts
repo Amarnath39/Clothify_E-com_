@@ -11,26 +11,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     try {
         await connectDB();
 
-        // ✅ Authorization check - Admin, SuperAdmin, or Sales person
-        const adminId = req.headers.get("x-admin-id");
-        if (!adminId) {
-            return NextResponse.json(
-                { success: false, error: "Please provide Admin Id" },
-                { status: 400 }
-            );
-        }
-
-        const admin = await Admin.findById(adminId);
-        if (
-            !admin ||
-            (admin.role !== "Admin" && admin.role !== "SuperAdmin" && admin.role !== "Sales person")
-        ) {
-            return NextResponse.json(
-                { success: false, error: "Unauthorized - Admin, SuperAdmin, or Sales person access required" },
-                { status: 401 }
-            );
-        }
-
+        // No authentication required - anyone can print shipping labels for paid orders
         const { orderId } = params;
 
         // ✅ Fetch order and validate

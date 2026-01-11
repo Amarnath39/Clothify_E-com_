@@ -274,27 +274,13 @@ const OrdersPage = () => {
     } catch (error) { }
   };
 
-  // ✅ NEW: Handle shipping label print
+  // ✅ Handle shipping label print (no authentication required)
   const handlePrintLabel = async (orderId: string) => {
     setLabelLoading({ ...labelLoading, [orderId]: true });
     setLabelError({ ...labelError, [orderId]: "" });
 
     try {
-      // Get admin ID from localStorage
-      const adminData = localStorage.getItem("admin");
-      const admin = adminData ? JSON.parse(adminData) : null;
-
-      if (!admin?._id) {
-        toast.error("Admin authentication required");
-        setLabelError({ ...labelError, [orderId]: "Admin authentication required" });
-        return;
-      }
-
-      const response = await fetch(`/api/admin/shipping-label/${orderId}`, {
-        headers: {
-          "x-admin-id": admin._id,
-        },
-      });
+      const response = await fetch(`/api/admin/shipping-label/${orderId}`);
       if (!response.ok) {
         const error = await response.json();
         setLabelError({ ...labelError, [orderId]: error.error || "Failed to fetch label" });
@@ -337,21 +323,7 @@ const OrdersPage = () => {
     setLabelError({ ...labelError, [orderId]: "" });
 
     try {
-      // Get admin ID from localStorage
-      const adminData = localStorage.getItem("admin");
-      const admin = adminData ? JSON.parse(adminData) : null;
-
-      if (!admin?._id) {
-        toast.error("Admin authentication required");
-        setLabelError({ ...labelError, [orderId]: "Admin authentication required" });
-        return;
-      }
-
-      const response = await fetch(`/api/admin/shipping-label/${orderId}`, {
-        headers: {
-          "x-admin-id": admin._id,
-        },
-      });
+      const response = await fetch(`/api/admin/shipping-label/${orderId}`);
       if (!response.ok) {
         const error = await response.json();
         setLabelError({ ...labelError, [orderId]: error.error || "Failed to fetch label" });
