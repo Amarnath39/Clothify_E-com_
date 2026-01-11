@@ -110,10 +110,15 @@ export async function GET(req: Request, { params }: Params) {
     let currentStatus = "PENDING";
     let paymentVerifiedAt: Date | undefined = undefined;
 
-    // ✅ CRITICAL: Verify BOTH state and code, AND validate amount
-    if (phonePeState === "COMPLETED" && phonePeCode === "PAYMENT_SUCCESS") {
+    // ✅ CRITICAL: PhonePe v2 only returns 'state', not 'code'
+    // Check ONLY state === "COMPLETED" for v2 compatibility
+    console.log(`📊 PhonePe Response: state="${phonePeState}", code="${phonePeCode}", amount=₹${phonePeAmount}`);
+
+    if (phonePeState === "COMPLETED") {
       // Validate amount matches order total (allow 1 rupee tolerance for rounding)
       const amountDifference = Math.abs(phonePeAmount - order.payablePrice);
+      console.log(`💰 Amount check: PhonePe=₹${phonePeAmount}, Order=₹${order.payablePrice}, Difference=₹${amountDifference}`);
+
       if (amountDifference > 1) {
         console.error(
           `⚠️ AMOUNT MISMATCH for order ${orderId}:`,
@@ -124,7 +129,7 @@ export async function GET(req: Request, { params }: Params) {
             success: false,
             error: "Payment amount mismatch",
             details: {
-              phonePeAmount,
+              phonePeAmount: phonePeAmount,
               orderAmount: order.payablePrice,
               difference: amountDifference,
             },
