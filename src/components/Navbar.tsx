@@ -140,7 +140,8 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* ✅ NEW: My Orders Link */}
+            {/* ✅ My Orders Link - Only show when logged in */}
+            {token &&
             <Link href="/orders" title="My Orders">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -161,6 +162,7 @@ const Navbar = () => {
                 <polyline points="12 14 9 17 6 14" />
               </svg>
             </Link>
+            }
 
             <Link href={token ? "/profile" : "/login"}>
               <LucideUserRound size={30} style={{ color: "#020101" }} />
