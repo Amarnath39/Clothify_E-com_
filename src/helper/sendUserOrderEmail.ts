@@ -54,7 +54,7 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
                 <!-- Greeting -->
                 <tr>
                   <td style="padding:30px 40px 20px;">
-                    <h2 style="margin:0; color:#333; font-size:24px;">Dear ${order.shippingAddress?.fullname || 'Customer'},</h2>
+                    <h2 style="margin:0; color:#333; font-size:24px;">Dear ${order.shippingAddress?.name || 'Customer'},</h2>
                     <p style="margin:15px 0 0; color:#666; font-size:16px; line-height:1.6;">
                       Your order has been placed successfully! Below are your purchased product details, pricing, and shipping address. Thank you for shopping.
                     </p>
@@ -121,11 +121,11 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
                   <td style="padding:0 40px 20px;">
                     <h3 style="margin:0 0 15px; color:#333; font-size:18px; border-bottom:2px solid #667eea; padding-bottom:10px;">Shipping Address</h3>
                     <div style="padding:15px; background-color:#f9f9f9; border-radius:6px; color:#666; line-height:1.6;">
-                      <strong style="color:#333;">${order.shippingAddress?.fullname}</strong><br/>
-                      ${order.shippingAddress?.houseNumber}, ${order.shippingAddress?.area}<br/>
-                      ${order.shippingAddress?.district}, ${order.shippingAddress?.state} ${order.shippingAddress?.pincode}<br/>
+                      <strong style="color:#333;">${order.shippingAddress?.name}</strong><br/>
+                      ${order.shippingAddress?.address}<br/>
+                      ${order.shippingAddress?.city}, ${order.shippingAddress?.state} ${order.shippingAddress?.zipCode}<br/>
                       India<br/>
-                      Phone: ${order.shippingAddress?.phoneNumber}
+                      Phone: ${order.shippingAddress?.phone || order.shippingAddress?.mobile}
                     </div>
                   </td>
                 </tr>

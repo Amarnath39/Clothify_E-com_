@@ -14,7 +14,7 @@ export const sendShippingNotificationEmail = async (order: any): Promise<{ succe
         });
 
         const trackingNumber = order.dtdc?.referenceNumber || 'Not Available';
-        const customerName = order.shippingAddress?.fullname || 'Customer';
+        const customerName = order.shippingAddress?.name || 'Customer';
 
         const htmlTemplate = `
       <!DOCTYPE html>
@@ -100,9 +100,9 @@ export const sendShippingNotificationEmail = async (order: any): Promise<{ succe
                     <div style="background-color:#fff9e6; border-left:4px solid #ffc107; padding:15px; border-radius:4px;">
                       <p style="margin:0; color:#856404; font-size:14px; line-height:1.6;">
                         <strong>📍 Delivery Address:</strong><br/>
-                        ${order.shippingAddress?.fullname}<br/>
-                        ${order.shippingAddress?.houseNumber}, ${order.shippingAddress?.area}<br/>
-                        ${order.shippingAddress?.district}, ${order.shippingAddress?.state} ${order.shippingAddress?.pincode}
+                        ${order.shippingAddress?.name}<br/>
+                        ${order.shippingAddress?.address}<br/>
+                        ${order.shippingAddress?.city}, ${order.shippingAddress?.state} ${order.shippingAddress?.zipCode}
                       </p>
                     </div>
                   </td>
