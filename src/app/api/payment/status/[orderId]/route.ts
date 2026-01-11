@@ -75,8 +75,30 @@ export async function GET(req: Request, { params }: Params) {
     }
 
     // 🔹 Call PhonePe API
-    const response: any = await getPhonePeClient().getOrderStatus(orderId);
-    console.log("RAW PHONEPE API RESPONSE:", JSON.stringify(response, null, 2));
+    console.log(`🔍 Calling PhonePe getOrderStatus for orderId: ${orderId}`);
+
+    let response: any;
+    try {
+      response = await getPhonePeClient().getOrderStatus(orderId);
+      console.log("✅ RAW PHONEPE API RESPONSE:", JSON.stringify(response, null, 2));
+    } catch (phonePeError: any) {
+      console.error("❌ PHONEPE API ERROR:", {
+        orderId,
+        error: phonePeError.message,
+        stack: phonePeError.stack,
+        response: phonePeError.response?.data,
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Failed to check payment status with PhonePe",
+          details: phonePeError.message,
+          orderId,
+        },
+        { status: 500 }
+      );
+    }
 
     const phonePeState = response?.state || "PENDING";
     const phonePeCode = response?.code || "";
