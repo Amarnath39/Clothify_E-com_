@@ -66,11 +66,16 @@ export async function GET(req: NextRequest, { params }: Params) {
         dtdcApiUrl.searchParams.set("label_code", "SHIP_LABEL_4X6");
         dtdcApiUrl.searchParams.set("label_format", "pdf");
 
+        // Debug: Check if API key is available
+        const apiKey = process.env.DTDC_API_KEY;
+        console.log(`🔑 DTDC API Key present: ${apiKey ? 'YES (length: ' + apiKey.length + ')' : 'NO - MISSING!'}`);
+        console.log(`📡 Calling DTDC API: ${dtdcApiUrl.toString()}`);
+
         const dtdcResponse = await fetch(dtdcApiUrl.toString(), {
             method: "GET",
             headers: {
-                accept: "application/pdf",
-                "api-key": process.env.DTDC_API_KEY || "",
+                "Accept": "application/pdf",
+                "api-key": apiKey || "",
             },
         });
 
