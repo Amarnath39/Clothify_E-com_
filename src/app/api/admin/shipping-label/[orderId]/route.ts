@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import Order from "@/model/Order";
-import Admin from "@/model/Admin";
 import { connectDB } from "@/../db";
 
 interface Params {
@@ -14,8 +13,14 @@ export async function GET(req: NextRequest, { params }: Params) {
         // No authentication required - anyone can print shipping labels for paid orders
         const { orderId } = params;
 
-        // ✅ Fetch order and validate
-        const order = await Order.findOne({ tempTransactionId: orderId });
+        // ✅ Fetch order - check both tempTransactionId and orderId for backward compatibility
+        const order = await Order.findOne({
+            $or: [
+                { tempTransactionId: orderId },
+                { orderId: orderId }
+            ]
+        });
+
         if (!order) {
             return NextResponse.json(
                 { success: false, error: "Order not found" },
