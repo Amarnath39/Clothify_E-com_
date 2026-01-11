@@ -25,6 +25,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logoutApi } from "@/lib/features/auth";
 import { Button } from "@/components/ui/button";
 import { MdVideoLibrary } from "react-icons/md";
+import NotificationDropdown from "@/components/admin/NotificationDropdown";
 
 function AdminLayout({ children }) {
   const pathname = usePathname();
@@ -262,8 +263,11 @@ function AdminLayout({ children }) {
             />
           </div>
 
+
+
           {/* Right: Welcome + Logout */}
           <div className="flex items-center gap-2 md:gap-4">
+            <NotificationDropdown />
             <h2 className="text-sm md:text-xl hidden md:block">
               Welcome <span className="font-bold">{user.name}</span>
             </h2>

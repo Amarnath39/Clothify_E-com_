@@ -78,3 +78,70 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
+
+export async function PATCH(req: NextRequest) {
+    try {
+        await connectDB();
+        const body = await req.json();
+        const { productId, variantId, newStock, reason, adminId } = body;
+
+        if (!productId || newStock === undefined) {
+            return NextResponse.json({ success: false, msg: "Missing required fields" }, { status: 400 });
+        }
+
+        // Fetch product
+        const product = await Product.findById(productId);
+        if (!product) {
+            return NextResponse.json({ success: false, msg: "Product not found" }, { status: 404 });
+        }
+
+        let oldStock = 0;
+        let finalStock = parseInt(newStock);
+        let updated = false;
+
+        // If variantId is provided, update specific size
+        if (variantId && product.sizes) {
+            const sizeIndex = product.sizes.findIndex((s: any) => s._id.toString() === variantId);
+            if (sizeIndex > -1) {
+                oldStock = product.sizes[sizeIndex].stock;
+                product.sizes[sizeIndex].stock = finalStock;
+                updated = true;
+
+                // Recalculate total stock
+                const total = product.sizes.reduce((acc: number, curr: any) => acc + (parseInt(curr.stock) || 0), 0);
+                product.totalStock = total;
+                product.availableStock = total - (product.reservedStock || 0);
+            }
+        }
+        // If no variantId, update totalStock directly (for non-sized products)
+        else {
+            oldStock = product.totalStock;
+            product.totalStock = finalStock;
+            product.availableStock = finalStock - (product.reservedStock || 0);
+            updated = true;
+        }
+
+        if (updated) {
+            await product.save();
+
+            // Log history
+            await StockHistory.create({
+                productId: product._id,
+                action: "MANUAL_UPDATE",
+                changeAmount: finalStock - oldStock,
+                oldStock: oldStock,
+                newStock: finalStock,
+                reason: reason || "Manual Admin Update",
+                adminId: adminId // Optional, if we track who did it
+            });
+
+            return NextResponse.json({ success: true, product });
+        } else {
+            return NextResponse.json({ success: false, msg: "Failed to update stock" }, { status: 400 });
+        }
+
+    } catch (error: any) {
+        console.error("Inventory Update Error:", error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}

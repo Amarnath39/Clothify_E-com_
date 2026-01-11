@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Pagination } from "@/components/ui/pagination"; // Assuming this component exists
+import { Pagination } from "@/components/ui/pagination";
 import {
   Dialog,
   DialogContent,
@@ -20,16 +20,55 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FaHistory, FaSearch, FaExclamationTriangle } from "react-icons/fa";
+import { FaHistory, FaSearch, FaExclamationTriangle, FaEdit } from "react-icons/fa";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import toast from "react-hot-toast";
 
 const InventoryPage = () => {
   const [data, setData] = useState<any[]>([]);
-  const [history, setHistory] = useState<any[]>([]); // For History Modal
+  const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showHistory, setShowHistory] = useState(false);
+
+  // Edit State
+  const [editItem, setEditItem] = useState<any>(null);
+  const [newStockValue, setNewStockValue] = useState("");
+  const [updateReason, setUpdateReason] = useState("");
+
+  const handleUpdateStock = async (productId: string, variantId: string | undefined, stockValue: string) => {
+    if (!stockValue) {
+      toast.error("Please enter a stock value");
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/inventory", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId,
+          variantId,
+          newStock: stockValue,
+          reason: updateReason,
+          // adminId: user._id // If available in context, or handled by session
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success("Stock updated successfully");
+        setEditItem(null);
+        setNewStockValue("");
+        setUpdateReason("");
+        fetchInventory(); // Refresh
+      } else {
+        toast.error(json.msg || "Failed to update");
+      }
+    } catch (error) {
+      toast.error("Error updating stock");
+    }
+  };
 
   const fetchInventory = async () => {
     setLoading(true);
@@ -109,16 +148,17 @@ const InventoryPage = () => {
                 <TableHead>Reserved</TableHead>
                 <TableHead>Threshold</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10">Loading...</TableCell>
+                  <TableCell colSpan={8} className="text-center py-10">Loading...</TableCell>
                 </TableRow>
               ) : data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10">No products found</TableCell>
+                  <TableCell colSpan={8} className="text-center py-10">No products found</TableCell>
                 </TableRow>
               ) : (
                 data.map((item) => (
@@ -137,6 +177,14 @@ const InventoryPage = () => {
                         {item.status === "Low Stock" && <FaExclamationTriangle className="mr-1 inline w-3 h-3" />}
                         {item.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" onClick={() => {
+                        setEditItem(item);
+                        setNewStockValue(item.totalStock.toString());
+                      }}>
+                        <FaEdit />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -184,6 +232,66 @@ const InventoryPage = () => {
               ))}
             </TableBody>
           </Table>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Stock Modal */}
+      <Dialog open={!!editItem} onOpenChange={(open) => !open && setEditItem(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Update Stock: {editItem?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {editItem?.sizes && editItem.sizes.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Update per size:</p>
+                <ScrollArea className="h-48 border rounded p-2">
+                  {editItem.sizes.map((size: any) => (
+                    <div key={size._id} className="flex justify-between items-center mb-2 p-2 bg-gray-50 rounded">
+                      <span className="font-semibold">{size.size}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Current: {size.stock}</span>
+                        <Input
+                          type="number"
+                          placeholder="New Stock"
+                          className="w-24 h-8"
+                          onChange={(e) => {
+                            // Should handle local state if we want to type before updating
+                          }}
+                          onBlur={(e) => {
+                            if (e.target.value) handleUpdateStock(editItem._id, size._id, e.target.value);
+                          }}
+                        />
+                        {/* Optional: Add explicit update button if onBlur isn't enough */}
+                      </div>
+                    </div>
+                  ))}
+                </ScrollArea>
+                <p className="text-xs text-yellow-600">Updating a size will automatically recalculate Total Stock.</p>
+              </div>
+            ) : (
+              <div>
+                <label className="text-sm font-medium">New Total Stock</label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    value={newStockValue}
+                    onChange={(e) => setNewStockValue(e.target.value)}
+                  />
+                  <Button onClick={() => handleUpdateStock(editItem?._id, undefined, newStockValue)}>Update</Button>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="text-sm font-medium">Reason for Change</label>
+              <Input
+                placeholder="e.g. Broken item, Found extra stock"
+                value={updateReason}
+                onChange={(e) => setUpdateReason(e.target.value)}
+              />
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
