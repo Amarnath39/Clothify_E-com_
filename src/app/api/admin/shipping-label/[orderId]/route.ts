@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     try {
         await connectDB();
 
-        // ✅ Authorization check - Admin only
+        // ✅ Authorization check - Admin, SuperAdmin, or Sales person
         const adminId = req.headers.get("x-admin-id");
         if (!adminId) {
             return NextResponse.json(
@@ -23,10 +23,10 @@ export async function GET(req: NextRequest, { params }: Params) {
         const admin = await Admin.findById(adminId);
         if (
             !admin ||
-            (admin.role !== "Admin" && admin.role !== "SuperAdmin")
+            (admin.role !== "Admin" && admin.role !== "SuperAdmin" && admin.role !== "Sales person")
         ) {
             return NextResponse.json(
-                { success: false, error: "Unauthorized - Admin access required" },
+                { success: false, error: "Unauthorized - Admin, SuperAdmin, or Sales person access required" },
                 { status: 401 }
             );
         }
