@@ -1,22 +1,22 @@
 import nodemailer from "nodemailer";
 
 export const sendShippingNotificationEmail = async (order: any): Promise<{ success: boolean; message: string; error?: any }> => {
-    console.log("--- DEBUG: Sending shipping notification email. Order data:", JSON.stringify(order, null, 2));
+  console.log("--- DEBUG: Sending shipping notification email. Order data:", JSON.stringify(order, null, 2));
 
-    try {
-        const transporter = nodemailer.createTransport({
-            host: "smtp.zeptomail.in",
-            port: 587,
-            auth: {
-                user: "emailapikey",
-                pass: "PHtE6r0OFO/qiGEq9kIA7ffpFsSmZN9/+79iJVFP44dAXPYAS01VrNEoxjfjqE0vXaZDEKWdnYtusOnNte6BJGy7NzkZW2qyqK3sx/VYSPOZsbq6x00YtF0fd0XaV4Hmdt5s1SfQv9jcNA==",
-            },
-        });
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.zeptomail.in",
+      port: 587,
+      auth: {
+        user: "emailapikey",
+        pass: "PHtE6r0OFO/qiGEq9kIA7ffpFsSmZN9/+79iJVFP44dAXPYAS01VrNEoxjfjqE0vXaZDEKWdnYtusOnNte6BJGy7NzkZW2qyqK3sx/VYSPOZsbq6x00YtF0fd0XaV4Hmdt5s1SfQv9jcNA==",
+      },
+    });
 
-        const trackingNumber = order.dtdc?.referenceNumber || 'Not Available';
-        const customerName = order.shippingAddress?.name || 'Customer';
+    const trackingNumber = order.dtdc?.referenceNumber || 'Not Available';
+    const customerName = order.shippingAddress?.name || 'Customer';
 
-        const htmlTemplate = `
+    const htmlTemplate = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -85,9 +85,18 @@ export const sendShippingNotificationEmail = async (order: any): Promise<{ succe
                 <!-- Track Order Button -->
                 <tr>
                   <td style="padding:0 40px 30px; text-align:center;">
-                    <a href="https://www.dtdc.com/in/" target="_blank" style="display:inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#ffffff; text-decoration:none; padding:15px 40px; border-radius:6px; font-size:16px; font-weight:bold; box-shadow:0 4px 10px rgba(102,126,234,0.3);">
-                      Track Your Order →
-                    </a>
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://www.dtdc.com/in/" style="height:50px;v-text-anchor:middle;width:200px;" arcsize="10%" stroke="f" fillcolor="#667eea">
+                      <w:anchorlock/>
+                      <center>
+                    <![endif]-->
+                        <a href="https://www.dtdc.com/in/" target="_blank" style="background-color:#667eea; color:#ffffff; display:inline-block; font-family:sans-serif; font-size:16px; font-weight:bold; line-height:50px; text-align:center; text-decoration:none; width:200px; -webkit-text-size-adjust:none; border-radius:6px; box-shadow:0 4px 10px rgba(102,126,234,0.3);">
+                          Track Your Order →
+                        </a>
+                    <!--[if mso]>
+                      </center>
+                    </v:roundrect>
+                    <![endif]-->
                     <p style="margin:15px 0 0; color:#999; font-size:13px;">
                       Click the button above to track your shipment on DTDC's website
                     </p>
@@ -143,28 +152,28 @@ export const sendShippingNotificationEmail = async (order: any): Promise<{ succe
       </html>
     `;
 
-        console.log("--- DEBUG: Sending shipping notification email...");
+    console.log("--- DEBUG: Sending shipping notification email...");
 
-        await transporter.sendMail({
-            from: '"Siskerala" <orders@siskerala.com>',
-            to: `${order.user?.email || order.customerEmail},sisbymridhulaparvathy@gmail.com`,
-            subject: `📦 Your Order Has Been Shipped! - Tracking #${trackingNumber}`,
-            html: htmlTemplate,
-        });
+    await transporter.sendMail({
+      from: '"Siskerala" <orders@siskerala.com>',
+      to: `${order.user?.email || order.customerEmail},sisbymridhulaparvathy@gmail.com`,
+      subject: `📦 Your Order Has Been Shipped! - Tracking #${trackingNumber}`,
+      html: htmlTemplate,
+    });
 
-        console.log("--- DEBUG: Shipping notification email sent successfully.");
+    console.log("--- DEBUG: Shipping notification email sent successfully.");
 
-        return {
-            success: true,
-            message: `📧 Shipping notification email sent successfully to: ${order.customerEmail}`,
-        };
-    } catch (error: any) {
-        console.error("--- DEBUG: FAILED TO SEND SHIPPING EMAIL. Error:", error);
+    return {
+      success: true,
+      message: `📧 Shipping notification email sent successfully to: ${order.customerEmail}`,
+    };
+  } catch (error: any) {
+    console.error("--- DEBUG: FAILED TO SEND SHIPPING EMAIL. Error:", error);
 
-        return {
-            success: false,
-            message: "❌ Failed to send shipping notification email.",
-            error: error.message || error,
-        };
-    }
+    return {
+      success: false,
+      message: "❌ Failed to send shipping notification email.",
+      error: error.message || error,
+    };
+  }
 };
