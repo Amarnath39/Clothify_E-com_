@@ -31,7 +31,6 @@ import {
   FaTrash,
   FaCheckCircle,
   FaTshirt,
-  FaWhatsapp,
 } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation, Thumbs } from "swiper/modules";
@@ -58,6 +57,7 @@ import { Quicksand } from "next/font/google";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@radix-ui/react-tabs";
 import ProductGalleryPage from "../../FullScreenCrousel";
 import CountDownTimer from "@/components/CountDownTimer";
+import UniversalShare from "@/components/UniversalShare";
 const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
 
 const ProductDetails = ({
@@ -172,12 +172,6 @@ const ProductDetails = ({
     router.push("/cart");
   };
 
-  const handleWhatsAppShare = () => {
-    const message = `Check out this product: ${productData.name}\nPrice: ₹${selectedSize ? selectedSize.offerPrice : productData.actualPrice
-      }\n${window.location.href}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
-  };
 
   if (loading) {
     return <ProductDetailsSkeleton />;
@@ -500,13 +494,10 @@ const ProductDetails = ({
               >
                 {isPreBooking ? "Pre-Book Now" : "Buy Now"}
               </Button>
-              <Button
-                variant="outline"
-                className="w-12 h-12 flex items-center justify-center bg-green-50 hover:bg-green-100"
-                onClick={handleWhatsAppShare}
-              >
-                <FaWhatsapp className="text-green-600" />
-              </Button>
+              <UniversalShare
+                product={productData}
+                currentPrice={selectedSize ? selectedSize.offerPrice : productData.actualPrice}
+              />
             </div>
           </div>
           {/* ✅ END: UPDATED BUTTONS SECTION */}
