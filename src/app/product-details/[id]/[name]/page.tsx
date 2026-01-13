@@ -25,15 +25,27 @@ export async function generateMetadata({ params }): Promise<Metadata> {
 
   const fullTitle = `${product.name} - ₹${price}`;
 
+  const imageUrl = product.img && product.img.length > 0
+    ? (product.img[0].startsWith("http") ? product.img[0] : `https://www.siskerala.com${product.img[0].startsWith('/') ? '' : '/'}${product.img[0]}`)
+    : "https://www.siskerala.com/assets/static/logo/ogimage.png";
+
+  const productUrl = `https://www.siskerala.com/product-details/${id}/${params.name}`;
+
   return {
     title: fullTitle,
     description: description,
     openGraph: {
       title: fullTitle,
       description: description,
-      images: product.img && product.img.length > 0
-        ? [product.img[0].startsWith("http") ? product.img[0] : `https://www.siskerala.com${product.img[0]}`]
-        : ["https://www.siskerala.com/assets/static/logo/ogimage.png"],
+      url: productUrl,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: product.name,
+        }
+      ],
       type: "website",
       siteName: "SIS Kerala",
     },
@@ -45,9 +57,7 @@ export async function generateMetadata({ params }): Promise<Metadata> {
       card: "summary_large_image",
       title: fullTitle,
       description: description,
-      images: product.img && product.img.length > 0
-        ? [product.img[0].startsWith("http") ? product.img[0] : `https://www.siskerala.com${product.img[0]}`]
-        : ["https://www.siskerala.com/assets/static/logo/ogimage.png"],
+      images: [imageUrl],
     },
   };
 }

@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/assets/static/logo/favicon.ico",
     apple: "/assets/static/logo/apple-touch-icon.png",
-    
+
   },
   keywords:
     " S.I.S – Strong, Independent, Stylish. A women’s online clothing store redefining fashion with timeless elegance, effortless style, and confidence in every look. – Men’s online shoe store for premium sneakers & casuals. Shop stylish, comfortable footwear designed for quality and confidence.raa, jewellery, online jewellery store, gold jewellery, silver jewellery, diamond jewellery, bridal jewellery, necklaces, earrings, rings",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     title: "S.I.S BY MV PV",
     description:
       "Shop stylish S.I.S – Strong, Independent, Stylish. A women’s online clothing store redefining fashion with timeless elegance, effortless style, and confidence in every look. and casual footwear at Grab it Kicks. Experience comfort and quality with every step.",
-    url: "https://www.siskerala.com./",
+    url: "https://www.siskerala.com/",
     siteName: "SIS BY MV|PV",
     images: [
       {
@@ -104,7 +104,7 @@ export default function RootLayout({
           sizes="180x180"
           href="/assets/static/logo/apple-touch-icon.png"
         />
-        
+
       </head>
       <body className={` ${urbanist.className} `}>
         <ThemeProvider
