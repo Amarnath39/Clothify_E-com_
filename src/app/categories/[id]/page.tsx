@@ -162,7 +162,7 @@ const CatgeoryProducts = ({ params }) => {
             className="md:hidden absolute top-[140px] right-4 z-50 bg-black text-black p-4 rounded-full shadow-lg"
             onClick={() => setIsFilterOpen(true)}
           >
-            <FaFilter size={24} color="white"/>
+            <FaFilter size={24} color="white" />
           </button>
         )}
         <div className="flex flex-col md:flex-row gap-8">
@@ -211,9 +211,8 @@ const CatgeoryProducts = ({ params }) => {
                     style={{ border: "none" }}
                     onClick={(e) => {
                       e.preventDefault();
-                      window.location.href = `/product-details/${
-                        product._id
-                      }/${product.name.split(" ").join("-")}`;
+                      window.location.href = `/product-details/${product._id
+                        }/${product.name.split(" ").join("-")}`;
                     }}
                     key={product._id}
                     className="flex flex-col overflow-hidden group cursor-pointer relative rounded-2xl bg-white border-none"
@@ -237,6 +236,11 @@ const CatgeoryProducts = ({ params }) => {
                             {Math.round(product?.off)}% OFF
                           </span>
                         )}
+                        {product?.is_prebooking && (
+                          <span className={`absolute ${product?.off > 0 ? "top-12" : "top-3"} left-3 text-xs font-medium bg-blue-600 text-white p-[5px] rounded-lg z-10`}>
+                            Pre-Booking
+                          </span>
+                        )}
                         <button
                           onClick={(e: any) => handleWishlistToggle(product, e)}
                           className="absolute top-3 right-3  bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm"
@@ -244,7 +248,7 @@ const CatgeoryProducts = ({ params }) => {
                           {wishlistItems.some(
                             (item) => item.id === product._id
                           ) ? (
-                            <FaHeart size={20} className="text-red-600"/>
+                            <FaHeart size={20} className="text-red-600" />
                           ) : (
                             <FaRegHeart size={20} className="text-black" />
                           )}
@@ -260,7 +264,7 @@ const CatgeoryProducts = ({ params }) => {
                                                 transition-all duration-300 ease-in-out
                                                 md:opacity-0 md:translate-y-full md:group-hover:opacity-100 md:group-hover:translate-y-0"
                         >
-                          <FaShoppingBag size={20}  />
+                          <FaShoppingBag size={20} />
                         </button>
                       </div>
                       <div className="p-4 flex flex-col space-y-1 sm:space-y-2">
