@@ -53,25 +53,6 @@ const UniversalShare = ({ product, currentPrice }: ShareProps) => {
                     text: `${shareText}\n\n${productUrl}`,
                 };
 
-                // Try to share with image if supported
-                if (navigator.canShare && product.img && product.img.length > 0) {
-                    try {
-                        let imageUrl = product.img[0];
-                        if (!imageUrl.startsWith("http")) {
-                            imageUrl = window.location.origin + imageUrl;
-                        }
-                        const response = await fetch(imageUrl);
-                        const blob = await response.blob();
-                        const file = new File([blob], "product.jpg", { type: blob.type });
-
-                        if (navigator.canShare({ files: [file] })) {
-                            shareData.files = [file];
-                        }
-                    } catch (err) {
-                        console.error("Error preparing file for share:", err);
-                    }
-                }
-
                 await navigator.share(shareData);
             } catch (err) {
                 if ((err as Error).name !== "AbortError") {
