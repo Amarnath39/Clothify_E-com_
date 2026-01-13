@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         const updateData: any = {
           paymentStatus: "PAYMENT_SUCCESS",
           transactionId: callbackData.payload.transactionId,
-          currentStatus: "CONFIRMED",
+          currentStatus: "CONFIRMED", // Or 'Processing' depending on workflow
           paymentMethod: callbackData.payload.paymentInstrument?.type || "ONLINE",
           paymentVerifiedAt: new Date(),
         };
@@ -63,9 +63,17 @@ export async function POST(req: Request) {
         ).populate("user").populate("productDetails.product"); // Populate for notification details
 
         if (updatedOrder) {
-          // ✅ Trigger Stock Reduction
-          const { reduceStock } = await import("@/lib/inventory");
-          await reduceStock(updatedOrder._id);
+          console.log("✅ Payment successful (Webhook), checking stock updates...");
+
+          if (updatedOrder.order_type === "prebooking") {
+            console.log("ℹ️ Pre-booking order detected. Skipping immediate stock reduction.");
+            // Skipping reduceStock()
+          } else {
+            // Use the NEW reduceStock function instead of my manual code
+            // ✅ Trigger Stock Reduction
+            const { reduceStock } = await import("@/lib/inventory");
+            await reduceStock(updatedOrder._id);
+          }
 
           // ✅ Notify Admin
           const { sendAdminNotification } = await import("@/lib/notifications");

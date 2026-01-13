@@ -138,6 +138,11 @@ export const PATCH = async (
     const ratedBy = parseInt(formData.get("ratedBy") as string) || null;
     const additionalFields =
       (formData.get("additionalFields") as string) || null;
+
+    const is_prebooking = formData.get("is_prebooking");
+    const prebooking_start_at = formData.get("prebooking_start_at");
+    const prebooking_end_at = formData.get("prebooking_end_at");
+
     console.log(ratedBy, "rated by");
 
     const updateData: any = {};
@@ -185,6 +190,14 @@ export const PATCH = async (
       updateData.rating = { ...updateData?.rating, ratedBy };
     if (additionalFields !== null)
       updateData.additionalFields = JSON.parse(additionalFields || "{}");
+
+    if (is_prebooking !== null) updateData.is_prebooking = is_prebooking === "true";
+    if (prebooking_start_at !== null) {
+      updateData.prebooking_start_at = prebooking_start_at ? new Date(prebooking_start_at as string) : null;
+    }
+    if (prebooking_end_at !== null) {
+      updateData.prebooking_end_at = prebooking_end_at ? new Date(prebooking_end_at as string) : null;
+    }
 
     const imgUrls: any[] = [];
     // Handling image files and updating img field if necessary

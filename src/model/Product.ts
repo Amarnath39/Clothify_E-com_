@@ -148,6 +148,18 @@ const Product = new mongoose.Schema(
         ref: "ReturnRule",
       },
     ],
+    is_prebooking: {
+      type: Boolean,
+      default: false,
+    },
+    prebooking_start_at: {
+      type: Date,
+      default: null,
+    },
+    prebooking_end_at: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

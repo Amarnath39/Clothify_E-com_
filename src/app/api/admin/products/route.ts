@@ -82,6 +82,10 @@ export const POST = async (req: NextRequest) => {
     const rating = Number(formData.get("rating") as string);
     const ratedBy = parseInt(formData.get("ratedBy") as string);
     const additionalFields = formData.get("additionalFields") as string;
+
+    const is_prebooking = formData.get("is_prebooking") === "true";
+    const prebooking_start_at = formData.get("prebooking_start_at") as string | null;
+    const prebooking_end_at = formData.get("prebooking_end_at") as string | null;
     if (!files || files.length === 0) {
       return NextResponse.json(
         { success: false, msg: "No files received." },
@@ -135,6 +139,9 @@ export const POST = async (req: NextRequest) => {
         ratedBy: ratedBy,
       },
       additionalFields: JSON.parse(additionalFields || "{}"),
+      is_prebooking,
+      prebooking_start_at: prebooking_start_at ? new Date(prebooking_start_at) : null,
+      prebooking_end_at: prebooking_end_at ? new Date(prebooking_end_at) : null,
     });
 
     // Function to recursively collect all linked variant IDs and their colors

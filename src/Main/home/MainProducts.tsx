@@ -42,7 +42,7 @@ const MainProducts = () => {
   // State for pausing animations when user interacts
   const [isPausedTop, setIsPausedTop] = useState(false);
   const [isPausedBottom, setIsPausedBottom] = useState(false);
-  
+
   const topRowRef = useRef<HTMLDivElement>(null);
   const bottomRowRef = useRef<HTMLDivElement>(null);
   const pauseTimerTopRef = useRef<NodeJS.Timeout | null>(null);
@@ -122,13 +122,13 @@ const MainProducts = () => {
   // Scroll function with auto-resume
   const scrollRow = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right', isTop: boolean) => {
     if (!ref.current) return;
-    
-    const scrollAmount = 400; 
+
+    const scrollAmount = 400;
     const currentScroll = ref.current.scrollLeft;
-    const targetScroll = direction === 'left' 
-      ? currentScroll - scrollAmount 
+    const targetScroll = direction === 'left'
+      ? currentScroll - scrollAmount
       : currentScroll + scrollAmount;
-    
+
     ref.current.scrollTo({
       left: targetScroll,
       behavior: 'smooth'
@@ -140,13 +140,13 @@ const MainProducts = () => {
       if (pauseTimerTopRef.current) clearTimeout(pauseTimerTopRef.current);
       pauseTimerTopRef.current = setTimeout(() => {
         setIsPausedTop(false);
-      }, 2000); 
+      }, 2000);
     } else {
       setIsPausedBottom(true);
       if (pauseTimerBottomRef.current) clearTimeout(pauseTimerBottomRef.current);
       pauseTimerBottomRef.current = setTimeout(() => {
         setIsPausedBottom(false);
-      }, 2000); 
+      }, 2000);
     }
   };
 
@@ -184,12 +184,17 @@ const MainProducts = () => {
               className="absolute top-0 left-0 object-cover w-full h-[300px] sm:h-[400px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
             />
           )}
+          {product?.is_prebooking && (
+            <span className="absolute top-3 left-3 text-xs font-bold bg-blue-600 text-white px-2 py-1 rounded-sm shadow-sm z-10 uppercase tracking-wider">
+              Pre-Booking
+            </span>
+          )}
           <button
             onClick={(e: any) => handleWishlistToggle(product, e)}
             className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm"
           >
             {wishlistItems.some((item) => item.id === product._id) ? (
-              <FaHeart size={20} className=" text-red-600"/>
+              <FaHeart size={20} className=" text-red-600" />
             ) : (
               <FaRegHeart size={20} className="text-black" />
             )}
@@ -233,18 +238,18 @@ const MainProducts = () => {
       </CardContent>
     </div>
   );
-  
+
   const SkeletonCard = ({ uniqueKey }) => (
     <div key={uniqueKey} className="flex-shrink-0 w-[45vw] sm:w-[30vw] md:w-[22vw] lg:w-[20vw] mx-3">
-        <Card className="flex flex-col overflow-hidden h-full">
-            <CardContent className="flex-grow p-0">
-                <Skeleton height={400} />
-            </CardContent>
-            <div className="p-4">
-                <Skeleton width="80%" height={24} />
-                <Skeleton width="60%" height={20} className="mt-2" />
-            </div>
-        </Card>
+      <Card className="flex flex-col overflow-hidden h-full">
+        <CardContent className="flex-grow p-0">
+          <Skeleton height={400} />
+        </CardContent>
+        <div className="p-4">
+          <Skeleton width="80%" height={24} />
+          <Skeleton width="60%" height={20} className="mt-2" />
+        </div>
+      </Card>
     </div>
   );
 
@@ -362,33 +367,33 @@ const MainProducts = () => {
         {loading ? (
           <div>
             <div className="marquee-container">
-                <div className="marquee-content">
-                    {Array.from({ length: 10 }).map((_, index) => (
-                        <SkeletonCard key={`sk-top-${index}`} uniqueKey={`sk-top-${index}`} />
-                    ))}
-                </div>
+              <div className="marquee-content">
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <SkeletonCard key={`sk-top-${index}`} uniqueKey={`sk-top-${index}`} />
+                ))}
+              </div>
             </div>
             <div className="marquee-container">
-                <div className="marquee-content">
-                    {Array.from({ length: 10 }).map((_, index) => (
-                        <SkeletonCard key={`sk-bottom-${index}`} uniqueKey={`sk-bottom-${index}`} />
-                    ))}
-                </div>
+              <div className="marquee-content">
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <SkeletonCard key={`sk-bottom-${index}`} uniqueKey={`sk-bottom-${index}`} />
+                ))}
+              </div>
             </div>
           </div>
         ) : products.products?.length > 0 ? (
           <div>
             {/* TOP ROW: SCROLLING RIGHT WITH NAVIGATION */}
             <div className="carousel-wrapper">
-              <button 
+              <button
                 className="nav-button nav-button-left"
                 onClick={() => scrollRow(topRowRef, 'left', true)}
                 aria-label="Scroll left"
               >
                 <FaChevronLeft size={20} className="text-gray-800" />
               </button>
-              
-              <div 
+
+              <div
                 ref={topRowRef}
                 className={`marquee-container ${isPausedTop ? 'paused' : ''}`}
               >
@@ -405,7 +410,7 @@ const MainProducts = () => {
                 </div>
               </div>
 
-              <button 
+              <button
                 className="nav-button nav-button-right"
                 onClick={() => scrollRow(topRowRef, 'right', true)}
                 aria-label="Scroll right"
@@ -416,15 +421,15 @@ const MainProducts = () => {
 
             {/* BOTTOM ROW: SCROLLING LEFT WITH NAVIGATION */}
             <div className="carousel-wrapper">
-              <button 
+              <button
                 className="nav-button nav-button-left"
                 onClick={() => scrollRow(bottomRowRef, 'left', false)}
                 aria-label="Scroll left"
               >
                 <FaChevronLeft size={20} className="text-gray-800" />
               </button>
-              
-              <div 
+
+              <div
                 ref={bottomRowRef}
                 className={`marquee-container ${isPausedBottom ? 'paused' : ''}`}
               >
@@ -441,7 +446,7 @@ const MainProducts = () => {
                 </div>
               </div>
 
-              <button 
+              <button
                 className="nav-button nav-button-right"
                 onClick={() => scrollRow(bottomRowRef, 'right', false)}
                 aria-label="Scroll right"

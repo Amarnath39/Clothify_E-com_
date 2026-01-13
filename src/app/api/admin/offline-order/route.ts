@@ -205,17 +205,19 @@ export const POST = async (req: NextRequest) => {
 
         await newOrder.save();
 
-        // ✅ Reduce inventory (same as online orders)
-        for (const item of processedProductDetails) {
-            const product = await Product.findById(item.product);
-            if (product) {
-                const sizeObj = product.sizes.find((s: any) =>
-                    s._id.equals(item.sizeId)
-                );
-                if (sizeObj) {
-                    sizeObj.stock = Math.max(0, sizeObj.stock - item.count);
-                    sizeObj.sellCount = (sizeObj.sellCount || 0) + item.count;
-                    await product.save();
+        // ✅ Reduce inventory (ONLY IF PAID)
+        if (paymentStatus === "Paid") {
+            for (const item of processedProductDetails) {
+                const product = await Product.findById(item.product);
+                if (product) {
+                    const sizeObj = product.sizes.find((s: any) =>
+                        s._id.equals(item.sizeId)
+                    );
+                    if (sizeObj) {
+                        sizeObj.stock = Math.max(0, sizeObj.stock - item.count);
+                        sizeObj.sellCount = (sizeObj.sellCount || 0) + item.count;
+                        await product.save();
+                    }
                 }
             }
         }

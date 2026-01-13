@@ -41,7 +41,7 @@ export const POST = async (
       .createHash("sha256")
       .update(
         `/pg/v1/status/${process.env.MERCHANT_ID_PROD}/${transactionId}` +
-          process.env.SALT_KEY_PROD
+        process.env.SALT_KEY_PROD
       )
       .digest("hex");
     const checksum = xVerify + "###" + process.env.SALT_KEY_INDEX;
@@ -88,6 +88,33 @@ export const POST = async (
     if (response?.data?.code === "PAYMENT_SUCCESS") {
       // Update the order
       order.paymentMethod = response.data?.data?.paymentInstrument?.type;
+      order.currentStatus = "CONFIRMED"; // Ensure status is confirmed
+
+      // ✅ Reduce Stock on Refresh Success
+      console.log("✅ Payment successful (Refresh), updating product stock...");
+      const Product = require("../../../../../../model/Product").default;
+      const productDetails = order.productDetails || [];
+
+      for (const item of productDetails) {
+        try {
+          if (!item.product) continue;
+          const product = await Product.findById(item.product._id || item.product);
+          if (product) {
+            const sizeObj = product.sizes.find((s: any) =>
+              s._id.toString() === item.sizeId?.toString()
+            );
+            if (sizeObj) {
+              const count = (item.count || 0) + (item.freeCount || 0);
+              sizeObj.stock = Math.max(0, sizeObj.stock - count);
+              sizeObj.sellCount = (sizeObj.sellCount || 0) + count;
+              await product.save();
+              console.log(`Refresh: Stock updated for product ${product._id}`);
+            }
+          }
+        } catch (err) {
+          console.error("Refresh: Error updating stock", err);
+        }
+      }
     }
     await order.save();
 

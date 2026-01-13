@@ -52,6 +52,19 @@ export async function POST(req: NextRequest) {
 
     const redirectUrl = `${process.env.MERCHANT_REDIRECT_URL}?orderId=${merchantOrderId}`;
 
+    // Extract base URL from redirect URL to construct callback URL
+    let callbackUrl = "https://sism.in/api/payment/callback"; // Default fallback
+    try {
+      if (process.env.MERCHANT_REDIRECT_URL) {
+        const urlObj = new URL(process.env.MERCHANT_REDIRECT_URL);
+        callbackUrl = `${urlObj.origin}/api/payment/callback`;
+      }
+    } catch (err) {
+      console.warn("Could not derive callback URL from redirect URL, using fallback.");
+    }
+
+    console.log(`Using Callback URL: ${callbackUrl}`);
+
     // 7. Build PhonePe payment request
     const request = StandardCheckoutPayRequest.builder()
       .merchantOrderId(merchantOrderId)

@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import Order from "../../../../../model/Order";
 import Admin from "../../../../../model/Admin";
+import Product from "../../../../../model/Product";
 import { sendOrderShippedEmail } from "../../../../../helper/sendOrderShippedEmail";
 import { sendOrderConfirmation, sendOrderTracking } from "../../../../../helper/whatsappNotifier"; // ✅ Import your first function
 
@@ -55,7 +56,61 @@ export const PATCH = async (
       );
     }
 
+    // ✅ Stock Reduction Logic: If status changes to CONFIRMED (and wasn't before)
+    // and paymentStatus is NOT already success (to avoid double count if logic overlaps)
+    if (status === "CONFIRMED" && order.currentStatus !== "CONFIRMED") {
+      console.log("Creating stock reduction for confirmed order:", id);
+
+      const productDetails = order.productDetails || [];
+      for (const item of productDetails) {
+        try {
+          // Re-fetch product to ensure fresh stock data
+          const product = await Product.findById(item.product);
+          if (product) {
+            const sizeObj = product.sizes.find((s: any) =>
+              s._id.toString() === item.sizeId?.toString()
+            );
+
+            if (sizeObj) {
+              const count = item.count + (item.freeCount || 0);
+              sizeObj.stock = Math.max(0, sizeObj.stock - count);
+              sizeObj.sellCount = (sizeObj.sellCount || 0) + count;
+              await product.save();
+              console.log(`Decremented stock for ${item.product} size ${sizeObj.size}`);
+            }
+          }
+        } catch (err) {
+          console.error("Error reducing stock during status update:", err);
+        }
+      }
+    }
+
     if (status === "Shipped") {
+
+      // ✅ Pre-booking Stock Reduction (Delayed until Shipped)
+      if (order.order_type === "prebooking") {
+        console.log("📦 Pre-booking Order Shipped: Reducing stock now.");
+        const productDetails = order.productDetails || [];
+        for (const item of productDetails) {
+          try {
+            const product = await Product.findById(item.product);
+            if (product) {
+              const sizeObj = product.sizes.find((s: any) =>
+                s._id.toString() === item.sizeId?.toString()
+              );
+              if (sizeObj) {
+                const count = (item.count || 0) + (item.freeCount || 0);
+                sizeObj.stock = Math.max(0, sizeObj.stock - count);
+                sizeObj.sellCount = (sizeObj.sellCount || 0) + count;
+                await product.save();
+                console.log(`Stock reduced for pre-booking product ${product._id}`);
+              }
+            }
+          } catch (err) {
+            console.error("Error reducing pre-booking stock:", err);
+          }
+        }
+      }
       const emailDetails = {
         trackingId: order.trackingId,
         deliveryPartner: order.deliveryPartner,
@@ -81,7 +136,8 @@ export const PATCH = async (
 
     // ✅ Stock Management Integration
     const confirmationStatuses = ["Processing", "Shipped", "Delivered", "COMPLETED"];
-    if (confirmationStatuses.includes(status) && !order.stockReduced) {
+    // Modified to skip prebooking orders to avoid double reduction or early reduction
+    if (confirmationStatuses.includes(status) && !order.stockReduced && order.order_type !== 'prebooking') {
       // Try to reduce stock for COD orders or manual confirmations
       const { reduceStock } = await import("@/lib/inventory");
       await reduceStock(order._id);

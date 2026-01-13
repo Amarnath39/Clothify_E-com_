@@ -113,6 +113,10 @@ const OrderSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    order_type: {
+      type: String,
+      default: "normal", // 'prebooking'
+    },
   },
   { timestamps: true }
 );

@@ -57,6 +57,7 @@ import { useRouter } from "next/navigation";
 import { Quicksand } from "next/font/google";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@radix-ui/react-tabs";
 import ProductGalleryPage from "../../FullScreenCrousel";
+import CountDownTimer from "@/components/CountDownTimer";
 const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
 
 const ProductDetails = ({
@@ -172,9 +173,8 @@ const ProductDetails = ({
   };
 
   const handleWhatsAppShare = () => {
-    const message = `Check out this product: ${productData.name}\nPrice: ₹${
-      selectedSize ? selectedSize.offerPrice : productData.actualPrice
-    }\n${window.location.href}`;
+    const message = `Check out this product: ${productData.name}\nPrice: ₹${selectedSize ? selectedSize.offerPrice : productData.actualPrice
+      }\n${window.location.href}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
   };
@@ -210,8 +210,13 @@ const ProductDetails = ({
     return !!data;
   };
 
-  // Variable to check if the selected size is out of stock
-  const isOutOfStock = selectedSize ? selectedSize.stock === 0 : true;
+  const isPreBooking = productData?.is_prebooking;
+  const isPreBookingEnded = isPreBooking && productData?.prebooking_end_at && new Date(productData.prebooking_end_at) < new Date();
+  const preBookingEndDate = productData?.prebooking_end_at;
+
+  // Variable to check if the selected size is out of stock (Ignore stock for pre-booking)
+  const isOutOfStock = selectedSize ? (selectedSize.stock === 0 && !isPreBooking) : true;
+
 
   return (
     <div className="container mx-auto px-4 py-6 sm:py-12 mt-20 sm:mt-24 min-h-[90vh] ">
@@ -226,11 +231,10 @@ const ProductDetails = ({
                   handleThumbnailClick(index);
                   setIsModalOpen(true);
                 }}
-                className={`w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${
-                  currentIndex === index
-                    ? "border-indigo-500"
-                    : "border-gray-300"
-                }`}
+                className={`w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${currentIndex === index
+                  ? "border-indigo-500"
+                  : "border-gray-300"
+                  }`}
               >
                 <img
                   src={image}
@@ -258,11 +262,10 @@ const ProductDetails = ({
               <button
                 key={index}
                 onClick={() => handleThumbnailClick(index)}
-                className={`w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
-                  currentIndex === index
-                    ? "border-indigo-500"
-                    : "border-gray-300"
-                }`}
+                className={`w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${currentIndex === index
+                  ? "border-indigo-500"
+                  : "border-gray-300"
+                  }`}
               >
                 <img
                   src={image}
@@ -286,6 +289,9 @@ const ProductDetails = ({
           <h1 className="text-2xl sm:text-4xl font-medium capitalize tracking-wide text-primaryRed">
             {productData?.name}
           </h1>
+          {isPreBooking && !isPreBookingEnded && (
+            <Badge className="bg-blue-600 text-white hover:bg-blue-700">Pre-Booking Open</Badge>
+          )}
           <div className="flex items-baseline space-x-2 text-2xl font-semibold">
             {selectedSize && selectedSize.offerPrice < productData.actualPrice ? (
               <>
@@ -299,46 +305,52 @@ const ProductDetails = ({
             )}
           </div>
 
+          {isPreBooking && preBookingEndDate && !isPreBookingEnded && (
+            <div className="my-4">
+              <p className="font-semibold mb-2">Pre-Booking Ends In:</p>
+              <CountDownTimer targetDate={preBookingEndDate} />
+            </div>
+          )}
+          {isPreBookingEnded && (
+            <p className="text-red-600 font-bold text-lg my-2">Pre-Booking Closed</p>
+          )}
+
           {/* Tabs with Border Bottom Effect */}
           <Tabs defaultValue="description" onValueChange={setActiveTab}>
             <TabsList className="flex border-b border-gray-300">
               <TabsTrigger
                 value="description"
-                className={`pb-2 transition-all px-2 border-b-2 ${
-                  activeTab === "description"
-                    ? "border-indigo-500"
-                    : "border-transparent"
-                }`}
+                className={`pb-2 transition-all px-2 border-b-2 ${activeTab === "description"
+                  ? "border-indigo-500"
+                  : "border-transparent"
+                  }`}
               >
                 Description
               </TabsTrigger>
               <TabsTrigger
                 value="material"
-                className={`pb-2 transition-all px-2 border-b-2 ${
-                  activeTab === "material"
-                    ? "border-indigo-500"
-                    : "border-transparent"
-                }`}
+                className={`pb-2 transition-all px-2 border-b-2 ${activeTab === "material"
+                  ? "border-indigo-500"
+                  : "border-transparent"
+                  }`}
               >
                 Material & Dimensions
               </TabsTrigger>
               <TabsTrigger
                 value="return"
-                className={`pb-2 transition-all px-3 border-b-2 ${
-                  activeTab === "return"
-                    ? "border-indigo-500"
-                    : "border-transparent"
-                }`}
+                className={`pb-2 transition-all px-3 border-b-2 ${activeTab === "return"
+                  ? "border-indigo-500"
+                  : "border-transparent"
+                  }`}
               >
                 Return Rules
               </TabsTrigger>
               <TabsTrigger
                 value="additional"
-                className={`pb-2 transition-all px-3 border-b-2 ${
-                  activeTab === "additional"
-                    ? "border-indigo-500"
-                    : "border-transparent"
-                }`}
+                className={`pb-2 transition-all px-3 border-b-2 ${activeTab === "additional"
+                  ? "border-indigo-500"
+                  : "border-transparent"
+                  }`}
               >
                 Other Information
               </TabsTrigger>
@@ -412,9 +424,8 @@ const ProductDetails = ({
           {/* sizes */}
           {productData.sizes && productData.sizes.length > 0 && (
             <div
-              className={`${
-                productData.sizes[0].type == "Others" ? "hidden" : ""
-              }`}
+              className={`${productData.sizes[0].type == "Others" ? "hidden" : ""
+                }`}
             >
               <h4 className="text-sm font-medium text-theme-secondary mb-2">
                 Size:
@@ -433,9 +444,8 @@ const ProductDetails = ({
                         ? "default"
                         : "outline"
                     }
-                    className={`px-3 py-1 ${
-                      size.stock === 0 ? "opacity-50 " : ""
-                    }`}
+                    className={`px-3 py-1 ${size.stock === 0 ? "opacity-50 " : ""
+                      }`}
                     onClick={() => setSelectedSize(size)}
                     disabled={size.stock === 0}
                   >
@@ -458,7 +468,7 @@ const ProductDetails = ({
             <div className="flex space-x-4">
               <Button
                 onClick={() => handleAddtoCart(selectedSize)}
-                disabled={isOutOfStock}
+                disabled={isOutOfStock || isPreBookingEnded}
                 className="py-6 bg-black hover:bg-gray-800 text-white text-lg w-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isInCart ? (
@@ -467,7 +477,7 @@ const ProductDetails = ({
                   </span>
                 ) : (
                   <span className="flex items-center">
-                    <FaShoppingCart className="mr-2" /> Add to Cart
+                    <FaShoppingCart className="mr-2" /> {isPreBooking ? "Pre-Book Now" : "Add to Cart"}
                   </span>
                 )}
               </Button>
@@ -477,19 +487,18 @@ const ProductDetails = ({
                 onClick={toggleWishlist}
               >
                 <FaHeart
-                  className={`${
-                    isWishlist ? "text-red-500" : "text-gray-400"
-                  }`}
+                  className={`${isWishlist ? "text-red-500" : "text-gray-400"
+                    }`}
                 />
               </Button>
             </div>
             <div className="flex space-x-4">
               <Button
                 onClick={handleBuyNow}
-                disabled={isOutOfStock}
+                disabled={isOutOfStock || isPreBookingEnded}
                 className="py-6 text-lg w-full flex items-center justify-center bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Buy Now
+                {isPreBooking ? "Pre-Book Now" : "Buy Now"}
               </Button>
               <Button
                 variant="outline"

@@ -59,6 +59,9 @@ const AddProduct = () => {
     offers: [],
     sizes: [],
     additionalFields: [],
+    is_prebooking: false,
+    prebooking_start_at: "",
+    prebooking_end_at: "",
   });
 
   const [categories, setCategories] = useState([]);
@@ -685,6 +688,40 @@ const AddProduct = () => {
             />
             <label htmlFor="latestProduct">New Arrivals</label>
           </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="is_prebooking"
+              checked={product.is_prebooking}
+              onCheckedChange={() => handleCheckboxChange("is_prebooking")}
+            />
+            <label htmlFor="is_prebooking">Enable Pre-booking</label>
+          </div>
+          {product.is_prebooking && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 p-4 border rounded">
+              <div>
+                <Label htmlFor="prebooking_start_at">Start Date (Optional)</Label>
+                <Input
+                  id="prebooking_start_at"
+                  name="prebooking_start_at"
+                  type="datetime-local"
+                  value={product.prebooking_start_at}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div>
+                <Label htmlFor="prebooking_end_at">End Date (Required)</Label>
+                <Input
+                  id="prebooking_end_at"
+                  name="prebooking_end_at"
+                  type="datetime-local"
+                  value={product.prebooking_end_at}
+                  onChange={handleInputChange}
+                  required={product.is_prebooking}
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div>

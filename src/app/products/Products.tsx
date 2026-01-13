@@ -169,7 +169,7 @@ const Products = () => {
             className="md:hidden absolute top-[140px] right-4 z-50 bg-black text-black p-4 rounded-full shadow-lg"
             onClick={() => setIsFilterOpen(true)}
           >
-            <FaFilter size={24} color="white"/>
+            <FaFilter size={24} color="white" />
           </button>
         )}
         <div className="flex flex-col md:flex-row gap-8">
@@ -223,9 +223,8 @@ const Products = () => {
                         style={{ border: "none" }}
                         onClick={(e) => {
                           e.preventDefault();
-                          window.location.href = `/product-details/${
-                            product._id
-                          }/${product.name.split(" ").join("-")}`;
+                          window.location.href = `/product-details/${product._id
+                            }/${product.name.split(" ").join("-")}`;
                         }}
                         key={product._id}
                         className="flex flex-col overflow-hidden group cursor-pointer relative rounded-2xl bg-white border-none"
@@ -249,6 +248,11 @@ const Products = () => {
                                 {Math.round(product?.off)}% OFF
                               </span>
                             )}
+                            {product?.is_prebooking && (
+                              <span className={`absolute ${product?.off > 0 ? "top-12" : "top-3"} left-3 text-xs font-medium bg-blue-600 text-white p-[5px] rounded-lg z-10`}>
+                                Pre-Booking
+                              </span>
+                            )}
                             <button
                               onClick={(e: any) =>
                                 handleWishlistToggle(product, e)
@@ -260,7 +264,7 @@ const Products = () => {
                               ) ? (
                                 <FaHeart size={20} className="text-red-600" />
                               ) : (
-                                <FaRegHeart size={20} className="text-black"/>
+                                <FaRegHeart size={20} className="text-black" />
                               )}
                             </button>
                             {/* Shopping Bag Icon - Hidden on mobile, shows on hover for larger screens */}

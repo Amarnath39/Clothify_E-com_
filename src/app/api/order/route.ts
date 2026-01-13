@@ -16,7 +16,7 @@ const generateOrderId = async (): Promise<string> => {
       .lean() as { orderSeq: number } | null;
 
     const nextSeq = (lastOrder?.orderSeq || 1799) + 1;
-    
+
     return `ON-${nextSeq.toString().padStart(6, "0")}`;
   } catch (error) {
     console.error("Error generating order ID:", error);
@@ -28,7 +28,7 @@ export const POST = async (req: NextRequest) => {
   try {
     const userId = req.headers.get("x-user-id");
     console.log("📍 Step 1: User ID received:", userId);
-    
+
     if (!userId) {
       return NextResponse.json(
         { success: false, msg: "Please provide User Id" },
@@ -38,7 +38,7 @@ export const POST = async (req: NextRequest) => {
 
     const user = await User.findById(userId);
     console.log("📍 Step 2: User found:", user ? "Yes" : "No");
-    
+
     if (!user) {
       return NextResponse.json(
         { success: false, msg: "Unauthorized" },
@@ -63,6 +63,9 @@ export const POST = async (req: NextRequest) => {
     const products = await Product.find({ _id: { $in: uniqueProductIds } });
     console.log("📍 Step 6: Products found:", products.length);
 
+    const isPreBookingOrder = products.some((p) => p.is_prebooking);
+    const orderType = isPreBookingOrder ? "prebooking" : "normal";
+
     if (products.length !== uniqueProductIds.length) {
       return NextResponse.json({ success: false, msg: "Some products not found" }, { status: 404 });
     }
@@ -72,7 +75,7 @@ export const POST = async (req: NextRequest) => {
     let totalOfferPrice = 0;
     let totalQuantity = 0;
     const outOfStockProducts: string[] = [];
-    
+
     console.log("📍 Step 7: Fetching shipping address for:", user.defaultAddress);
     const shippingAddress = await Address.findById(user.defaultAddress);
     console.log("📍 Step 7.5: Shipping address found:", shippingAddress ? "Yes" : "No");
@@ -85,11 +88,11 @@ export const POST = async (req: NextRequest) => {
           const selectedSize = pd.size;
           const sizeObj = product.sizes.find((size: any) => size._id.toString() === selectedSize);
 
-          if (!sizeObj || sizeObj.stock < quantity) {
+          if (!sizeObj || (sizeObj.stock < quantity && !product.is_prebooking)) {
             outOfStockProducts.push(product._id.toString());
             return null;
           }
-          
+
           totalActualPrice += product.actualPrice * quantity;
           totalOfferPrice += (sizeObj.offerPrice || product.actualPrice) * quantity;
           totalQuantity += quantity;
@@ -124,14 +127,14 @@ export const POST = async (req: NextRequest) => {
     if (couponCode) {
       const coupon = await Coupon.findOne({ couponCode });
       console.log(coupon, "coupon details::::");
-      
+
       if (coupon) {
         const isValid =
           coupon.validity &&
           new Date(coupon.validity) > new Date() &&
           coupon.availableFor > coupon.userCount &&
           coupon.purchaseAmount <= totalOfferPrice;
-          
+
         const hasUserUsedCoupon = coupon.user.includes(userId);
         if (isValid && (!hasUserUsedCoupon || coupon.multiUse)) {
           if (coupon.type === "percentage") {
@@ -154,7 +157,7 @@ export const POST = async (req: NextRequest) => {
     totalPayablePrice = Math.max(totalPayablePrice, 1);
 
     let newOrder;
-    
+
     // ✅ CRITICAL FIX: Handle order update/create properly
     if (orderId) {
       console.log("📍 Step 11: Attempting to update existing order:", orderId);
@@ -170,12 +173,13 @@ export const POST = async (req: NextRequest) => {
             shippingAddress,
             shippingCost,
             couponCode: appliedCoupon,
+            order_type: orderType,
           },
         },
         { new: true }
       );
       console.log("📍 Step 11.5: Order found and updated:", newOrder ? "Yes" : "No");
-      
+
       // ✅ If order not found with that orderId, create new one
       if (!newOrder) {
         console.log("📍 Step 11.6: Order not found, creating new order instead");
@@ -193,6 +197,7 @@ export const POST = async (req: NextRequest) => {
           shippingAddress,
           shippingCost,
           couponCode: appliedCoupon,
+          order_type: orderType,
         });
 
         await newOrder.save();
@@ -215,6 +220,7 @@ export const POST = async (req: NextRequest) => {
         shippingAddress,
         shippingCost,
         couponCode: appliedCoupon,
+        order_type: orderType,
       });
 
       await newOrder.save();
@@ -222,7 +228,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     console.log("📍 Step 13: Preparing response");
-    
+
     // ✅ Final safety check
     if (!newOrder) {
       console.error("❌ newOrder is still null!");
@@ -246,18 +252,18 @@ export const POST = async (req: NextRequest) => {
         createdAt: newOrder.createdAt,
       },
     };
-    
+
     console.log("✅ Step 14: Success! Returning order:", newOrder.orderId);
     return NextResponse.json(response, { status: 200 });
-    
+
   } catch (error) {
     console.error("❌ ERROR in Order API:", error);
     console.error("❌ Error stack:", error instanceof Error ? error.stack : "No stack trace");
     console.error("❌ Error message:", error instanceof Error ? error.message : String(error));
-    
+
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         msg: "Internal Server Error",
         error: error instanceof Error ? error.message : String(error),
         stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
@@ -279,7 +285,7 @@ export const GET = async (req: NextRequest) => {
     console.log("--- DEBUG: Populated Orders in API ---");
     console.log(JSON.stringify(orders, null, 2));
     console.log("-------------------------------------");
-    
+
     return NextResponse.json(
       { success: true, msg: "Success", orders },
       { status: 200 }

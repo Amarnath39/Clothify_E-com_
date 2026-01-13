@@ -1,5 +1,5 @@
 "use client";
- 
+
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Input } from "@/components/ui/input";
@@ -13,11 +13,11 @@ import {
   getAllProducts,
   getProductsById,
 } from "@/lib/features/catogary";
- 
+
 import toast from "react-hot-toast";
 import { ColorVariantSelector } from "../../addProduct/Colorsvarianet";
 import { CategorySelector } from "../../addProduct/Selector";
- 
+
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
- 
+
 import axios from "axios";
 import RulesSelector from "../RulesSelector";
 import {
@@ -36,7 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSearchParams } from "next/navigation";
- 
+
 enum OfferStatus {
   ACTIVE = "Active",
   INACTIVE = "Inactive",
@@ -44,7 +44,7 @@ enum OfferStatus {
 const UpdateProduct = ({ params }) => {
   const { id } = params;
   const dispatch = useDispatch<any>();
- 
+
   const [product, setProduct] = useState<any>({
     name: "",
     description: "",
@@ -66,6 +66,9 @@ const UpdateProduct = ({ params }) => {
     returnRules: [],
     sizes: [],
     additionalFields: [],
+    is_prebooking: false,
+    prebooking_start_at: "",
+    prebooking_end_at: "",
   });
   const [categories, setCategories] = useState([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -87,55 +90,55 @@ const UpdateProduct = ({ params }) => {
   const [newField, setNewField] = useState({ key: "", value: "" });
   const searchParams = useSearchParams();
   const isDuplicate = searchParams.get('duplicate') === 'true';
- 
+
   const handleOfferChange = (e) => {
     const { name, value } = e.target;
     setNewOffer((prev) => ({ ...prev, [name]: value }));
   };
- 
+
   useEffect(() => {
     // Check if we're editing a duplicate product
     if (isDuplicate) {
       const duplicateProduct = JSON.parse(localStorage.getItem('editDuplicateProduct') || '{}');
-     
+
       if (duplicateProduct && duplicateProduct._id) {
         // Remove the temporary ID and isDuplicate flag
         const { _id, isDuplicate, ...productData } = duplicateProduct;
-       
+
         // Set the form data with the duplicate product data
         setProduct(productData);
-       
+
         // Clear the localStorage after using it
         localStorage.removeItem('editDuplicateProduct');
       }
     }
   }, [isDuplicate]);
- 
+
   const fetchOfferProducts = async () => {
     if (product.categories.length === 0) {
       toast.error("Please select at least one category first");
       return;
     }
- 
+
     try {
       const allProductsPromises = product.categories.map(async (categoryId) => {
         const queryParams = new URLSearchParams({ categoryId });
         const { payload } = await dispatch(getAllProducts(queryParams.toString()));
         return payload.success ? payload.products : [];
       });
- 
+
       const allProductsArrays = await Promise.all(allProductsPromises);
       const allProducts = Array.from(new Set(allProductsArrays.flat())).filter(
         (p) => p._id !== product._id
       );
- 
+
       setOfferProducts(allProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast.error("Failed to fetch products. Please try again.");
     }
   };
- 
+
   const handleProductSelection = (productId: any) => {
     setNewOffer((prev: any) => {
       const updatedProducts = prev.freeProduct.includes(productId)
@@ -144,7 +147,7 @@ const UpdateProduct = ({ params }) => {
       return { ...prev, freeProduct: updatedProducts };
     });
   };
- 
+
   const handleAddOffer = () => {
     if (
       newOffer.purchaseQuantity &&
@@ -178,39 +181,39 @@ const UpdateProduct = ({ params }) => {
       );
     }
   };
- 
+
   const removeOffer = (index) => {
     setProduct((prev) => ({
       ...prev,
       offers: prev.offers.filter((_, i) => i !== index),
     }));
   };
- 
+
   const toggleOfferStatus = (index) => {
     setProduct((prev) => ({
       ...prev,
       offers: prev.offers.map((offer, i) =>
         i === index
           ? {
-              ...offer,
-              status:
-                offer.status === OfferStatus.ACTIVE
-                  ? OfferStatus.INACTIVE
-                  : OfferStatus.ACTIVE,
-            }
+            ...offer,
+            status:
+              offer.status === OfferStatus.ACTIVE
+                ? OfferStatus.INACTIVE
+                : OfferStatus.ACTIVE,
+          }
           : offer
       ),
     }));
   };
- 
+
   const handleRatingChange = (e) => {
     setRating(Number(e.target.value));
   };
- 
+
   const handleRatedByChange = (e) => {
     setRatedBy(Number(e.target.value));
   };
- 
+
   useEffect(() => {
     const fetchProductAndCategories = async () => {
       try {
@@ -218,12 +221,14 @@ const UpdateProduct = ({ params }) => {
           dispatch(getProductsById(id)),
           dispatch(getAllCategories()),
         ]);
- 
+
         if (productResponse.payload.success) {
           const fetchedProduct = productResponse.payload.product;
           setProduct({
             ...fetchedProduct,
             categories: fetchedProduct.categories.map((cat) => cat._id),
+            prebooking_start_at: fetchedProduct.prebooking_start_at ? new Date(fetchedProduct.prebooking_start_at).toISOString().slice(0, 16) : "",
+            prebooking_end_at: fetchedProduct.prebooking_end_at ? new Date(fetchedProduct.prebooking_end_at).toISOString().slice(0, 16) : "",
           });
           setRating(fetchedProduct.rating.star);
           setRatedBy(fetchedProduct.rating.ratedBy);
@@ -231,7 +236,7 @@ const UpdateProduct = ({ params }) => {
         } else {
           toast.error("Failed to fetch product");
         }
- 
+
         if (categoriesResponse.payload.success) {
           setCategories(categoriesResponse.payload.categories);
         } else {
@@ -242,42 +247,42 @@ const UpdateProduct = ({ params }) => {
         toast.error("An error occurred while fetching data");
       }
     };
- 
+
     fetchProductAndCategories();
   }, [id, dispatch]);
- 
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProduct({ ...product, [name]: value });
   };
- 
+
   const handleCheckboxChange = (name) => {
     setProduct({ ...product, [name]: !product[name] });
   };
- 
+
   const handleMaterialChange = (e) => {
     setProduct({ ...product, material: e.target.value.split(",") });
   };
- 
+
   const handleCategoryChange = (selectedCategories) => {
     setProduct({ ...product, categories: selectedCategories });
   };
- 
+
   const handleColorVariantsChange = (newVariants) => {
     setProduct((prev) => ({ ...prev, colors: newVariants }));
   };
- 
+
   const handleImageUpload = (e: any) => {
     const files = Array.from(e.target.files) as File[];
     setNewImages((prevImages) => [...prevImages, ...files]);
   };
- 
+
   const removeExistingImage = (imgPath: string) => {
     setExistingImages((prevImages) =>
       prevImages.filter((img) => img !== imgPath)
     );
   };
- 
+
   const removeNewImage = (index: number) => {
     setNewImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
@@ -290,7 +295,7 @@ const UpdateProduct = ({ params }) => {
     _id: "",
     // deliveryPrice: "",
   });
- 
+
   const handleAddSize = () => {
     if (
       newSize.size &&
@@ -304,12 +309,12 @@ const UpdateProduct = ({ params }) => {
           sizes: prevProduct.sizes.map((size, index) =>
             index === editingSizeIndex
               ? {
-                  // deliveryPrice: newSize.deliveryPrice,
-                  size: newSize.size,
-                  stock: newSize.stock,
-                  offerPrice: newSize.offerPrice,
-                  _id: prevProduct.sizes[editingSizeIndex]._id, // Keep original _id
-                }
+                // deliveryPrice: newSize.deliveryPrice,
+                size: newSize.size,
+                stock: newSize.stock,
+                offerPrice: newSize.offerPrice,
+                _id: prevProduct.sizes[editingSizeIndex]._id, // Keep original _id
+              }
               : size
           ),
         }));
@@ -320,7 +325,7 @@ const UpdateProduct = ({ params }) => {
           setSizeError("This size is already present.");
           return;
         }
- 
+
         // Adding new size - omit _id
         const { _id, ...sizeWithoutId } = newSize;
         setProduct((prevProduct) => ({
@@ -328,7 +333,7 @@ const UpdateProduct = ({ params }) => {
           sizes: [...prevProduct.sizes, sizeWithoutId],
         }));
       }
- 
+
       // Reset form
       setNewSize({
         size: "",
@@ -343,14 +348,14 @@ const UpdateProduct = ({ params }) => {
       toast.error("Please fill all size details");
     }
   };
- 
+
   const removeSize = (index: number) => {
     setProduct((prevProduct) => ({
       ...prevProduct,
       sizes: prevProduct.sizes.filter((_, i) => i !== index),
     }));
   };
- 
+
   const handleAddAdditionalField = () => {
     if (newField.key && newField.value) {
       setProduct((prevProduct) => ({
@@ -366,7 +371,7 @@ const UpdateProduct = ({ params }) => {
       toast.error("Please fill both key and value");
     }
   };
- 
+
   const removeAdditionalField = (keyToRemove) => {
     setProduct((prevProduct) => {
       const updatedFields = { ...prevProduct.additionalFields };
@@ -374,11 +379,11 @@ const UpdateProduct = ({ params }) => {
       return { ...prevProduct, additionalFields: updatedFields };
     });
   };
- 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData: any = new FormData();
- 
+
     // Append all fields to formData
     Object.keys(product).forEach((key) => {
       if (
@@ -393,19 +398,19 @@ const UpdateProduct = ({ params }) => {
         formData.append(key, product[key]);
       }
     });
- 
+
     formData.delete("rating");
     // Append rating and ratedBy to the formData
     formData.append("rating", rating);
     formData.append("ratedBy", ratedBy);
     // Append existing images
     formData.append("existingImages", JSON.stringify(existingImages));
- 
+
     // Append new images
     newImages.forEach((file) => {
       formData.append("file", file);
     });
- 
+
     try {
       // Replace with actual product ID if dynamic
       const response = await fetch(`/api/admin/products/${id}`, {
@@ -415,18 +420,18 @@ const UpdateProduct = ({ params }) => {
           "x-admin-id": "your-admin-id-here", // Replace with actual admin ID
         },
       });
- 
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
- 
+
       const data = await response.json();
       if (data.success) {
         toast.success("updated successfully");
       } else {
         toast.error(data.msg);
       }
- 
+
       // Handle success (e.g., show a success message, reset form, redirect, etc.)
       // For example:
       // showSuccessMessage("Product updated successfully!");
@@ -438,7 +443,7 @@ const UpdateProduct = ({ params }) => {
       // showErrorMessage("Failed to update product. Please try again.");
     }
   };
- 
+
   const fetchRules = async () => {
     try {
       const response = await axios.get("/api/rules");
@@ -447,11 +452,11 @@ const UpdateProduct = ({ params }) => {
       toast.error("Failed to fetch rules");
     }
   };
- 
+
   useEffect(() => {
     fetchRules();
   }, []);
- 
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Update Product</h1>
@@ -554,7 +559,7 @@ const UpdateProduct = ({ params }) => {
               required
             />
           </div>
- 
+
           <div>
             <Label htmlFor="rating">Stars</Label>
             <Input
@@ -636,7 +641,7 @@ const UpdateProduct = ({ params }) => {
               required
             />
           </div>
- 
+
           <div>
             <Label htmlFor="washCare">Wash Care</Label>
             <Input
@@ -661,7 +666,7 @@ const UpdateProduct = ({ params }) => {
             onChange={handleCategoryChange}
           />
         </div>
- 
+
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -688,7 +693,41 @@ const UpdateProduct = ({ params }) => {
             <label htmlFor="latestProduct">New Arrivals</label>
           </div>
         </div>
- 
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="is_prebooking"
+            checked={product.is_prebooking}
+            onCheckedChange={() => handleCheckboxChange("is_prebooking")}
+          />
+          <label htmlFor="is_prebooking">Enable Pre-booking</label>
+        </div>
+        {product.is_prebooking && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 p-4 border rounded">
+            <div>
+              <Label htmlFor="prebooking_start_at">Start Date (Optional)</Label>
+              <Input
+                id="prebooking_start_at"
+                name="prebooking_start_at"
+                type="datetime-local"
+                value={product.prebooking_start_at}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="prebooking_end_at">End Date (Required)</Label>
+              <Input
+                id="prebooking_end_at"
+                name="prebooking_end_at"
+                type="datetime-local"
+                value={product.prebooking_end_at}
+                onChange={handleInputChange}
+                required={product.is_prebooking}
+                min={new Date().toISOString().slice(0, 16)}
+              />
+            </div>
+          </div>
+        )}
+
         {/* <div>
           <Label>Offers</Label>
           <div className="flex flex-wrap gap-2 mt-2">
@@ -726,14 +765,14 @@ const UpdateProduct = ({ params }) => {
             ))}
           </div>
         </div> */}
- 
+
         <div>
           <Label>Sizes</Label>
           <div className="flex flex-wrap gap-2 mt-2">
             {product.sizes.map((size, index) => (
               <div key={index} className="bg-gray-100 p-2 rounded">
                 {size.size} - Stock: {size.stock}, Price: {size.offerPrice}
-               
+
                 <button
                   type="button"
                   onClick={() => {
@@ -757,7 +796,7 @@ const UpdateProduct = ({ params }) => {
           </div>
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button  type="button" className="mt-2">
+              <Button type="button" className="mt-2">
                 {"Add Size"}
               </Button>
             </DialogTrigger>
@@ -837,7 +876,7 @@ const UpdateProduct = ({ params }) => {
                     }
                   />
                 </div> */}
-                <Button  type="button" onClick={handleAddSize}>
+                <Button type="button" onClick={handleAddSize}>
                   {editingSizeIndex !== null ? "Update Size" : "Add Size"}
                 </Button>
               </div>
@@ -868,7 +907,7 @@ const UpdateProduct = ({ params }) => {
             onOpenChange={setIsAdditionalFieldModalOpen}
           >
             <DialogTrigger asChild>
-              <Button  type="button" className="mt-2">
+              <Button type="button" className="mt-2">
                 Add Additional Field
               </Button>
             </DialogTrigger>
@@ -898,7 +937,7 @@ const UpdateProduct = ({ params }) => {
                   />
                 </div>
                 <Button
-             
+
                   type="button"
                   onClick={handleAddAdditionalField}
                 >
@@ -908,15 +947,14 @@ const UpdateProduct = ({ params }) => {
             </DialogContent>
           </Dialog>
         </div>
- 
+
         <Button type="submit" className="w-full">
           Update Product
         </Button>
-      </form>
-    </div>
+      </form >
+    </div >
   );
 };
- 
+
 export default UpdateProduct;
- 
- 
+
