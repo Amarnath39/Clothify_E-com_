@@ -35,7 +35,12 @@ const UniversalShare = ({ product, currentPrice }: ShareProps) => {
 
     const productUrl = typeof window !== "undefined" ? window.location.href : "";
     const price = currentPrice || product.offerPrice || product.actualPrice;
-    const shareText = `Check out this product: ${product.name}\nPrice: ₹${price}\n`;
+
+    // Formatting share text for better appearance in apps like WhatsApp
+    const shareTitle = `*${product.name}*`;
+    const sharePrice = `*Price: ₹${price}*`;
+    const shareDescription = product.description ? `\n\n${product.description}` : "";
+    const shareText = `${shareTitle}${shareDescription}\n\n${sharePrice}\n`;
 
     const handleShare = async () => {
         if (navigator.share) {
@@ -43,7 +48,7 @@ const UniversalShare = ({ product, currentPrice }: ShareProps) => {
             try {
                 const shareData: ShareData = {
                     title: product.name,
-                    text: shareText,
+                    text: `${shareText}\nCheck it out here:`,
                     url: productUrl,
                 };
 
@@ -87,9 +92,8 @@ const UniversalShare = ({ product, currentPrice }: ShareProps) => {
     };
 
     const shareToWhatsApp = () => {
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
-            shareText + " " + productUrl
-        )}`;
+        const fullMessage = `${shareText}\nCheck it out here: ${productUrl}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(fullMessage)}`;
         window.open(whatsappUrl, "_blank");
         setIsOpen(false);
     };
@@ -122,13 +126,13 @@ const UniversalShare = ({ product, currentPrice }: ShareProps) => {
         <>
             <Button
                 variant="outline"
-                className="h-12 flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 transition-colors px-4"
+                className="h-12 flex items-center justify-center gap-2 bg-white border-gray-200 hover:bg-gray-50 transition-colors px-4"
                 onClick={handleShare}
                 disabled={isSharing}
                 title="Share product"
             >
-                <FaShareAlt className="text-blue-600" />
-                <span className="font-medium text-blue-600">Share</span>
+                <FaShareAlt className="text-black" />
+                <span className="font-medium text-black">Share</span>
             </Button>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
