@@ -39,8 +39,10 @@ const UniversalShare = ({ product, currentPrice }: ShareProps) => {
     // Formatting share text for better appearance in apps like WhatsApp
     const shareTitle = `*${product.name}*`;
     const sharePrice = `*Price: ₹${price}*`;
-    const shareDescription = product.description ? `\n\n${product.description}` : "";
-    const shareText = `${shareTitle}${shareDescription}\n\n${sharePrice}\n`;
+    const shareDescription = product.description
+        ? `\n\n${product.description.substring(0, 100)}${product.description.length > 100 ? "..." : ""}`
+        : "";
+    const shareText = `${shareTitle}${shareDescription}\n\n${sharePrice}`;
 
     const handleShare = async () => {
         if (navigator.share) {
@@ -48,8 +50,7 @@ const UniversalShare = ({ product, currentPrice }: ShareProps) => {
             try {
                 const shareData: ShareData = {
                     title: product.name,
-                    text: `${shareText}\nCheck it out here:`,
-                    url: productUrl,
+                    text: `${shareText}\n\n${productUrl}`,
                 };
 
                 // Try to share with image if supported
