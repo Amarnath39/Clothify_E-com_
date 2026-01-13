@@ -222,13 +222,13 @@ const CatgeoryProducts = ({ params }) => {
                         <img
                           src={product.img[0]}
                           alt={product.name}
-                          className="object-cover object-center w-full h-[260px] sm:h-[400px] transition-opacity duration-300 ease-in-out hover:scale-105"
+                          className="object-cover object-center w-full h-[260px] sm:h-[400px] transition-transform duration-300 ease-in-out md:group-hover:scale-105"
                         />
                         {product.img[1] && (
                           <img
                             src={product.img[1]}
                             alt={product.name}
-                            className="absolute top-0 left-0 object-cover w-full h-[260px] sm:h-[400px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
+                            className="absolute top-0 left-0 object-cover w-full h-[260px] sm:h-[400px] opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
                           />
                         )}
                         {product?.off > 0 && (
