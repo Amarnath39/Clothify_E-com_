@@ -21,9 +21,14 @@ export async function generateMetadata({ params }): Promise<Metadata> {
     ? product.sizes[0].offerPrice || product.actualPrice
     : product.actualPrice;
 
-  const description = `${product.description ? product.description.substring(0, 150) + '...' : ""} | Price: ₹${price}`;
+  // Create a rich description for social sharing
+  const productDescription = product.description
+    ? product.description.substring(0, 200).trim()
+    : "Shop stylish S.I.S – Strong, Independent, Stylish.";
 
-  const fullTitle = `${product.name} - ₹${price}`;
+  const description = `${productDescription}${productDescription.length >= 200 ? '...' : ''}\n\nPrice: ₹${price}`;
+
+  const fullTitle = `${product.name}`;
 
   const imageUrl = product.img && product.img.length > 0
     ? (product.img[0].startsWith("http") ? product.img[0] : `https://www.siskerala.com${product.img[0].startsWith('/') ? '' : '/'}${product.img[0]}`)
@@ -47,11 +52,16 @@ export async function generateMetadata({ params }): Promise<Metadata> {
         }
       ],
       type: "website",
-      siteName: "SIS Kerala",
+      siteName: "S.I.S BY MV PV",
+      locale: "en_IN",
     },
     other: {
+      "og:price:amount": price.toString(),
+      "og:price:currency": "INR",
       "product:price:amount": price.toString(),
       "product:price:currency": "INR",
+      "product:availability": "in stock",
+      "product:condition": "new",
     },
     twitter: {
       card: "summary_large_image",
