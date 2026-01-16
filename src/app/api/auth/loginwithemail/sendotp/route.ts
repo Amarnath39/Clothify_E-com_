@@ -30,13 +30,13 @@ export const POST = async (req: NextRequest) => {
         await user.save();
       }
 
-      user.emailOtp = "123456"; // fixed dummy OTP
+      user.emailOtp = "123456"; // fixed demo OTP
       user.emailOtpExpiry = Date.now() + 5 * 60 * 1000;
       await user.save();
 
       return NextResponse.json({
-        message: "Dummy OTP set for test user",
-        dummy: true,
+        message: "Demo OTP set for test user",
+        demo: true,
         otp: "123456", // optionally return it for test clients
       });
     }
