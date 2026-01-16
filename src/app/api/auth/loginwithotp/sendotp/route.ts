@@ -27,12 +27,12 @@ export const POST = async (req: NextRequest) => {
 
     // ✅ Check for dummy phone number
     if (phone === "6543210123") {
-      const dummySessionId = "dummy-session-id-12345";
+      const dummySessionId = "DEMO_SESSION_ID";
       user.otpSessionId = dummySessionId;
       await user.save();
 
       return NextResponse.json({
-        message: "OTP sent successfully (dummy)",
+        message: "OTP sent successfully (demo)",
         sessionId: dummySessionId,
       });
     }
