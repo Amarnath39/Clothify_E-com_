@@ -18,14 +18,14 @@ export const POST = async (req: NextRequest) => {
 
     await connectDB();
 
-    // ✅ Dummy logic: if sessionId matches dummy, simulate success
-    if (sessionId === "dummy-session-id-12345" && otp === "243638") {
+    // ✅ Dummy logic: if sessionId matches demo, simulate success
+    if (sessionId === "DEMO_SESSION_ID" && otp === "243648") {
       let user = await User.findOne({ otpSessionId: sessionId });
 
-      // If not found, auto-create dummy user
+      // If not found, auto-create demo user
       if (!user) {
         user = new User({
-          phone: "9387653894",
+          phone: "6543210123",
           role: "User",
           otpSessionId: sessionId,
         });
@@ -52,7 +52,7 @@ export const POST = async (req: NextRequest) => {
 
       return NextResponse.json(
         {
-          message: "Login successful (dummy)",
+          message: "Login successful (demo)",
           token,
           user: {
             id: user._id,
