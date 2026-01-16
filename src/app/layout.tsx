@@ -37,16 +37,16 @@ const quicksand = Quicksand({
  
 export const metadata: Metadata = {
   title: {
-    default: "Swaarsya – Sarees & Jewellery by Swetha",
-    template: "%s | Swaarsya",
+    default: "Swaarasya – Sarees & Jewellery by Swetha",
+    template: "%s | Swaarasya",
   },
   description:
-    "Swaarsya is an online store offering premium sarees and jewellery for women. Explore ethnic, traditional, and designer sarees along with handcrafted jewellery collections.",
+    "Swaarasya is an online store offering premium sarees and jewellery for women. Explore ethnic, traditional, and designer sarees along with handcrafted jewellery collections.",
   keywords: [
-    "Swaarsya",
-    "Swaarsya ecommerce",
-    "Swaarsya sarees",
-    "Swaarsya jewellery",
+    "Swaarasya",
+    "Swaarasya ecommerce",
+    "Swaarasya sarees",
+    "Swaarasya jewellery",
     "women’s sarees online",
     "designer sarees online",
     "latest saree collection",
@@ -74,43 +74,44 @@ export const metadata: Metadata = {
     "affordable sarees online shopping",
     "online jewellery store for women",
     "handcrafted jewellery for women",
-    "Swaarsya sarees collection",
-    "Swaarsya jewellery collection",
-    "Swaarsya ethnic wear",
-    "Swaarsya online store",
+    "Swaarasya sarees collection",
+    "Swaarasya jewellery collection",
+    "Swaarasya ethnic wear",
+    "Swaarasya online store",
   ],
   icons: {
     icon: "/assets/static/logo/favicon.ico",
     apple: "/assets/static/logo/apple-touch-icon.png",
   },
   authors: [{ name: "Webgeon Results" }],
- 
+
   openGraph: {
-    title: "Swaarsya – Sarees & Jewellery Online Store",
+    title: "Swaarasya – Sarees & Jewellery Online Store",
     description:
-      "Shop premium sarees and handcrafted Jewelleries at Swaarsya. Discover ethnic, festive, and designer collections for women.",
-    url: "https://swaarsya.com",
-    siteName: "Swaarsya",
+      "Shop premium sarees and handcrafted jewellery at Swaarasya. Discover ethnic, festive, and designer collections for women.",
+    url: "https://swaarasya.com",
+    siteName: "Swaarasya",
     images: [
       {
         url: "/assets/static/logo/ogimage.png",
         width: 1200,
         height: 630,
-        alt: "Swaarsya OpenGraph Image",
+        alt: "Swaarasya OpenGraph Image",
       },
     ],
     locale: "en_IN",
     type: "website",
   },
- 
+
   twitter: {
     card: "summary_large_image",
-    title: "Swaarsya – Sarees & Jewellery Online Store",
+    title: "Swaarasya – Sarees & Jewellery Online Store",
     description:
-      "Explore premium sarees and jewellery collections at Swaarsya. Ethnic, bridal, festive, and designer styles for women.",
+      "Explore premium sarees and jewellery collections at Swaarasya. Ethnic, bridal, festive, and designer styles for women.",
     images: ["/assets/static/logo/ogimage.png"],
   },
 };
+
  
 export default function RootLayout({
   children,

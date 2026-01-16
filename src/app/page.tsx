@@ -16,7 +16,7 @@ import VideoList from '@/Main/home/video';
 import CategoryCarousel from "@/Main/home/CategoryCarousel";
  
 export const metadata = {
-  title: "Home | Swaarsya – Sarees & Jewellery by Swetha",
+  title: "Home | Swaarasya – Sarees & Jewellery by Swetha",
   // icons:{
   //   icon:"/favicon.ico",
   // }
