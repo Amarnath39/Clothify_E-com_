@@ -23,10 +23,10 @@ export const POST = async (req: NextRequest) => {
     // ✅ Dummy account shortcut
     if (email === "test@gmail.com") {
       if (otp !== "123456") {
-        return NextResponse.json({ error: "Invalid OTP for dummy account" }, { status: 401 });
+        return NextResponse.json({ error: "Invalid OTP for demo account" }, { status: 401 });
       }
 
-      // No need to check expiry for dummy user
+      // No need to check expiry for demo user
       user.emailOtp = undefined;
       user.emailOtpExpiry = undefined;
       await user.save();
@@ -47,7 +47,7 @@ export const POST = async (req: NextRequest) => {
 
       return NextResponse.json(
         {
-          message: "Dummy login successful",
+          message: "Demo login successful",
           token,
           user: {
             id: user._id,
