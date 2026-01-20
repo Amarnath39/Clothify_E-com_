@@ -258,7 +258,7 @@ return (
           <div className="bg-white p-2 sm:p-4 rounded-lg">
             <div className="h-28 w-28 sm:h-48 sm:w-48 mx-auto sm:mx-0 rounded-3xl flex items-center justify-center overflow-hidden">
               <img
-                src="/assets/static/logo/SIS-LOGO.png"
+                src="/assets/static/logo/saw.svg"
                 alt="logo"
                 className="h-full w-full object-contain"
               />

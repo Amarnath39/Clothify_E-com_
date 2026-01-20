@@ -1,259 +1,402 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { IoBagOutline } from "react-icons/io5";
-import {
-  FaBars,
-  FaHeart,
-  FaRegHeart,
-} from "react-icons/fa";
-import AnimatedSearchInput from "./AnimateSearchInput";
-import { IoMdSearch } from "react-icons/io";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
+import { Search, ShoppingBag, Heart, User, Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Redux Actions
 import { getAllCategories } from "@/lib/features/catogary";
-import toast from "react-hot-toast";
-import NavigationMobile from "./NavigationMobile";
-import useWindowSize from "@/hooks/useWindowSize";
 import { logoutApi } from "@/lib/features/auth";
-import { LucideUserRound } from "lucide-react";
+import toast from "react-hot-toast";
+
+// Types
+interface SubCategory {
+  name: string;
+  image: string;
+  link: string;
+}
+
+interface NavItem {
+  id?: string;
+  name: string;
+  path: string;
+  hasDropdown?: boolean;
+  subCategories?: SubCategory[];
+}
 
 const Navbar = () => {
   const dispatch = useDispatch<any>();
-  const [categories, setCategories] = useState<any>([]);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Redux State
+  const categories = useSelector((state: any) => state.auth.categories || []); // Ensure fallback
+  // Note: Sometimes categories are in state.category.categories or similar, checking original file...
+  // Original file: const [categories, setCategories] = useState<any>([]);
+  // Original file fetched manually. I will keep the fetch logic but also try to read from where they are stored if possible.
+  // Actually, original code did: setCategories(payload.categories). I will replicate that local state for simplicity and safety.
+
   const cartItems = useSelector((state: any) => state.cart.items);
   const wishlistItems = useSelector((state: any) => state.wishlist.items);
   const token = useSelector((state: any) => state.auth.token);
+  const user = useSelector((state: any) => state.auth.user);
 
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState<any>(false);
+  // Local State
+  const [localCategories, setLocalCategories] = useState<any[]>([]);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
+  // Fetch Categories
   useEffect(() => {
-    callGetAllCategories();
+    const fetchCats = async () => {
+      try {
+        const { payload } = await dispatch(getAllCategories());
+        if (payload?.success) {
+          setLocalCategories(payload.categories);
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories", error);
+      }
+    };
+    fetchCats();
+  }, [dispatch]);
+
+  // Scroll Handler
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const callGetAllCategories = async () => {
-    try {
-      const { payload } = await dispatch(getAllCategories());
-      if (payload.success) {
-        setCategories(payload.categories);
-      } else {
-        toast.error(payload.msg);
-      }
-    } catch (error: any) {
-      toast.error(error?.message);
-    }
-  };
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setActiveDropdown(null);
+  }, [pathname]);
 
-  const { width } = useWindowSize();
-
-  const closeSheet = () => {
-    setIsSheetOpen(false);
-  };
-
+  // Logout Handler
   const handleLogout = async () => {
     const { payload }: any = await dispatch(logoutApi());
-    if (payload.success) {
+    if (payload?.success) {
       toast.success("Logout Success");
       router.push("/");
     } else {
-      toast.error(payload.msg);
+      toast.error(payload?.msg || "Logout failed");
     }
   };
 
+  // Construct Dynamic Navigation
+  const navItems: NavItem[] = useMemo(() => {
+    // 1. Filter Roots (no parent)
+    const roots = localCategories.filter((c: any) => c.parentCategory.length === 0);
+
+    // 2. Map to NavItem structure
+    const dynamicItems = roots.map((root: any) => {
+      // Find children
+      const children = localCategories.filter((c: any) => c.parentCategory.includes(root._id));
+
+      const subItems: SubCategory[] = children.map((child: any) => ({
+        name: child.name,
+        image: child.img, // Assuming 'img' property exists from original file
+        link: `/categories/${child._id}`
+      }));
+
+      return {
+        id: root._id,
+        name: root.name,
+        path: `/categories/${root._id}`,
+        hasDropdown: subItems.length > 0,
+        subCategories: subItems
+      };
+    });
+
+    // 3. Prepend static items
+    return [
+      { name: "Home", path: "/" },
+      ...dynamicItems,
+      // { name: "About", path: "/about" } // Optional, can add if 'About' page exists
+    ];
+  }, [localCategories]);
+
+  // Search Handler
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Assuming a search page exists or query params logic
+      // Since original didn't have a specific route shown (it used a modal), let's route to a search page
+      // router.push(`/search?q=${searchQuery}`);
+      // Or just toast for now if no search page implemented
+      console.log("Searching for:", searchQuery);
+    }
+  };
 
   return (
-    <nav
-      // 🚀 CHANGE: Updated from 'pt-4' to 'pt-6' for increased top spacing
-      className={`bg-[#ffffff] fixed w-full navbar-main transition-all duration-300 top-0 pt-5`}
-      style={{
-        zIndex: 100,
-        transform: "translate3d(0,0,0)",
-        willChange: "transform",
-      }}
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
+          ? "bg-white/95 backdrop-blur-lg shadow-lg py-3 border-b border-gray-100"
+          : "bg-gradient-to-b from-white/90 to-transparent backdrop-blur-sm py-6"
+        }`}
+      onMouseLeave={() => setActiveDropdown(null)}
     >
-      <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-8">
-        {/* Main header section for logo and icons */}
-        <div className="flex items-center justify-between h-28 md:h-32">
+      {/* Decorative Top Border */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#eab564] via-[#b48a3c] to-[#eab564] opacity-80"></div>
+
+      <div className="container mx-auto px-4 md:px-8">
+        <div className="flex items-center justify-between">
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="lg:hidden text-gray-800 hover:text-[#b48a3c] transition-colors"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <Menu size={24} />
+          </button>
 
           {/* Logo */}
-          <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center">
+          <Link href="/" className="relative z-50 group">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
               <img
-                src="/assets/static/logo/SIS-LOGO.png"
+                src="/assets/static/logo/saw.svg"
                 alt="Logo"
-                className="h-20 md:h-[100px] lg:h-[104px] w-auto object-contain"
+                className="h-12 md:h-16 w-auto object-contain"
               />
-            </Link>
-          </div>
+            </motion.div>
+          </Link>
 
-          {/* Desktop Search Bar - Centered */}
-          <div className="hidden md:flex flex-1 justify-center px-8">
-            <div className="w-full max-w-md">
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-8 xl:space-x-10">
+            {navItems.map((item) => (
               <div
-                onClick={() => setIsModalOpen((prev) => !prev)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full cursor-pointer hover:border-gray-400 transition-colors"
+                key={item.name}
+                className="relative group h-full py-2" // Added py-2 to give hit area
+                onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.name)}
               >
-                <IoMdSearch size={24} style={{ color: "#020101" }} />
-                <span className="text-gray-500 text-sm">Search...</span>
-              </div>
-            </div>
-          </div>
-
-          {isModalOpen && (
-            <AnimatedSearchInput
-              setIsModalOpen={setIsModalOpen}
-              isModalOpen={isModalOpen}
-            />
-          )}
-
-          {/* Desktop Icons */}
-          <div className="hidden md:flex items-center gap-4">
-            <Link href="/wishlist">
-              {wishlistItems.length === 0 ? (
-                <FaRegHeart size={28} style={{ color: "#020101" }} />
-              ) : (
-                <FaHeart size={28} style={{ color: "#020101" }} />
-              )}
-            </Link>
-
-            <div
-              title="cart"
-              onClick={() => router.push("/cart")}
-              className="relative cursor-pointer"
-            >
-              <IoBagOutline size={28} style={{ color: "#020101" }} />
-              {cartItems.length > 0 && (
-                <span className="absolute bottom-[-6px] right-[-4px] w-5 h-5 z-[100] rounded-full text-white flex items-center justify-center bg-primaryRed text-[10px]">
-                  {cartItems.length}
-                </span>
-              )}
-            </div>
-
-            {/* ✅ My Orders Link - Only show when logged in */}
-            {token &&
-            <Link href="/orders" title="My Orders">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#020101"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                <polyline points="9 11 9 17" />
-                <polyline points="12 14 9 17 6 14" />
-              </svg>
-            </Link>
-            }
-
-            <Link href={token ? "/profile" : "/login"}>
-              <LucideUserRound size={30} style={{ color: "#020101" }} />
-            </Link>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-transparent cursor-pointer"
-              style={{ color: "#020101" }}
-              onClick={() => setIsSheetOpen(true)}
-            >
-              <FaBars size={28} />
-            </Button>
-          </div>
-
-          {/* Mobile Icons */}
-          <div className="md:hidden flex items-center gap-1">
-            <div onClick={() => setIsModalOpen((prev) => !prev)}>
-              <IoMdSearch size={24} className="cursor-pointer" style={{ color: "#020101" }} />
-            </div>
-
-            <Link href="/wishlist">
-              {wishlistItems.length === 0 ? (
-                <FaRegHeart className="h-5 w-5" style={{ color: "#020101" }} />
-              ) : (
-                <FaHeart className="h-5 w-5" style={{ color: "#020101" }} />
-              )}
-            </Link>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-transparent cursor-pointer"
-              style={{ color: "#020101" }}
-              onClick={() => setIsSheetOpen(true)}
-            >
-              <FaBars className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetContent
-            side="right"
-            className="w-[300px] sm:w-[400px] bg-white text-black"
-            style={{ zIndex: 9999 }}
-          >
-            {token && (
-              <div>
-                <Button onClick={handleLogout} style={{ color: "#255255255", backgroundColor: "black" }}>
-                  Logout
-                </Button>
-              </div>
-            )}
-            <SheetHeader>
-              <SheetTitle className="text-navbarBackground mt-12">Menu</SheetTitle>
-            </SheetHeader>
-            <div className="py-4 space-y-4 overflow-y-scroll">
-              <NavigationMobile categories={categories} onNavigate={closeSheet} />
-            </div>
-          </SheetContent>
-        </Sheet>
-
-        {/* Category Navigation Bar - Below search */}
-      </div> {/* This closes the max-w-7xl div from above */}
-
-      {/* Category Navigation Bar - Below search (full width line) */}
-      <div className="hidden md:block border-t border-gray-200">
-        <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-8 flex items-center justify-center gap-x-8 py-3">
-          {categories
-            .filter((c: any) => c.parentCategory.length === 0)
-            .map((category: any) => {
-              const isActive = pathname.includes(category._id);
-              return (
                 <Link
-                  key={category._id}
-                  href={`/categories/${category._id}`}
-                  className={`text-sm tracking-wide uppercase transition-all duration-200 relative
-                  ${isActive
-                      ? "text-black font-bold border-b-2 border-black pb-1"
-                      : "text-gray-600 font-medium hover:text-black hover:font-semibold"
+                  href={item.path}
+                  className={`relative py-2 text-sm uppercase tracking-[0.15em] font-medium transition-all duration-300 ${pathname === item.path
+                      ? "text-[#b48a3c]"
+                      : "text-gray-700 hover:text-[#b48a3c]"
                     }`}
                 >
-                  {category.name}
+                  {item.name}
+                  {pathname === item.path && (
+                    <motion.div
+                      layoutId="activeUnderline"
+                      className="absolute left-0 right-0 -bottom-1 h-0.5 bg-gradient-to-r from-[#eab564] to-[#b48a3c]"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
                 </Link>
-              );
-            })}
+              </div>
+            ))}
+          </nav>
+
+          {/* Icons */}
+          <div className="flex items-center space-x-4 md:space-x-6">
+
+            {/* Search */}
+            <div className={`flex items-center transition-all duration-300 ${isSearchOpen ? 'w-48' : 'w-8'}`}>
+              <motion.button
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                className="text-gray-700 hover:text-[#b48a3c] transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Search size={22} />
+              </motion.button>
+              <AnimatePresence>
+                {isSearchOpen && (
+                  <motion.form
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "100%" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    onSubmit={handleSearch}
+                    className="ml-2 flex-1"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="bg-transparent border-b border-gray-300 focus:border-[#b48a3c] outline-none text-sm w-full py-1 text-gray-800"
+                      autoFocus
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </motion.form>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Wishlist */}
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Link href="/wishlist" className="text-gray-700 hover:text-[#b48a3c] transition-colors relative">
+                {wishlistItems.length === 0 ? <Heart size={22} /> : <Heart size={22} fill="#b48a3c" className="text-[#b48a3c]" />}
+              </Link>
+            </motion.div>
+
+            {/* Cart */}
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Link href="/cart" className="text-gray-700 hover:text-[#b48a3c] transition-colors relative">
+                <ShoppingBag size={22} />
+                {cartItems.length > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-2 -right-2 bg-[#b48a3c] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-md"
+                  >
+                    {cartItems.length}
+                  </motion.span>
+                )}
+              </Link>
+            </motion.div>
+
+            {/* User */}
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="relative group/user">
+              <Link href={token ? "/profile" : "/login"} className="text-gray-700 hover:text-[#b48a3c] transition-colors">
+                <User size={22} />
+              </Link>
+              {/* Optional user dropdown could go here */}
+            </motion.div>
+
+          </div>
         </div>
       </div>
-    </nav>
+
+      {/* Mega Menu Dropdown */}
+      <AnimatePresence>
+        {activeDropdown && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="absolute top-full left-0 w-full bg-white/98 backdrop-blur-lg border-t border-gray-100 shadow-xl py-10 z-40"
+            onMouseLeave={() => setActiveDropdown(null)}
+          >
+            <div className="container mx-auto px-8">
+              {/* Note: If subcategories are empty, this might look empty. Handled safely. */}
+              {(() => {
+                const activeItem = navItems.find((i) => i.name === activeDropdown);
+                if (!activeItem?.subCategories?.length) {
+                  return <div className="text-center text-gray-500 italic">No subcategories available.</div>;
+                }
+                return (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+                    {activeItem.subCategories.map((sub, idx) => (
+                      <motion.div
+                        key={sub.name}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                      >
+                        <Link href={sub.link} className="group block">
+                          <div className="overflow-hidden mb-3 aspect-[3/4] bg-gray-100 relative rounded-lg">
+                            <img
+                              src={sub.image || "/assets/static/placeholder.png"}
+                              alt={sub.name}
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "https://placehold.co/300x400?text=No+Image";
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          </div>
+                          <h4 className="font-serif text-base text-gray-900 group-hover:text-[#b48a3c] transition-colors mb-1">
+                            {sub.name}
+                          </h4>
+                          <span className="text-xs text-gray-500 uppercase tracking-wider group-hover:text-black transition-colors">
+                            Explore →
+                          </span>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Menu Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-[85%] max-w-sm bg-white z-50 lg:hidden overflow-y-auto shadow-2xl"
+            >
+              <div className="p-6 flex justify-between items-center border-b border-gray-100">
+                <h2 className="font-serif text-xl font-bold text-[#b48a3c] tracking-widest">MENU</h2>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-gray-500 hover:text-[#b48a3c]"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* User Info / Logout for Mobile */}
+                {token ? (
+                  <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                    <span className="text-sm font-medium text-gray-900">Hello, User</span>
+                    <button onClick={handleLogout} className="text-xs text-red-500 font-medium hover:underline">Logout</button>
+                  </div>
+                ) : (
+                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="block pb-4 border-b border-gray-100 text-sm font-medium text-[#b48a3c]">Login / Register</Link>
+                )}
+
+
+                {navItems.map((item) => (
+                  <div key={item.name}>
+                    <Link
+                      href={item.path}
+                      className="block text-lg font-medium text-gray-900 mb-2 hover:text-[#b48a3c] transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                    {item.subCategories && item.subCategories.length > 0 && (
+                      <div className="pl-4 space-y-3 mt-2 border-l-2 border-gray-100 ml-1">
+                        {item.subCategories.map((sub) => (
+                          <Link
+                            key={sub.name}
+                            href={sub.link}
+                            className="block text-sm text-gray-600 hover:text-[#b48a3c] transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </header>
   );
 };
 

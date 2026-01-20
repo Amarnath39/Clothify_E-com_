@@ -16,11 +16,11 @@ export const POST = async (req: NextRequest) => {
         }
 
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash("w3213TAOK3y7", salt);
+        const hashedPassword = await bcrypt.hash("swaarasya@123", salt);
 
         const superAdmin = new Admin({
-            name: "Siskerala",
-            email: "sisbymridhulaparvathy@gmail.com",
+            name: "Swaarasya",
+            email: "swethasarin2@gmail.com",
             password: hashedPassword,
             role: "SuperAdmin",
         });
