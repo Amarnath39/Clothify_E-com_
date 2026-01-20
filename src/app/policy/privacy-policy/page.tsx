@@ -4,71 +4,71 @@ const PrivacyPolicy = () => {
   const sections = [
     {
       title: "Introduction",
-      content: `At S.I.S, we are committed to protecting your privacy and ensuring that your personal information is handled securely and responsibly. This Privacy Policy outlines the types of data we collect, how it is used, and the rights you have regarding your information.`,
+      content: `At Swarasya, we are committed to protecting your privacy and ensuring that your personal information is handled with the highest level of security and transparency. This Privacy Policy explains what data we collect, how we use it, and the rights you have regarding your information.`,
     },
     {
       title: "Information We Collect",
-      content:
-        `We collect personal information when you:
-          Browse our website
-          Register or create an account
-          Place an order
-          Subscribe to our newsletter or updates
-          Contact us for support or inquiries
+      content: `We collect personal information when you:
+          • Browse our website
+          • Create an account or register
+          • Place an order
+          • Subscribe to our newsletter
+          • Contact us for assistance or support
+
         Information collected may include:
-          Full name
-          Contact details (address, email, phone number)
-          Billing and payment information
-          Order history
-          Preferences and browsing behavior (via cookies)`
+          • Full name
+          • Contact details (email, phone number, address)
+          • Payment and billing information
+          • Order history
+          • Browsing preferences and activity (via cookies)`,
     },
     {
       title: "How We Use Your Information",
-      content:
-        `We use the data we collect to:
-          Process and fulfill your orders
-          Communicate order status, confirmations, and shipping updates
-          Respond to customer service inquiries
-          Send promotional messages (only if opted-in)
-          Improve our website and user experience
-          Comply with legal obligations`,
+      content: `We use your information to:
+          • Process and deliver your orders
+          • Send order confirmations and shipping updates
+          • Provide customer service and support
+          • Share promotional offers (only if you opt-in)
+          • Enhance your website experience and improve our services
+          • Comply with legal and regulatory obligations`,
     },
     {
       title: "Information Sharing",
-      content:
-        `Your information is shared only with trusted third parties who help us operate our business:
-          Payment gateways
-          Delivery partners and logistics providers
-          IT and software service providers
-        We never sell your personal data.`,
+      content: `Your information is shared only with trusted third parties who help us operate our business, including:
+          • Payment service providers
+          • Delivery and logistics partners
+          • IT, hosting, and software support teams
+
+        We do NOT sell or trade your personal information with any third party.`,
     },
     {
       title: "Data Security",
-      content:
-        `We implement multiple layers of protection:
-          Secure socket layer (SSL) encryption
-          Firewalled hosting environment
-          Access controls and authorization`,
+      content: `We maintain strong security measures to protect your information, including:
+          • SSL encryption for secure transactions
+          • Protected hosting infrastructure
+          • Strict access control and authorization systems
+
+        While we take every step to secure your data, no method of digital transfer is 100% risk-free.`,
     },
     {
       title: "Your Rights",
-      content:
-        `You have the right to:
-          Access, update, or delete your data
-          Opt out of marketing communications at any time
-          Request data portability or lodge a complaint`,
+      content: `As a user, you have the right to:
+          • Access, update, or delete your personal information
+          • Opt out of marketing or promotional emails anytime
+          • Request correction of inaccurate data
+          • Ask for data portability
+          • Raise concerns or complaints regarding your privacy`,
     },
     {
       title: "Changes to This Privacy Policy",
-      content:
-        "We reserve the right to update or change this Privacy Policy at any time. Any changes will be effective immediately upon posting the updated policy on our website. We encourage you to review this policy periodically for any updates.",
+      content: `Swarasya may update this Privacy Policy as needed to reflect changes in our practices or legal requirements. Updated versions will be posted on this page. Please review periodically to stay informed.`,
     },
     {
       title: "Contact Us",
-      content:
-        `For all privacy-related questions or concerns, please contact:
-          📧 Varnasuba755@gmail.com
-          📞 +91 7306372906`,
+      content: `For any privacy-related questions, concerns, or requests, reach out to us at:
+
+          📧 Email: swarasya.shop@gmail.com
+          📞 Phone: 8943525333`,
     },
   ];
 
@@ -88,14 +88,16 @@ const PrivacyPolicy = () => {
               <h2 className="text-2xl font-bold text-black mb-4">
                 {section.title}
               </h2>
-              <p className="text-gray-600 leading-relaxed">{section.content}</p>
+              <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                {section.content}
+              </p>
             </div>
           ))}
         </div>
 
         <div className="mt-16 text-center">
           <p className="text-xl font-medium text-black">
-            Thank you for trusting S.I.S with your information!
+            Thank you for trusting Swarasya with your information!
           </p>
         </div>
       </div>
@@ -104,3 +106,4 @@ const PrivacyPolicy = () => {
 };
 
 export default PrivacyPolicy;
+

@@ -70,14 +70,14 @@ const Contact = () => {
               <FaPhone className="text-2xl text-primary" />
               <div>
                 <h3 className="font-semibold">Phone</h3>
-                <p>+91 6282667959</p>
+                <p>+91 8943525333</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <FaEnvelope className="text-2xl text-primary" />
               <div>
                 <h3 className="font-semibold">Email</h3>
-                <p>sisbymridhulaparvathy@gmail.com</p>
+                <p>swaarasya.shop@gmail.com</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -85,7 +85,7 @@ const Contact = () => {
               <div>
                 <h3 className="font-semibold">Location</h3>
                 <p>
-                  Trivandrum, Kerala, Pin: 670102
+                  Kerala , India
                 </p>
               </div>
             </div>
