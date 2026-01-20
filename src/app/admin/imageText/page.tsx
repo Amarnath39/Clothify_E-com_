@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { FaExclamationTriangle } from "react-icons/fa";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useSelector } from "react-redux";
 
 interface ImageText {
   _id: string;
@@ -42,6 +43,10 @@ const ImageTextManagement: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Redux: Get Admin ID
+  const user = useSelector((state: any) => state.auth.user);
+  const adminId = user?._id;
+
   useEffect(() => {
     fetchImageTexts();
   }, []);
@@ -57,6 +62,12 @@ const ImageTextManagement: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!adminId) {
+      setError("Admin ID not found. Please log in again.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
@@ -69,30 +80,41 @@ const ImageTextManagement: React.FC = () => {
     }
 
     try {
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "x-admin-id": adminId
+        },
+      };
+
       if (editingId) {
-        await axios.put(`/api/admin/imageText/${editingId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.put(`/api/admin/imageText/${editingId}`, formData, config);
       } else {
-        await axios.post("/api/admin/imageText", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.post("/api/admin/imageText", formData, config);
       }
       fetchImageTexts();
       resetForm();
       setIsDialogOpen(false);
-    } catch (error) {
-      setError("Failed to save ImageText");
+    } catch (error: any) {
+      console.error(error);
+      setError(error?.response?.data?.msg || "Failed to save ImageText");
     }
   };
 
   const handleDelete = async (id: string) => {
+    if (!adminId) {
+      alert("Unauthorized: Admin ID missing");
+      return;
+    }
+
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this product?"
     );
     if (confirmDelete) {
       try {
-        await axios.delete(`/api/admin/imageText/${id}`);
+        await axios.delete(`/api/admin/imageText/${id}`, {
+          headers: { "x-admin-id": adminId }
+        });
         fetchImageTexts();
       } catch (error) {
         setError("Failed to delete ImageText");
@@ -119,7 +141,13 @@ const ImageTextManagement: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-     
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <FaExclamationTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <h1 className="text-2xl font-bold mb-4">ImageText Management</h1>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -174,8 +202,10 @@ const ImageTextManagement: React.FC = () => {
                 {files.map((f) => f.name).join(", ")}
               </p>
             )}
-            <p className="my-2">Select two image</p>
-            <Button  className="bg-black text-white hover:bg-black" type="submit">{editingId ? "Update" : "Create"}</Button>
+            <p className="my-2 text-sm text-gray-500">Select at least one image (required for new items)</p>
+            <Button className="bg-black text-white hover:bg-black" type="submit">
+              {editingId ? "Update" : "Create"}
+            </Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -199,7 +229,7 @@ const ImageTextManagement: React.FC = () => {
                     key={index}
                     src={imgSrc}
                     alt={`Image ${index + 1}`}
-                    className="w-16 h-16 object-cover mr-2 inline-block"
+                    className="w-16 h-16 object-cover mr-2 inline-block rounded"
                   />
                 ))}
               </TableCell>
@@ -207,21 +237,22 @@ const ImageTextManagement: React.FC = () => {
               <TableCell>{imageText.description}</TableCell>
               <TableCell>{imageText.url}</TableCell>
               <TableCell>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleEdit(imageText)}
-                  className="mr-2"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button className="bg-black text-white hover:bg-gray-800"
-                 
-                  size="icon"
-                  onClick={() => handleDelete(imageText._id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleEdit(imageText)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    className="bg-black text-white hover:bg-gray-800"
+                    size="icon"
+                    onClick={() => handleDelete(imageText._id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

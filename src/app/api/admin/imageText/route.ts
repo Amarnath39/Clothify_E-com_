@@ -33,18 +33,21 @@ export const POST = async (req: NextRequest) => {
     const file1 = formData.get("files[0]") as File | null;
     const file2 = formData.get("files[1]") as File | null;
 
-    // Check if both files are provided
-    if (!file1 || !file2) {
+    // Check if at least one file is provided
+    if (!file1) {
       return NextResponse.json(
-        { success: false, msg: "Please provide both image files." },
+        { success: false, msg: "Please provide at least one image file." },
         { status: 400 }
       );
     }
 
     const imgLinks: string[] = [];
-    
-    // Upload both files
-    for (const file of [file1, file2]) {
+
+    // Upload files
+    const filesToUpload = [file1];
+    if (file2) filesToUpload.push(file2);
+
+    for (const file of filesToUpload) {
       const fileLink = await uploadFile("server/imageText", file);
       if (fileLink === null) {
         return NextResponse.json(

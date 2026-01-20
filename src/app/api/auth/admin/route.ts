@@ -64,6 +64,7 @@ export const POST = async (req: NextRequest) => {
         token,
         id: admin._id,
         user: {
+          _id: admin._id,
           name: admin.name,
           role: admin.role,
         },

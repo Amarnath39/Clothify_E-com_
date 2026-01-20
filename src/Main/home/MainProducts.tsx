@@ -1,29 +1,202 @@
 "use client";
 
 import { getAllProducts } from "@/lib/features/catogary";
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, memo } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import NotFound from "@/components/NotFound";
-
-import { FaHeart, FaRegHeart, FaShoppingBag, FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { addToCart, removeFromCart } from "@/lib/features/cart";
+import NotFound from "@/components/NotFound"; // Assuming exists
+import { Heart, ShoppingBag, Star } from "lucide-react"; // Added Star
+import { addToCart } from "@/lib/features/cart";
 import { useSearchParams } from "next/navigation";
 import { toggleItem } from "@/lib/features/wishlist";
 import ProductSizeModal from "@/components/ProductSizeModal";
-import { Quicksand } from "next/font/google";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Import Quicksand font
-const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
+// --- ProductCardAlt Component (Moved Outside) ---
+const ProductCardAlt = memo(({ product, index = 0, isWishlisted, onToggleWishlist, onQuickAdd }: any) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Badge Logic
+  const discount = product.off || (product.actualPrice ? Math.round((product.actualPrice - product.sizes[0].offerPrice) / product.actualPrice * 100) : 0);
+  const isNew = product.latestProduct; // Updated from schema
+  const isBestSeller = product.bestsellerProduct; // Updated from schema
+  const isPreOrder = product.is_prebooking;
+  const isFeatured = product.featureProduct;
+
+  // Rating Logic (Use schema structure: rating: { star: number, ratedBy: number })
+  const rating = product.rating?.star || 4.5;
+  const reviews = product.rating?.ratedBy || 0;
+
+  // Category Logic (Use populated categories array)
+  const categoryName = product.categories?.[0]?.name || product.categories?.[0] || "";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.6, delay: index * 0.05, ease: 'easeOut' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group relative"
+    >
+      <Link href={`/product-details/${product._id}/${product.name.split(" ").join("-")}`} className="block">
+        {/* Image Container */}
+        <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4 rounded-sm">
+          {/* Main Image */}
+          <motion.img
+            src={product.img[0]}
+            alt={product.name}
+            className="w-full h-full object-cover"
+            animate={{ scale: isHovered ? 1.05 : 1 }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+          />
+
+          {/* Secondary Image (appears on hover) */}
+          <AnimatePresence>
+            {isHovered && product.img[1] && (
+              <motion.img
+                src={product.img[1]}
+                alt={`${product.name} alternate view`}
+                className="absolute inset-0 w-full h-full object-cover"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Gradient Overlay */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            transition={{ duration: 0.4 }}
+          />
+
+          {/* Top Badges */}
+          <div className="absolute top-4 left-4 flex flex-col items-start gap-2 z-10">
+            {isNew && (
+              <span className="bg-[#b48a3c] text-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm">
+                New Arrival
+              </span>
+            )}
+            {discount > 0 && (
+              <span className="bg-red-600 text-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm">
+                {Math.round(discount)}% Off
+              </span>
+            )}
+            {isBestSeller && (
+              <span className="bg-black text-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm">
+                Bestseller
+              </span>
+            )}
+            {isFeatured && (
+              <span className="bg-emerald-700 text-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm">
+                Featured
+              </span>
+            )}
+            {isPreOrder && (
+              <span className="bg-blue-600 text-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] shadow-sm">
+                Pre-Order
+              </span>
+            )}
+          </div>
+
+          {/* Wishlist Button */}
+          <motion.button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleWishlist(product);
+            }}
+            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <Heart
+              size={16}
+              className={`transition-colors ${isWishlisted ? 'text-red-600 fill-red-600' : 'text-gray-600'}`}
+            />
+          </motion.button>
+
+          {/* Quick Actions (appear on hover) */}
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 20, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="absolute bottom-4 left-4 right-4 flex gap-2 z-10"
+              >
+                <motion.button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onQuickAdd(e, product);
+                  }}
+                  className="flex-1 bg-white text-gray-900 py-3 px-4 text-xs font-bold uppercase tracking-wider hover:bg-[#b48a3c] hover:text-white transition-colors duration-300 shadow-lg flex items-center justify-center gap-2"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <ShoppingBag size={14} />
+                  Add to Cart
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Product Info */}
+        <div className="space-y-1 text-center md:text-left">
+          {/* Category */}
+          {categoryName && (
+            <p className="text-[10px] uppercase tracking-[0.15em] text-gray-500 font-medium mb-1">
+              {categoryName}
+            </p>
+          )}
+
+          <h3 className="font-serif text-lg text-gray-900 group-hover:text-[#b48a3c] transition-colors duration-300 line-clamp-1">
+            {product.name}
+          </h3>
+
+          {/* Rating */}
+          <div className="flex items-center justify-center md:justify-start gap-1 mb-1">
+            <div className="flex text-[#b48a3c]">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={10}
+                  className={i < Math.floor(rating) ? "fill-[#b48a3c]" : "text-gray-300 fill-gray-300"}
+                />
+              ))}
+            </div>
+            <span className="text-xs text-gray-400 ml-1">({reviews})</span>
+          </div>
+
+          {/* Price */}
+          <div className="flex items-baseline justify-center md:justify-start gap-2">
+            <span className="font-medium text-lg text-gray-900">
+              ₹{product.sizes[0].offerPrice.toLocaleString()}
+            </span>
+            {product.actualPrice && product.actualPrice > product.sizes[0].offerPrice && (
+              <span className="text-sm text-gray-400 line-through">
+                ₹{product.actualPrice.toLocaleString()}
+              </span>
+            )}
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+});
+
+ProductCardAlt.displayName = "ProductCardAlt"; // For dev tools
+
 
 const MainProducts = () => {
   const searchParams = useSearchParams();
@@ -38,15 +211,6 @@ const MainProducts = () => {
   const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-
-  // State for pausing animations when user interacts
-  const [isPausedTop, setIsPausedTop] = useState(false);
-  const [isPausedBottom, setIsPausedBottom] = useState(false);
-
-  const topRowRef = useRef<HTMLDivElement>(null);
-  const bottomRowRef = useRef<HTMLDivElement>(null);
-  const pauseTimerTopRef = useRef<NodeJS.Timeout | null>(null);
-  const pauseTimerBottomRef = useRef<NodeJS.Timeout | null>(null);
 
   const isInCart = cartItems?.some(
     (item) =>
@@ -101,8 +265,8 @@ const MainProducts = () => {
     }
   };
 
-  const handleWishlistToggle = (product: any, event: MouseEvent) => {
-    event.stopPropagation();
+  const handleWishlistToggle = useCallback((product: any) => {
+    // Check if item is already in wishlist to show correct toast
     const isInWishlist = wishlistItems.some((item) => item.id === product._id);
 
     dispatch(
@@ -115,351 +279,88 @@ const MainProducts = () => {
         amount: product?.sizes[0]?.offerPrice,
       })
     );
-
     toast.success(isInWishlist ? "Removed from wishlist" : "Added to wishlist");
-  };
+  }, [dispatch, wishlistItems]); // Added wishlistItems dependency
 
-  // Scroll function with auto-resume
-  const scrollRow = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right', isTop: boolean) => {
-    if (!ref.current) return;
-
-    const scrollAmount = 400;
-    const currentScroll = ref.current.scrollLeft;
-    const targetScroll = direction === 'left'
-      ? currentScroll - scrollAmount
-      : currentScroll + scrollAmount;
-
-    ref.current.scrollTo({
-      left: targetScroll,
-      behavior: 'smooth'
-    });
-
-    // Pause animation
-    if (isTop) {
-      setIsPausedTop(true);
-      if (pauseTimerTopRef.current) clearTimeout(pauseTimerTopRef.current);
-      pauseTimerTopRef.current = setTimeout(() => {
-        setIsPausedTop(false);
-      }, 2000);
-    } else {
-      setIsPausedBottom(true);
-      if (pauseTimerBottomRef.current) clearTimeout(pauseTimerBottomRef.current);
-      pauseTimerBottomRef.current = setTimeout(() => {
-        setIsPausedBottom(false);
-      }, 2000);
-    }
-  };
-
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      if (pauseTimerTopRef.current) clearTimeout(pauseTimerTopRef.current);
-      if (pauseTimerBottomRef.current) clearTimeout(pauseTimerBottomRef.current);
-    };
+  const openSizeModal = useCallback((e: any, product: any) => {
+    setSelectedProduct(product);
+    setIsSizeModalOpen(true);
   }, []);
 
-  const ProductCard = ({ product, uniqueKey }) => (
-    <div
-      key={uniqueKey}
-      style={{ border: "none" }}
-      onClick={(e) => {
-        e.preventDefault();
-        window.location.href = `/product-details/${product._id}/${product.name
-          .split(" ")
-          .join("-")}`;
-      }}
-      className="flex-shrink-0 w-[45vw] sm:w-[30vw] md:w-[22vw] lg:w-[20vw] mx-3 flex flex-col overflow-hidden group cursor-pointer relative rounded-2xl bg-white border-none"
-    >
-      <CardContent className="flex-grow p-0">
-        <div className="relative overflow-hidden rounded-2xl">
-          <img
-            src={product.img[0]}
-            alt={product.name}
-            className="object-cover object-center w-full h-[300px] sm:h-[400px] transition-transform duration-300 ease-in-out md:group-hover:scale-105"
-          />
-          {product.img[1] && (
-            <img
-              src={product.img[1]}
-              alt={product.name}
-              className="absolute top-0 left-0 object-cover w-full h-[300px] sm:h-[400px] opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
-            />
-          )}
-          {product?.is_prebooking && (
-            <span className="absolute top-3 left-3 text-xs font-bold bg-blue-600 text-white px-2 py-1 rounded-sm shadow-sm z-10 uppercase tracking-wider">
-              Pre-Booking
-            </span>
-          )}
-          <button
-            onClick={(e: any) => handleWishlistToggle(product, e)}
-            className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm"
-          >
-            {wishlistItems.some((item) => item.id === product._id) ? (
-              <FaHeart size={20} className=" text-red-600" />
-            ) : (
-              <FaRegHeart size={20} className="text-black" />
-            )}
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsSizeModalOpen(true);
-              setSelectedProduct(product);
-            }}
-            className="absolute bottom-3 right-3 text-white bg-black/80 backdrop-blur-sm rounded-full p-3 shadow-sm transition-all duration-300 ease-in-out md:opacity-0 md:translate-y-full md:group-hover:opacity-100 md:group-hover:translate-y-0"
-          >
-            <FaShoppingBag size={20} />
-          </button>
-        </div>
-        <div className="p-4 flex flex-col space-y-2">
-          <CardTitle className="text-base font-medium text-gray-900 line-clamp-2">
-            {product.name}
-          </CardTitle>
-          <div className="flex items-baseline space-x-2">
-            <span className="text-xl font-semibold text-gray-900">
-              ₹{product.sizes[0].offerPrice.toFixed(2)}
-            </span>
-            {product.actualPrice && product.sizes[0].offerPrice < product.actualPrice && (
-              <span className="text-sm text-gray-500 line-through">
-                ₹{product.actualPrice.toFixed(2)}
-              </span>
-            )}
-            {product?.off > 0 && (
-              <span className="text-sm font-medium text-red-600">
-                {Math.round(product?.off)}% OFF
-              </span>
-            )}
-          </div>
-          {product.sizes.length > 1 && (
-            <span className="text-sm text-gray-600">
-              +{product?.sizes?.length - 1} More sizes available
-            </span>
-          )}
-        </div>
-      </CardContent>
-    </div>
-  );
-
   const SkeletonCard = ({ uniqueKey }) => (
-    <div key={uniqueKey} className="flex-shrink-0 w-[45vw] sm:w-[30vw] md:w-[22vw] lg:w-[20vw] mx-3">
-      <Card className="flex flex-col overflow-hidden h-full">
-        <CardContent className="flex-grow p-0">
-          <Skeleton height={400} />
-        </CardContent>
-        <div className="p-4">
-          <Skeleton width="80%" height={24} />
-          <Skeleton width="60%" height={20} className="mt-2" />
-        </div>
-      </Card>
+    <div key={uniqueKey} className="flex flex-col">
+      <div className="aspect-[3/4] bg-gray-200 animate-pulse mb-4 rounded-sm"></div>
+      <div className="h-4 bg-gray-200 animate-pulse w-3/4 mb-2"></div>
+      <div className="h-4 bg-gray-200 animate-pulse w-1/4"></div>
     </div>
   );
 
   return (
-    <div className={quicksand.className}>
-      <style jsx>{`
-        .marquee-container {
-          overflow-x: auto;
-          overflow-y: hidden;
-          position: relative;
-          width: 100%;
-          padding: 20px 0;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .marquee-container::-webkit-scrollbar {
-          display: none;
-        }
-        .marquee-content {
-          display: flex;
-          flex-wrap: nowrap;
-          width: max-content;
-        }
-        
-        /* Animation pauses on hover and when paused */
-        .marquee-container:hover .marquee-content,
-        .marquee-container.paused .marquee-content {
-          animation-play-state: paused;
-        }
-        
-        .scroll-left {
-          animation: scroll-left 40s linear infinite;
-        }
-        @keyframes scroll-left {
-          0% {
-            transform: translateX(0%);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
+    <section className="py-24 bg-white relative z-0">
+      {/* Added relative z-0 to ensure it sits properly in stacking context if needed, though usually standard flow is fine */}
+      <div className="container mx-auto px-4 md:px-8">
 
-        .scroll-right {
-          animation: scroll-right 40s linear infinite;
-        }
-        @keyframes scroll-right {
-          0% {
-            transform: translateX(-50%);
-          }
-          100% {
-            transform: translateX(0%);
-          }
-        }
-
-        .nav-button {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          z-index: 10;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(8px);
-          border: none;
-          border-radius: 50%;
-          width: 48px;
-          height: 48px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .nav-button:hover {
-          background: rgba(255, 255, 255, 1);
-          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-          transform: translateY(-50%) scale(1.1);
-        }
-        
-        .nav-button:active {
-          transform: translateY(-50%) scale(0.95);
-        }
-        
-        .nav-button-left {
-          left: 20px;
-        }
-        
-        .nav-button-right {
-          right: 20px;
-        }
-
-        .carousel-wrapper {
-          position: relative;
-        }
-
-        @media (max-width: 768px) {
-          .nav-button {
-            width: 40px;
-            height: 40px;
-          }
-          .nav-button-left {
-            left: 10px;
-          }
-          .nav-button-right {
-            right: 10px;
-          }
-        }
-      `}</style>
-
-      <h1 className="relative text-3xl mt-12 tracking-wider py-2 pt-6 text-center mx-auto animated-underline">
-        CHECK OUR SELECTION
-      </h1>
-
-      <div key={searchQuery} className="py-2 mt-10">
-        {loading ? (
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-gray-100 pb-6 gap-4">
           <div>
-            <div className="marquee-container">
-              <div className="marquee-content">
-                {Array.from({ length: 10 }).map((_, index) => (
-                  <SkeletonCard key={`sk-top-${index}`} uniqueKey={`sk-top-${index}`} />
-                ))}
-              </div>
-            </div>
-            <div className="marquee-container">
-              <div className="marquee-content">
-                {Array.from({ length: 10 }).map((_, index) => (
-                  <SkeletonCard key={`sk-bottom-${index}`} uniqueKey={`sk-bottom-${index}`} />
-                ))}
-              </div>
-            </div>
+            <span className="font-serif text-[#b48a3c] text-sm tracking-[0.2em] mb-2 block uppercase">
+              Featured
+            </span>
+            <h2 className="font-serif text-3xl md:text-5xl text-gray-900 leading-tight">
+              Curated Collection
+            </h2>
           </div>
-        ) : products.products?.length > 0 ? (
-          <div>
-            {/* TOP ROW: SCROLLING RIGHT WITH NAVIGATION */}
-            <div className="carousel-wrapper">
-              <button
-                className="nav-button nav-button-left"
-                onClick={() => scrollRow(topRowRef, 'left', true)}
-                aria-label="Scroll left"
-              >
-                <FaChevronLeft size={20} className="text-gray-800" />
-              </button>
+          <Link
+            href="/products"
+            className="hidden md:flex items-center text-xs uppercase tracking-widest text-gray-500 hover:text-[#b48a3c] transition-colors group"
+          >
+            View All Products
+            <span className="block h-[1px] w-8 bg-gray-300 ml-3 group-hover:w-12 group-hover:bg-[#b48a3c] transition-all"></span>
+          </Link>
+        </div>
 
-              <div
-                ref={topRowRef}
-                className={`marquee-container ${isPausedTop ? 'paused' : ''}`}
-              >
-                <div className="marquee-content scroll-right">
-                  {[...products.products, ...products.products].map(
-                    (product, index) => (
-                      <ProductCard
-                        product={product}
-                        uniqueKey={`top-${product._id}-${index}`}
-                        key={`top-${product._id}-${index}`}
-                      />
-                    )
-                  )}
-                </div>
-              </div>
-
-              <button
-                className="nav-button nav-button-right"
-                onClick={() => scrollRow(topRowRef, 'right', true)}
-                aria-label="Scroll right"
-              >
-                <FaChevronRight size={20} className="text-gray-800" />
-              </button>
+        {/* Content */}
+        <div className="">
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <SkeletonCard key={`sk-${index}`} uniqueKey={`sk-${index}`} />
+              ))}
             </div>
-
-            {/* BOTTOM ROW: SCROLLING LEFT WITH NAVIGATION */}
-            <div className="carousel-wrapper">
-              <button
-                className="nav-button nav-button-left"
-                onClick={() => scrollRow(bottomRowRef, 'left', false)}
-                aria-label="Scroll left"
-              >
-                <FaChevronLeft size={20} className="text-gray-800" />
-              </button>
-
-              <div
-                ref={bottomRowRef}
-                className={`marquee-container ${isPausedBottom ? 'paused' : ''}`}
-              >
-                <div className="marquee-content scroll-left">
-                  {[...products.products, ...products.products].map(
-                    (product, index) => (
-                      <ProductCard
-                        product={product}
-                        uniqueKey={`bottom-${product._id}-${index}`}
-                        key={`bottom-${product._id}-${index}`}
-                      />
-                    )
-                  )}
-                </div>
-              </div>
-
-              <button
-                className="nav-button nav-button-right"
-                onClick={() => scrollRow(bottomRowRef, 'right', false)}
-                aria-label="Scroll right"
-              >
-                <FaChevronRight size={20} className="text-gray-800" />
-              </button>
+          ) : products.products?.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-8 md:gap-y-12">
+              {products.products.map((product, index) => {
+                const isWishlisted = wishlistItems.some((item) => item.id === product._id);
+                return (
+                  <ProductCardAlt
+                    key={product._id}
+                    product={product}
+                    index={index}
+                    isWishlisted={isWishlisted}
+                    onToggleWishlist={handleWishlistToggle}
+                    onQuickAdd={openSizeModal} // Quick add opens modal
+                  />
+                );
+              })}
             </div>
-          </div>
-        ) : (
-          <NotFound height="60vh" text="Products" />
-        )}
+          ) : (
+            <NotFound height="400px" text="No Featured Products Found" />
+          )}
+        </div>
+
+        {/* Mobile View All Button */}
+        <div className="mt-12 text-center md:hidden">
+          <Link
+            href="/products"
+            className="inline-block border border-gray-900 text-gray-900 px-8 py-3 text-xs uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors"
+          >
+            View All Products
+          </Link>
+        </div>
+
       </div>
 
+      {/* Size Modal */}
       {products && products.products && products.products.length > 0 && (
         <ProductSizeModal
           isOpen={isSizeModalOpen}
@@ -471,7 +372,7 @@ const MainProducts = () => {
           isInCart={isInCart}
         />
       )}
-    </div>
+    </section>
   );
 };
 
