@@ -28,7 +28,7 @@ export const sendSubscribeEmail = async (email: string): Promise<void> => {
 
     // Email details
     const mailOptions = {
-      from: '"siskerala" <orders@siskerala.com>', // Verified sender in ZeptoMail
+      from: '"Swaarasya" <noreply@swaarasya.com>', // Verified sender in ZeptoMail
       to: email,
       subject: '🎉 Welcome to siskerala!',
       html: emailContent,

@@ -155,7 +155,7 @@ export const sendShippingNotificationEmail = async (order: any): Promise<{ succe
     console.log("--- DEBUG: Sending shipping notification email...");
 
     await transporter.sendMail({
-      from: '"Siskerala" <orders@siskerala.com>',
+      from: '"Swaarasya" <noreply@swaarasya.com>',
       to: `${order.user?.email || order.customerEmail},sisbymridhulaparvathy@gmail.com`,
       subject: `📦 Your Order Has Been Shipped! - Tracking #${trackingNumber}`,
       html: htmlTemplate,
