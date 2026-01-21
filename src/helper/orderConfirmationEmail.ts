@@ -16,7 +16,7 @@ const orderConfirmationEmail = async (
     });
 
     const mailOptions = {
-      from: '"Siskerala" <orders@siskerala.com>',
+      from: '"Swaarasya" <noreply@swaarasya.com>',
       to,
       subject,
       html,

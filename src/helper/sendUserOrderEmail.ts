@@ -169,7 +169,7 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
     console.log("--- DEBUG: Attempting to send email via ZeptoMail...");
 
     await transporter.sendMail({
-      from: '"Siskerala" <orders@siskerala.com>',
+      from: '"Swaarasya" <noreply@swaarasya.com>',
       to: `${order.user?.email || order.customerEmail},sisbymridhulaparvathy@gmail.com`,
       subject: `✅ Order Confirmed - #${order.orderId || order.tempTransactionId} - SIS Kerala`,
       html: htmlTemplate,

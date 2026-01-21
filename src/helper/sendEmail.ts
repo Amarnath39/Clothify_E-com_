@@ -13,7 +13,7 @@ export const sendEmail = async (email: string, otp: number): Promise<void> => {
     });
 
     const mailOptions = {
-      from: '"Udayaada" <varnasuba755@gmail.com>', // ZeptoMail-approved sender
+      from: '"Swaarasya" <noreply@swaarasya.com>', // ZeptoMail-approved sender
       to: email,
       subject: "Your OTP for Udayaada",
       html: `
