@@ -47,7 +47,7 @@ export const POST = async (req: NextRequest) => {
         secure: process.env.NODE_ENV === "production",
         maxAge: 1 * 24 * 60 * 60, // 1 day
         path: "/",
-        domain: process.env.NODE_ENV === "production" ? "siskerala.com" : "localhost",
+        domain: process.env.NODE_ENV === "production" ? "swaarasya.com" : "localhost",
       };
 
       return NextResponse.json(

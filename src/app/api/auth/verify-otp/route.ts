@@ -56,7 +56,7 @@ export const POST = async (req: NextRequest) => {
         // sameSite: 'none',
         maxAge: 30 * 24 * 60 * 60, // 30 days
         path: "/",
-        domain: ".siskerala.com",
+        domain: ".swaarasya.com",
       };
 
       return new NextResponse(
