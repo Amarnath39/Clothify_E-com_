@@ -23,32 +23,32 @@ export function CategoryCard({
   index = 0
 }: CategoryCardProps) {
   return (
-    <Link href={link} className="block w-full h-full">
+    <Link href={link} className="group relative flex flex-col items-center w-full">
       <motion.div
-        className="group relative block aspect-[3/4] overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-500"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ delay: index * 0.1, duration: 0.6 }}
-        whileHover={{ y: -8 }}
+        transition={{ delay: index * 0.1, duration: 0.5 }}
+        className="w-full"
       >
-        <motion.img
-          src={image}
-          alt={name}
-          className="w-full h-full object-cover"
-          whileHover={{ scale: 1.1 }}
-          transition={{ duration: 0.8 }}
-        />
+        {/* Circular Image Container with Background */}
+        <div className="relative w-full aspect-square mb-6 bg-gradient-to-br from-[#800020]/90 to-[#800020] rounded-3xl overflow-hidden p-4 md:p-6 shadow-lg group-hover:shadow-2xl transition-all duration-500">
+          <div className="w-full h-full rounded-full overflow-hidden border-4 md:border-8 border-white/90 shadow-inner transform transition-transform duration-700 group-hover:scale-105">
+            <img
+              src={image}
+              alt={name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500"></div>
-
-        <div className="absolute bottom-0 left-0 w-full p-8 text-center transform transition-transform duration-500 group-hover:-translate-y-2">
-          <h3 className="text-2xl md:text-3xl font-serif font-medium text-white tracking-wide mb-3 drop-shadow-md">
-            {name.toUpperCase()}
+        {/* Category Info */}
+        <div className="text-center space-y-2">
+          <h3 className="text-lg md:text-xl font-serif font-medium text-gray-900 group-hover:text-[#800020] transition-colors uppercase tracking-wide">
+            {name}
           </h3>
-          <span className="inline-block px-5 py-2 border border-white/60 rounded-full text-white text-xs uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0 backdrop-blur-sm">
-            Explore Collection
+          <span className="inline-block text-xs text-gray-500 uppercase tracking-widest border-b border-transparent group-hover:border-[#800020] transition-all">
+            View Collection
           </span>
         </div>
       </motion.div>
@@ -72,7 +72,6 @@ const CategoryList = () => {
           );
           setCategories(parentCategories);
         } else {
-          // Silently fail or log, don't toast excessively
           console.error(payload.msg);
         }
       } catch (error: any) {
@@ -85,30 +84,22 @@ const CategoryList = () => {
   if (categories.length === 0) return null;
 
   return (
-    <section className="py-24 bg-white">
-      <div className="container mx-auto px-4 md:px-20">
+    <section className="py-20 md:py-24 bg-[#FAFAFA]">
+      <div className="container mx-auto px-4 md:px-8">
 
         {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <span className="font-serif text-[#b48a3c] text-sm tracking-[0.3em] mb-4 block uppercase">
-            Discover
-          </span>
-          <h2 className="font-serif text-4xl md:text-5xl text-gray-900 mb-6">
-            Shop by Category
+        <div className="text-center mb-12 md:mb-16">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif text-gray-900 mb-4">
+            Shop by Categories
           </h2>
-          <p className="text-gray-600 text-lg font-light max-w-2xl mx-auto">
-            Explore our curated collections of handwoven sarees and handcrafted jewellery
+          <p className="text-sm md:text-base text-gray-500 max-w-2xl mx-auto font-light">
+            Discover our curated collection of handcrafted wonders
           </p>
-        </motion.div>
+        </div>
 
         {/* Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-          {categories.map((cat: any, idx: number) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 lg:gap-10">
+          {categories.slice(0, 4).map((cat: any, idx: number) => (
             <CategoryCard
               key={cat._id}
               name={cat.name}
@@ -119,6 +110,17 @@ const CategoryList = () => {
           ))}
         </div>
 
+        {/* If more than 4 categories, maybe a view all button or just list all rows? 
+            Snippet implied specific grid, sticking to 4 or wrapping nicely. 
+            If many categories, grid-cols-2 md:grid-cols-4 works great for wrapping too.
+         */}
+        {categories.length > 4 && (
+          <div className="mt-12 text-center">
+            <Link href="/categories" className="inline-block border-b border-gray-900 pb-1 text-sm uppercase tracking-widest hover:text-[#b48a3c] hover:border-[#b48a3c] transition-colors">
+              View All Categories
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -1,0 +1,17 @@
+
+.recently-viewed-swiper {
+  padding-bottom: 4px;
+  overflow: visible !important;
+}
+
+.recently-viewed-swiper :global(.swiper-wrapper) {
+  overflow: visible !important;
+}
+
+.recently-viewed-swiper :global(.swiper-slide) {
+  overflow: visible !important;
+}
+
+.recently-viewed-swiper :global(.swiper-pagination) {
+  bottom: 0;
+}

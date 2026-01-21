@@ -33,12 +33,7 @@ const Navbar = () => {
   const pathname = usePathname();
 
   // Redux State
-  const categories = useSelector((state: any) => state.auth.categories || []); // Ensure fallback
-  // Note: Sometimes categories are in state.category.categories or similar, checking original file...
-  // Original file: const [categories, setCategories] = useState<any>([]);
-  // Original file fetched manually. I will keep the fetch logic but also try to read from where they are stored if possible.
-  // Actually, original code did: setCategories(payload.categories). I will replicate that local state for simplicity and safety.
-
+  const categories = useSelector((state: any) => state.auth.categories || []);
   const cartItems = useSelector((state: any) => state.cart.items);
   const wishlistItems = useSelector((state: any) => state.wishlist.items);
   const token = useSelector((state: any) => state.auth.token);
@@ -99,11 +94,25 @@ const Navbar = () => {
     // 2. Map to NavItem structure
     const dynamicItems = roots.map((root: any) => {
       // Find children
-      const children = localCategories.filter((c: any) => c.parentCategory.includes(root._id));
+      const children = localCategories.filter((c: any) => {
+        let parentIds: string[] = [];
+
+        if (Array.isArray(c.parentCategory)) {
+          parentIds = c.parentCategory.map((p: any) =>
+            typeof p === 'object' && p !== null ? p._id : p
+          );
+        } else if (c.parentCategory) {
+          // Single item (string or object)
+          const p = c.parentCategory;
+          parentIds = [typeof p === 'object' && p !== null ? p._id : p];
+        }
+
+        return parentIds.includes(root._id);
+      });
 
       const subItems: SubCategory[] = children.map((child: any) => ({
         name: child.name,
-        image: child.img, // Assuming 'img' property exists from original file
+        image: child.img,
         link: `/categories/${child._id}`
       }));
 
@@ -120,7 +129,6 @@ const Navbar = () => {
     return [
       { name: "Home", path: "/" },
       ...dynamicItems,
-      // { name: "About", path: "/about" } // Optional, can add if 'About' page exists
     ];
   }, [localCategories]);
 
@@ -128,91 +136,83 @@ const Navbar = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Assuming a search page exists or query params logic
-      // Since original didn't have a specific route shown (it used a modal), let's route to a search page
-      // router.push(`/search?q=${searchQuery}`);
-      // Or just toast for now if no search page implemented
       console.log("Searching for:", searchQuery);
     }
   };
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
-          ? "bg-white/95 backdrop-blur-lg shadow-lg py-3 border-b border-gray-100"
-          : "bg-gradient-to-b from-white/90 to-transparent backdrop-blur-sm py-6"
-        }`}
-      onMouseLeave={() => setActiveDropdown(null)}
-    >
-      {/* Decorative Top Border */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#eab564] via-[#b48a3c] to-[#eab564] opacity-80"></div>
+    <header className="fixed top-0 left-0 right-0 z-50 pt-4 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Capsule Container */}
+        <div className="bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-gray-100 px-6 h-16 flex items-center justify-between relative z-50">
 
-      <div className="container mx-auto px-4 md:px-8">
-        <div className="flex items-center justify-between">
-
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Menu Button */}
           <button
             className="lg:hidden text-gray-800 hover:text-[#b48a3c] transition-colors"
             onClick={() => setIsMobileMenuOpen(true)}
           >
-            <Menu size={24} />
+            <Menu className="h-6 w-6" />
           </button>
 
           {/* Logo */}
-          <Link href="/" className="relative z-50 group">
+          <Link href="/" className="flex items-center">
             <motion.div
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <img
                 src="/assets/static/logo/saw.svg"
-                alt="Logo"
-                className="h-12 md:h-16 w-auto object-contain"
+                alt="Swaarasya"
+                className="h-10 w-auto object-contain"
               />
             </motion.div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8 xl:space-x-10">
-            {navItems.map((item) => (
-              <div
-                key={item.name}
-                className="relative group h-full py-2" // Added py-2 to give hit area
-                onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.name)}
-              >
-                <Link
-                  href={item.path}
-                  className={`relative py-2 text-sm uppercase tracking-[0.15em] font-medium transition-all duration-300 ${pathname === item.path
+          <nav className="hidden lg:flex items-center space-x-6">
+            {navItems.map((item) => {
+              const isActive = pathname === item.path || activeDropdown === item.name;
+              return (
+                <div
+                  key={item.name}
+                  className="relative group h-full py-4"
+                  onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.name)}
+                >
+                  <Link
+                    href={item.path}
+                    className={`text-sm uppercase tracking-[0.1em] font-medium transition-colors ${isActive
                       ? "text-[#b48a3c]"
                       : "text-gray-700 hover:text-[#b48a3c]"
-                    }`}
-                >
-                  {item.name}
-                  {pathname === item.path && (
+                      }`}
+                  >
+                    {item.name}
+                  </Link>
+                  {isActive && (
                     <motion.div
-                      layoutId="activeUnderline"
-                      className="absolute left-0 right-0 -bottom-1 h-0.5 bg-gradient-to-r from-[#eab564] to-[#b48a3c]"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      layoutId="activeDot"
+                      className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-1 h-1 rounded-full bg-[#b48a3c]"
+                      transition={{ duration: 0.3 }}
                     />
                   )}
-                </Link>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </nav>
 
-          {/* Icons */}
-          <div className="flex items-center space-x-4 md:space-x-6">
+          {/* Actions */}
+          <div className="flex items-center space-x-4">
 
-            {/* Search */}
-            <div className={`flex items-center transition-all duration-300 ${isSearchOpen ? 'w-48' : 'w-8'}`}>
-              <motion.button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="text-gray-700 hover:text-[#b48a3c] transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Search size={22} />
-              </motion.button>
+            {/* Search Toggle */}
+            <div className={`flex items-center transition-all duration-300 ${isSearchOpen ? 'w-40 md:w-64' : 'w-auto'}`}>
+              {!isSearchOpen && (
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className="text-gray-700 hover:text-[#b48a3c] transition-colors hidden md:block"
+                >
+                  <Search className="h-5 w-5" />
+                </button>
+              )}
+
               <AnimatePresence>
                 {isSearchOpen && (
                   <motion.form
@@ -220,100 +220,101 @@ const Navbar = () => {
                     animate={{ opacity: 1, width: "100%" }}
                     exit={{ opacity: 0, width: 0 }}
                     onSubmit={handleSearch}
-                    className="ml-2 flex-1"
+                    className="flex items-center"
                   >
                     <input
                       type="text"
                       placeholder="Search..."
-                      className="bg-transparent border-b border-gray-300 focus:border-[#b48a3c] outline-none text-sm w-full py-1 text-gray-800"
+                      className="bg-transparent border-b border-gray-300 focus:border-[#b48a3c] outline-none text-sm w-full py-1 text-gray-800 mr-2"
                       autoFocus
+                      onBlur={() => !searchQuery && setIsSearchOpen(false)}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
+                    <button type="submit" className="text-[#b48a3c]">
+                      <Search className="h-4 w-4" />
+                    </button>
                   </motion.form>
                 )}
               </AnimatePresence>
             </div>
 
-            {/* Wishlist */}
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <Link href="/wishlist" className="text-gray-700 hover:text-[#b48a3c] transition-colors relative">
-                {wishlistItems.length === 0 ? <Heart size={22} /> : <Heart size={22} fill="#b48a3c" className="text-[#b48a3c]" />}
-              </Link>
-            </motion.div>
 
-            {/* Cart */}
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <Link href="/cart" className="text-gray-700 hover:text-[#b48a3c] transition-colors relative">
-                <ShoppingBag size={22} />
-                {cartItems.length > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-2 -right-2 bg-[#b48a3c] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-md"
-                  >
-                    {cartItems.length}
-                  </motion.span>
-                )}
-              </Link>
-            </motion.div>
+            {/* Wishlist */}
+            <Link href="/wishlist" className="text-gray-700 hover:text-[#b48a3c] transition-colors hidden md:block">
+              {wishlistItems.length === 0 ? <Heart className="h-5 w-5" /> : <Heart className="h-5 w-5 fill-[#b48a3c] text-[#b48a3c]" />}
+            </Link>
 
             {/* User */}
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="relative group/user">
-              <Link href={token ? "/profile" : "/login"} className="text-gray-700 hover:text-[#b48a3c] transition-colors">
-                <User size={22} />
-              </Link>
-              {/* Optional user dropdown could go here */}
-            </motion.div>
+            <Link
+              href={token ? '/profile' : '/login'}
+              className="text-gray-700 hover:text-[#b48a3c] transition-colors hidden md:block"
+            >
+              <User className="h-5 w-5" />
+            </Link>
 
+            {/* Cart */}
+            <Link
+              href="/cart"
+              className="text-gray-700 hover:text-[#b48a3c] transition-colors relative"
+            >
+              <ShoppingBag className="h-5 w-5" />
+              {cartItems.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#b48a3c] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-medium shadow-sm">
+                  {cartItems.length}
+                </span>
+              )}
+            </Link>
           </div>
         </div>
-      </div>
 
-      {/* Mega Menu Dropdown */}
-      <AnimatePresence>
-        {activeDropdown && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute top-full left-0 w-full bg-white/98 backdrop-blur-lg border-t border-gray-100 shadow-xl py-10 z-40"
-            onMouseLeave={() => setActiveDropdown(null)}
-          >
-            <div className="container mx-auto px-8">
-              {/* Note: If subcategories are empty, this might look empty. Handled safely. */}
+        {/* Mega Menu Dropdown */}
+        <AnimatePresence>
+          {activeDropdown && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-20 left-4 right-4 bg-white/98 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-40 p-8"
+              onMouseEnter={() => setActiveDropdown(activeDropdown)}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
               {(() => {
                 const activeItem = navItems.find((i) => i.name === activeDropdown);
                 if (!activeItem?.subCategories?.length) {
-                  return <div className="text-center text-gray-500 italic">No subcategories available.</div>;
+                  return (
+                    <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                      <span className="font-serif italic text-lg">Explore our collection</span>
+                    </div>
+                  );
                 }
                 return (
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
                     {activeItem.subCategories.map((sub, idx) => (
                       <motion.div
                         key={sub.name}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: idx * 0.05 }}
                       >
-                        <Link href={sub.link} className="group block">
-                          <div className="overflow-hidden mb-3 aspect-[3/4] bg-gray-100 relative rounded-lg">
+                        <Link href={sub.link} className="group block text-center" onClick={() => setActiveDropdown(null)}>
+                          <div className="overflow-hidden mb-3 aspect-[3/4] bg-gray-50 relative rounded-xl shadow-sm mx-auto">
                             <img
                               src={sub.image || "/assets/static/placeholder.png"}
                               alt={sub.name}
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = "https://placehold.co/300x400?text=No+Image";
                               }}
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300"></div>
                           </div>
-                          <h4 className="font-serif text-base text-gray-900 group-hover:text-[#b48a3c] transition-colors mb-1">
+                          <h4 className="font-serif text-sm font-medium text-gray-900 group-hover:text-[#b48a3c] transition-colors mb-1">
                             {sub.name}
                           </h4>
-                          <span className="text-xs text-gray-500 uppercase tracking-wider group-hover:text-black transition-colors">
-                            Explore →
+                          <span className="text-[10px] text-gray-500 uppercase tracking-widest group-hover:text-[#b48a3c] opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                            Shop Now
                           </span>
                         </Link>
                       </motion.div>
@@ -321,81 +322,87 @@ const Navbar = () => {
                   </div>
                 );
               })()}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Mobile Menu Overlay - Full Screen */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-white flex flex-col md:hidden"
+          >
+            {/* Header in Mobile Menu */}
+            <div className="p-4 flex justify-between items-center border-b border-gray-50">
+              <img
+                src="/assets/static/logo/saw.svg"
+                alt="Swaarasya"
+                className="h-8 w-auto"
+              />
+              <button onClick={() => setIsMobileMenuOpen(false)} className="bg-gray-50 p-2 rounded-full hover:bg-gray-100 transition-colors">
+                <X className="h-6 w-6 text-gray-800" />
+              </button>
+            </div>
+
+            {/* Links */}
+            <div className="flex-1 overflow-y-auto p-8 flex flex-col space-y-8 items-center justify-center text-center">
+              {navItems.map((item) => (
+                <motion.div
+                  key={item.name}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="w-full"
+                >
+                  <Link
+                    href={item.path}
+                    className="text-2xl font-serif text-gray-900 hover:text-[#b48a3c] transition-colors block"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                  {/* Optional Subcategories in Mobile - Simple List */}
+                  {item.hasDropdown && (
+                    <div className="mt-4 flex flex-wrap justify-center gap-3">
+                      {item.subCategories?.slice(0, 4).map(sub => (
+                        <Link
+                          key={sub.name}
+                          href={sub.link}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="text-xs uppercase tracking-widest text-gray-500 border border-gray-200 px-3 py-1 rounded-full hover:border-[#b48a3c] hover:text-[#b48a3c] transition-colors"
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                </motion.div>
+              ))}
+
+              <div className="w-16 h-[1px] bg-gray-200 my-4"></div>
+
+              {/* Account / Action Links Mobile */}
+              <div className="flex flex-col gap-4 w-full max-w-xs">
+                {user ? (
+                  <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 text-gray-800 text-sm font-medium hover:text-[#b48a3c]">
+                    <User size={18} /> My Account
+                  </Link>
+                ) : (
+                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full bg-black text-white py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#b48a3c] transition-colors">
+                    Login / Sign Up
+                  </Link>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Mobile Menu Drawer */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-[85%] max-w-sm bg-white z-50 lg:hidden overflow-y-auto shadow-2xl"
-            >
-              <div className="p-6 flex justify-between items-center border-b border-gray-100">
-                <h2 className="font-serif text-xl font-bold text-[#b48a3c] tracking-widest">MENU</h2>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-gray-500 hover:text-[#b48a3c]"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-6">
-                {/* User Info / Logout for Mobile */}
-                {token ? (
-                  <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                    <span className="text-sm font-medium text-gray-900">Hello, User</span>
-                    <button onClick={handleLogout} className="text-xs text-red-500 font-medium hover:underline">Logout</button>
-                  </div>
-                ) : (
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="block pb-4 border-b border-gray-100 text-sm font-medium text-[#b48a3c]">Login / Register</Link>
-                )}
-
-
-                {navItems.map((item) => (
-                  <div key={item.name}>
-                    <Link
-                      href={item.path}
-                      className="block text-lg font-medium text-gray-900 mb-2 hover:text-[#b48a3c] transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                    {item.subCategories && item.subCategories.length > 0 && (
-                      <div className="pl-4 space-y-3 mt-2 border-l-2 border-gray-100 ml-1">
-                        {item.subCategories.map((sub) => (
-                          <Link
-                            key={sub.name}
-                            href={sub.link}
-                            className="block text-sm text-gray-600 hover:text-[#b48a3c] transition-colors"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            {sub.name}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </header>
   );
 };

@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { getCartItems, getCouponById, getVisibleCoupons } from "./action";
 
-export interface CounterState {}
+export interface CounterState { }
 
 const initialState: any = {
   items: [],
@@ -14,16 +14,17 @@ export const cartSlice = createSlice({
   initialState,
   reducers: {
     setInitialState: () => initialState,
-    addToCart: (state, action: PayloadAction<{ id: string; size: any }>) => {
-      const { id, size } = action.payload;
+    addToCart: (state, action: PayloadAction<{ id: string; size: any; quantity?: number }>) => {
+      const { id, size, quantity } = action.payload;
+      const countToAdd = quantity || 1;
 
       const existingItem = state.items.find((item) => {
         return item.id === id && item.size._id === size._id;
       });
       if (existingItem) {
-        existingItem.count += 1;
+        existingItem.count += countToAdd;
       } else {
-        state.items.push({ id, size, count: 1 });
+        state.items.push({ id, size, count: countToAdd });
       }
     },
     increaseCount: (
@@ -76,9 +77,9 @@ export const cartSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(getCartItems.fulfilled, (state, { payload }) => {});
-    builder.addCase(getVisibleCoupons.fulfilled, (state, { payload }) => {});
-    builder.addCase(getCouponById.fulfilled, (state, { payload }) => {});
+    builder.addCase(getCartItems.fulfilled, (state, { payload }) => { });
+    builder.addCase(getVisibleCoupons.fulfilled, (state, { payload }) => { });
+    builder.addCase(getCouponById.fulfilled, (state, { payload }) => { });
   },
 });
 
