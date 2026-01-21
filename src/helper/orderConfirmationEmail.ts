@@ -11,12 +11,12 @@ const orderConfirmationEmail = async (
       port: 587,
       auth: {
         user: "emailapikey",
-        pass: "PHtE6r0OFO/qiGEq9kIA7ffpFsSmZN9/+79iJVFP44dAXPYAS01VrNEoxjfjqE0vXaZDEKWdnYtusOnNte6BJGy7NzkZW2qyqK3sx/VYSPOZsbq6x00YtF0fd0XaV4Hmdt5s1SfQv9jcNA==",
+        pass: process.env.ZEPTO_API_KEY,
       },
     });
 
     const mailOptions = {
-      from: '"Siskerala" <orders@siskerala.com>',
+      from: '"Swaarasya" <noreply@swaarasya.com>',
       to,
       subject,
       html,
