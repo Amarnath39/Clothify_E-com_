@@ -8,9 +8,15 @@ export const GET = async () => {
     try {
         const scrollText = await ScrollText.findOne();
         if (!scrollText) {
-            return NextResponse.json({ text: "Free Shipping all over India | Ships in 24 hours | ✨ New Arrivals Every Week" });
+            return NextResponse.json({
+                text: "Free Shipping all over India | Ships in 24 hours | ✨ New Arrivals Every Week",
+                isVisible: true
+            });
         }
-        return NextResponse.json({ text: scrollText.text });
+        return NextResponse.json({
+            text: scrollText.text,
+            isVisible: scrollText.isVisible
+        });
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch scroll text" }, { status: 500 });
     }
@@ -18,13 +24,14 @@ export const GET = async () => {
 
 export const POST = async (req: NextRequest) => {
     try {
-        const { text } = await req.json();
+        const { text, isVisible } = await req.json();
         let scrollText = await ScrollText.findOne();
         if (scrollText) {
-            scrollText.text = text;
+            if (text !== undefined) scrollText.text = text;
+            if (isVisible !== undefined) scrollText.isVisible = isVisible;
             await scrollText.save();
         } else {
-            scrollText = new ScrollText({ text });
+            scrollText = new ScrollText({ text, isVisible: isVisible !== undefined ? isVisible : true });
             await scrollText.save();
         }
         return NextResponse.json({ success: true, msg: "Scroll text updated" });

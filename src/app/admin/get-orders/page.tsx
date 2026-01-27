@@ -422,7 +422,7 @@ const OrdersPage = () => {
           <SelectContent>
             <SelectItem value="all">All Sources</SelectItem>
             <SelectItem value="online">Online Orders</SelectItem>
-            <SelectItem value="offline">Offline Orders</SelectItem>
+            {/* <SelectItem value="offline">Offline Orders</SelectItem> */}
           </SelectContent>
         </Select>
 

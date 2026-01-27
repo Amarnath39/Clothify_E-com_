@@ -358,7 +358,7 @@ export const POST = async (req: NextRequest) => {
             {
                 success: true,
                 msg: "Offline order created successfully",
-                order: newOrder,
+                offlorder: newOrder,
             },
             { status: 201 }
         );
