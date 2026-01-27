@@ -128,6 +128,9 @@ const Navbar = () => {
     // 3. Prepend static items
     return [
       { name: "Home", path: "/" },
+      { name: "Collections", path: "/categories" },
+      { name: "AboutUs", path: "/about" },
+
       ...dynamicItems,
     ];
   }, [localCategories]);
