@@ -1,19 +1,11 @@
 "use client";
-// Main imports
+
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Quicksand } from "next/font/google";
+import { ArrowRight } from "lucide-react";
 
 import { useAppDispatch } from "@/lib/hooks";
 import { getAllProducts } from "@/lib/features/catogary";
-
-// Style imports
-import "swiper/css/pagination";
-import "swiper/css";
-import "swiper/css/navigation";
-import "./swiper.css";
-
-const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
 
 const PRODUCT_CATEGORIES = [
   { type: "bestsellerProduct", title: "Best Sellers" },
@@ -21,101 +13,109 @@ const PRODUCT_CATEGORIES = [
   { type: "featureProduct", title: "Featured" },
 ];
 
-const BestSelling = () => {
-  const [products, setProducts] = useState<any>({}); 
-  
-
-  const [hoveredType, setHoveredType] = useState<string | null>(null);
-  
-
+const FeaturedCollections = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
+  const [products, setProducts] = useState<Record<string, any>>({});
+
   useEffect(() => {
-    const fetchAllProducts = async () => {
+    const fetchCollections = async () => {
       try {
-        const productPromises = PRODUCT_CATEGORIES.map((category) => {
+        const requests = PRODUCT_CATEGORIES.map((category) => {
           const queryParams = new URLSearchParams({
             [category.type]: "true",
             sort: "newlyArrived",
             limit: "1",
           });
+
           return dispatch(getAllProducts(queryParams.toString()) as any);
         });
 
-        const results = await Promise.all(productPromises);
+        const responses = await Promise.all(requests);
 
-        const fetchedProducts = results.reduce((acc, result, index) => {
-          if (result.payload?.success && result.payload.products.length > 0) {
-            const categoryType = PRODUCT_CATEGORIES[index].type;
-            acc[categoryType] = result.payload.products[0];
+        const mappedProducts = responses.reduce((acc, res, index) => {
+          if (res.payload?.success && res.payload.products.length > 0) {
+            acc[PRODUCT_CATEGORIES[index].type] =
+              res.payload.products[0];
           }
           return acc;
-        }, {});
+        }, {} as Record<string, any>);
 
-        setProducts(fetchedProducts);
+        setProducts(mappedProducts);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Failed to fetch collections", error);
       }
     };
 
-    fetchAllProducts();
+    fetchCollections();
   }, [dispatch]);
 
   return (
-    <div className={`${quicksand.className} antialiased bg-white py-12 sm:py-16`}>
-      <h1 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-8">
-        Our Collections
-      </h1>
+    <section className="py-20 bg-white">
+      {/* ✅ Proper width container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-      <div className="w-full h-[85vh] sm:h-[75vh] min-h-[600px] sm:min-h-[500px] max-h-[900px] sm:max-h-[800px] flex flex-col sm:flex-row p-2 gap-2">
-        {PRODUCT_CATEGORIES.map((category) => {
-          const product = products[category.type];
-          const isHovered = hoveredType === category.type;
-          const isAnyHovered = hoveredType !== null;
+        {/* ✅ Proper heading alignment */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-serif text-charcoal mb-1">
+              Curated Collections
+            </h2>
+            <p className="text-gray-500 italic">
+              Handpicked for the connoisseur in you
+            </p>
+          </div>
 
-          const flexValue = isAnyHovered
-            ? isHovered
-              ? "flex-[5]"
-              : "flex-[1]"
-            : "flex-1";
+          <button
+            onClick={() => router.push("/collections")}
+            className="group flex items-center text-burgundy font-medium hover:text-burgundy-dark transition-colors"
+          >
+            View All
+            <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </button>
+        </div>
 
-          return (
-            <div
-              key={category.type}
-              className={`relative rounded-2xl overflow-hidden cursor-pointer w-full transition-all duration-700 ease-in-out ${flexValue}`}
-              style={{
-                backgroundImage: `url(${
-                  product?.img?.[0] || "https://placehold.co/800x1200/e2e8f0/e2e8f0"
-                })`,
-                backgroundSize: "auto 100%",
-                backgroundPosition: "center",
-              }}
-              onMouseEnter={() => setHoveredType(category.type)} // This line will now work correctly
-              onMouseLeave={() => setHoveredType(null)}
-              onClick={() => router.push(`/products?${category.type}=true`)}
-            >
-              <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-50 transition-all duration-500"></div>
+        {/* ✅ Grid inside margins */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {PRODUCT_CATEGORIES.map((category) => {
+            const product = products[category.type];
 
-              <div className="relative w-full h-full flex flex-col justify-end items-start p-6 sm:p-10 text-white">
-                <div
-                  className="w-full transform transition-transform duration-500 ease-out"
-                  style={{ opacity: isHovered ? 1 : 0.95 }}
-                >
-                  <h2 className="text-2xl sm:text-4xl font-bold tracking-tight sm:mb-4">
+            return (
+              <div
+                key={category.type}
+                onClick={() =>
+                  router.push(`/products?${category.type}=true`)
+                }
+                className="group relative h-[500px] overflow-hidden rounded-2xl cursor-pointer"
+              >
+                <img
+                  src={
+                    product?.img?.[0] ||
+                    "https://placehold.co/800x1200/e2e8f0/e2e8f0"
+                  }
+                  alt={category.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80" />
+
+                <div className="absolute bottom-0 left-0 p-8 w-full">
+                  <h3 className="text-2xl font-serif text-white mb-2">
                     {category.title}
-                  </h2>
-                  <button className="bg-transparent border-2 border-white text-white font-bold py-2 px-6 rounded-lg hover:bg-white hover:text-black transition-all duration-300 hidden sm:block">
-                    EXPLORE
-                  </button>
+                  </h3>
+                  <span className="inline-block text-gold text-sm uppercase tracking-widest border-b border-gold pb-1 group-hover:text-white group-hover:border-white transition-colors">
+                    Explore Collection
+                  </span>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
       </div>
-    </div>
+    </section>
   );
 };
 
-export default BestSelling;
+export default FeaturedCollections;
