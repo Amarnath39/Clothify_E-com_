@@ -1,3 +1,4 @@
+// update banner and marque content
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
