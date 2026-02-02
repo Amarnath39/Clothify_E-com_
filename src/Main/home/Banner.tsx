@@ -12,8 +12,15 @@ import "../../hooks/style.css";
 
 // --- Marquee Strip ---
 const MarqueeStrip = () => {
-  const marqueeText =
-    "Free Shipping all over India | Ships in 24 hours | ✨ New Arrivals Every Week";
+  const [marqueeText, setMarqueeText] = useState("Free Shipping all over India | Ships in 24 hours | ✨ New Arrivals Every Week");
+
+  useEffect(() => {
+    fetch('/api/scrolltext')
+      .then(res => res.json())
+      .then(data => setMarqueeText(data.text))
+      .catch(() => {});
+  }, []);
+
   const repeatedText = `${marqueeText} - ${marqueeText} - ${marqueeText}`;
 
   return (
@@ -97,9 +104,12 @@ const Banner = () => {
   // --- Render ---
   if (banners.length === 0) {
     return (
-      <section className="relative w-full h-[60vh] bg-[#FAF7F2] flex items-center justify-center">
-        {/* Loading State or Skeleton could go here */}
-      </section>
+      <>
+        <MarqueeStrip />
+        <section className="relative w-full h-[60vh] bg-[#FAF7F2] flex items-center justify-center">
+          {/* Loading State or Skeleton could go here */}
+        </section>
+      </>
     );
   }
 
@@ -107,6 +117,7 @@ const Banner = () => {
 
   return (
     <>
+      <MarqueeStrip />
       <section className="relative w-full min-h-[90vh] flex items-center overflow-hidden bg-[#FAF7F2] pt-24 pb-12">
         <div className="container mx-auto px-4 md:px-8 h-full relative z-10">
           <AnimatePresence mode="wait">
@@ -233,7 +244,6 @@ const Banner = () => {
           )}
         </div>
       </section>
-      <MarqueeStrip />
     </>
   );
 };
