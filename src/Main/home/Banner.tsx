@@ -13,18 +13,24 @@ import "../../hooks/style.css";
 // --- Marquee Strip ---
 const MarqueeStrip = () => {
   const [marqueeText, setMarqueeText] = useState("Free Shipping all over India | Ships in 24 hours | ✨ New Arrivals Every Week");
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     fetch('/api/scrolltext')
       .then(res => res.json())
-      .then(data => setMarqueeText(data.text))
+      .then(data => {
+        setMarqueeText(data.text);
+        setIsVisible(data.isVisible);
+      })
       .catch(() => {});
   }, []);
 
   const repeatedText = `${marqueeText} - ${marqueeText} - ${marqueeText}`;
 
+  if (!isVisible) return null;
+
   return (
-    <div className="w-full bg-black text-white overflow-hidden py-2 text-center text-sm sm:text-base font-medium z-20 relative">
+    <div className="w-full bg-black text-white overflow-hidden py-2 text-center text-sm sm:text-base font-medium z-20 relative mt-20 md:mt-2">
       <div className="flex w-fit animate-marquee">
         <span className="whitespace-nowrap px-4 tracking-wider">{repeatedText}</span>
       </div>
