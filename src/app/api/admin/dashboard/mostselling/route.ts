@@ -4,6 +4,7 @@ import Product from "../../../../../model/Product";
 import Admin from "../../../../../model/Admin";
 
 connectDB();
+export const dynamic = "force-dynamic";
 
 export const GET = async (req: NextRequest) => {
     try {
