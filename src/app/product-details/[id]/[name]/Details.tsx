@@ -158,23 +158,12 @@ const ProductDetails = ({
       </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
-        {/* Left: Gallery */}
-        <div className="flex flex-col-reverse md:flex-row gap-4">
-          {/* Thumbnails */}
-          <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible">
-            {productData.img?.map((img: string, idx: number) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentIndex(idx)}
-                className={`relative w-16 h-20 md:w-20 md:h-24 flex-shrink-0 border transition-all ${currentIndex === idx ? "border-[#b48a3c]" : "border-transparent hover:border-gray-200"}`}
-              >
-                <img src={img} alt="" className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
+       {/* Left: Gallery */}
+        <div className="flex flex-col gap-4 lg:max-h-[calc(100vh-8rem)]">
 
           {/* Main Image */}
-          <div className="flex-1 bg-gray-50 aspect-[3/4] relative overflow-hidden group">
+          <div className="bg-gray-50 relative overflow-hidden group flex items-center justify-center h-[60vh] lg:h-[65vh] max-h-[600px]">
+
             <img
               src={productData.img[currentIndex]}
               alt={productData.name}
@@ -185,10 +174,9 @@ const ProductDetails = ({
               onClick={() => setIsModalOpen(true)}
               className="absolute top-4 right-4 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <FaTshirt /> {/* Placeholder for zoom icon */}
+              <FaTshirt />
             </button>
 
-            {/* Zoom Modal Logic */}
             {isModalOpen && (
               <ProductGalleryPage
                 productData={productData}
@@ -197,10 +185,31 @@ const ProductDetails = ({
               />
             )}
           </div>
+
+          {/* Thumbnails (bottom row) */}
+          <div className="flex gap-2 overflow-x-auto py-1">
+
+            {productData.img?.map((img: string, idx: number) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`relative w-16 h-20 flex-shrink-0 border transition-all ${
+                  currentIndex === idx
+                    ? "border-[#b48a3c]"
+                    : "border-transparent hover:border-gray-200"
+                }`}
+              >
+                <img src={img} alt="" className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+
         </div>
 
+
+
         {/* Right: Info */}
-        <div className="flex flex-col">
+        <div className="flex flex-col lg:sticky lg:top-28 self-start">
           <div className="mb-8 border-b border-gray-100 pb-8">
             {productData.categories && productData.categories.length > 0 && (
               <span className="text-sm text-[#b48a3c] font-medium tracking-widest uppercase mb-2 block">
@@ -290,27 +299,6 @@ const ProductDetails = ({
                   <Plus size={16} />
                 </button>
               </div>
-            </div>
-
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                onClick={handleAddToCart}
-                disabled={isOutOfStock || isPreBookingEnded}
-                size="lg"
-                className={`flex-1 h-14 uppercase tracking-widest text-xs font-bold ${isInCart ? "bg-red-600 hover:bg-red-700 text-white" : "bg-black text-white hover:bg-gray-800"}`}
-              >
-                {isInCart ? "Remove from Cart" : (isPreBooking ? "Pre-Book Now" : "Add to Cart")}
-              </Button>
-              <Button
-                onClick={handleBuyNow}
-                disabled={isOutOfStock || isPreBookingEnded}
-                variant="outline"
-                size="lg"
-                className="flex-1 h-14 uppercase tracking-widest text-xs font-bold border-black text-black hover:bg-black hover:text-white"
-              >
-                Buy Now
-              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -319,10 +307,86 @@ const ProductDetails = ({
               >
                 <Heart className={isWishlist ? "fill-red-600 text-red-600" : "text-gray-400"} />
               </Button>
+              <UniversalShare product={productData} currentPrice={selectedSize?.offerPrice} />
             </div>
 
-            <UniversalShare product={productData} currentPrice={selectedSize?.offerPrice} />
+            {/* Buttons */}
+            <div className="flex flex-col gap-4">
+              <Button
+                onClick={handleAddToCart}
+                disabled={isOutOfStock || isPreBookingEnded}
+                size="lg"
+                className="w-full h-14 bg-[#7b1e3a] text-white text-sm font-semibold uppercase tracking-wider flex items-center justify-center"
+
+              >
+                {isInCart ? "Remove from Cart" : (isPreBooking ? "Pre-Book Now" : "Add to Cart")}
+              </Button>
+              <Button
+                onClick={handleBuyNow}
+                disabled={isOutOfStock || isPreBookingEnded}
+                variant="outline"
+                size="lg"
+                className="w-full h-14 border border-[#7b1e3a] text-[#7b1e3a] uppercase tracking-wider font-semibold flex items-center justify-center hover:bg-[#7b1e3a] hover:text-white transition-colors duration-300"
+
+              >
+                Buy Now
+              </Button>
+            </div>
+
+            
           </div>
+
+          {/* Details Section */}
+          <div className="pt-6 border-t border-gray-100 space-y-6 text-sm">
+
+            {/* Row 1: Description + Material */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+              {/* Description */}
+              <div>
+                <span className="block text-gray-500 mb-1">Description</span>
+                <p className="font-medium text-gray-900 leading-relaxed">
+                  {productData.description}
+                </p>
+              </div>
+
+              {/* Material */}
+              {productData.material && (
+                <div>
+                  <span className="block text-gray-500 mb-1">Material</span>
+                  <span className="font-medium text-gray-900">
+                    {Array.isArray(productData.material)
+                      ? productData.material.join(", ")
+                      : productData.material}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Row 2: Shipping (spans both columns) */}
+            <div className="sm:col-span-2 space-y-3 text-gray-600">
+              <span className="block text-gray-500">Shipping</span>
+              <p className="font-medium text-gray-900">
+                Free shipping on all orders above ₹5000. Standard delivery
+                takes 5–7 business days. Express delivery available at checkout.
+              </p>
+
+              {productData.returnRules && productData.returnRules.length > 0 && (
+                <div>
+                  <span className="block text-gray-900 font-medium mb-2">
+                    Return Policy
+                  </span>
+                  <ul className="list-disc list-inside space-y-1">
+                    {productData.returnRules.map((rule: any, i: number) => (
+                      <li key={i}>{rule.rule}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+          </div>
+
 
           {/* Trust Badges */}
           <div className="grid grid-cols-3 gap-4 mb-8 pt-6 border-t border-gray-100">
@@ -340,75 +404,7 @@ const ProductDetails = ({
             </div>
           </div>
 
-          {/* Tabs */}
-          <div>
-            <Tabs defaultValue="description" className="w-full">
-              <TabsList className="w-full justify-start border-b border-gray-200 rounded-none h-auto p-0 bg-transparent">
-                <TabsTrigger
-                  value="description"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#b48a3c] data-[state=active]:text-[#b48a3c] px-6 py-3 bg-transparent font-serif tracking-wide"
-                >
-                  Description
-                </TabsTrigger>
-                <TabsTrigger
-                  value="material"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#b48a3c] data-[state=active]:text-[#b48a3c] px-6 py-3 bg-transparent font-serif tracking-wide"
-                >
-                  Material & Care
-                </TabsTrigger>
-                <TabsTrigger
-                  value="shipping"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#b48a3c] data-[state=active]:text-[#b48a3c] px-6 py-3 bg-transparent font-serif tracking-wide"
-                >
-                  Shipping
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="pt-6 min-h-[150px] text-gray-600 leading-relaxed text-sm">
-                <TabsContent value="description">
-                  <p>{productData.description}</p>
-                  {productData.additionalFields && (
-                    <ul className="mt-4 space-y-2">
-                      {Object.entries(productData.additionalFields).map(([key, val]: any) => (
-                        <li key={key}><span className="font-semibold text-gray-900">{key}:</span> {val}</li>
-                      ))}
-                    </ul>
-                  )}
-                </TabsContent>
-                <TabsContent value="material">
-                  {productData.material && (
-                    <div className="mb-2">
-                      <span className="font-semibold text-gray-900 block mb-1">Material</span>
-                      {Array.isArray(productData.material) ? productData.material.join(", ") : productData.material}
-                    </div>
-                  )}
-                  {productData.washCare && (
-                    <div>
-                      <span className="font-semibold text-gray-900 block mb-1">Care Instructions</span>
-                      {productData.washCare}
-                    </div>
-                  )}
-                </TabsContent>
-                <TabsContent value="shipping">
-                  <p className="mb-4">
-                    Free shipping on all orders above ₹5000. Standard delivery
-                    takes 5-7 business days. Express delivery available at
-                    checkout.
-                  </p>
-                  {productData.returnRules && productData.returnRules.length > 0 && (
-                    <div>
-                      <span className="font-semibold text-gray-900 block mb-2">Return Policy</span>
-                      <ul className="list-disc list-inside">
-                        {productData.returnRules.map((rule: any, i: number) => (
-                          <li key={i}>{rule.rule}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </TabsContent>
-              </div>
-            </Tabs>
-          </div>
+          
         </div>
       </div>
 
