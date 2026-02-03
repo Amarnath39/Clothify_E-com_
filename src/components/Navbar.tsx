@@ -136,12 +136,26 @@ const Navbar = () => {
   }, [localCategories]);
 
   // Search Handler
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      console.log("Searching for:", searchQuery);
-    }
-  };
+  // const handleSearch = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (searchQuery.trim()) {
+  //     console.log("Searching for:", searchQuery);
+  //   }
+  // };
+  // Update the import at the top of the file
+// import { useRouter } from "next/navigation";
+
+// Inside the Navbar component, update the handleSearch function:
+const handleSearch = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (searchQuery.trim()) {
+    // Encode the search query and redirect to the products page
+    const encodedQuery = encodeURIComponent(searchQuery.trim());
+    router.push(`/products?search=${encodedQuery}`);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+  }
+};
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 pt-4 px-4">

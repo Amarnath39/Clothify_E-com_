@@ -18,7 +18,7 @@ const MarqueeStrip = () => {
         setMarqueeText(data.text);
         setIsVisible(data.isVisible);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const repeatedText = `${marqueeText} - ${marqueeText} - ${marqueeText}`;
@@ -26,12 +26,13 @@ const MarqueeStrip = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="w-full bg-black text-white overflow-hidden py-2 text-center text-sm sm:text-base font-medium z-20 relative mt-20 md:mt-2">
-      <div className="flex w-fit animate-marquee">
-        <span className="whitespace-nowrap px-4 tracking-wider">{repeatedText}</span>
-      </div>
+  <div className="w-full bg-black text-white overflow-hidden py-2 text-center text-sm sm:text-base font-medium z-20 relative">
+    <div className="flex w-fit animate-marquee">
+      <span className="whitespace-nowrap px-4 tracking-wider">{repeatedText}</span>
     </div>
-  );
+  </div>
+);
+
 };
 
 const Banner: React.FC = () => {
@@ -113,9 +114,9 @@ const Banner: React.FC = () => {
   if (banners.length === 0) {
     return (
       <>
-        <section className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden">
+        <section className="relative h-[calc(100vh-4rem)] w-full overflow-hidden ">
           <div className="absolute inset-0 bg-gradient-to-r from-charcoal/60 via-charcoal/30 to-transparent" />
-          <div className="relative h-full container-custom flex items-center pt-16 md:pt-20">
+          <div className="relative h-full container-custom flex items-center pt-0">
             <div className="max-w-2xl text-white space-y-4 md:space-y-6">
               <span className="inline-block px-3 py-1 bg-gold/20 backdrop-blur-sm border border-gold/30 text-gold-light text-xs tracking-[0.2em] uppercase">
                 Welcome
@@ -136,7 +137,7 @@ const Banner: React.FC = () => {
     <>
       <section className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden">
         {/* Background Image/Video */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 h-full">
           {currentBanner.type === "video" ? (
             <video
               src={currentBanner.img}
@@ -157,17 +158,20 @@ const Banner: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="relative h-full container-custom flex items-center pt-16 md:pt-20">
-          <div className="max-w-2xl text-white space-y-4 md:space-y-6 animate-fade-in">
+        <div className="relative h-full container-custom flex items-center">
+          <div className="max-w-2xl text-white space-y-4 md:space-y-6 animate-fade-in pt-12 md:pt-16">
             <span className="inline-block px-3 py-1 bg-gold/20 backdrop-blur-sm border border-gold/30 text-gold-light text-xs tracking-[0.2em] uppercase">
               New Festive Collection
             </span>
+
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif leading-tight">
               {currentBanner.title}
             </h1>
+
             <p className="text-base md:text-lg lg:text-xl text-gray-200 font-body leading-relaxed max-w-lg">
               {currentBanner.description}
             </p>
+
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 md:pt-4">
               <Link href={currentBanner.url || "/sarees"} className="px-4 py-2">
                 <Button
@@ -178,8 +182,13 @@ const Banner: React.FC = () => {
                   Shop Sarees
                 </Button>
               </Link>
+
               <Link href="/jewellery" className="px-4 py-2">
-                <Button size="lg" variant="outline" className="!h-12 !rounded-none border-white text-white bg-transparent text-black">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="!h-12 !rounded-none border-white text-white bg-transparent"
+                >
                   View Jewellery
                 </Button>
               </Link>
@@ -194,16 +203,16 @@ const Banner: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handleDotClick(idx)}
-                className={`transition-all duration-300 rounded-full ${
-                  activeIndex === idx
+                className={`transition-all duration-300 rounded-full ${activeIndex === idx
                     ? "w-8 h-2 bg-gold"
                     : "w-2 h-2 bg-gray-400 hover:bg-gold/70"
-                }`}
+                  }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
           </div>
         )}
+
       </section>
       <MarqueeStrip />
     </>

@@ -94,20 +94,21 @@ const WishList = () => {
                 onClick={() => handleDetails(item)}
                 variant="outline"
                 size="sm"
-                className="flex items-center text-xs sm:text-sm"
+                className="flex items-center gap-2 text-xs sm:text-sm !rounded-none border-gray-300 text-gray-700 hover:!bg-gray-100 hover:!border-gray-400 transition-all duration-200"
               >
-                <FaEye className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />{" "}
-                <span className="hidden md:block"> View </span>
+                <FaEye className="h-3 w-3 sm:h-4 sm:w-4 opacity-70" />
+                <span className="hidden md:block tracking-wide">View</span>
               </Button>
+
               <Button
                 onClick={() => handleRemoveFromWishlist(item.id)}
-                variant="destructive"
                 size="sm"
-                className="flex items-center text-xs sm:text-sm bg-black"
+                className="flex items-center gap-2 text-xs sm:text-sm !rounded-none border border-gray-300 text-gray-600 bg-white hover:!bg-black hover:!text-white hover:!border-black transition-all duration-200"
               >
-                <FaTrash className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden md:block"> Remove </span>
+                <FaTrash className="h-3 w-3 sm:h-4 sm:w-4 opacity-70" />
+                <span className="hidden md:block tracking-wide">Remove</span>
               </Button>
+
             </CardFooter>
           </Card>
         ))}

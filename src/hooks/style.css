@@ -1,3 +1,8 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
 .fadeRight {
   animation-name: fadeRight;
   animation-duration: 1.5s;
@@ -170,3 +175,4 @@
 .animate-marquee {
   animation: marquee 20s linear infinite;
 }
+
