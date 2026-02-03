@@ -98,13 +98,17 @@ const FeaturedCollections = () => {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80 pointer-events-none" />
 
                 <div className="absolute bottom-0 left-0 p-8 w-full">
                   <h3 className="text-2xl font-serif text-white mb-2">
                     {category.title}
                   </h3>
-                  <span className="inline-block text-gold text-sm uppercase tracking-widest border-b border-gold pb-1 group-hover:text-white group-hover:border-white transition-colors">
+                  <span className="inline-block text-white text-sm uppercase tracking-widest
+                 border-b border-white pb-1
+                 group-hover:text-gold
+                 group-hover:border-gold
+                 transition-colors">
                     Explore Collection
                   </span>
                 </div>
