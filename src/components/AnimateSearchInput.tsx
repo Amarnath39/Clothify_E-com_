@@ -82,7 +82,7 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
 
       {/* Modal Overlay */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-start justify-center p-4">
+        <div className="fixed inset-0 backdrop-blur-none z-50 flex items-start justify-center p-4">
           <div
             className="w-full max-w-2xl bg-white rounded-lg shadow-lg overflow-hidden animate-in slide-in-from-top duration-300"
             style={{ maxHeight: "calc(100vh - 2rem)" }}

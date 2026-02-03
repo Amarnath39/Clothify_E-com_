@@ -57,7 +57,7 @@ const WishList = () => {
         {wishListItems.map((item, index) => (
           <Card
             key={item.id}
-            className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+            className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col h-full"
           >
             <CardHeader className="p-0">
               <div className="relative aspect-square overflow-hidden">
@@ -68,14 +68,14 @@ const WishList = () => {
                 />
               </div>
             </CardHeader>
-            <CardContent className="p-2 sm:p-3 md:p-4">
+            <CardContent className="p-2 sm:p-3 md:p-4 flex flex-col flex-1">
               <CardTitle className="text-sm sm:text-base md:text-lg font-semibold mb-1 sm:mb-2 line-clamp-1 md:line-clamp-2">
                 {item.name}
               </CardTitle>
               <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2 line-clamp-2 md:line-clamp-3">
                 {item?.description}
               </p>
-              <p className="font-bold text-sm sm:text-base md:text-lg text-primary">
+              <p className="font-bold text-sm sm:text-base md:text-lg text-primary mt-auto">
                 ₹{item?.amount?.toFixed(2)}
               </p>
               {/* <div className="mt-2 flex flex-wrap gap-1 sm:gap-2">
@@ -89,26 +89,25 @@ const WishList = () => {
                 ))}
               </div> */}
             </CardContent>
-            <CardFooter className="flex justify-between items-center p-2 sm:p-3 md:p-4 bg-gray-50">
+            <CardFooter className="mt-auto flex justify-between items-center p-2 sm:p-3 md:p-4 bg-gray-50">
               <Button
                 onClick={() => handleDetails(item)}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2 text-xs sm:text-sm !rounded-none border-gray-300 text-gray-700 hover:!bg-gray-100 hover:!border-gray-400 transition-all duration-200"
+                className="flex items-center text-xs sm:text-sm"
               >
-                <FaEye className="h-3 w-3 sm:h-4 sm:w-4 opacity-70" />
-                <span className="hidden md:block tracking-wide">View</span>
+                <FaEye className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />{" "}
+                <span className="hidden md:block"> View </span>
               </Button>
-
               <Button
                 onClick={() => handleRemoveFromWishlist(item.id)}
+                variant="destructive"
                 size="sm"
-                className="flex items-center gap-2 text-xs sm:text-sm !rounded-none border border-gray-300 text-gray-600 bg-white hover:!bg-black hover:!text-white hover:!border-black transition-all duration-200"
+                className="flex items-center text-xs sm:text-sm bg-black"
               >
-                <FaTrash className="h-3 w-3 sm:h-4 sm:w-4 opacity-70" />
-                <span className="hidden md:block tracking-wide">Remove</span>
+                <FaTrash className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden md:block"> Remove </span>
               </Button>
-
             </CardFooter>
           </Card>
         ))}
