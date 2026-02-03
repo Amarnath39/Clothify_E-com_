@@ -1,6 +1,7 @@
 // @ts-nocheck
- 
+
 import Banner from "@/Main/home/Banner";
+import MarqueeStrip from "@/components/MarqueeStrip";
 import CategoryList from "@/Main/home/categoryList";
 import ResizableProducts from "@/Main/home/ResizableProducts";
 import BestSelling from "@/Main/home/BestSelling";
@@ -14,14 +15,14 @@ import MainCategoryList from "@/components/MainCategoryList";
 import MainProducts from "@/Main/home/MainProducts";
 import VideoList from '@/Main/home/video';
 import CategoryCarousel from "@/Main/home/CategoryCarousel";
- 
+
 export const metadata = {
   title: "Home | Swaarasya – Sarees & Jewellery by Swetha",
   // icons:{
   //   icon:"/favicon.ico",
   // }
 };
- 
+
 export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden">
@@ -29,6 +30,7 @@ export default function Home() {
         <AnimatedSearchInput />
       </div> */}
       <Banner />
+      <MarqueeStrip />
       <MainCategoryList />
       <Featured />
       <BestSelling />
@@ -36,11 +38,10 @@ export default function Home() {
       {/* <CategoryCarousel /> */}
       {/* <ImageComparisonSlider /> */}
       <MainProducts />
-       <VideoList />
+      <VideoList />
       <InstagramPage />
       {/* <InstaVideo /> */}
     </main>
   );
 }
- 
- 
+

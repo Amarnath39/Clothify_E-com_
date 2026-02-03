@@ -143,9 +143,10 @@ function AdminLayout({ children }) {
       title: "Add Video",
       icon: <MdVideoLibrary size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin"],
-    },    {
-      href: "/admin/scrolltext",
-      title: "Scroll Text",
+    },
+    {
+      href: "/admin/marquee",
+      title: "Marquee Text",
       icon: <SiSublimetext size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin"],
     },    // {
