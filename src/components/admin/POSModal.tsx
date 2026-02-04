@@ -72,8 +72,8 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ Core State
     const [invoiceNumber, setInvoiceNumber] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState<"CASH" | "RAZORPAY_UPI" | "RAZORPAY_CARD" | "RAZORPAY_PAYMENT_LINK">("CASH");
-    const [transactionDetails, setTransactionDetails] = useState(""); // ✅ NEW: For UPI/Card transaction ID
+    const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "CARD" | "RAZORPAY_PAYMENT_LINK">("CASH");
+    const [transactionDetails, setTransactionDetails] = useState(""); // ✅ For UPI/Card transaction ID
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -84,15 +84,12 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ Refs
     const searchInputRef = useRef<HTMLInputElement>(null);
     const phoneInputRef = useRef<HTMLInputElement>(null);
-    const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // ✅ NEW: Payment Link State
     const [paymentLinkInfo, setPaymentLinkInfo] = useState<{
         link: string;
         orderId: string;
         invoiceId: string;
-        isPolling: boolean;
-        pollAttempts: number;
     } | null>(null);
 
     // ✅ Auto-focus search input when modal opens
@@ -105,63 +102,8 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
         } else {
             // Reset on close
             resetPOS();
-            stopPolling();
         }
     }, [isOpen]);
-
-    // ✅ Cleanup polling on unmount
-    useEffect(() => {
-        return () => {
-            stopPolling();
-        };
-    }, []);
-
-    // ✅ START PAYMENT POLLING
-    const startPaymentPolling = async (orderId: string) => {
-        const POLL_INTERVAL = 3000;
-        const MAX_POLL_ATTEMPTS = 200; // 10 minutes max
-        let attempts = 0;
-
-        stopPolling();
-
-        pollingIntervalRef.current = setInterval(async () => {
-            attempts++;
-
-            try {
-                const { data } = await axios.get(`/api/admin/pos/orders?orderId=${orderId}`, {
-                    headers: { "x-admin-id": localStorage.getItem("adminId") }
-                });
-
-                if (data.success && data.order) {
-                    const order = data.order;
-
-                    // Check if payment is successful
-                    if (order.paymentStatus === "PAYMENT_SUCCESS") {
-                        stopPolling();
-                        toast.success("Payment Received!");
-                        setCompletedOrder(order);
-                        setPaymentLinkInfo(null);
-                    }
-                }
-
-                // Stop after max attempts
-                if (attempts >= MAX_POLL_ATTEMPTS) {
-                    stopPolling();
-                    toast.error("Payment timeout. Please check order status manually.");
-                }
-            } catch (error) {
-                console.error("Polling error:", error);
-            }
-        }, POLL_INTERVAL);
-    };
-
-    // ✅ STOP POLLING
-    const stopPolling = () => {
-        if (pollingIntervalRef.current) {
-            clearInterval(pollingIntervalRef.current);
-            pollingIntervalRef.current = null;
-        }
-    };
 
     // ✅ COPY PAYMENT LINK
     const copyPaymentLink = () => {
@@ -392,22 +334,19 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 if (data.success) {
                     toast.success("Payment Link Sent!");
 
-                    // Start Polling Backend for Payment Status
                     setPaymentLinkInfo({
                         link: data.paymentLink,
                         orderId: data.order.orderId,
                         invoiceId: data.invoiceId,
-                        isPolling: true,
-                        pollAttempts: 0
                     });
 
-                    startPaymentPolling(data.order.orderId);
+                    // No polling. Just display link.
                 } else {
                     toast.error(data.message || "Failed to generate link");
                 }
             }
             // ═════════════════════════════════════════════════════════════════════
-            // CASE 2: CASH, UPI (Manual), CARD (Manual) -> Immediate Completion
+            // CASE 2: CASH, UPI (Offline), CARD (Offline) -> Immediate Completion
             // ═════════════════════════════════════════════════════════════════════
             else {
                 const { data } = await axios.post(
@@ -443,21 +382,16 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
             toast.error(errorMessage);
         } finally {
-            // Stop spinner only if NOT waiting for link payment
-            if (paymentMethod !== "RAZORPAY_PAYMENT_LINK") {
-                setIsProcessing(false);
-            }
+            // ALWAYS Stop spinner
+            setIsProcessing(false);
         }
     };
 
-    // ✅ Print Invoice
     // ✅ Print Invoice
     const printInvoice = () => {
         if (!completedOrder) return;
         window.open(`/invoice/${completedOrder.invoiceId}`, "_blank");
     };
-
-
 
     // ✅ Reset POS
     const resetPOS = () => {
@@ -468,6 +402,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
         setSearchQuery("");
         setSearchResults([]);
         setCompletedOrder(null);
+        setPaymentLinkInfo(null);
         generateInvoiceNumber();
     };
 
@@ -521,17 +456,17 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                             </div>
                         </div>
 
-                        {/* Status Indicator */}
-                        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 text-center space-y-4">
+                        {/* Status Indicator - NO SPINNER, Just Information */}
+                        <div className="bg-green-50 border-2 border-green-300 rounded-lg p-6 text-center space-y-4">
                             <div className="flex items-center justify-center gap-3">
-                                <span className="animate-spin text-2xl">⏳</span>
+                                <span className="text-2xl">✅</span>
                                 <p className="text-lg font-semibold text-gray-800">
-                                    Awaiting Payment Confirmation
+                                    Link Sent & Order Pending
                                 </p>
                             </div>
                             <p className="text-sm text-gray-600">
-                                Customer can use the link above to complete payment.
-                                This screen will auto-update when payment is received.
+                                The order has been created. Payment will be confirmed automatically via Webhook.
+                                You can close this window now.
                             </p>
                         </div>
 
@@ -555,111 +490,17 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                         <div className="flex gap-2">
                             <Button
                                 onClick={() => {
-                                    stopPolling();
                                     resetPOS();
                                     searchInputRef.current?.focus();
                                 }}
                                 className="flex-1"
                                 variant="outline"
                             >
-                                Cancel & New Order
+                                Start New Order
                             </Button>
                             <Button
                                 onClick={handleClose}
-                                variant="ghost"
-                                className="flex-1"
-                            >
-                                Close POS
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        );
-    }
-
-    // ✅ PAYMENT LINK AWAITING SCREEN
-    if (paymentLinkInfo && !completedOrder) {
-        return (
-            <Dialog open={isOpen} onOpenChange={handleClose}>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle className="text-center text-blue-600 text-2xl">
-                            🔗 Payment Link Generated
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-6 py-4">
-                        {/* Payment Link Display */}
-                        <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 space-y-4">
-                            <p className="text-sm font-semibold text-gray-700">Payment Link:</p>
-                            <div className="bg-white p-4 rounded border border-blue-200 break-all text-blue-600 font-mono text-sm">
-                                {paymentLinkInfo.link}
-                            </div>
-
-                            <div className="flex gap-2">
-                                <Button
-                                    onClick={copyPaymentLink}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                                >
-                                    Copy Link
-                                </Button>
-                                <Button
-                                    onClick={openPaymentLink}
-                                    className="flex-1 bg-green-600 hover:bg-green-700"
-                                    variant="default"
-                                >
-                                    Open Link
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Status Indicator */}
-                        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 text-center space-y-4">
-                            <div className="flex items-center justify-center gap-3">
-                                <span className="animate-spin text-2xl">⏳</span>
-                                <p className="text-lg font-semibold text-gray-800">
-                                    Awaiting Payment Confirmation
-                                </p>
-                            </div>
-                            <p className="text-sm text-gray-600">
-                                Customer can use the link above to complete payment.
-                                This screen will auto-update when payment is received.
-                            </p>
-                        </div>
-
-                        {/* Order Details */}
-                        <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Order ID:</span>
-                                <span className="font-bold">{paymentLinkInfo.orderId}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Invoice ID:</span>
-                                <span className="font-bold">{paymentLinkInfo.invoiceId}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Customer Phone:</span>
-                                <span className="font-bold">{customerPhone}</span>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2">
-                            <Button
-                                onClick={() => {
-                                    stopPolling();
-                                    resetPOS();
-                                    searchInputRef.current?.focus();
-                                }}
-                                className="flex-1"
-                                variant="outline"
-                            >
-                                Cancel & New Order
-                            </Button>
-                            <Button
-                                onClick={handleClose}
-                                variant="ghost"
+                                variant="default"
                                 className="flex-1"
                             >
                                 Close POS
@@ -931,15 +772,15 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                         </SelectTrigger>
                                         <SelectContent className="z-[9999]">
                                             <SelectItem value="CASH">💵 Cash (Immediate)</SelectItem>
-                                            <SelectItem value="RAZORPAY_UPI">📱 UPI (Manual Confirmation)</SelectItem>
-                                            <SelectItem value="RAZORPAY_CARD">💳 Card/Swipe (Manual Confirmation)</SelectItem>
-                                            <SelectItem value="RAZORPAY_PAYMENT_LINK">🔗 Payment Link</SelectItem>
+                                            <SelectItem value="UPI">📱 UPI (Offline / Manual)</SelectItem>
+                                            <SelectItem value="CARD">💳 Card (Offline / Swipe)</SelectItem>
+                                            <SelectItem value="RAZORPAY_PAYMENT_LINK">🔗 Payment Link (Razorpay)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
 
                                 {/* ✅ NEW: Transaction Details for UPI/Card */}
-                                {(paymentMethod === "RAZORPAY_UPI" || paymentMethod === "RAZORPAY_CARD") && (
+                                {(paymentMethod === "UPI" || paymentMethod === "CARD") && (
                                     <div>
                                         <Label htmlFor="transactionDetails">
                                             Transaction Note / Manual ID

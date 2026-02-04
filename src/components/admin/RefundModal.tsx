@@ -173,7 +173,7 @@ export default function RefundModal({ order, isOpen, onClose, onSuccess }: Refun
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Reason" />
                             </SelectTrigger>
-                            <SelectContent className="z-[9999]">
+                            <SelectContent className="z-[9999]" position="popper">
                                 <SelectItem value="Wrong Size">Wrong Size</SelectItem>
                                 <SelectItem value="Defective">Defective</SelectItem>
                                 <SelectItem value="Changed Mind">Changed Mind</SelectItem>

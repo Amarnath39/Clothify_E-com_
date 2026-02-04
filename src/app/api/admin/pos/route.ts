@@ -184,8 +184,8 @@ export const POST = async (req: NextRequest) => {
 
         const isImmediatePayment =
             paymentMethod === "CASH" ||
-            paymentMethod === "RAZORPAY_UPI" ||
-            paymentMethod === "RAZORPAY_CARD" ||
+            paymentMethod === "UPI" ||
+            paymentMethod === "CARD" ||
             action === "COMPLETE"; // Explicit override
 
         const paymentStatus = isImmediatePayment ? "PAYMENT_SUCCESS" : "PENDING";
