@@ -1,71 +1,62 @@
 name: VPS Deployment
+
 on:
   push:
     branches:
       - main
+
 jobs:
+  # 🔹 STEP 1: Get Commit & Push (Tag handling)
   get_commit_hash:
     runs-on: self-hosted
-    name: get_commit_hash
+    name: Get Commit Hash
     outputs:
-      commitHash: ${{ steps.create_commit_hash.outputs.SHORT_COMMIT_HASH }}
+      short_sha: ${{ steps.get_sha.outputs.SHA }}
     steps:
-      - name: Get short commit hash
-        id: create_commit_hash
-        run: echo "SHORT_COMMIT_HASH=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
-      - name: Show commit hash
-        run: echo "Short commit hash is ${{ steps.create_commit_hash.outputs.SHORT_COMMIT_HASH }}"
+      - name: Extract Short SHA
+        id: get_sha
+        run: echo "SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
 
+  # 🔹 STEP 2: Docker Build & Push
   docker_build:
+    needs: get_commit_hash
     runs-on: self-hosted
-    name: docker_build
-    needs:
-      - get_commit_hash
-    outputs:
-      imageTag: ${{ steps.image_outputs.outputs.DOCKER_IMAGE_TAG }}
-      imageName: ${{ steps.image_outputs.outputs.IMAGE_NAME }}
+    name: Build & Push
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: image=moby/buildkit:latest
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      
-      - name: Normalize Image Data
-        id: image_outputs
-        run: |
-          # Robust Lowercase Conversion for Image Name
-          RAW_NAME="${{ secrets.DOCKER_IMAGE_NAME }}"
-          LOWER_NAME=$(echo "$RAW_NAME" | tr '[:upper:]' '[:lower:]')
-          FULL_IMAGE_NAME="weteams/${LOWER_NAME}"
-          COMMIT_TAG="commit_${{needs.get_commit_hash.outputs.commitHash}}"
           
-          echo "IMAGE_NAME=${FULL_IMAGE_NAME}" >> $GITHUB_OUTPUT
-          echo "DOCKER_IMAGE_TAG=${COMMIT_TAG}" >> $GITHUB_OUTPUT
+      - name: Build and Push Docker Image
+        run: |
+          # Define Variables
+          # Using 'weteams' namespace based on existing infrastructure context
+          # Ensuring lowercase naming 'sway'
+          IMAGE_REPO="weteams/sway"
+          TAG="commit-${{ needs.get_commit_hash.outputs.short_sha }}"
+          FULL_IMAGE="$IMAGE_REPO:$TAG"
+          
+          echo "Building image: $FULL_IMAGE"
+          
+          # Build
+          docker build -t $FULL_IMAGE .
+          
+          # Push
+          docker push $FULL_IMAGE
+          
+          echo "✅ Pushed: $FULL_IMAGE"
 
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ steps.image_outputs.outputs.IMAGE_NAME }}:${{ steps.image_outputs.outputs.DOCKER_IMAGE_TAG }}
-          provenance: false # Fixes 400 Bad Request on Docker Hub
-
+  # 🔹 STEP 3: Deploy via SSH (SAFE deployment)
   deploy:
+    needs: [get_commit_hash, docker_build]
     runs-on: self-hosted
-    name: Continuous Deployment
-    needs:
-      - docker_build
+    name: SSH Deployment
     steps:
-      - name: Deploy using ssh
+      - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -73,59 +64,67 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
           script: |
-            # Authenticate with Normalized Credentials
-            docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+            # --- Configuration ---
+            IMAGE_REPO="weteams/sway"
+            TAG="commit-${{ needs.get_commit_hash.outputs.short_sha }}"
+            FULL_IMAGE="$IMAGE_REPO:$TAG"
+            CONTAINER_NAME="sway"
+            HOST_PORT=7034
+            CONTAINER_PORT=3000
+            PROJECT_DIR="/root/sway"
             
-            # Variables
-            # Reconstruct Image Name directly to avoid empty output issues
-            RAW_NAME="${{ secrets.DOCKER_IMAGE_NAME }}"
-            LOWER_NAME=$(echo "$RAW_NAME" | tr '[:upper:]' '[:lower:]')
-            NEW_IMAGE_NAME="weteams/${LOWER_NAME}"
+            echo "🚀 Starting Deployment for $CONTAINER_NAME..."
             
-            NEW_IMAGE_TAG="${{ needs.docker_build.outputs.imageTag }}"
+            # 1. Login to Docker Hub
+            echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
             
-            echo "Target Image: ${NEW_IMAGE_NAME}:${NEW_IMAGE_TAG}"
+            # 2. Pull the newly built image
+            echo "📥 Pulling $FULL_IMAGE..."
+            docker pull $FULL_IMAGE
             
-            # Search pattern uses original secret to match existing file content
-            SEARCH_IMAGE_PREFIX="weteams/${{ secrets.DOCKER_IMAGE_NAME }}"
+            # 3. Stop & Remove old container (Idempotent)
+            if [ "$(docker ps -aq -f name=^/${CONTAINER_NAME}$)" ]; then
+                echo "🛑 Stopping existing container..."
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
+            else
+                echo "ℹ️ No existing container found. Proceeding..."
+            fi
             
-            # IFS=',' read -ra PROJECTS <<< "${{ vars.PROJECT_NAMES }}"
+            # 4. Create & Run new container
+            echo "▶️ Starting new container..."
             
-            # 🚨 Override: Explicitly targeting 'sway' per user request
-            PROJECTS=("sway")
+            # Ensure project directory exists and enter it (for .env file reference)
+            mkdir -p $PROJECT_DIR
+            cd $PROJECT_DIR
             
-            for PROJECT_NAME in "${PROJECTS[@]}"; do
-              echo "Deploying to $PROJECT_NAME..."
-              cd /root/$PROJECT_NAME/ || continue
+            # Check for .env file to preserve existing configuration
+            ENV_OPTS=""
+            if [ -f .env ]; then
+                echo "✅ Found .env file, injecting environment variables..."
+                ENV_OPTS="--env-file .env"
+            else
+                echo "⚠️ No .env file found in $PROJECT_DIR. Starting without env file."
+            fi
+            
+            # Run Command
+            # host 7034 -> container 3000
+            docker run -d \
+              --name $CONTAINER_NAME \
+              -p $HOST_PORT:$CONTAINER_PORT \
+              --restart unless-stopped \
+              $ENV_OPTS \
+              $FULL_IMAGE
               
-              # docker compose down || true  <-- Removed to prevent full downtime
-              
-              # Update docker-compose.yaml with normalized image name and new tag
-              sed -i -E "s|${SEARCH_IMAGE_PREFIX}:[^\"']*|${NEW_IMAGE_NAME}:${NEW_IMAGE_TAG}|g" docker-compose.yaml
-              
-              # Pull new image first to minimize switch-over time
-              docker compose pull
-              
-              # Rolling update: Recreates only changed containers
-              docker compose up -d --remove-orphans
-              
-              # ✅ Verification: Wait and check if service stayed up
-              echo "Verifying deployment for $PROJECT_NAME..."
-              sleep 15
-              
-              if docker compose ps | grep -i "Exit"; then
-                 echo "❌ Deployment Failed: Container crashed!"
-                 docker compose logs --tail=30
-                 exit 1
-              fi
-              
-              echo "✅ Deployment Successful: Service is healthy."
-            done
+            # 5. Verification
+            sleep 5
+            if [ "$(docker inspect -f '{{.State.Running}}' $CONTAINER_NAME)" = "true" ]; then
+                echo "✅ Deployment Successful! App reachable at port $HOST_PORT"
+            else
+                echo "❌ Deployment Failed: Container exited."
+                docker logs $CONTAINER_NAME --tail 20
+                exit 1
+            fi
             
-            # Proxy Refresh
-            cd /root/proxy
-            # Only recreate proxy if necessary, don't force restart
-            docker compose up -d proxy
-            
-            # Cleanup
-            docker image prune -a -f
+            # Cleanup old images
+            docker image prune -a -f --filter "until=24h"
