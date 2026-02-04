@@ -73,7 +73,7 @@ function AdminLayout({ children }) {
           href: "#",
           title: "POS",
           icon: <FaCashRegister size={24} className="text-white" />,
-          roles: ["SuperAdmin", "Admin"],
+          roles: ["SuperAdmin", "Admin", "Sales person"],
           onClick: () => setShowPOSModal(true), // ✅ Open modal instead of navigation
         },
       ]
