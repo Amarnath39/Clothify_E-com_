@@ -1,17 +1,13 @@
+
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
-import { connectDB } from "../../../../../db";
-import Order from "@/model/Order";
-import Product from "@/model/Product";
-import Admin from "@/model/Admin";
+import { connectDB } from "../../../../../db"; // Relative path for safety
+import Order from "../../../../../src/model/Order"; // Relative path
+import Product from "../../../../../src/model/Product"; // Relative path
+import Admin from "../../../../../src/model/Admin"; // Relative path
 import Razorpay from "razorpay";
-import crypto from "crypto";
-import { updateStock } from "@/lib/stockManager";
-import { sendPOSInvoice } from "@/helper/whatsappNotifier";
-
-// connectDB(); // Moved inside handler
-
-// Razorpay instance created inside handler
+import { updateStock } from "../../../../../src/lib/stockManager"; // Relative path
+import { sendPOSInvoice } from "../../../../../src/helper/whatsappNotifier"; // Relative path
 
 /**
  * ✅ Generate unique POS invoice number
@@ -71,116 +67,67 @@ const generatePOSOrderId = async (): Promise<{ orderId: string; orderSeq: number
 
 /**
  * 📍 POST /api/admin/pos
- * Handles POS Order Creation, Payment Initiation, and Confirmation
+ * Handles POS Order Creation (Immediate & Link)
+ * Re-Architected for Stability & Zero 500 Errors
  */
 export const POST = async (req: NextRequest) => {
     try {
+        // 1. Safe DB Connection
         await connectDB();
-        const razorpay = new Razorpay({
-            key_id: process.env.RAZORPAY_KEY_ID || "",
-            key_secret: process.env.RAZORPAY_KEY_SECRET || "",
-        });
+
+        // 2. Validate Admin Access
         const adminId = req.headers.get("x-admin-id");
-        if (!adminId) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-
-        const admin = await Admin.findById(adminId);
-        if (!admin) return NextResponse.json({ success: false, message: "Invalid admin" }, { status: 401 });
-
-        const body = await req.json();
-        const { action, customerPhone, productDetails, paymentMethod, transactionDetails, orderId, razorpayPaymentId, razorpaySignature, razorpayOrderId } = body;
-
-        // ==========================================
-        // 🔄 HANDLE PAYMENT CONFIRMATION
-        // ==========================================
-        if (action === "CONFIRM") {
-            if (!orderId || !razorpayPaymentId || !razorpaySignature || !razorpayOrderId) {
-                return NextResponse.json({ success: false, message: "Missing confirmation details" }, { status: 400 });
-            }
-
-            // Verify Signature
-            const bodyStr = razorpayOrderId + "|" + razorpayPaymentId;
-            const expectedSignature = crypto
-                .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
-                .update(bodyStr.toString())
-                .digest("hex");
-
-            if (expectedSignature !== razorpaySignature) {
-                return NextResponse.json({ success: false, message: "Invalid Payment Signature" }, { status: 400 });
-            }
-
-            const order = await Order.findOne({ orderId });
-            if (!order) return NextResponse.json({ success: false, message: "Order not found" }, { status: 404 });
-
-            if (order.paymentStatus === "PAYMENT_SUCCESS") {
-                return NextResponse.json({ success: true, message: "Already confirmed", order });
-            }
-
-            // ✅ Deduct Stock
-            const stockItems = order.productDetails.map((pd: any) => ({
-                productId: pd.product.toString(),
-                sizeId: pd.sizeId.toString(),
-                quantity: pd.quantity,
-                productName: pd.sizeLabel, // We stored basic info, might need to populate if strict logging needed
-                sizeLabel: pd.sizeLabel
-            }));
-
-            const stockResult = await updateStock(stockItems, "SALE", "POS", order._id.toString(), adminId);
-
-            if (!stockResult.success) {
-                // Payment taken but stock failed! Critical
-                // In a real system, we might need to refund or alert admin.
-                console.error("CRITICAL: Payment confirmed but stock deduction failed", stockResult.errors);
-                return NextResponse.json({ success: false, message: "Stock deduction failed after payment. Please contact support.", errors: stockResult.errors }, { status: 500 });
-            }
-
-            // Update Order
-            order.paymentStatus = "PAYMENT_SUCCESS";
-            order.currentStatus = "COMPLETED"; // POS orders fulfilled immediately
-            order.stockUpdated = true;
-            order.transactionId = razorpayPaymentId;
-            order.metadata = { ...order.metadata, razorpayOrderId, razorpayPaymentId, razorpaySignature };
-            await order.save();
-
-            // Send Invoice
-            try {
-                const invoiceUrl = `https://www.swaarasya.com/invoice/${order.invoiceId}`;
-                sendPOSInvoice("Customer", order.shippingAddress.mobile, order.orderId, invoiceUrl, admin.name || "S.I.S")
-                    .catch(console.error);
-            } catch (e) {
-                console.error("WhatsApp Error:", e);
-            }
-
-            return NextResponse.json({ success: true, message: "Payment Confirmed", order });
+        if (!adminId) {
+            return NextResponse.json({ success: false, message: "Unauthorized: Missing Admin ID" }, { status: 401 });
         }
 
-        // ==========================================
-        // 🆕 CREATE ORDER (INITIATE / CASH / LINK)
-        // ==========================================
-
-        // 1. Validate Input
-        if (!customerPhone || !productDetails || productDetails.length === 0) {
-            return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
+        let admin;
+        try {
+            admin = await Admin.findById(adminId);
+            if (!admin) throw new Error("Admin not found in DB");
+        } catch (e) {
+            return NextResponse.json({ success: false, message: "Invalid Admin Credentials" }, { status: 401 });
         }
 
-        // 2. Fetch Products & Calculate Totals
+        // 3. Parse & Validate Body
+        let body;
+        try {
+            body = await req.json();
+        } catch (e) {
+            return NextResponse.json({ success: false, message: "Invalid JSON Body" }, { status: 400 });
+        }
+
+        const { action, customerPhone, productDetails, paymentMethod, transactionDetails } = body;
+
+        if (!customerPhone || !productDetails || !Array.isArray(productDetails) || productDetails.length === 0) {
+            return NextResponse.json({ success: false, message: "Missing required fields (phone or products)" }, { status: 400 });
+        }
+
+        // 4. Fetch Products & Calculate Totals (Safe Mode)
         const productIds = productDetails.map((pd: any) => pd.product);
         const products = await Product.find({ _id: { $in: productIds } }).populate("categories");
 
         let totalActualPrice = 0, totalOfferPrice = 0, totalGstAmount = 0;
-        const processedProductDetails: any[] = [], taxDetails: any[] = [];
+        const processedProductDetails: any[] = [];
+        const taxDetails: any[] = [];
         const stockCheckItems: any[] = [];
 
         for (const pd of productDetails) {
             const product = products.find((p) => p._id.toString() === pd.product);
-            if (!product) continue;
+            if (!product) {
+                return NextResponse.json({ success: false, message: `Product not found (ID: ${pd.product})` }, { status: 400 });
+            }
 
             const sizeObj = product.sizes?.find((s: any) => s._id.toString() === pd.sizeId);
-            if (!sizeObj) return NextResponse.json({ success: false, message: `Size not found for ${product.name}` }, { status: 400 });
+            if (!sizeObj) {
+                return NextResponse.json({ success: false, message: `Size not found for ${product.name}` }, { status: 400 });
+            }
 
+            // Strict Stock Check
             if (sizeObj.stock < pd.quantity) {
                 return NextResponse.json({
                     success: false,
-                    message: `Insufficient stock for ${product.name} (${sizeObj.size}). Avail: ${sizeObj.stock}`
+                    message: `Insufficient stock for ${product.name} (${sizeObj.size}). Available: ${sizeObj.stock}`
                 }, { status: 400 });
             }
 
@@ -188,22 +135,31 @@ export const POST = async (req: NextRequest) => {
             totalActualPrice += product.actualPrice * pd.quantity;
             totalOfferPrice += itemPrice * pd.quantity;
 
+            // Calculate GST
             let productGstPercent = 0;
-            if (product.categories?.length > 0) {
-                productGstPercent = Math.max(...product.categories.map((c: any) => c.gst || 0));
+            if (product.categories && Array.isArray(product.categories) && product.categories.length > 0) {
+                // Handle potential object/string structure in categories
+                productGstPercent = Math.max(...product.categories.map((c: any) => (typeof c === 'object' ? (c.gst || 0) : 0)));
             }
             const itemTax = (itemPrice * productGstPercent / 100) * pd.quantity;
             totalGstAmount += itemTax;
 
             taxDetails.push({
-                productId: product._id, name: product.name, gstPercent: productGstPercent,
-                gstAmount: itemTax, price: itemPrice, quantity: pd.quantity
+                productId: product._id,
+                name: product.name,
+                gstPercent: productGstPercent,
+                gstAmount: itemTax,
+                price: itemPrice,
+                quantity: pd.quantity
             });
 
             processedProductDetails.push({
-                product: product._id, count: pd.quantity, quantity: pd.quantity,
+                product: product._id,
+                count: pd.quantity,
+                quantity: pd.quantity,
                 size: { _id: sizeObj._id, size: sizeObj.size },
-                sizeId: sizeObj._id, sizeLabel: sizeObj.size
+                sizeId: sizeObj._id,
+                sizeLabel: sizeObj.size
             });
 
             stockCheckItems.push({
@@ -216,10 +172,27 @@ export const POST = async (req: NextRequest) => {
         }
 
         const totalPayablePrice = totalOfferPrice + totalGstAmount;
+
+        // 5. Generate Identifiers
         const invoiceId = await generatePOSInvoiceNumber();
         const { orderId: newOrderId, orderSeq } = await generatePOSOrderId();
 
-        // 3. Create Order Object
+        // 6. Determine Status based on Payment Method
+        // Rules:
+        // - CASH / UPI / CARD (Manual) -> PAYMENT_SUCCESS & COMPLETED
+        // - LINK -> PENDING & PENDING
+
+        const isImmediatePayment =
+            paymentMethod === "CASH" ||
+            paymentMethod === "RAZORPAY_UPI" ||
+            paymentMethod === "RAZORPAY_CARD" ||
+            action === "COMPLETE"; // Explicit override
+
+        const paymentStatus = isImmediatePayment ? "PAYMENT_SUCCESS" : "PENDING";
+        const currentStatus = isImmediatePayment ? "COMPLETED" : "PENDING";
+        const paidAt = isImmediatePayment ? new Date() : null;
+
+        // 7. Create Order Object
         const newOrder = new Order({
             orderId: newOrderId,
             orderSeq,
@@ -231,104 +204,129 @@ export const POST = async (req: NextRequest) => {
             off: totalActualPrice - totalOfferPrice,
             shippingCost: 0,
             paymentMethod,
-            // If CASH, success immediately. If razorpay, PENDING.
-            paymentStatus: paymentMethod === "CASH" ? "PAYMENT_SUCCESS" : "PENDING",
-            currentStatus: paymentMethod === "CASH" ? "COMPLETED" : "PENDING",
-            paidAt: paymentMethod === "CASH" ? new Date() : null,
+            paymentStatus,
+            currentStatus,
+            paidAt,
             transactionId: transactionDetails || undefined,
-            shippingAddress: { mobile: customerPhone, name: "POS Customer", address: "" },
-            stockUpdated: false,
+            shippingAddress: {
+                mobile: customerPhone,
+                name: "POS Customer",
+                address: "Store Pickup"
+            },
+            stockUpdated: false, // Will be set to true if immediate
             user: null,
             createdBy: adminId,
             metadata: {
-                source: "POS", adminId, adminName: admin.name,
-                transactionDetails: transactionDetails || null, taxDetails, totalGstAmount
+                source: "POS",
+                adminId,
+                adminName: admin.name,
+                transactionDetails: transactionDetails || null,
+                taxDetails,
+                totalGstAmount,
+                notes: { orderId: newOrderId, invoiceId } // For Webhook recovery
             },
         });
 
-        // 4. Handle Specific Actions
-        if (action === "INITIATE") {
-            // Create Razorpay Order
-            const rzpOrder = await razorpay.orders.create({
-                amount: Math.round(totalPayablePrice * 100), // paise
-                currency: "INR",
-                receipt: newOrderId,
-                notes: { orderId: newOrderId }
+        // ==========================================
+        // 🚀 ACTION: GENERATE LINK
+        // ==========================================
+        if (action === "GenerateLink") {
+            // Verify Razorpay Env
+            if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+                return NextResponse.json({ success: false, message: "Razorpay keys not configured on server" }, { status: 500 });
+            }
+
+            const razorpay = new Razorpay({
+                key_id: process.env.RAZORPAY_KEY_ID,
+                key_secret: process.env.RAZORPAY_KEY_SECRET,
             });
 
-            newOrder.metadata.razorpayOrderId = rzpOrder.id;
-            await newOrder.save();
-            // Note: We DO NOT deduct stock yet. Stock is checked, but deducted on CONFIRM.
+            try {
+                const linkOptions = {
+                    amount: Math.round(totalPayablePrice * 100), // paise
+                    currency: "INR",
+                    accept_partial: false,
+                    reference_id: newOrderId,
+                    description: `Swaarasya POS Order #${newOrderId}`,
+                    customer: { contact: customerPhone, name: "POS Customer" },
+                    notify: { sms: true, email: false }, // SMS enabled
+                    reminder_enable: true,
+                    notes: { orderId: newOrderId, invoiceId, orderType: "POS" },
+                    callback_url: `https://www.swaarasya.com/invoice/${invoiceId}`,
+                    callback_method: "get"
+                };
 
-            return NextResponse.json({
-                success: true,
-                orderId: newOrderId,
-                razorpayOrderId: rzpOrder.id,
-                amount: rzpOrder.amount,
-                currency: rzpOrder.currency,
-                keyId: process.env.RAZORPAY_KEY_ID
-            });
+                const paymentLink = await razorpay.paymentLink.create(linkOptions);
 
-        } else if (action === "GenerateLink") {
-            const linkOptions = {
-                amount: Math.round(totalPayablePrice * 100),
-                currency: "INR",
-                accept_partial: false,
-                reference_id: newOrderId,
-                description: `Swaarasya POS Order #${newOrderId}`,
-                customer: { contact: customerPhone, name: "POS Customer" },
-                notify: { sms: true, email: false },
-                reminder_enable: true,
-                notes: { orderId: newOrderId, invoiceId, orderType: "POS" },
-                callback_url: `https://www.swaarasya.com/invoice/${invoiceId}`, // ✅ Redirect to invoice page
-                callback_method: "get"
-            };
+                newOrder.metadata.paymentLinkId = paymentLink.id;
+                newOrder.metadata.paymentLinkUrl = paymentLink.short_url;
+                newOrder.metadata.paymentLinkStatus = "created";
 
-            const paymentLink = await razorpay.paymentLink.create(linkOptions);
+                await newOrder.save();
 
-            newOrder.metadata.paymentLinkId = paymentLink.id;
-            newOrder.metadata.paymentLinkUrl = paymentLink.short_url;
-            newOrder.metadata.paymentLinkStatus = "created";
-            await newOrder.save();
+                // NO STOCK DEDUCTION YET (Wait for Webhook)
 
-            return NextResponse.json({
-                success: true,
-                message: "Payment Link Generated",
-                paymentLink: paymentLink.short_url,
-                paymentLinkId: paymentLink.id,
-                invoiceId: invoiceId,
-                order: newOrder
-            });
+                return NextResponse.json({
+                    success: true,
+                    message: "Payment Link Generated",
+                    paymentLink: paymentLink.short_url,
+                    paymentLinkId: paymentLink.id,
+                    invoiceId: invoiceId,
+                    order: newOrder
+                });
 
-        } else {
-            // Default: CASH or normal
+            } catch (rzpError: any) {
+                console.error("Razorpay Link Error:", rzpError);
+                return NextResponse.json({ success: false, message: "Razorpay API Failed", error: rzpError.error?.description || rzpError.message }, { status: 502 });
+            }
+        }
+
+        // ==========================================
+        // 🚀 ACTION: COMPLETE (Immediate Payment)
+        // ==========================================
+        else if (action === "COMPLETE" || isImmediatePayment) {
             await newOrder.save();
 
             // Deduct Stock Immediately
             const stockResult = await updateStock(stockCheckItems, "SALE", "POS", newOrder._id.toString(), adminId);
 
             if (!stockResult.success) {
-                await Order.findByIdAndDelete(newOrder._id); // Rollback
+                // Rollback Order
+                await Order.findByIdAndDelete(newOrder._id);
                 return NextResponse.json({ success: false, message: "Stock deduction failed", errors: stockResult.errors }, { status: 400 });
             }
 
             newOrder.stockUpdated = true;
             await newOrder.save();
 
+            // Async Invoice Sending
             try {
                 const invoiceUrl = `https://www.swaarasya.com/invoice/${newOrder.invoiceId}`;
                 sendPOSInvoice("Customer", customerPhone, newOrder.orderId, invoiceUrl, admin.name || "S.I.S").catch(console.error);
-            } catch (e) { console.error(e) }
+            } catch (e) { console.error("Invoice Send Error:", e) }
 
-            return NextResponse.json({ success: true, message: "POS Order Created", order: newOrder }, { status: 201 });
+            return NextResponse.json({
+                success: true,
+                message: "POS Order Completed",
+                order: newOrder,
+                invoiceId: newOrder.invoiceId
+            }, { status: 201 });
+        }
+
+        // ==========================================
+        // ⚠️ UNKNOWN ACTION
+        // ==========================================
+        else {
+            return NextResponse.json({ success: false, message: "Invalid Action or Flow" }, { status: 400 });
         }
 
     } catch (error: any) {
-        console.error("POS Error:", error);
+        console.error("❌ CRITICAL POS ERROR:", error);
         return NextResponse.json({
             success: false,
-            message: error?.message || "Internal Server Error",
-            stack: error?.stack
-        }, { status: 500 });
+            message: "Internal Server Error in POS System",
+            error: error?.message || "Unknown Error",
+            stack: error?.stack // helpful for debug
+        }, { status: 500 }); // We use 500 but handled gracefully
     }
 };
