@@ -9,7 +9,8 @@ html, body {
   animation-iteration-count: 1;
   animation-timing-function: ease-in-out;
 
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow */
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  /* Adds a subtle shadow */
 }
 
 @keyframes fadeRight {
@@ -30,7 +31,8 @@ html, body {
   animation-iteration-count: 1;
   animation-timing-function: ease-in-out;
 
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow */
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  /* Adds a subtle shadow */
 }
 
 @keyframes fadeLeft {
@@ -94,32 +96,39 @@ html, body {
 @keyframes fadeUp {
   0% {
     opacity: 0;
-    transform: translateY(-100px); /* Start slightly below */
+    transform: translateY(-100px);
+    /* Start slightly below */
   }
 
   100% {
     opacity: 1;
-    transform: translateY(0px); /* Reach the original position */
+    transform: translateY(0px);
+    /* Reach the original position */
   }
 }
 
 .height {
   animation-name: height;
-  animation-duration: 0.8s; /* Shortened duration for a quicker, smoother animation */
-  animation-fill-mode: forwards; /* Keeps the final style after animation ends */
+  animation-duration: 0.8s;
+  /* Shortened duration for a quicker, smoother animation */
+  animation-fill-mode: forwards;
+  /* Keeps the final style after animation ends */
 }
 
 @keyframes height {
   0% {
     opacity: 0;
     max-height: 0;
-    padding: 0; /* Optionally add padding animation */
+    padding: 0;
+    /* Optionally add padding animation */
   }
 
   100% {
     opacity: 1;
-    max-height: 500px; /* Adjust as needed */
-    padding: 20px; /* Optionally add padding animation */
+    max-height: 500px;
+    /* Adjust as needed */
+    padding: 20px;
+    /* Optionally add padding animation */
   }
 }
 
@@ -148,13 +157,16 @@ html, body {
 }
 
 @keyframes bounce {
+
   0%,
   100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-15px);
   }
+
   70% {
     transform: translateY(-7.5px);
   }
@@ -162,7 +174,7 @@ html, body {
 
 
 @keyframes marquee {
- 
+
   0% {
     transform: translate3d(0, 0, 0);
   }
@@ -176,3 +188,6 @@ html, body {
   animation: marquee 20s linear infinite;
 }
 
+.animate-marquee-continuous {
+  animation: marquee 30s linear infinite;
+}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPhonePeClient } from "@/lib/phonepeClient";
+export const dynamic = "force-dynamic";
 
 /**
  * TEST ENDPOINT: Check if PhonePe API is reachable

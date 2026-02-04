@@ -1,13 +1,18 @@
 import mongoose from "mongoose";
 
-const OrderSchema = new mongoose.Schema(
+const Order = new mongoose.Schema(
   {
     orderId: { type: String },
-
-    totalPrice: { type: Number },
-    payablePrice: { type: Number },
-    off: { type: Number },
-    shippingCost: { type: Number, default: 0 },
+    shippingCost: { type: Number },
+    totalPrice: {
+      type: Number,
+    },
+    payablePrice: {
+      type: Number,
+    },
+    off: {
+      type: Number,
+    },
     couponCode: {
       type: String,
       default: null,
@@ -15,110 +20,125 @@ const OrderSchema = new mongoose.Schema(
     shippingAddress: {
       type: Object,
     },
-
     productDetails: [
       {
         product: {
-          type: mongoose.Schema.Types.ObjectId,
+          type: mongoose.SchemaTypes.ObjectId,
           ref: "Product",
-          required: true,
         },
-        sizeId: {
-          type: mongoose.Schema.Types.ObjectId,
-          required: true, // The size _id inside product.sizes
-        },
-        sizeLabel: {
-          type: String, // e.g., “S”, “M”, “L”
-          required: true,
-        },
-        count: {
-          type: Number,
-          default: 1,
+        size: {
+          _id: { type: mongoose.SchemaTypes.ObjectId },
+          size: { type: String },
         },
         freeCount: {
           type: Number,
           default: 0,
         },
-        actualPrice: {
+        count: {
           type: Number,
-          required: true,
+          default: 1,
         },
-        offerPrice: {
-          type: Number,
-          required: true,
+        stitchingId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Stitching",
+          default: null,
         },
       },
     ],
-
+    stitchingPrice: { type: Number, default: null },
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.SchemaTypes.ObjectId,
       ref: "User",
-      required: true,
     },
-
-    transactionId: { type: String },
-    tempTransactionId: { type: String },
+    transactionId: {
+      type: String,
+    },
+    tempTransactionId: {
+      type: String,
+    },
+    razorpayOrderId: { type: String, unique: true, sparse: true },
+    paymentDetails: {
+      initiatedAt: { type: Date },
+      completedAt: { type: Date },
+    },
     paymentStatus: {
       type: String,
+      enum: [
+        "NOT_INITIATED",
+        "INITIATED",
+        "PAYMENT_SUCCESS",
+        "PAYMENT_PENDING",
+        "PAYMENT_DECLINED",
+        "PAYMENT_ERROR",
+        "PAYMENT_CANCELLED",
+        "COD_PENDING",
+      ],
       default: "NOT_INITIATED",
     },
-    paymentMethod: { type: String },
-    paymentVerifiedAt: { type: Date },
-    phonePeReferenceId: { type: String },
-
+    paymentError: { type: String, default: null },
+    paymentLogs: [
+      {
+        status: String,
+        timestamp: { type: Date, default: Date.now },
+        details: Object,
+      },
+    ],
+    paymentMethod: {
+      type: String,
+    },
     currentStatus: {
       type: String,
       default: "CHECKOUT",
     },
-
-    trackingId: { type: String },
-    deliveryPartner: { type: String },
-    invoiceId: { type: String },
-
+    trackingId: {
+      type: String,
+    },
+    deliveryPartner: {
+      type: String,
+    },
+    invoiceId: {
+      type: String,
+    },
     exchangeReason: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.SchemaTypes.ObjectId,
       ref: "Exchange",
     },
-
     orderSeq: {
       type: Number,
       required: true,
       default: 1800,
     },
-
-    date: { type: Date, default: null },
-
+    date: {
+      type: Date,
+      default: null,
+    },
+    stockUpdated: { type: Boolean, default: false },
+    shiprocket: { type: Object, default: null },
     dtdc: {
       referenceNumber: { type: String },
       customerReferenceNumber: { type: String },
     },
-
-    // ✅ NEW: Optional fields for offline orders (backward-compatible)
-    orderSource: {
-      type: String,
-      enum: ["ADMIN_OFFLINE"],
-      // No default - undefined for online orders
-    },
-
-    createdByAdminId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      // No required - only set for offline orders
-    },
-    isShippingEmailSent: {
-      type: Boolean,
-      default: false,
-    },
-    stockReduced: {
-      type: Boolean,
-      default: false,
-    },
+    paypalOrderId: { type: String, unique: true, sparse: true },
+    payerEmail: { type: String },
+    paidAt: { type: Date },
+    fulfillmentError: { type: String },
+    // ✅ POS-specific fields
     order_type: {
       type: String,
-      default: "normal", // 'prebooking'
+      enum: ["normal", "prebooking", "POS"],
+      default: "normal",
+    },
+    createdBy: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "Admin",
+      default: null,
+    },
+    metadata: {
+      type: Object,
+      default: null,
     },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Order || mongoose.model("Order", OrderSchema);
+export default mongoose.models.Order || mongoose.model("Order", Order);
