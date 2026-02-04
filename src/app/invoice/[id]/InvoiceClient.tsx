@@ -53,7 +53,7 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                     <div>
                         <div className="relative w-48 h-16 mb-2">
                             {/* Use img for better print support than Next Image sometimes */}
-                            <img src="/image/logo.png" alt="Sindhoora Ethnics" className="object-contain h-16 w-auto" />
+                            <img src="/assets/static/logo/saw.svg" alt="Sindhoora Ethnics" className="object-contain h-16 w-auto" />
                         </div>
                         <div className="text-sm text-gray-500 whitespace-pre-line mt-2">
                             {companyDetails.address}
