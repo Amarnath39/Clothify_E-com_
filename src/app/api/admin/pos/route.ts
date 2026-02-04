@@ -99,9 +99,54 @@ export const POST = async (req: NextRequest) => {
 
         const { action, customerPhone, productDetails, paymentMethod, transactionDetails } = body;
 
-        if (!customerPhone || !productDetails || !Array.isArray(productDetails) || productDetails.length === 0) {
-            return NextResponse.json({ success: false, message: "Missing required fields (phone or products)" }, { status: 400 });
+        // Enhanced validation with detailed error messages
+        console.log("📦 POS Request Body:", JSON.stringify({
+            action,
+            customerPhone,
+            productDetailsCount: productDetails?.length || 0,
+            paymentMethod,
+            hasTransactionDetails: !!transactionDetails
+        }, null, 2));
+
+        if (!customerPhone) {
+            console.error("❌ Missing customerPhone");
+            return NextResponse.json({ success: false, message: "Missing customer phone number" }, { status: 400 });
         }
+
+        if (!productDetails || !Array.isArray(productDetails)) {
+            console.error("❌ Invalid productDetails:", productDetails);
+            return NextResponse.json({ success: false, message: "Product details must be an array" }, { status: 400 });
+        }
+
+        if (productDetails.length === 0) {
+            console.error("❌ Empty productDetails array");
+            return NextResponse.json({ success: false, message: "Cart is empty" }, { status: 400 });
+        }
+
+        if (!paymentMethod) {
+            console.error("❌ Missing payment method");
+            return NextResponse.json({ success: false, message: "Payment method is required" }, { status: 400 });
+        }
+
+        // Validate product details structure
+        for (let i = 0; i < productDetails.length; i++) {
+            const pd = productDetails[i];
+            if (!pd.product) {
+                console.error(`❌ Missing product ID at index ${i}:`, pd);
+                return NextResponse.json({ success: false, message: `Invalid product at position ${i + 1}` }, { status: 400 });
+            }
+            if (!pd.sizeId) {
+                console.error(`❌ Missing sizeId at index ${i}:`, pd);
+                return NextResponse.json({ success: false, message: `Missing size for product at position ${i + 1}` }, { status: 400 });
+            }
+            if (!pd.quantity || pd.quantity < 1) {
+                console.error(`❌ Invalid quantity at index ${i}:`, pd);
+                return NextResponse.json({ success: false, message: `Invalid quantity for product at position ${i + 1}` }, { status: 400 });
+            }
+        }
+
+        console.log("✅ Request validation passed");
+
 
         // 4. Fetch Products & Calculate Totals (Safe Mode)
         const productIds = productDetails.map((pd: any) => pd.product);
@@ -297,16 +342,36 @@ export const POST = async (req: NextRequest) => {
         // 🚀 ACTION: COMPLETE (Immediate Payment)
         // ==========================================
         else if (action === "COMPLETE" || isImmediatePayment) {
+            console.log("💰 Processing immediate payment order:", {
+                orderId: newOrderId,
+                paymentMethod,
+                totalItems: stockCheckItems.length
+            });
+
             await newOrder.save();
+            console.log("✅ Order saved to database");
 
             // Deduct Stock Immediately
+            console.log("📦 Attempting stock deduction for items:", JSON.stringify(stockCheckItems, null, 2));
+
             const stockResult = await updateStock(stockCheckItems, "SALE", "POS", newOrder._id.toString(), adminId);
 
             if (!stockResult.success) {
+                console.error("❌ Stock deduction failed:", stockResult.errors);
+
                 // Rollback Order
+                console.log("🔄 Rolling back order...");
                 await Order.findByIdAndDelete(newOrder._id);
-                return NextResponse.json({ success: false, message: "Stock deduction failed", errors: stockResult.errors }, { status: 400 });
+                console.log("✅ Order rollback complete");
+
+                return NextResponse.json({
+                    success: false,
+                    message: "Stock deduction failed",
+                    errors: stockResult.errors
+                }, { status: 400 });
             }
+
+            console.log("✅ Stock deduction successful");
 
             newOrder.stockUpdated = true;
             await newOrder.save();
