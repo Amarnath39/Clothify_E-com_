@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { Search, ShoppingBag, Heart, User, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import AnimatedSearchInput from "@/components/AnimateSearchInput";
 
 // Redux Actions
 import { getAllCategories } from "@/lib/features/catogary";
@@ -136,12 +137,25 @@ const Navbar = () => {
   }, [localCategories]);
 
   // Search Handler
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      console.log("Searching for:", searchQuery);
-    }
-  };
+  // const handleSearch = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (searchQuery.trim()) {
+  //     console.log("Searching for:", searchQuery);
+  //   }
+  // };
+  // Update the import at the top of the file
+
+  // Inside the Navbar component, update the handleSearch function:
+  // const handleSearch = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (searchQuery.trim()) {
+  //     // Encode the search query and redirect to the products page
+  //     const encodedQuery = encodeURIComponent(searchQuery.trim());
+  //     router.push(`/products?search=${encodedQuery}`);
+  //     setIsSearchOpen(false);
+  //     setSearchQuery("");
+  //   }
+  // };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 pt-4 px-4">
@@ -206,7 +220,7 @@ const Navbar = () => {
           <div className="flex items-center space-x-4">
 
             {/* Search Toggle */}
-            <div className={`flex items-center transition-all duration-300 ${isSearchOpen ? 'w-40 md:w-64' : 'w-auto'}`}>
+            {/* <div className={`flex items-center transition-all duration-300 ${isSearchOpen ? 'w-40 md:w-64' : 'w-auto'}`}>
               {!isSearchOpen && (
                 <button
                   onClick={() => setIsSearchOpen(true)}
@@ -240,6 +254,14 @@ const Navbar = () => {
                   </motion.form>
                 )}
               </AnimatePresence>
+            </div> */}
+
+            {/* Search Toggle */}
+            <div className="flex items-center">
+              <AnimatedSearchInput
+                isModalOpen={isSearchOpen}
+                setIsModalOpen={setIsSearchOpen}
+              />
             </div>
 
 
