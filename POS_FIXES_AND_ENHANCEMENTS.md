@@ -18,16 +18,24 @@
 - **WhatsApp:** Sends invoice via WhatsApp using Template ID `310865`.
 - **Function:** `sendPOSInvoice(customerName, phone, orderId, invoiceUrl, merchantName)`.
 - **Invoice Link:** `https://www.swaarasya.com/invoice/[invoiceId]`
+- **Rebranding:** Updated to "Swaarasya", "Kannur, Kerala". Use `saw.svg` logo.
 
 ### ✅ Issue 4: Professional Invoice Page
 **Status:** ✅ CREATED
 - **URL:** `/invoice/[invoiceId]`
 - **Features:** 
-  - Professional design
+  - Professional design (Swaarasya branding)
   - Print/Save as PDF button
   - Company logo and address
-  - Order details table
+  - Order details table with GST breakdown
   - Publicly accessible for easy sharing
+
+### ✅ Issue 5: GST Support (New)
+**Status:** ✅ IMPLEMENTED
+- **Settings Page:** `Admin > GST Settings` (Manage Tax % per category)
+- **POS Calculation:** Automatically fetches GST% from product categories and calculates Tax (Exclusive).
+- **Invoice:** Displays GST amount separately.
+- **Shipping:** Removed from POS orders.
 
 ---
 

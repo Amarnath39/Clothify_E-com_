@@ -41,6 +41,11 @@ interface Product {
         stock: number;
         offerPrice: number;
     }>;
+    categories?: Array<{
+        _id: string;
+        name: string;
+        gst: number;
+    }>;
 }
 
 interface CartItem {
@@ -231,17 +236,27 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     const calculateTotals = () => {
         let subtotal = 0;
         let totalItems = 0;
+        let totalGst = 0;
 
         cart.forEach((item) => {
             const price = item.selectedSize.offerPrice || item.product.actualPrice;
             subtotal += price * item.quantity;
             totalItems += item.quantity;
+
+            // GST
+            let gstPercent = 0;
+            if (item.product.categories && Array.isArray(item.product.categories)) {
+                const gstValues = item.product.categories.map((c: any) => typeof c === 'object' ? (c.gst || 0) : 0);
+                if (gstValues.length > 0) gstPercent = Math.max(...gstValues);
+            }
+
+            totalGst += (price * gstPercent / 100) * item.quantity;
         });
 
-        const discount = 0; // Can add discount logic later
-        const total = subtotal - discount;
+        const discount = 0;
+        const total = subtotal + totalGst - discount;
 
-        return { subtotal, discount, total, totalItems };
+        return { subtotal, totalGst, discount, total, totalItems };
     };
 
     // ✅ Process POS Order
@@ -636,6 +651,10 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                 <div className="flex justify-between text-sm">
                                     <span>Subtotal:</span>
                                     <span>₹{totals.subtotal.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-gray-600">
+                                    <span>GST:</span>
+                                    <span>₹{totals.totalGst.toFixed(2)}</span>
                                 </div>
                                 {totals.discount > 0 && (
                                     <div className="flex justify-between text-sm text-green-600">

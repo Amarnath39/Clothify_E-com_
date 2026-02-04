@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { FaSearch, FaReceipt, FaFilter } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
+import RefundModal from "@/components/admin/RefundModal";
 
 interface POSOrder {
     _id: string;
@@ -39,6 +40,10 @@ const POSOrdersPage = () => {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [filteredOrders, setFilteredOrders] = useState<POSOrder[]>([]);
+
+    // Refund State
+    const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+    const [orderToRefund, setOrderToRefund] = useState<POSOrder | null>(null);
 
     useEffect(() => {
         fetchPOSOrders();
@@ -82,6 +87,15 @@ const POSOrdersPage = () => {
     const downloadInvoice = (order: POSOrder) => {
         // Implement invoice download/print functionality
         toast.success(`Invoice for ${order.invoiceId} downloaded`);
+    };
+
+    const handleRefundClick = (order: POSOrder) => {
+        setOrderToRefund(order);
+        setIsRefundModalOpen(true);
+    };
+
+    const handleRefundSuccess = () => {
+        fetchPOSOrders();
     };
 
     return (
@@ -181,14 +195,24 @@ const POSOrdersPage = () => {
                                             {order.productDetails.length} item(s)
                                         </TableCell>
                                         <TableCell>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => downloadInvoice(order)}
-                                            >
-                                                <FaReceipt className="mr-1" />
-                                                Invoice
-                                            </Button>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => downloadInvoice(order)}
+                                                >
+                                                    <FaReceipt className="mr-1" />
+                                                    Invoice
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200"
+                                                    onClick={() => handleRefundClick(order)}
+                                                >
+                                                    Returns
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -231,6 +255,16 @@ const POSOrdersPage = () => {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Refund Modal */}
+            {orderToRefund && (
+                <RefundModal
+                    isOpen={isRefundModalOpen}
+                    onClose={() => setIsRefundModalOpen(false)}
+                    onSuccess={handleRefundSuccess}
+                    order={orderToRefund}
+                />
+            )}
         </div>
     );
 };

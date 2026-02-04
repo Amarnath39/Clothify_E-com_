@@ -4,6 +4,7 @@ import Order from "@/model/Order";
 import Product from "@/model/Product";
 import StockHistory from "@/model/StockHistory";
 import Admin from "@/model/Admin";
+import Category from "@/model/Category";
 import mongoose from "mongoose";
 
 connectDB();
@@ -240,7 +241,7 @@ export const POST = async (req: NextRequest) => {
 
         // ✅ Fetch products and calculate totals
         const productIds = productDetails.map((pd: any) => pd.product);
-        const products = await Product.find({ _id: { $in: productIds } });
+        const products = await Product.find({ _id: { $in: productIds } }).populate("categories");
 
         if (products.length !== productIds.length) {
             return NextResponse.json(
@@ -251,7 +252,9 @@ export const POST = async (req: NextRequest) => {
 
         let totalActualPrice = 0;
         let totalOfferPrice = 0;
+        let totalGstAmount = 0;
         const processedProductDetails: any[] = [];
+        const taxDetails: any[] = [];
 
         for (const pd of productDetails) {
             const product = products.find((p) => p._id.toString() === pd.product);
@@ -282,8 +285,28 @@ export const POST = async (req: NextRequest) => {
                 );
             }
 
+            const itemPrice = (sizeObj.offerPrice || product.actualPrice);
             totalActualPrice += product.actualPrice * quantity;
-            totalOfferPrice += (sizeObj.offerPrice || product.actualPrice) * quantity;
+            totalOfferPrice += itemPrice * quantity;
+
+            // ✅ Calculate GST
+            let productGstPercent = 0;
+            if (product.categories && product.categories.length > 0) {
+                // Get max GST from categories
+                productGstPercent = Math.max(...product.categories.map((c: any) => c.gst || 0));
+            }
+
+            const itemTax = (itemPrice * productGstPercent / 100) * quantity;
+            totalGstAmount += itemTax;
+
+            taxDetails.push({
+                productId: product._id,
+                name: product.name,
+                gstPercent: productGstPercent,
+                gstAmount: itemTax,
+                price: itemPrice,
+                quantity: quantity
+            });
 
             processedProductDetails.push({
                 product: product._id,
@@ -298,7 +321,7 @@ export const POST = async (req: NextRequest) => {
             });
         }
 
-        const totalPayablePrice = totalOfferPrice + shippingCost;
+        const totalPayablePrice = totalOfferPrice + totalGstAmount; // POS has NO Shipping
 
         // ✅ Generate invoice and order IDs
         const invoiceId = await generatePOSInvoiceNumber();
@@ -317,7 +340,7 @@ export const POST = async (req: NextRequest) => {
             totalPrice: totalActualPrice,
             payablePrice: totalPayablePrice,
             off: totalActualPrice - totalOfferPrice,
-            shippingCost,
+            shippingCost: 0, // Force 0 for POS
             paymentMethod,
             paymentStatus: "PAYMENT_SUCCESS", // POS is always paid upfront
             currentStatus: "COMPLETED", // POS orders are immediately fulfilled
@@ -326,6 +349,7 @@ export const POST = async (req: NextRequest) => {
             shippingAddress: {
                 mobile: customerPhone,
                 name: "POS Customer",
+                address: "", // In-house
             },
             stockUpdated: false, // Will update after stock reduction
             user: null, // POS orders don't require user account
@@ -335,6 +359,8 @@ export const POST = async (req: NextRequest) => {
                 adminId,
                 adminName: admin.name,
                 transactionDetails: transactionDetails || null, // ✅ Also store in metadata
+                taxDetails, // ✅ Store GST breakdown
+                totalGstAmount // ✅ Store total GST
             },
         });
 

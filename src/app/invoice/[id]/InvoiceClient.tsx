@@ -15,9 +15,9 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
     };
 
     const companyDetails = {
-        name: "Sindhoora Ethnics",
-        address: "Thrissur, Kerala, India\nPhone: +91 6282 025 003",
-        footer: "Thank you for shopping with Sindhoora Ethnics!",
+        name: "Swaarasya",
+        address: "Kannur, Kerala, India",
+        footer: "Thank you for shopping with Swaarasya!",
     };
 
     // Helper to safely get date
@@ -53,7 +53,7 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                     <div>
                         <div className="relative w-48 h-16 mb-2">
                             {/* Use img for better print support than Next Image sometimes */}
-                            <img src="/assets/static/logo/saw.svg" alt="Sindhoora Ethnics" className="object-contain h-16 w-auto" />
+                            <img src="/assets/static/logo/saw.svg" alt="Swaarasya" className="object-contain h-16 w-auto" />
                         </div>
                         <div className="text-sm text-gray-500 whitespace-pre-line mt-2">
                             {companyDetails.address}
@@ -147,15 +147,30 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                     <div className="flex justify-end">
                         <div className="w-full md:w-1/2 lg:w-1/3 space-y-3">
                             <div className="flex justify-between text-gray-600">
-                                <span>Subtotal</span>
+                                <span>Subtotal (MRP)</span>
                                 <span>₹{(order.totalPrice || 0).toFixed(2)}</span>
                             </div>
 
-                            {/* Discount */}
-                            {(order.totalPrice - order.payablePrice > 0) && (
-                                <div className="flex justify-between text-green-600">
-                                    <span>Discount</span>
-                                    <span>-₹{(order.totalPrice - order.payablePrice).toFixed(2)}</span>
+                            {/* Calculate Discount dynamically */}
+                            {(() => {
+                                const gst = order.metadata?.totalGstAmount || 0;
+                                const shipping = order.shippingCost || 0;
+                                const effectivePrice = order.payablePrice - gst - shipping;
+                                const discount = (order.totalPrice || 0) - effectivePrice;
+
+                                return discount > 0 ? (
+                                    <div className="flex justify-between text-green-600">
+                                        <span>Discount</span>
+                                        <span>-₹{discount.toFixed(2)}</span>
+                                    </div>
+                                ) : null;
+                            })()}
+
+                            {/* GST */}
+                            {(order.metadata?.totalGstAmount > 0) && (
+                                <div className="flex justify-between text-gray-600">
+                                    <span>GST</span>
+                                    <span>₹{(order.metadata.totalGstAmount).toFixed(2)}</span>
                                 </div>
                             )}
 

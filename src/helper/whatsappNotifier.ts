@@ -9,7 +9,7 @@ interface SendOrderConfirmationResponse {
 
 
 export const sendOrderConfirmation = async (
-  customerName: string, phoneNumber: string, orderId: string, merchantName: string = "S.I.S", deliveryPartner: string = "",): Promise<SendOrderConfirmationResponse> => {
+  customerName: string, phoneNumber: string, orderId: string, merchantName: string = "Swaarasya", deliveryPartner: string = "",): Promise<SendOrderConfirmationResponse> => {
   try {
     const countryCode = "91";
 
@@ -59,7 +59,7 @@ export const sendOrderConfirmation = async (
 };
 
 export const sendOrderTracking = async (
-  customerName: string, phoneNumber: string, trackingId: string, merchantName: string = "S.I.S", deliveryPartner: string = "",): Promise<SendOrderConfirmationResponse> => {
+  customerName: string, phoneNumber: string, trackingId: string, merchantName: string = "Swaarasya", deliveryPartner: string = "",): Promise<SendOrderConfirmationResponse> => {
   try {
     const countryCode = "91";
 
@@ -113,7 +113,7 @@ export const sendPOSInvoice = async (
   phoneNumber: string,
   orderId: string,
   invoiceUrl: string,
-  merchantName: string = "S.I.S"
+  merchantName: string = "Swaarasya"
 ): Promise<SendOrderConfirmationResponse> => {
   try {
     const countryCode = "91";
