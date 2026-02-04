@@ -95,17 +95,21 @@ jobs:
               echo "Deploying to $PROJECT_NAME..."
               cd /root/$PROJECT_NAME/ || continue
               
-              docker compose down || true
+              # docker compose down || true  <-- Removed to prevent full downtime
               
               # Update docker-compose.yaml with normalized image name and new tag
               sed -i -E "s|${SEARCH_IMAGE_PREFIX}:[^\"']*|${NEW_IMAGE_NAME}:${NEW_IMAGE_TAG}|g" docker-compose.yaml
               
-              docker compose up -d
+              # Pull new image first to minimize switch-over time
+              docker compose pull
+              
+              # Rolling update: Recreates only changed containers
+              docker compose up -d --remove-orphans
             done
             
             # Proxy Refresh
             cd /root/proxy
-            docker compose down || true
+            # Only recreate proxy if necessary, don't force restart
             docker compose up -d proxy
             
             # Cleanup
