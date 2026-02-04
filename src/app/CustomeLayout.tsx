@@ -110,7 +110,8 @@ import "./globals.css";
 const CustomLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   // Exclude /login/admin from isAdminRoute so Navbar/Footer show up there
-  const isAdminRoute = pathname.startsWith("/admin") || pathname.startsWith("/adminLogin");
+  // Also exclude /invoice routes to show only invoice without header/footer
+  const isAdminRoute = pathname.startsWith("/admin") || pathname.startsWith("/adminLogin") || pathname.startsWith("/invoice");
 
   const isHomePage = pathname === "/";
 
