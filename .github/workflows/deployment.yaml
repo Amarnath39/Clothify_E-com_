@@ -105,6 +105,18 @@ jobs:
               
               # Rolling update: Recreates only changed containers
               docker compose up -d --remove-orphans
+              
+              # ✅ Verification: Wait and check if service stayed up
+              echo "Verifying deployment for $PROJECT_NAME..."
+              sleep 15
+              
+              if docker compose ps | grep -i "Exit"; then
+                 echo "❌ Deployment Failed: Container crashed!"
+                 docker compose logs --tail=30
+                 exit 1
+              fi
+              
+              echo "✅ Deployment Successful: Service is healthy."
             done
             
             # Proxy Refresh
