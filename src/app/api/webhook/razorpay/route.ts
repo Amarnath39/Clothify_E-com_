@@ -114,11 +114,23 @@ export async function POST(req: NextRequest) {
                 .populate("productDetails.product");
 
             if (!order && payment.notes?.orderId) {
-                // Fallback for Payment Links
+                // Fallback for Payment Links (Notes)
                 console.log("🔍 Looking up order by notes:", payment.notes.orderId);
                 order = await Order.findOne({ orderId: payment.notes.orderId })
                     .populate("user")
                     .populate("productDetails.product");
+            }
+
+            // Fallback: Parse Description (e.g. "Swaarasya POS Order #ON-12345")
+            if (!order && payment.description) {
+                const match = payment.description.match(/Order #(ON-\d+)/);
+                if (match) {
+                    const extractedId = match[1];
+                    console.log("🔍 Looking up order by description:", extractedId);
+                    order = await Order.findOne({ orderId: extractedId })
+                        .populate("user")
+                        .populate("productDetails.product");
+                }
             }
 
             if (!order) {
@@ -507,21 +519,32 @@ export async function POST(req: NextRequest) {
             console.log("✅ Payment link paid:", {
                 paymentLinkId: paymentLink.id,
                 amount: paymentLink.amount / 100,
-                status: paymentLink.status
+                status: paymentLink.status,
+                reference_id: paymentLink.reference_id
             });
 
-            // Find order by payment link ID
+            // 1. Find by Link ID
             let order = await Order.findOne({
                 "metadata.paymentLinkId": paymentLink.id
             })
                 .populate("user")
                 .populate("productDetails.product");
 
-            // Fallback: search by reference_id (orderId)
+            // 2. Fallback: search by reference_id (Handle Suffix!)
             if (!order && paymentLink.reference_id) {
+                // Try exact match first
                 order = await Order.findOne({ orderId: paymentLink.reference_id })
                     .populate("user")
                     .populate("productDetails.product");
+
+                // If not found, try stripping suffix (Format: ON-12345-random)
+                if (!order) {
+                    const cleanOrderId = paymentLink.reference_id.split("-").slice(0, 2).join("-");
+                    console.log("🔍 Trying stripped order ID:", cleanOrderId);
+                    order = await Order.findOne({ orderId: cleanOrderId })
+                        .populate("user")
+                        .populate("productDetails.product");
+                }
             }
 
             if (!order) {
