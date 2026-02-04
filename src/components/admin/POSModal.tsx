@@ -25,6 +25,8 @@ import {
     FaMinus,
     FaPrint,
     FaBarcode,
+    FaCopy,
+    FaExternalLinkAlt,
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -96,6 +98,16 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ Refs
     const searchInputRef = useRef<HTMLInputElement>(null);
     const phoneInputRef = useRef<HTMLInputElement>(null);
+    const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // ✅ NEW: Payment Link State
+    const [paymentLinkInfo, setPaymentLinkInfo] = useState<{
+        link: string;
+        orderId: string;
+        invoiceId: string;
+        isPolling: boolean;
+        pollAttempts: number;
+    } | null>(null);
 
     // ✅ Auto-focus search input when modal opens
     useEffect(() => {
@@ -107,8 +119,78 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
         } else {
             // Reset on close
             resetPOS();
+            stopPolling();
         }
     }, [isOpen]);
+
+    // ✅ Cleanup polling on unmount
+    useEffect(() => {
+        return () => {
+            stopPolling();
+        };
+    }, []);
+
+    // ✅ START PAYMENT POLLING
+    const startPaymentPolling = async (orderId: string) => {
+        const POLL_INTERVAL = 3000;
+        const MAX_POLL_ATTEMPTS = 200; // 10 minutes max
+        let attempts = 0;
+
+        stopPolling();
+
+        pollingIntervalRef.current = setInterval(async () => {
+            attempts++;
+
+            try {
+                const { data } = await axios.get(`/api/admin/pos/orders?orderId=${orderId}`, {
+                    headers: { "x-admin-id": localStorage.getItem("adminId") }
+                });
+
+                if (data.success && data.order) {
+                    const order = data.order;
+
+                    // Check if payment is successful
+                    if (order.paymentStatus === "PAYMENT_SUCCESS") {
+                        stopPolling();
+                        toast.success("Payment Received!");
+                        setCompletedOrder(order);
+                        setPaymentLinkInfo(null);
+                    }
+                }
+
+                // Stop after max attempts
+                if (attempts >= MAX_POLL_ATTEMPTS) {
+                    stopPolling();
+                    toast.error("Payment timeout. Please check order status manually.");
+                }
+            } catch (error) {
+                console.error("Polling error:", error);
+            }
+        }, POLL_INTERVAL);
+    };
+
+    // ✅ STOP POLLING
+    const stopPolling = () => {
+        if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+        }
+    };
+
+    // ✅ COPY PAYMENT LINK
+    const copyPaymentLink = () => {
+        if (paymentLinkInfo?.link) {
+            navigator.clipboard.writeText(paymentLinkInfo.link);
+            toast.success("Link copied to clipboard!");
+        }
+    };
+
+    // ✅ OPEN PAYMENT LINK
+    const openPaymentLink = () => {
+        if (paymentLinkInfo?.link) {
+            window.open(paymentLinkInfo.link, "_blank");
+        }
+    };
 
     // ✅ Generate invoice number on modal open
     const generateInvoiceNumber = () => {
@@ -399,11 +481,17 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
                 if (data.success) {
                     toast.success("Payment Link Sent!");
-                    // We might want to show the link to the admin too
-                    if (data.paymentLink) {
-                        prompt("Payment Link Generated:", data.paymentLink);
-                    }
-                    setCompletedOrder(data.order);
+
+                    // ✅ SET PAYMENT LINK INFO AND START POLLING
+                    setPaymentLinkInfo({
+                        link: data.paymentLink,
+                        orderId: data.order.orderId,
+                        invoiceId: data.invoiceId,
+                        isPolling: true,
+                        pollAttempts: 0
+                    });
+
+                    startPaymentPolling(data.order.orderId);
                 } else {
                     toast.error(data.message || "Failed to generate link");
                 }
@@ -469,6 +557,194 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     };
 
     const totals = calculateTotals();
+
+    // ✅ PAYMENT LINK AWAITING SCREEN
+    if (paymentLinkInfo && !completedOrder) {
+        return (
+            <Dialog open={isOpen} onOpenChange={handleClose}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-blue-600 text-2xl">
+                            🔗 Payment Link Generated
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-6 py-4">
+                        {/* Payment Link Display */}
+                        <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 space-y-4">
+                            <p className="text-sm font-semibold text-gray-700">Payment Link:</p>
+                            <div className="bg-white p-4 rounded border border-blue-200 break-all text-blue-600 font-mono text-sm">
+                                {paymentLinkInfo.link}
+                            </div>
+
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={copyPaymentLink}
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                >
+                                    <FaCopy className="mr-2" />
+                                    Copy Link
+                                </Button>
+                                <Button
+                                    onClick={openPaymentLink}
+                                    className="flex-1 bg-green-600 hover:bg-green-700"
+                                    variant="default"
+                                >
+                                    <FaExternalLinkAlt className="mr-2" />
+                                    Open Link
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Status Indicator */}
+                        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 text-center space-y-4">
+                            <div className="flex items-center justify-center gap-3">
+                                <span className="animate-spin text-2xl">⏳</span>
+                                <p className="text-lg font-semibold text-gray-800">
+                                    Awaiting Payment Confirmation
+                                </p>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                                Customer can use the link above to complete payment.
+                                This screen will auto-update when payment is received.
+                            </p>
+                        </div>
+
+                        {/* Order Details */}
+                        <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Order ID:</span>
+                                <span className="font-bold">{paymentLinkInfo.orderId}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Invoice ID:</span>
+                                <span className="font-bold">{paymentLinkInfo.invoiceId}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Customer Phone:</span>
+                                <span className="font-bold">{customerPhone}</span>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={() => {
+                                    stopPolling();
+                                    resetPOS();
+                                    searchInputRef.current?.focus();
+                                }}
+                                className="flex-1"
+                                variant="outline"
+                            >
+                                Cancel & New Order
+                            </Button>
+                            <Button
+                                onClick={handleClose}
+                                variant="ghost"
+                                className="flex-1"
+                            >
+                                Close POS
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
+    // ✅ PAYMENT LINK AWAITING SCREEN
+    if (paymentLinkInfo && !completedOrder) {
+        return (
+            <Dialog open={isOpen} onOpenChange={handleClose}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-blue-600 text-2xl">
+                            🔗 Payment Link Generated
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-6 py-4">
+                        {/* Payment Link Display */}
+                        <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 space-y-4">
+                            <p className="text-sm font-semibold text-gray-700">Payment Link:</p>
+                            <div className="bg-white p-4 rounded border border-blue-200 break-all text-blue-600 font-mono text-sm">
+                                {paymentLinkInfo.link}
+                            </div>
+
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={copyPaymentLink}
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                >
+                                    Copy Link
+                                </Button>
+                                <Button
+                                    onClick={openPaymentLink}
+                                    className="flex-1 bg-green-600 hover:bg-green-700"
+                                    variant="default"
+                                >
+                                    Open Link
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Status Indicator */}
+                        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 text-center space-y-4">
+                            <div className="flex items-center justify-center gap-3">
+                                <span className="animate-spin text-2xl">⏳</span>
+                                <p className="text-lg font-semibold text-gray-800">
+                                    Awaiting Payment Confirmation
+                                </p>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                                Customer can use the link above to complete payment.
+                                This screen will auto-update when payment is received.
+                            </p>
+                        </div>
+
+                        {/* Order Details */}
+                        <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Order ID:</span>
+                                <span className="font-bold">{paymentLinkInfo.orderId}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Invoice ID:</span>
+                                <span className="font-bold">{paymentLinkInfo.invoiceId}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-600">Customer Phone:</span>
+                                <span className="font-bold">{customerPhone}</span>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={() => {
+                                    stopPolling();
+                                    resetPOS();
+                                    searchInputRef.current?.focus();
+                                }}
+                                className="flex-1"
+                                variant="outline"
+                            >
+                                Cancel & New Order
+                            </Button>
+                            <Button
+                                onClick={handleClose}
+                                variant="ghost"
+                                className="flex-1"
+                            >
+                                Close POS
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        );
+    }
 
     // ✅ If order completed, show success screen
     if (completedOrder) {

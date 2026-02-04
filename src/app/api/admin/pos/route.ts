@@ -124,7 +124,7 @@ export const POST = async (req: NextRequest) => {
                 sizeLabel: pd.sizeLabel
             }));
 
-            const stockResult = await updateStock(stockItems, "SALE", "POS", order.orderId, adminId);
+            const stockResult = await updateStock(stockItems, "SALE", "POS", order._id.toString(), adminId);
 
             if (!stockResult.success) {
                 // Payment taken but stock failed! Critical
@@ -274,13 +274,13 @@ export const POST = async (req: NextRequest) => {
                 amount: Math.round(totalPayablePrice * 100),
                 currency: "INR",
                 accept_partial: false,
-                reference_id: newOrderId, // ✅ Add reference_id for webhook lookup
-                description: `Swaarasya Order #${newOrderId}`,
-                customer: { contact: customerPhone },
-                notify: { sms: true, email: false }, // Notify customer via SMS (if supported)
+                reference_id: newOrderId,
+                description: `Swaarasya POS Order #${newOrderId}`,
+                customer: { contact: customerPhone, name: "POS Customer" },
+                notify: { sms: true, email: false },
                 reminder_enable: true,
-                notes: { orderId: newOrderId },
-                callback_url: "https://www.swaarasya.com/payment-success", // Fallback
+                notes: { orderId: newOrderId, invoiceId, orderType: "POS" },
+                callback_url: `https://www.swaarasya.com/invoice/${invoiceId}`, // ✅ Redirect to invoice page
                 callback_method: "get"
             };
 
@@ -295,6 +295,8 @@ export const POST = async (req: NextRequest) => {
                 success: true,
                 message: "Payment Link Generated",
                 paymentLink: paymentLink.short_url,
+                paymentLinkId: paymentLink.id,
+                invoiceId: invoiceId,
                 order: newOrder
             });
 
@@ -303,7 +305,7 @@ export const POST = async (req: NextRequest) => {
             await newOrder.save();
 
             // Deduct Stock Immediately
-            const stockResult = await updateStock(stockCheckItems, "SALE", "POS", newOrderId, adminId);
+            const stockResult = await updateStock(stockCheckItems, "SALE", "POS", newOrder._id.toString(), adminId);
 
             if (!stockResult.success) {
                 await Order.findByIdAndDelete(newOrder._id); // Rollback
