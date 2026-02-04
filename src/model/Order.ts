@@ -30,6 +30,9 @@ const Order = new mongoose.Schema(
           _id: { type: mongoose.SchemaTypes.ObjectId },
           size: { type: String },
         },
+        sizeLabel: { type: String },
+        offerPrice: { type: Number },
+        actualPrice: { type: Number },
         freeCount: {
           type: Number,
           default: 0,
