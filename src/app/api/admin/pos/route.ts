@@ -242,19 +242,28 @@ export const POST = async (req: NextRequest) => {
             });
 
             try {
+                // Sanitize Phone Number (Ensure E.164 format)
+                let contact = customerPhone.trim();
+                if (contact.length === 10 && !contact.startsWith("+")) {
+                    contact = `+91${contact}`;
+                }
+
                 const linkOptions = {
                     amount: Math.round(totalPayablePrice * 100), // paise
                     currency: "INR",
                     accept_partial: false,
-                    reference_id: newOrderId,
+                    // Append random suffix to ensure uniqueness on retries
+                    reference_id: `${newOrderId}-${Math.random().toString(36).substring(2, 7)}`,
                     description: `Swaarasya POS Order #${newOrderId}`,
-                    customer: { contact: customerPhone, name: "POS Customer" },
+                    customer: { contact: contact, name: "POS Customer" },
                     notify: { sms: true, email: false }, // SMS enabled
                     reminder_enable: true,
                     notes: { orderId: newOrderId, invoiceId, orderType: "POS" },
                     callback_url: `https://www.swaarasya.com/invoice/${invoiceId}`,
                     callback_method: "get"
                 };
+
+                console.log("Generating Razorpay Link...", JSON.stringify(linkOptions));
 
                 const paymentLink = await razorpay.paymentLink.create(linkOptions);
 
@@ -276,8 +285,12 @@ export const POST = async (req: NextRequest) => {
                 });
 
             } catch (rzpError: any) {
-                console.error("Razorpay Link Error:", rzpError);
-                return NextResponse.json({ success: false, message: "Razorpay API Failed", error: rzpError.error?.description || rzpError.message }, { status: 502 });
+                console.error("Razorpay Link Creation Failed:", rzpError);
+                return NextResponse.json({
+                    success: false,
+                    message: "Razorpay API Failed",
+                    error: rzpError.error?.description || rzpError.message || "Unknown Razorpay Error"
+                }, { status: 502 });
             }
         }
 
