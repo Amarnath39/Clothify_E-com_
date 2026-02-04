@@ -499,6 +499,186 @@ export async function POST(req: NextRequest) {
         }
 
         // ═════════════════════════════════════════════════════════════════════════
+        // EVENT: payment_link.paid → Payment Link Successfully Paid
+        // ═════════════════════════════════════════════════════════════════════════
+        if (webhookEvent === "payment_link.paid") {
+            const paymentLink = payload.payload.payment_link.entity;
+
+            console.log("✅ Payment link paid:", {
+                paymentLinkId: paymentLink.id,
+                amount: paymentLink.amount / 100,
+                status: paymentLink.status
+            });
+
+            // Find order by payment link ID
+            let order = await Order.findOne({
+                "metadata.paymentLinkId": paymentLink.id
+            })
+                .populate("user")
+                .populate("productDetails.product");
+
+            // Fallback: search by reference_id (orderId)
+            if (!order && paymentLink.reference_id) {
+                order = await Order.findOne({ orderId: paymentLink.reference_id })
+                    .populate("user")
+                    .populate("productDetails.product");
+            }
+
+            if (!order) {
+                console.error("❌ Order not found for payment link:", paymentLink.id);
+                return NextResponse.json({ success: true });
+            }
+
+            console.log("✅ Order found:", order.orderId);
+
+            // Validate amount
+            const expectedAmount = Math.round(order.payablePrice * 100);
+            if (paymentLink.amount !== expectedAmount) {
+                console.error("❌ AMOUNT MISMATCH for payment link:", {
+                    expected: expectedAmount,
+                    received: paymentLink.amount,
+                    orderId: order.orderId
+                });
+
+                order.paymentStatus = "PAYMENT_AMOUNT_MISMATCH";
+                order.paymentLogs = order.paymentLogs || [];
+                order.paymentLogs.push({
+                    status: "AMOUNT_MISMATCH",
+                    timestamp: new Date(),
+                    details: {
+                        expected: expectedAmount,
+                        received: paymentLink.amount,
+                        paymentLinkId: paymentLink.id
+                    }
+                });
+                await order.save();
+
+                return NextResponse.json(
+                    { success: false, error: "Amount mismatch" },
+                    { status: 400 }
+                );
+            }
+
+            // Check if already processed
+            if (order.paymentStatus === "PAYMENT_SUCCESS" && order.stockUpdated) {
+                console.log("⚠️ Payment link already processed:", order.orderId);
+                return NextResponse.json({
+                    success: true,
+                    message: "Already processed"
+                });
+            }
+
+            // NOTE: The actual stock deduction will happen when payment.captured webhook fires
+            // This event just marks the payment link as paid
+            order.metadata.paymentLinkStatus = "paid";
+            order.metadata.paymentLinkPaidAt = new Date();
+
+            order.paymentLogs = order.paymentLogs || [];
+            order.paymentLogs.push({
+                status: "PAYMENT_LINK_PAID",
+                timestamp: new Date(),
+                details: {
+                    paymentLinkId: paymentLink.id,
+                    amount: paymentLink.amount / 100,
+                    status: paymentLink.status
+                }
+            });
+
+            await order.save();
+            console.log("✅ Payment link marked as paid:", order.orderId);
+
+            return NextResponse.json({ success: true, orderId: order.orderId });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════════
+        // EVENT: payment_link.expired → Payment Link Expired
+        // ═════════════════════════════════════════════════════════════════════════
+        if (webhookEvent === "payment_link.expired") {
+            const paymentLink = payload.payload.payment_link.entity;
+
+            console.log("⏰ Payment link expired:", paymentLink.id);
+
+            let order = await Order.findOne({
+                "metadata.paymentLinkId": paymentLink.id
+            });
+
+            if (!order && paymentLink.reference_id) {
+                order = await Order.findOne({ orderId: paymentLink.reference_id });
+            }
+
+            if (!order) {
+                console.log("⚠️ Order not found for expired payment link");
+                return NextResponse.json({ success: true });
+            }
+
+            // Only update if payment wasn't already successful
+            if (order.paymentStatus !== "PAYMENT_SUCCESS") {
+                order.currentStatus = "CANCELLED";
+                order.paymentStatus = "PAYMENT_LINK_EXPIRED";
+                order.metadata.paymentLinkStatus = "expired";
+
+                order.paymentLogs = order.paymentLogs || [];
+                order.paymentLogs.push({
+                    status: "PAYMENT_LINK_EXPIRED",
+                    timestamp: new Date(),
+                    details: {
+                        paymentLinkId: paymentLink.id,
+                        expiredAt: paymentLink.expired_at
+                    }
+                });
+
+                await order.save();
+                console.log("✅ Order marked as expired:", order.orderId);
+            }
+
+            return NextResponse.json({ success: true });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════════
+        // EVENT: payment_link.cancelled → Payment Link Cancelled
+        // ═════════════════════════════════════════════════════════════════════════
+        if (webhookEvent === "payment_link.cancelled") {
+            const paymentLink = payload.payload.payment_link.entity;
+
+            console.log("❌ Payment link cancelled:", paymentLink.id);
+
+            let order = await Order.findOne({
+                "metadata.paymentLinkId": paymentLink.id
+            });
+
+            if (!order && paymentLink.reference_id) {
+                order = await Order.findOne({ orderId: paymentLink.reference_id });
+            }
+
+            if (!order) {
+                console.log("⚠️ Order not found for cancelled payment link");
+                return NextResponse.json({ success: true });
+            }
+
+            // Only update if payment wasn't already successful
+            if (order.paymentStatus !== "PAYMENT_SUCCESS") {
+                order.currentStatus = "CANCELLED";
+                order.paymentStatus = "PAYMENT_LINK_CANCELLED";
+                order.metadata.paymentLinkStatus = "cancelled";
+
+                order.paymentLogs = order.paymentLogs || [];
+                order.paymentLogs.push({
+                    status: "PAYMENT_LINK_CANCELLED",
+                    timestamp: new Date(),
+                    details: {
+                        paymentLinkId: paymentLink.id,
+                        cancelledBy: paymentLink.cancelled_by || "system"
+                    }
+                });
+
+                await order.save();
+                console.log("✅ Order marked as cancelled:", order.orderId);
+            }
+
+            return NextResponse.json({ success: true });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════════
         // OTHER EVENTS: Log and acknowledge
         // ═════════════════════════════════════════════════════════════════════════
         console.log("ℹ️ Unhandled webhook event:", webhookEvent);

@@ -274,6 +274,7 @@ export const POST = async (req: NextRequest) => {
                 amount: Math.round(totalPayablePrice * 100),
                 currency: "INR",
                 accept_partial: false,
+                reference_id: newOrderId, // ✅ Add reference_id for webhook lookup
                 description: `Swaarasya Order #${newOrderId}`,
                 customer: { contact: customerPhone },
                 notify: { sms: true, email: false }, // Notify customer via SMS (if supported)
@@ -287,6 +288,7 @@ export const POST = async (req: NextRequest) => {
 
             newOrder.metadata.paymentLinkId = paymentLink.id;
             newOrder.metadata.paymentLinkUrl = paymentLink.short_url;
+            newOrder.metadata.paymentLinkStatus = "created";
             await newOrder.save();
 
             return NextResponse.json({
