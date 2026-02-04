@@ -14,6 +14,7 @@ import {
 } from "../../../../helper/sendAdminOrderEmail";
 import { sendOrderConfirmation } from "../../../../helper/whatsappNotifier";
 import { sseClients } from "../../../../lib/sseClients";
+import Razorpay from "razorpay";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // WEBHOOK HANDLER
@@ -23,7 +24,10 @@ export async function POST(req: NextRequest) {
     let webhookEvent = "unknown";
 
     // ⭐ READ BODY FIRST - Before ANY other operations
-    const body = await req.text();
+    // ⭐ READ RAW BODY - Using arrayBuffer for perfect signature match
+    const arrayBuffer = await req.arrayBuffer();
+    const bodyBuffer = Buffer.from(arrayBuffer);
+    const body = bodyBuffer.toString("utf-8");
     const signature = req.headers.get("x-razorpay-signature");
 
     console.log("════════════════════════════════════════════════════════════");
@@ -48,22 +52,53 @@ export async function POST(req: NextRequest) {
         // ─────────────────────────────────────────────────────────────────────────
         // 2. Verify Webhook Signature
         // ─────────────────────────────────────────────────────────────────────────
-        const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        // ⭐ CLEAN THE SECRET (Handles quotes or hidden spaces)
+        const secret = (process.env.RAZORPAY_WEBHOOK_SECRET || "")
+            .trim()
+            .replace(/^["']|["']$/g, "");
+
+        const keySecret = (process.env.RAZORPAY_KEY_SECRET || "").trim();
+        const mode = (process.env.RAZORPAY_KEY_ID || "").startsWith("rzp_live") ? "LIVE" : "TEST";
+
+        console.log("⚙️  WEBHOOK FORENSICS:", {
+            mode,
+            hasSecret: !!secret,
+            secretLength: secret.length,
+            secretMasked: `${secret.substring(0, 3)}...${secret.substring(secret.length - 3)}`,
+            isSameAsKeySecret: secret === keySecret,
+            hasCRLF: body.includes("\r"), // 🚩 CRITICAL: If TRUE, a proxy is breaking your signature
+        });
+
         if (!secret) {
-            console.error("❌ RAZORPAY_WEBHOOK_SECRET not configured");
+            console.error("❌ RAZORPAY_WEBHOOK_SECRET is empty in process.env");
             return NextResponse.json(
                 { success: false, error: "Webhook not configured" },
                 { status: 500 }
             );
         }
 
-        const expectedSignature = crypto
-            .createHmac("sha256", secret)
-            .update(body)
-            .digest("hex");
+        // ⭐ ULTIMATE SOURCE OF TRUTH: Raw Buffer HMAC comparison
+        const hmac = crypto.createHmac("sha256", secret);
+        hmac.update(bodyBuffer);
+        const expectedSignature = hmac.digest("hex");
 
-        if (expectedSignature !== signature) {
-            console.error("❌ Invalid webhook signature");
+        const isMatch = expectedSignature === signature;
+
+        console.log("🔍 SIGNATURE COMPARISON:", {
+            isMatch,
+            expected: expectedSignature,
+            received: signature,
+            bodyBytes: bodyBuffer.length
+        });
+
+        if (!isMatch) {
+            console.error("❌ Invalid webhook signature (Mismatch)");
+
+            // Log ALL headers to see if a proxy is messing with us
+            const headerObj: any = {};
+            req.headers.forEach((val, key) => { headerObj[key] = val; });
+            console.log("📋 ALL HEADERS:", JSON.stringify(headerObj, null, 2));
+
             return NextResponse.json(
                 { success: false, error: "Invalid signature" },
                 { status: 400 }
@@ -158,7 +193,7 @@ export async function POST(req: NextRequest) {
             // ───────────────────────────────────────────────────────────────────────
             // Idempotency Check
             // ───────────────────────────────────────────────────────────────────────
-            if (order.paymentStatus === "PAYMENT_SUCCESS") {
+            if (order.paymentStatus === "PAYMENT_SUCCESS" && order.stockUpdated) {
                 console.log("⚠️ Order already processed:", order.orderId);
                 return NextResponse.json({
                     success: true,

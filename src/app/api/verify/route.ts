@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // ONLY mark as success — NOTHING ELSE
+    // Mark order as payment success - Webhook will handle fulfillment
     console.log("✅ Signature valid. Updating order to PAYMENT_SUCCESS...");
     await Order.findByIdAndUpdate(
       order._id,
@@ -71,11 +71,11 @@ export async function POST(req: Request) {
         paymentStatus: "PAYMENT_SUCCESS",
         paymentMethod: "RAZORPAY",
         paidAt: new Date(),
-        currentStatus: "PENDING", // ⭐ Transition from CHECKOUT to PENDING
-      },
-      { new: true }
+        currentStatus: "PENDING",
+      }
     );
-    console.log("✅ Order updated successfully");
+
+    console.log("✅ Order updated. Webhook will handle stock & notifications.");
 
     return NextResponse.json({
       success: true,
