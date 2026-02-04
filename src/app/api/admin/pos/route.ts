@@ -73,6 +73,11 @@ const generatePOSOrderId = async (): Promise<{ orderId: string; orderSeq: number
  * 🔥 CRITICAL: Stock Reduction with Atomic Safety
  * This function MUST succeed for the POS order to be valid
  */
+import { sendPOSInvoice } from "@/helper/whatsappNotifier"; // ✅ Import WhatsApp notifier
+
+// ... (existing imports)
+
+// ✅ FIX: reduceStockForPOS function
 const reduceStockForPOS = async (
     productDetails: any[],
     orderId: string,
@@ -91,8 +96,9 @@ const reduceStockForPOS = async (
                 continue;
             }
 
+            // ✅ FIX: Ensure ID comparison handles both String and ObjectId
             const sizeObj = product.sizes?.find(
-                (s: any) => s._id.toString() === item.sizeId
+                (s: any) => s._id.toString() === item.sizeId.toString()
             );
 
             if (!sizeObj) {
@@ -153,7 +159,7 @@ const reduceStockForPOS = async (
                 oldStock: update.oldStock,
                 newStock: update.newStock,
                 changeAmount: update.changeAmount,
-                action: "SALE", // Using SALE action (same as online orders)
+                action: "SALE",
                 reason: `POS Order ${orderId}`,
                 adminId: adminId,
             });
@@ -169,6 +175,8 @@ const reduceStockForPOS = async (
         return { success: false, errors: [error.message] };
     }
 };
+
+
 
 /**
  * 📍 POST /api/admin/pos
@@ -360,6 +368,21 @@ export const POST = async (req: NextRequest) => {
         await newOrder.save();
 
         console.log("✅ POS Order completed successfully:", orderId);
+
+        // ✅ Send WhatsApp Invoice (Fire-and-forget)
+        try {
+            const invoiceUrl = `https://www.swaarasya.com/invoice/${newOrder.invoiceId}`;
+            sendPOSInvoice(
+                "Customer", // Customer name (fallback)
+                customerPhone,
+                newOrder.orderId, // Order ID in template
+                invoiceUrl,
+                admin.name || "S.I.S"
+            ).then(res => console.log(`📲 WhatsApp Invoice sent to ${customerPhone}:`, res.success))
+                .catch(err => console.error("❌ WhatsApp Invoice failed:", err));
+        } catch (e) {
+            console.error("❌ WhatsApp invocation failed:", e);
+        }
 
         return NextResponse.json(
             {

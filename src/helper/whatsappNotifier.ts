@@ -9,7 +9,7 @@ interface SendOrderConfirmationResponse {
 
 
 export const sendOrderConfirmation = async (
-customerName: string, phoneNumber: string, orderId: string, merchantName: string = "S.I.S", deliveryPartner: string = "",): Promise<SendOrderConfirmationResponse> => {
+  customerName: string, phoneNumber: string, orderId: string, merchantName: string = "S.I.S", deliveryPartner: string = "",): Promise<SendOrderConfirmationResponse> => {
   try {
     const countryCode = "91";
 
@@ -59,7 +59,7 @@ customerName: string, phoneNumber: string, orderId: string, merchantName: string
 };
 
 export const sendOrderTracking = async (
-customerName: string, phoneNumber: string, trackingId: string, merchantName: string = "S.I.S", deliveryPartner: string = "",): Promise<SendOrderConfirmationResponse> => {
+  customerName: string, phoneNumber: string, trackingId: string, merchantName: string = "S.I.S", deliveryPartner: string = "",): Promise<SendOrderConfirmationResponse> => {
   try {
     const countryCode = "91";
 
@@ -107,3 +107,58 @@ customerName: string, phoneNumber: string, trackingId: string, merchantName: str
     };
   }
 }
+
+export const sendPOSInvoice = async (
+  customerName: string,
+  phoneNumber: string,
+  orderId: string,
+  invoiceUrl: string,
+  merchantName: string = "S.I.S"
+): Promise<SendOrderConfirmationResponse> => {
+  try {
+    const countryCode = "91";
+
+    let formattedPhoneNumber = phoneNumber.replace(/\+/g, "");
+    if (!formattedPhoneNumber.startsWith(countryCode)) {
+      formattedPhoneNumber = `${countryCode}${formattedPhoneNumber}`;
+    }
+
+    const formData = new URLSearchParams({
+      apiToken: "10641|R3bJazoz4iohOk42cyQhfOrCo4x0q2ZSuJezDk6m346fe236",
+      phoneNumberID: "627218387152627",
+      botTemplateID: "310865",
+      "templateVariable-variable1-1": customerName || "Customer",
+      "templateVariable-variable2-2": merchantName,
+      "templateVariable-variable3-3": orderId || "N/A",
+      "templateVariable-variable4-4": invoiceUrl,
+      sendToPhoneNumber: formattedPhoneNumber,
+    });
+
+    console.log("📨 WhatsApp POS Invoice Request:", formData.toString());
+
+    const response: AxiosResponse = await axios.post(
+      "https://bot.wabis.in/api/v1/whatsapp/send/template",
+      formData.toString(),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    );
+
+    console.log("✅ WhatsApp POS invoice sent:", response.data);
+
+    return {
+      success: true,
+      message: "WhatsApp POS invoice sent successfully!",
+      response: response.data,
+    };
+  } catch (error: any) {
+    console.error("❌ WhatsApp POS Invoice Error:", {
+      message: error.message,
+      response: error.response?.data || "No response body",
+    });
+
+    return {
+      success: false,
+      message: "Failed to send WhatsApp POS invoice",
+      error: error.response?.data || error.message,
+    };
+  }
+};

@@ -310,103 +310,13 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     };
 
     // ✅ Print Invoice
+    // ✅ Print Invoice
     const printInvoice = () => {
         if (!completedOrder) return;
-
-        // Create print window
-        const printWindow = window.open("", "_blank");
-        if (!printWindow) {
-            toast.error("Please allow popups to print invoice");
-            return;
-        }
-
-        const totals = calculateTotals();
-
-        const invoiceHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Invoice ${completedOrder.invoiceId}</title>
-        <style>
-          @media print {
-            body { margin: 0; padding: 10px; font-family: monospace; font-size: 12px; }
-          }
-          body { width: 80mm; font-family: monospace; font-size: 12px; }
-          h1 { font-size: 16px; text-align: center; margin: 10px 0; }
-          .divider { border-bottom: 1px dashed #000; margin: 5px 0; }
-          table { width: 100%; border-collapse: collapse; }
-          th, td { text-align: left; padding: 3px 0; }
-          .right { text-align: right; }
-          .bold { font-weight: bold; }
-          .total { font-size: 14px; font-weight: bold; margin-top: 10px; }
-        </style>
-      </head>
-      <body>
-        <h1>POS INVOICE</h1>
-        <div class="divider"></div>
-        <p><strong>Invoice:</strong> ${completedOrder.invoiceId}</p>
-        <p><strong>Date:</strong> ${new Date(completedOrder.createdAt).toLocaleString()}</p>
-        <p><strong>Phone:</strong> ${completedOrder.customerPhone}</p>
-        <p><strong>Payment:</strong> ${completedOrder.paymentMethod}</p>
-        <div class="divider"></div>
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th class="right">Qty</th>
-              <th class="right">Price</th>
-              <th class="right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${cart.map((item) => {
-            const price = item.selectedSize.offerPrice || item.product.actualPrice;
-            const total = price * item.quantity;
-            return `
-                <tr>
-                  <td>${item.product.name}<br><small>${item.selectedSize.size}</small></td>
-                  <td class="right">${item.quantity}</td>
-                  <td class="right">₹${price}</td>
-                  <td class="right">₹${total}</td>
-                </tr>
-              `;
-        }).join("")}
-          </tbody>
-        </table>
-        <div class="divider"></div>
-        <table>
-          <tr>
-            <td>Subtotal:</td>
-            <td class="right">₹${totals.subtotal.toFixed(2)}</td>
-          </tr>
-          ${totals.discount > 0 ? `
-          <tr>
-            <td>Discount:</td>
-            <td class="right">-₹${totals.discount.toFixed(2)}</td>
-          </tr>
-          ` : ''}
-          <tr class="total">
-            <td>TOTAL:</td>
-            <td class="right">₹${totals.total.toFixed(2)}</td>
-          </tr>
-        </table>
-        <div class="divider"></div>
-        <p style="text-align: center; margin-top: 15px;">Thank You!</p>
-        <script>
-          window.onload = function() {
-            window.print();
-            window.onafterprint = function() {
-              window.close();
-            };
-          };
-        </script>
-      </body>
-      </html>
-    `;
-
-        printWindow.document.write(invoiceHTML);
-        printWindow.document.close();
+        window.open(`/invoice/${completedOrder.invoiceId}`, "_blank");
     };
+
+
 
     // ✅ Reset POS
     const resetPOS = () => {
@@ -687,8 +597,8 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                         value={paymentMethod}
                                         onValueChange={(value: any) => setPaymentMethod(value)}
                                     >
-                                        <SelectTrigger>
-                                            <SelectValue />
+                                        <SelectTrigger id="paymentMethod">
+                                            <SelectValue placeholder="Select payment method" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="CASH">💵 Cash</SelectItem>
