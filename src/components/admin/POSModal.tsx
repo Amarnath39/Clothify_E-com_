@@ -41,6 +41,11 @@ interface Product {
         stock: number;
         offerPrice: number;
     }>;
+    categories?: Array<{
+        _id: string;
+        name: string;
+        gst: number;
+    }>;
 }
 
 interface CartItem {
@@ -64,6 +69,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     const [invoiceNumber, setInvoiceNumber] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
     const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "CARD">("CASH");
+    const [transactionDetails, setTransactionDetails] = useState(""); // ✅ NEW: For UPI/Card transaction ID
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -230,17 +236,27 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     const calculateTotals = () => {
         let subtotal = 0;
         let totalItems = 0;
+        let totalGst = 0;
 
         cart.forEach((item) => {
             const price = item.selectedSize.offerPrice || item.product.actualPrice;
             subtotal += price * item.quantity;
             totalItems += item.quantity;
+
+            // GST
+            let gstPercent = 0;
+            if (item.product.categories && Array.isArray(item.product.categories)) {
+                const gstValues = item.product.categories.map((c: any) => typeof c === 'object' ? (c.gst || 0) : 0);
+                if (gstValues.length > 0) gstPercent = Math.max(...gstValues);
+            }
+
+            totalGst += (price * gstPercent / 100) * item.quantity;
         });
 
-        const discount = 0; // Can add discount logic later
-        const total = subtotal - discount;
+        const discount = 0;
+        const total = subtotal + totalGst - discount;
 
-        return { subtotal, discount, total, totalItems };
+        return { subtotal, totalGst, discount, total, totalItems };
     };
 
     // ✅ Process POS Order
@@ -271,14 +287,21 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 quantity: item.quantity,
             }));
 
+            const requestBody: any = {
+                customerPhone,
+                productDetails,
+                paymentMethod,
+                shippingCost: 0,
+            };
+
+            // ✅ Add transaction details if UPI or Card
+            if ((paymentMethod === "UPI" || paymentMethod === "CARD") && transactionDetails) {
+                requestBody.transactionDetails = transactionDetails;
+            }
+
             const { data } = await axios.post(
                 "/api/admin/pos",
-                {
-                    customerPhone,
-                    productDetails,
-                    paymentMethod,
-                    shippingCost: 0,
-                },
+                requestBody,
                 {
                     headers: {
                         "x-admin-id": localStorage.getItem("adminId"),
@@ -302,109 +325,20 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     };
 
     // ✅ Print Invoice
+    // ✅ Print Invoice
     const printInvoice = () => {
         if (!completedOrder) return;
-
-        // Create print window
-        const printWindow = window.open("", "_blank");
-        if (!printWindow) {
-            toast.error("Please allow popups to print invoice");
-            return;
-        }
-
-        const totals = calculateTotals();
-
-        const invoiceHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Invoice ${completedOrder.invoiceId}</title>
-        <style>
-          @media print {
-            body { margin: 0; padding: 10px; font-family: monospace; font-size: 12px; }
-          }
-          body { width: 80mm; font-family: monospace; font-size: 12px; }
-          h1 { font-size: 16px; text-align: center; margin: 10px 0; }
-          .divider { border-bottom: 1px dashed #000; margin: 5px 0; }
-          table { width: 100%; border-collapse: collapse; }
-          th, td { text-align: left; padding: 3px 0; }
-          .right { text-align: right; }
-          .bold { font-weight: bold; }
-          .total { font-size: 14px; font-weight: bold; margin-top: 10px; }
-        </style>
-      </head>
-      <body>
-        <h1>POS INVOICE</h1>
-        <div class="divider"></div>
-        <p><strong>Invoice:</strong> ${completedOrder.invoiceId}</p>
-        <p><strong>Date:</strong> ${new Date(completedOrder.createdAt).toLocaleString()}</p>
-        <p><strong>Phone:</strong> ${completedOrder.customerPhone}</p>
-        <p><strong>Payment:</strong> ${completedOrder.paymentMethod}</p>
-        <div class="divider"></div>
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th class="right">Qty</th>
-              <th class="right">Price</th>
-              <th class="right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${cart.map((item) => {
-            const price = item.selectedSize.offerPrice || item.product.actualPrice;
-            const total = price * item.quantity;
-            return `
-                <tr>
-                  <td>${item.product.name}<br><small>${item.selectedSize.size}</small></td>
-                  <td class="right">${item.quantity}</td>
-                  <td class="right">₹${price}</td>
-                  <td class="right">₹${total}</td>
-                </tr>
-              `;
-        }).join("")}
-          </tbody>
-        </table>
-        <div class="divider"></div>
-        <table>
-          <tr>
-            <td>Subtotal:</td>
-            <td class="right">₹${totals.subtotal.toFixed(2)}</td>
-          </tr>
-          ${totals.discount > 0 ? `
-          <tr>
-            <td>Discount:</td>
-            <td class="right">-₹${totals.discount.toFixed(2)}</td>
-          </tr>
-          ` : ''}
-          <tr class="total">
-            <td>TOTAL:</td>
-            <td class="right">₹${totals.total.toFixed(2)}</td>
-          </tr>
-        </table>
-        <div class="divider"></div>
-        <p style="text-align: center; margin-top: 15px;">Thank You!</p>
-        <script>
-          window.onload = function() {
-            window.print();
-            window.onafterprint = function() {
-              window.close();
-            };
-          };
-        </script>
-      </body>
-      </html>
-    `;
-
-        printWindow.document.write(invoiceHTML);
-        printWindow.document.close();
+        window.open(`/invoice/${completedOrder.invoiceId}`, "_blank");
     };
+
+
 
     // ✅ Reset POS
     const resetPOS = () => {
         setCart([]);
         setCustomerPhone("");
         setPaymentMethod("CASH");
+        setTransactionDetails(""); // ✅ Reset transaction details
         setSearchQuery("");
         setSearchResults([]);
         setCompletedOrder(null);
@@ -678,8 +612,8 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                         value={paymentMethod}
                                         onValueChange={(value: any) => setPaymentMethod(value)}
                                     >
-                                        <SelectTrigger>
-                                            <SelectValue />
+                                        <SelectTrigger id="paymentMethod">
+                                            <SelectValue placeholder="Select payment method" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="CASH">💵 Cash</SelectItem>
@@ -688,6 +622,26 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                {/* ✅ NEW: Transaction Details for UPI/Card */}
+                                {(paymentMethod === "UPI" || paymentMethod === "CARD") && (
+                                    <div>
+                                        <Label htmlFor="transactionDetails">
+                                            Transaction ID {paymentMethod === "UPI" ? "(UPI Ref)" : "(Card Ref)"}
+                                            <span className="text-gray-500 text-xs ml-1">(Optional)</span>
+                                        </Label>
+                                        <Input
+                                            id="transactionDetails"
+                                            type="text"
+                                            placeholder={`Enter ${paymentMethod} transaction ID...`}
+                                            value={transactionDetails}
+                                            onChange={(e) => setTransactionDetails(e.target.value)}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            For record keeping and verification
+                                        </p>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 
@@ -697,6 +651,10 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                 <div className="flex justify-between text-sm">
                                     <span>Subtotal:</span>
                                     <span>₹{totals.subtotal.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-gray-600">
+                                    <span>GST:</span>
+                                    <span>₹{totals.totalGst.toFixed(2)}</span>
                                 </div>
                                 {totals.discount > 0 && (
                                     <div className="flex justify-between text-sm text-green-600">

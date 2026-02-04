@@ -9,6 +9,8 @@ import { getAllBanner } from "@/lib/features/banner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import "../../hooks/style.css";
+import { getAllCategories } from "@/lib/features/catogary";
+
 
 const Banner: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -16,6 +18,8 @@ const Banner: React.FC = () => {
   const timerRef = useRef<any>(null);
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const [categories, setCategories] = useState<any[]>([]);
+
 
   // --- Fetch Data ---
   useEffect(() => {
@@ -41,6 +45,18 @@ const Banner: React.FC = () => {
     };
     callGetAllBanner();
   }, [dispatch]);
+
+  //--- Fetch Categories ---
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { payload }: any = await dispatch(getAllCategories() as any);
+      if (payload?.success) {
+        setCategories(payload.categories);
+      }
+    };
+    fetchCategories();
+  }, [dispatch]);
+
 
   // --- Auto Rotation ---
   useEffect(() => {
@@ -107,6 +123,14 @@ const Banner: React.FC = () => {
   }
 
   const currentBanner = banners[activeIndex];
+  const sareeCategory = categories.find(
+  (c) => c.name.toLowerCase() === "saree"
+);
+
+const jewelleryCategory = categories.find(
+  (c) => c.name.toLowerCase() === "jewellery"
+);
+
   return (
     <section className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden">
       {/* Background Image/Video */}
@@ -143,21 +167,33 @@ const Banner: React.FC = () => {
             {currentBanner.description}
           </p>
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
-            <Link href={currentBanner.url || "/sarees"} className="px-0 py-2">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="!h-12 !rounded-none !bg-[#C9A24D] text-black hover:!bg-[#b48a3c]"
-              >
-                Shop Sarees
-              </Button>
-            </Link>
-            <Link href="/jewellery" className="px-0 py-2">
-              <Button size="lg" variant="secondary" className="!h-12 !rounded-none text-white bg-black hover:bg-white hover:text-black transition-all duration-300">
-                View Jewellery
-              </Button>
-            </Link>
-          </div>
+  <Link
+    href={sareeCategory ? `/categories/${sareeCategory._id}` : "#"}
+    className="px-0 py-2"
+  >
+    <Button
+      size="lg"
+      variant="secondary"
+      className="!h-12 !rounded-none !bg-[#C9A24D] text-black hover:!bg-[#b48a3c]"
+    >
+      Shop Sarees
+    </Button>
+  </Link>
+
+  <Link
+    href={jewelleryCategory ? `/categories/${jewelleryCategory._id}` : "#"}
+    className="px-0 py-2"
+  >
+    <Button
+      size="lg"
+      variant="secondary"
+      className="!h-12 !rounded-none text-white bg-black hover:bg-white hover:text-black transition-all duration-300"
+    >
+      View Jewellery
+    </Button>
+  </Link>
+</div>
+
         </div>
       </div>
 

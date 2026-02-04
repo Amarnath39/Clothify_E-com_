@@ -4,12 +4,13 @@ import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { Search, ShoppingBag, Heart, User, Menu, X } from "lucide-react";
+import { Search, ShoppingBag, Heart, User, Menu, X  } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AnimatedSearchInput from "@/components/AnimateSearchInput";
 
 // Redux Actions
 import { getAllCategories } from "@/lib/features/catogary";
+import { getSearchSuggestion } from "@/lib/features/misc/action";
 import { logoutApi } from "@/lib/features/auth";
 import toast from "react-hot-toast";
 
@@ -47,6 +48,11 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
 
   // Fetch Categories
   useEffect(() => {
@@ -75,6 +81,12 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
     setActiveDropdown(null);
   }, [pathname]);
+
+  // Close user menu on route change
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+  }, [pathname]);
+
 
   // Logout Handler
   const handleLogout = async () => {
@@ -256,13 +268,115 @@ const Navbar = () => {
               </AnimatePresence>
             </div> */}
 
+
             {/* Search Toggle */}
             <div className="flex items-center">
-              <AnimatedSearchInput
-                isModalOpen={isSearchOpen}
-                setIsModalOpen={setIsSearchOpen}
-              />
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (searchQuery.trim()) {
+                  router.push(`/products/?search=${encodeURIComponent(searchQuery)}`);
+                  setSearchQuery('');
+                  setIsSearchOpen(false);
+                  setSuggestions([]);
+                }
+              }} className="relative">
+                <Search className="absolute left-2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="pl-8 pr-6 py-1 w-40 border-b border-gray-300 focus:outline-none focus:border-[#b48a3c] text-sm bg-transparent"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSearchQuery(value);
+                    setIsSearchOpen(true);
+
+                    if (debounceRef.current) {
+                      clearTimeout(debounceRef.current);
+                    }
+
+                    if (!value.trim()) {
+                      setIsSearching(false);
+                      setSuggestions([]);
+                      return;
+                    }
+
+                    debounceRef.current = setTimeout(async () => {
+                      try {
+                        setIsSearching(true);
+                        const { payload }: any = await dispatch(getSearchSuggestion(value));
+                        if (payload?.success) {
+                          const list = (payload?.suggestion || []).filter(
+                            (x: any) => (x?.type ?? 'product') === 'product'
+                          );
+                          setSuggestions(list);
+                        } else {
+                          setSuggestions([]);
+                        }
+                      } finally {
+                        setIsSearching(false);
+                      }
+                    }, 250);
+                  }}
+                  onFocus={() => {
+                    setIsSearchOpen(true);
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => setIsSearchOpen(false), 200);
+                  }}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-1 text-gray-400 hover:text-gray-600"
+                  >
+                  </button>
+                )}
+
+                <AnimatePresence>
+                  {isSearchOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[999]"
+                    >
+                      {isSearching ? (
+                        <div className="p-3 text-sm text-gray-500">Searching...</div>
+                      ) : searchQuery.trim() ? (
+                        suggestions.length > 0 ? (
+                          <div className="py-1">
+                            {suggestions.slice(0, 8).map((item: any) => (
+                              <button
+                                key={item?._id || item?.name}
+                                type="button"
+                                className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-gray-50"
+                                onMouseDown={(ev) => ev.preventDefault()}
+                                onClick={() => {
+                                  router.push(`/products/?search=${encodeURIComponent(item.name)}`);
+                                  setSearchQuery('');
+                                  setIsSearchOpen(false);
+                                  setSuggestions([]);
+                                }}
+                              >
+                                {item.name}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-3 text-sm text-gray-500">No results found</div>
+                        )
+                      ) : (
+                        <div className="p-3 text-sm text-gray-500">Start typing to search…</div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </form>
             </div>
+            
 
 
             {/* Wishlist */}
@@ -271,12 +385,59 @@ const Navbar = () => {
             </Link>
 
             {/* User */}
-            <Link
-              href={token ? '/profile' : '/login'}
-              className="text-gray-700 hover:text-[#b48a3c] transition-colors hidden md:block"
-            >
-              <User className="h-5 w-5" />
-            </Link>
+            <div className="relative hidden md:block">
+              <button
+                onClick={() => {
+                  if (!token) {
+                    router.push("/login");
+                    return;
+                  }
+                  setIsUserMenuOpen((prev) => !prev);
+                }}
+                className="text-gray-700 hover:text-[#b48a3c] transition-colors"
+              >
+                <User className="h-5 w-5" />
+              </button>
+
+  <AnimatePresence>
+    {isUserMenuOpen && token && (
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+        className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
+      >
+        <Link
+          href="/profile"
+          onClick={() => setIsUserMenuOpen(false)}
+          className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#b48a3c]"
+        >
+          Profile
+        </Link>
+
+        <Link
+          href="/orders"
+          onClick={() => setIsUserMenuOpen(false)}
+          className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#b48a3c]"
+        >
+          Orders
+        </Link>
+
+        <button
+          onClick={() => {
+            setIsUserMenuOpen(false);
+            handleLogout();
+          }}
+          className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+        >
+          Logout
+        </button>
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
+
 
             {/* Cart */}
             <Link
@@ -412,17 +573,38 @@ const Navbar = () => {
               <div className="w-16 h-[1px] bg-gray-200 my-4"></div>
 
               {/* Account / Action Links Mobile */}
-              <div className="flex flex-col gap-4 w-full max-w-xs">
-                {user ? (
-                  <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 text-gray-800 text-sm font-medium hover:text-[#b48a3c]">
-                    <User size={18} /> My Account
-                  </Link>
-                ) : (
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full bg-black text-white py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#b48a3c] transition-colors">
-                    Login / Sign Up
-                  </Link>
-                )}
-              </div>
+<div className="flex flex-col gap-3 w-full max-w-xs">
+  {token ? (
+    <>
+      <Link
+        href="/profile"
+        onClick={() => setIsMobileMenuOpen(false)}
+        className="flex items-center justify-center gap-2 text-gray-800 text-sm font-medium hover:text-[#b48a3c]"
+      >
+        <User size={18} /> My Account
+      </Link>
+
+      <button
+        onClick={() => {
+          setIsMobileMenuOpen(false);
+          handleLogout();
+        }}
+        className="w-full border border-red-500 text-red-600 py-3 rounded-full text-sm font-semibold uppercase tracking-widest hover:bg-red-50 transition-colors"
+      >
+        Logout
+      </button>
+    </>
+  ) : (
+    <Link
+      href="/login"
+      onClick={() => setIsMobileMenuOpen(false)}
+      className="w-full bg-black text-white py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#b48a3c] transition-colors"
+    >
+      Login / Sign Up
+    </Link>
+  )}
+</div>
+
             </div>
           </motion.div>
         )}

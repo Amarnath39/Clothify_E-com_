@@ -359,7 +359,7 @@ setTimeout(() => {
   className="text-white bg-white px-8 py-6 shadow-x1 border-2  rounded-2xl"style={{ backgroundColor: '#ffffff' }} // px = horizontal, py = vertical
 >
    <div className="flex justify-center rounded-2xl">
-<img src="/assets/static/logo/Sisk.jpg" alt="Logo" className="h-[100px] w-auto object-contain" />
+<img src="/assets/static/logo/ogimage.png" alt="Logo" className="h-[100px] w-auto object-contain" />
   </div>
 </CardHeader>
 

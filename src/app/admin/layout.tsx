@@ -16,6 +16,8 @@ import {
   FaInstagram,
   FaBoxOpen,
   FaCashRegister,
+  FaReceipt,
+  FaPercent,
 } from "react-icons/fa";
 import { SiSublimetext } from "react-icons/si";
 import { FcRules } from "react-icons/fc";
@@ -73,8 +75,14 @@ function AdminLayout({ children }) {
           href: "#",
           title: "POS",
           icon: <FaCashRegister size={24} className="text-white" />,
-          roles: ["SuperAdmin", "Admin"],
+          roles: ["SuperAdmin", "Admin", "Sales person"],
           onClick: () => setShowPOSModal(true), // ✅ Open modal instead of navigation
+        },
+        {
+          href: "/admin/pos-orders",
+          title: "POS Orders",
+          icon: <FaReceipt size={24} className="text-white" />,
+          roles: ["SuperAdmin", "Admin", "Sales person"],
         },
       ]
       : []),
@@ -105,6 +113,12 @@ function AdminLayout({ children }) {
       href: "/admin/categories",
       title: "Categories",
       icon: <FaList size={24} className="text-white" />,
+      roles: ["SuperAdmin", "Admin"],
+    },
+    {
+      href: "/admin/gst-settings",
+      title: "GST Settings",
+      icon: <FaPercent size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin"],
     },
     {
@@ -306,8 +320,8 @@ function AdminLayout({ children }) {
           {/* Logo */}
           <div className="flex items-center">
             <img
-              src="/assets/static/logo/fyncartlogo.png"
-              alt="Logo"
+              src="/assets/static/logo/saw.svg"
+              alt="Swaarasya Logo"
               className="h-8 md:h-10 w-auto object-contain"
             />
           </div>

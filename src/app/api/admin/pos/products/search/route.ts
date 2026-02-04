@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/../db";
 import Product from "@/model/Product";
+import Category from "@/model/Category";
+
 
 connectDB();
+
+export const dynamic = "force-dynamic";
 
 /**
  * 📍 GET /api/admin/pos/products/search
@@ -41,7 +45,8 @@ export const GET = async (req: NextRequest) => {
         const products = await Product.find({
             $or: searchConditions,
         })
-            .select("_id name sku img actualPrice sizes")
+            .select("_id name sku img actualPrice sizes categories")
+            .populate("categories", "name gst")
             .limit(20) // Limit results for performance
             .lean();
 
