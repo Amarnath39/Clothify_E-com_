@@ -195,12 +195,13 @@ export const POST = async (req: NextRequest) => {
         }
 
         const body = await req.json();
-        const { customerPhone, productDetails, paymentMethod, shippingCost = 0 } = body;
+        const { customerPhone, productDetails, paymentMethod, shippingCost = 0, transactionDetails } = body;
 
         console.log("📍 POS Order Request:", {
             customerPhone,
             productsCount: productDetails?.length,
             paymentMethod,
+            transactionDetails: transactionDetails || "N/A",
         });
 
         // ✅ Validate input
@@ -313,6 +314,7 @@ export const POST = async (req: NextRequest) => {
             paymentStatus: "PAYMENT_SUCCESS", // POS is always paid upfront
             currentStatus: "COMPLETED", // POS orders are immediately fulfilled
             paidAt: new Date(),
+            transactionId: transactionDetails || undefined, // ✅ Store transaction ID for UPI/Card
             shippingAddress: {
                 mobile: customerPhone,
                 name: "POS Customer",
@@ -324,6 +326,7 @@ export const POST = async (req: NextRequest) => {
                 source: "POS",
                 adminId,
                 adminName: admin.name,
+                transactionDetails: transactionDetails || null, // ✅ Also store in metadata
             },
         });
 

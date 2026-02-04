@@ -64,6 +64,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     const [invoiceNumber, setInvoiceNumber] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
     const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "CARD">("CASH");
+    const [transactionDetails, setTransactionDetails] = useState(""); // ✅ NEW: For UPI/Card transaction ID
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -271,14 +272,21 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 quantity: item.quantity,
             }));
 
+            const requestBody: any = {
+                customerPhone,
+                productDetails,
+                paymentMethod,
+                shippingCost: 0,
+            };
+
+            // ✅ Add transaction details if UPI or Card
+            if ((paymentMethod === "UPI" || paymentMethod === "CARD") && transactionDetails) {
+                requestBody.transactionDetails = transactionDetails;
+            }
+
             const { data } = await axios.post(
                 "/api/admin/pos",
-                {
-                    customerPhone,
-                    productDetails,
-                    paymentMethod,
-                    shippingCost: 0,
-                },
+                requestBody,
                 {
                     headers: {
                         "x-admin-id": localStorage.getItem("adminId"),
@@ -405,6 +413,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
         setCart([]);
         setCustomerPhone("");
         setPaymentMethod("CASH");
+        setTransactionDetails(""); // ✅ Reset transaction details
         setSearchQuery("");
         setSearchResults([]);
         setCompletedOrder(null);
@@ -688,6 +697,26 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                {/* ✅ NEW: Transaction Details for UPI/Card */}
+                                {(paymentMethod === "UPI" || paymentMethod === "CARD") && (
+                                    <div>
+                                        <Label htmlFor="transactionDetails">
+                                            Transaction ID {paymentMethod === "UPI" ? "(UPI Ref)" : "(Card Ref)"}
+                                            <span className="text-gray-500 text-xs ml-1">(Optional)</span>
+                                        </Label>
+                                        <Input
+                                            id="transactionDetails"
+                                            type="text"
+                                            placeholder={`Enter ${paymentMethod} transaction ID...`}
+                                            value={transactionDetails}
+                                            onChange={(e) => setTransactionDetails(e.target.value)}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            For record keeping and verification
+                                        </p>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 

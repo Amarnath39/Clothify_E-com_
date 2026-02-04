@@ -16,6 +16,7 @@ import {
   FaInstagram,
   FaBoxOpen,
   FaCashRegister,
+  FaReceipt,
 } from "react-icons/fa";
 import { SiSublimetext } from "react-icons/si";
 import { FcRules } from "react-icons/fc";
@@ -75,6 +76,12 @@ function AdminLayout({ children }) {
           icon: <FaCashRegister size={24} className="text-white" />,
           roles: ["SuperAdmin", "Admin", "Sales person"],
           onClick: () => setShowPOSModal(true), // ✅ Open modal instead of navigation
+        },
+        {
+          href: "/admin/pos-orders",
+          title: "POS Orders",
+          icon: <FaReceipt size={24} className="text-white" />,
+          roles: ["SuperAdmin", "Admin", "Sales person"],
         },
       ]
       : []),
