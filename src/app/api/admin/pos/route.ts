@@ -27,7 +27,7 @@ const generatePOSInvoiceNumber = async (): Promise<string> => {
         })
             .sort({ createdAt: -1 })
             .select("invoiceId")
-            .lean();
+            .lean() as { invoiceId: string } | null;
 
         let sequenceNumber = 1;
 
