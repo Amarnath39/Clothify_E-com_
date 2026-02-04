@@ -122,6 +122,21 @@ const Order = new mongoose.Schema(
     payerEmail: { type: String },
     paidAt: { type: Date },
     fulfillmentError: { type: String },
+    // ✅ POS-specific fields
+    order_type: {
+      type: String,
+      enum: ["normal", "prebooking", "POS"],
+      default: "normal",
+    },
+    createdBy: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "Admin",
+      default: null,
+    },
+    metadata: {
+      type: Object,
+      default: null,
+    },
   },
   { timestamps: true }
 );
