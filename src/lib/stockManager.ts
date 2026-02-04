@@ -69,13 +69,14 @@ export const updateStock = async (
 
             // Update Stock
             // We use direct array update via mongoose for atomicity within session
-            // Note: mongoose findOneAndUpdate with session is cleaner if we wasn't iterating on a doc we already fetched,
-            // but since we need to validate *multiple* items before committing *any*, we do this inside the transaction.
-
-            // However, modifying the doc and saving is also valid in a transaction.
             sizeObj.stock += changeAmount;
             sizeObj.sellCount = (sizeObj.sellCount || 0) + (-changeAmount); // Increment sell count on sale
             product.sellCount = (product.sellCount || 0) + (-changeAmount);
+
+            // Explicitly mark sizes as modified to ensure Mongoose detects the change
+            product.markModified('sizes');
+
+            console.log(`📦 Stock Update: ${product.name} (${sizeObj.size}) -> New Stock: ${sizeObj.stock}`);
 
             // Save product
             await product.save({ session });
@@ -96,11 +97,13 @@ export const updateStock = async (
         }
 
         if (errors.length > 0) {
+            console.error("❌ Stock Update Errors:", errors);
             await session.abortTransaction();
             return { success: false, errors };
         }
 
         await session.commitTransaction();
+        console.log("✅ Stock Transaction Committed");
         return { success: true };
 
     } catch (error: any) {
