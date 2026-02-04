@@ -15,6 +15,7 @@ import {
 import { sendOrderConfirmation } from "../../../../helper/whatsappNotifier";
 import { sseClients } from "../../../../lib/sseClients";
 import Razorpay from "razorpay";
+import { updateStock } from "@/lib/stockManager";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // WEBHOOK HANDLER
@@ -108,9 +109,17 @@ export async function POST(req: NextRequest) {
             // ───────────────────────────────────────────────────────────────────────
             // Find Order
             // ───────────────────────────────────────────────────────────────────────
-            const order = await Order.findOne({ razorpayOrderId: payment.order_id })
+            let order = await Order.findOne({ razorpayOrderId: payment.order_id })
                 .populate("user")
                 .populate("productDetails.product");
+
+            if (!order && payment.notes?.orderId) {
+                // Fallback for Payment Links
+                console.log("🔍 Looking up order by notes:", payment.notes.orderId);
+                order = await Order.findOne({ orderId: payment.notes.orderId })
+                    .populate("user")
+                    .populate("productDetails.product");
+            }
 
             if (!order) {
                 console.error("❌ Order not found:", payment.order_id);
@@ -270,112 +279,48 @@ export async function POST(req: NextRequest) {
 
 
                 // -----------------------------------------------------------------------------
-                // 2. Deduct Stock
+                // 2. Deduct Stock (Centralized)
                 // -----------------------------------------------------------------------------
                 if (!order.stockUpdated) {
-                    console.log("📦 Updating stock...");
-                    let stockErrors: string[] = [];
-                    let insufficientStockFound = false;
+                    console.log("📦 Updating stock via StockManager...");
 
-                    for (const item of order.productDetails) {
-                        const qty = item.count + (item.freeCount || 0);
-                        const productName = item.product?.name || "Unknown Product";
+                    const stockItems = order.productDetails.map((item: any) => ({
+                        productId: item.product._id.toString(),
+                        sizeId: item.size?._id?.toString(),
+                        quantity: item.count + (item.freeCount || 0),
+                        productName: item.product?.name,
+                        sizeLabel: item.size?.size
+                    })).filter((i: any) => i.sizeId);
 
-                        console.log(`\n  🔍 Checking: ${productName}`);
-                        console.log(`     Requested quantity: ${qty}`);
+                    const stockResult = await updateStock(
+                        stockItems,
+                        "SALE",
+                        order.paymentMethod === "COD" ? "ONLINE" : (order.order_type === "POS" ? "POS" : "ONLINE"),
+                        order.orderId
+                    );
 
-                        // Fetch product
-                        const currentProduct = await Product.findById(item.product._id);
+                    if (!stockResult.success) {
+                        const errorMsg = stockResult.errors?.join("; ") || "Stock update failed";
+                        console.error("❌ Stock Update Failed:", errorMsg);
 
-                        if (!currentProduct) {
-                            const errorMsg = `Product not found: ${productName}`;
-                            console.error(`     ❌ ${errorMsg}`);
-                            stockErrors.push(errorMsg);
-                            insufficientStockFound = true;
-                            continue;
-                        }
-
-                        console.log(`     📦 STOCK MODE → SIZE-BASED ONLY`);
-
-                        // ----------------------------
-                        // SIZE-BASED STOCK CHECK
-                        // ----------------------------
-                        if (item.size?._id) {
-                            const currentSize = currentProduct.sizes?.find(
-                                (s) => s._id.toString() === item.size._id.toString()
-                            );
-
-                            if (!currentSize) {
-                                const errorMsg = `Size ${item.size?.size || "UNKNOWN"} not found`;
-                                console.error(`     ❌ ${errorMsg}`);
-                                stockErrors.push(errorMsg);
-                                insufficientStockFound = true;
-                                continue;
-                            }
-
-                            console.log(
-                                `     📏 CURRENT SIZE STOCK (${currentSize.size}) → ${currentSize.stock}`
-                            );
-
-                            if (currentSize.stock < qty) {
-                                const errorMsg = `Insufficient stock for size ${currentSize.size}: Need ${qty}, Have ${currentSize.stock}`;
-                                console.error(`     ❌ ${errorMsg}`);
-                                stockErrors.push(errorMsg);
-                                insufficientStockFound = true;
-                                continue;
-                            }
-                        }
-
-                        // ----------------------------
-                        // Update SIZE stock
-                        //----------------------------
-                        if (item.size?._id) {
-                            await Product.findOneAndUpdate(
-                                {
-                                    _id: item.product._id,
-                                    "sizes._id": item.size._id,
-                                },
-                                {
-                                    $inc: {
-                                        "sizes.$.sellCount": qty,
-                                        "sizes.$.stock": -qty,
-                                    },
-                                }
-                            );
-
-                            console.log(
-                                `     ✅ Size stock updated (${item.size?.size || "UNKNOWN"})`
-                            );
-                        }
-
-                        // Always update total sellCount
-                        await Product.findByIdAndUpdate(item.product._id, {
-                            $inc: { sellCount: qty },
-                        });
-                    }
-
-                    // ----------------------------
-                    // Handle stock errors
-                    // ----------------------------
-                    if (insufficientStockFound) {
-                        order.fulfillmentError = stockErrors.join("; ");
+                        order.fulfillmentError = errorMsg;
                         order.currentStatus = "PENDING_STOCK";
 
                         order.paymentLogs.push({
                             status: "STOCK_ERROR",
                             timestamp: new Date(),
-                            details: { errors: stockErrors },
+                            details: { errors: stockResult.errors },
                         });
 
                         await order.save();
                         return NextResponse.json(
-                            { success: true, warning: "Stock issue", errors: stockErrors },
+                            { success: true, warning: "Stock issue", errors: stockResult.errors },
                             { status: 200 }
                         );
                     }
 
                     order.stockUpdated = true;
-                    console.log("\n✅ All size-based stock updated successfully");
+                    console.log("✅ Stock updated successfully");
                 }
 
 

@@ -29,6 +29,22 @@ import {
 import axios from "axios";
 import toast from "react-hot-toast";
 
+declare global {
+    interface Window {
+        Razorpay: any;
+    }
+}
+
+const loadRazorpay = () => {
+    return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+    });
+};
+
 interface Product {
     _id: string;
     name: string;
@@ -68,7 +84,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ Core State
     const [invoiceNumber, setInvoiceNumber] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "CARD">("CASH");
+    const [paymentMethod, setPaymentMethod] = useState<"CASH" | "RAZORPAY_UPI" | "RAZORPAY_CARD" | "RAZORPAY_PAYMENT_LINK">("CASH");
     const [transactionDetails, setTransactionDetails] = useState(""); // ✅ NEW: For UPI/Card transaction ID
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -292,27 +308,121 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 productDetails,
                 paymentMethod,
                 shippingCost: 0,
+                transactionDetails: transactionDetails || undefined
             };
 
-            // ✅ Add transaction details if UPI or Card
-            if ((paymentMethod === "UPI" || paymentMethod === "CARD") && transactionDetails) {
-                requestBody.transactionDetails = transactionDetails;
-            }
-
-            const { data } = await axios.post(
-                "/api/admin/pos",
-                requestBody,
-                {
-                    headers: {
-                        "x-admin-id": localStorage.getItem("adminId"),
-                    },
+            // ✅ Handle Razorpay Logic
+            if (paymentMethod === "RAZORPAY_UPI" || paymentMethod === "RAZORPAY_CARD") {
+                const isLoaded = await loadRazorpay();
+                if (!isLoaded) {
+                    toast.error("Razorpay SDK failed to load");
+                    setIsProcessing(false);
+                    return;
                 }
-            );
 
-            if (data.success) {
-                toast.success("POS order completed successfully!");
-                setCompletedOrder(data.order);
-                // Don't close modal yet - show invoice print option
+                // 1. Create Order on Backend
+                const { data: orderData } = await axios.post(
+                    "/api/admin/pos",
+                    { ...requestBody, action: "INITIATE" },
+                    { headers: { "x-admin-id": localStorage.getItem("adminId") } }
+                );
+
+                if (!orderData.success) {
+                    throw new Error(orderData.message);
+                }
+
+                const { orderId, razorpayOrderId, keyId, amount, currency, user } = orderData;
+
+                // 2. Open Razorpay Checkout
+                const options = {
+                    key: keyId,
+                    amount: amount,
+                    currency: currency,
+                    name: "Swaarasya POS",
+                    description: `Order #${orderId}`,
+                    order_id: razorpayOrderId,
+                    handler: async function (response: any) {
+                        try {
+                            // 3. Confirm Payment on Backend
+                            const { data: confirmData } = await axios.post(
+                                "/api/admin/pos",
+                                {
+                                    action: "CONFIRM",
+                                    orderId: orderId,
+                                    razorpayPaymentId: response.razorpay_payment_id,
+                                    razorpaySignature: response.razorpay_signature,
+                                    razorpayOrderId: response.razorpay_order_id,
+                                },
+                                { headers: { "x-admin-id": localStorage.getItem("adminId") } }
+                            );
+
+                            if (confirmData.success) {
+                                toast.success("Payment Successful!");
+                                setCompletedOrder(confirmData.order);
+                            } else {
+                                toast.error("Payment confirmation failed");
+                            }
+                        } catch (err) {
+                            console.error("Confirmation Error:", err);
+                            toast.error("Failed to confirm payment");
+                        }
+                    },
+                    prefill: {
+                        name: "POS Customer",
+                        contact: customerPhone,
+                    },
+                    theme: {
+                        color: "#3399cc",
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            setIsProcessing(false);
+                            toast("Payment cancelled");
+                        }
+                    }
+                };
+
+                const rzp1 = new window.Razorpay(options);
+                rzp1.on("payment.failed", function (response: any) {
+                    toast.error(response.error.description);
+                    setIsProcessing(false);
+                });
+                rzp1.open();
+
+            } else if (paymentMethod === "RAZORPAY_PAYMENT_LINK") {
+                // Generate Link
+                const { data } = await axios.post(
+                    "/api/admin/pos",
+                    { ...requestBody, action: "GenerateLink" },
+                    { headers: { "x-admin-id": localStorage.getItem("adminId") } }
+                );
+
+                if (data.success) {
+                    toast.success("Payment Link Sent!");
+                    // We might want to show the link to the admin too
+                    if (data.paymentLink) {
+                        prompt("Payment Link Generated:", data.paymentLink);
+                    }
+                    setCompletedOrder(data.order);
+                } else {
+                    toast.error(data.message || "Failed to generate link");
+                }
+            } else {
+                // CASH Flow (Existing)
+                const { data } = await axios.post(
+                    "/api/admin/pos",
+                    requestBody,
+                    {
+                        headers: {
+                            "x-admin-id": localStorage.getItem("adminId"),
+                        },
+                    }
+                );
+
+                if (data.success) {
+                    toast.success("POS order completed successfully!");
+                    setCompletedOrder(data.order);
+                }
             }
         } catch (error: any) {
             console.error("POS order failed:", error);
@@ -320,7 +430,10 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 error.response?.data?.message || "POS order failed";
             toast.error(errorMessage);
         } finally {
-            setIsProcessing(false);
+            if (paymentMethod === "CASH") {
+                setIsProcessing(false);
+            }
+            // For Razorpay, we keep processing true until modal closes or payment completes
         }
     };
 
@@ -617,23 +730,24 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="CASH">💵 Cash</SelectItem>
-                                            <SelectItem value="UPI">📱 UPI</SelectItem>
-                                            <SelectItem value="CARD">💳 Card</SelectItem>
+                                            <SelectItem value="RAZORPAY_UPI">📱 UPI (Razorpay)</SelectItem>
+                                            <SelectItem value="RAZORPAY_CARD">💳 Card (Razorpay)</SelectItem>
+                                            <SelectItem value="RAZORPAY_PAYMENT_LINK">🔗 Payment Link</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
 
                                 {/* ✅ NEW: Transaction Details for UPI/Card */}
-                                {(paymentMethod === "UPI" || paymentMethod === "CARD") && (
+                                {(paymentMethod === "RAZORPAY_UPI" || paymentMethod === "RAZORPAY_CARD") && (
                                     <div>
                                         <Label htmlFor="transactionDetails">
-                                            Transaction ID {paymentMethod === "UPI" ? "(UPI Ref)" : "(Card Ref)"}
+                                            Transaction Note / Manual ID
                                             <span className="text-gray-500 text-xs ml-1">(Optional)</span>
                                         </Label>
                                         <Input
                                             id="transactionDetails"
                                             type="text"
-                                            placeholder={`Enter ${paymentMethod} transaction ID...`}
+                                            placeholder="Enter note or transaction ID..."
                                             value={transactionDetails}
                                             onChange={(e) => setTransactionDetails(e.target.value)}
                                         />
