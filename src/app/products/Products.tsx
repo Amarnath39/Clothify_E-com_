@@ -168,8 +168,7 @@ const Products = () => {
       >
         {!isFilterOpen && (
           <button
-            className="md:hidden absolute top-[140px] right-4 z-50 bg-black text-black p-4 rounded-full shadow-lg"
-            onClick={() => setIsFilterOpen(true)}
+            className="md:hidden fixed top-[90px] right-4 z-[9999] bg-black p-4 rounded-full shadow-lg"
           >
             <FaFilter size={24} color="white" />
           </button>

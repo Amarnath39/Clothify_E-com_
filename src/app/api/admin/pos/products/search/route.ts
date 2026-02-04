@@ -3,7 +3,10 @@ import { connectDB } from "@/../db";
 import Product from "@/model/Product";
 import Category from "@/model/Category";
 
+
 connectDB();
+
+export const dynamic = "force-dynamic";
 
 /**
  * 📍 GET /api/admin/pos/products/search

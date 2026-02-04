@@ -47,6 +47,8 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
 
   // Fetch Categories
   useEffect(() => {
@@ -75,6 +77,12 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
     setActiveDropdown(null);
   }, [pathname]);
+
+  // Close user menu on route change
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+  }, [pathname]);
+
 
   // Logout Handler
   const handleLogout = async () => {
@@ -271,12 +279,59 @@ const Navbar = () => {
             </Link>
 
             {/* User */}
-            <Link
-              href={token ? '/profile' : '/login'}
-              className="text-gray-700 hover:text-[#b48a3c] transition-colors hidden md:block"
-            >
-              <User className="h-5 w-5" />
-            </Link>
+            <div className="relative hidden md:block">
+              <button
+                onClick={() => {
+                  if (!token) {
+                    router.push("/login");
+                    return;
+                  }
+                  setIsUserMenuOpen((prev) => !prev);
+                }}
+                className="text-gray-700 hover:text-[#b48a3c] transition-colors"
+              >
+                <User className="h-5 w-5" />
+              </button>
+
+  <AnimatePresence>
+    {isUserMenuOpen && token && (
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2 }}
+        className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
+      >
+        <Link
+          href="/profile"
+          onClick={() => setIsUserMenuOpen(false)}
+          className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#b48a3c]"
+        >
+          Profile
+        </Link>
+
+        <Link
+          href="/orders"
+          onClick={() => setIsUserMenuOpen(false)}
+          className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#b48a3c]"
+        >
+          Orders
+        </Link>
+
+        <button
+          onClick={() => {
+            setIsUserMenuOpen(false);
+            handleLogout();
+          }}
+          className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+        >
+          Logout
+        </button>
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
+
 
             {/* Cart */}
             <Link
@@ -412,17 +467,38 @@ const Navbar = () => {
               <div className="w-16 h-[1px] bg-gray-200 my-4"></div>
 
               {/* Account / Action Links Mobile */}
-              <div className="flex flex-col gap-4 w-full max-w-xs">
-                {user ? (
-                  <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 text-gray-800 text-sm font-medium hover:text-[#b48a3c]">
-                    <User size={18} /> My Account
-                  </Link>
-                ) : (
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full bg-black text-white py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#b48a3c] transition-colors">
-                    Login / Sign Up
-                  </Link>
-                )}
-              </div>
+<div className="flex flex-col gap-3 w-full max-w-xs">
+  {token ? (
+    <>
+      <Link
+        href="/profile"
+        onClick={() => setIsMobileMenuOpen(false)}
+        className="flex items-center justify-center gap-2 text-gray-800 text-sm font-medium hover:text-[#b48a3c]"
+      >
+        <User size={18} /> My Account
+      </Link>
+
+      <button
+        onClick={() => {
+          setIsMobileMenuOpen(false);
+          handleLogout();
+        }}
+        className="w-full border border-red-500 text-red-600 py-3 rounded-full text-sm font-semibold uppercase tracking-widest hover:bg-red-50 transition-colors"
+      >
+        Logout
+      </button>
+    </>
+  ) : (
+    <Link
+      href="/login"
+      onClick={() => setIsMobileMenuOpen(false)}
+      className="w-full bg-black text-white py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#b48a3c] transition-colors"
+    >
+      Login / Sign Up
+    </Link>
+  )}
+</div>
+
             </div>
           </motion.div>
         )}
