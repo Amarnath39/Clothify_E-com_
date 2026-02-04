@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "../../../../../db";
-import Order from "../../../../model/Order";
-import Product from "../../../../model/Product";
-import StockHistory from "../../../../model/StockHistory";
-import Admin from "../../../../model/Admin";
+import { connectDB } from "@/../db";
+import Order from "@/model/Order";
+import Product from "@/model/Product";
+import StockHistory from "@/model/StockHistory";
+import Admin from "@/model/Admin";
 import mongoose from "mongoose";
 
 connectDB();
