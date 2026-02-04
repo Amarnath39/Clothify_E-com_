@@ -89,7 +89,10 @@ jobs:
             # Search pattern uses original secret to match existing file content
             SEARCH_IMAGE_PREFIX="weteams/${{ secrets.DOCKER_IMAGE_NAME }}"
             
-            IFS=',' read -ra PROJECTS <<< "${{ vars.PROJECT_NAMES }}"
+            # IFS=',' read -ra PROJECTS <<< "${{ vars.PROJECT_NAMES }}"
+            
+            # 🚨 Override: Explicitly targeting 'sway' per user request
+            PROJECTS=("sway")
             
             for PROJECT_NAME in "${PROJECTS[@]}"; do
               echo "Deploying to $PROJECT_NAME..."
