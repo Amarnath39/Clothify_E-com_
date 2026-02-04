@@ -728,7 +728,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                         <SelectTrigger id="paymentMethod">
                                             <SelectValue placeholder="Select payment method" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="z-[9999]">
                                             <SelectItem value="CASH">💵 Cash</SelectItem>
                                             <SelectItem value="RAZORPAY_UPI">📱 UPI (Razorpay)</SelectItem>
                                             <SelectItem value="RAZORPAY_CARD">💳 Card (Razorpay)</SelectItem>

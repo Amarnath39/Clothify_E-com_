@@ -177,12 +177,13 @@ const POSOrdersPage = () => {
                                         <TableCell>
                                             <Badge variant={
                                                 order.paymentMethod === "CASH" ? "default" :
-                                                    order.paymentMethod === "UPI" ? "secondary" : "outline"
+                                                    (order.paymentMethod.includes("UPI") || order.paymentMethod.includes("LINK")) ? "secondary" : "outline"
                                             }>
                                                 {order.paymentMethod === "CASH" && "💵 "}
-                                                {order.paymentMethod === "UPI" && "📱 "}
-                                                {order.paymentMethod === "CARD" && "💳 "}
-                                                {order.paymentMethod}
+                                                {order.paymentMethod.includes("UPI") && "📱 "}
+                                                {order.paymentMethod.includes("CARD") && "💳 "}
+                                                {order.paymentMethod.includes("LINK") && "🔗 "}
+                                                {order.paymentMethod.replace("RAZORPAY_", "")}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-xs text-gray-600">
