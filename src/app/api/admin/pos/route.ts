@@ -236,12 +236,11 @@ export const POST = async (req: NextRequest) => {
                 return NextResponse.json({ success: false, message: "Razorpay keys not configured on server" }, { status: 500 });
             }
 
-            const razorpay = new Razorpay({
-                key_id: process.env.RAZORPAY_KEY_ID,
-                key_secret: process.env.RAZORPAY_KEY_SECRET,
-            });
-
             try {
+                const razorpay = new Razorpay({
+                    key_id: process.env.RAZORPAY_KEY_ID,
+                    key_secret: process.env.RAZORPAY_KEY_SECRET,
+                });
                 // Sanitize Phone Number (Ensure E.164 format)
                 let contact = customerPhone.trim();
                 if (contact.length === 10 && !contact.startsWith("+")) {

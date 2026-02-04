@@ -426,12 +426,21 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
         } catch (error: any) {
             console.error("POS order failed:", error);
-            const errorMessage =
-                error.response?.data?.message ||
-                error.response?.data?.error ||
-                (typeof error.response?.data === 'string' ? error.response.data : "") ||
-                error.message ||
-                "POS order failed";
+
+            let errorMessage = "POS order failed";
+
+            if (error.response?.data) {
+                const data = error.response.data;
+                // Check if response is HTML (starts with <)
+                if (typeof data === 'string' && data.trim().startsWith("<")) {
+                    errorMessage = "Server Error: received HTML response. Check server logs.";
+                } else {
+                    errorMessage = data.message || data.error || (typeof data === 'string' ? data : errorMessage);
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
             toast.error(errorMessage);
         } finally {
             // Stop spinner only if NOT waiting for link payment
