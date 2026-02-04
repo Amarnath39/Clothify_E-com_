@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/../db";
+import { connectDB } from "../../../../../../../db";
 import Product from "@/model/Product";
 import Category from "@/model/Category";
 
 
-connectDB();
+// connectDB(); // Moved inside handler
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
  * Fast product search for POS (SKU, Barcode, or Name)
  */
 export const GET = async (req: NextRequest) => {
+    await connectDB();
     try {
         const adminId = req.headers.get("x-admin-id");
 

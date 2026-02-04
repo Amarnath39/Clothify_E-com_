@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/../db";
+import { connectDB } from "../../../../../../db";
+export const dynamic = 'force-dynamic';
 import Order from "@/model/Order";
 
 /**

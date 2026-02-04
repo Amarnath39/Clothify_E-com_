@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
-import { connectDB } from "@/../db";
+import { connectDB } from "../../../../../db";
 import Order from "@/model/Order";
 import Product from "@/model/Product";
 import Admin from "@/model/Admin";
@@ -325,6 +325,10 @@ export const POST = async (req: NextRequest) => {
 
     } catch (error: any) {
         console.error("POS Error:", error);
-        return NextResponse.json({ success: false, message: error.message || "Internal Error" }, { status: 500 });
+        return NextResponse.json({
+            success: false,
+            message: error?.message || "Internal Server Error",
+            stack: error?.stack
+        }, { status: 500 });
     }
 };
