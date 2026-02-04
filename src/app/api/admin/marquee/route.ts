@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { connectDB } from "../../../../../db";
 import MarqueeEntry from "@/model/MarqueeEntry";
 
-connectDB();
+// connectDB called inside handlers
 
 export const GET = async (req: NextRequest) => {
+    await connectDB();
     try {
         const entries = await MarqueeEntry.find().sort({ createdAt: -1 });
         return NextResponse.json({ success: true, entries });
@@ -15,6 +17,7 @@ export const GET = async (req: NextRequest) => {
 };
 
 export const POST = async (req: NextRequest) => {
+    await connectDB();
     try {
         const { text } = await req.json();
 

@@ -8,8 +8,14 @@ export const connectDB = async () => {
     return;
   }
 
+  const uri = process.env.MONGO_URI;
+  if (!uri) {
+    console.warn("⚠️ MONGO_URI is not defined. Skipping DB connection (expected during build/static optimization).");
+    return;
+  }
+
   try {
-    const db = await mongoose.connect(process.env.MONGO_URI as string, {
+    const db = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 30000,
       connectTimeoutMS: 30000,
     });
@@ -18,6 +24,8 @@ export const connectDB = async () => {
     console.log("✅ DB Connected");
   } catch (e) {
     console.error("❌ Error to connect DB", e);
+    // Only throw in runtime, not during build if possible, 
+    // but throwing is usually safer for real runtime errors.
     throw e;
   }
 };
