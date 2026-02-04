@@ -9,12 +9,19 @@ import {
   Mail,
   Phone,
   MapPin,
+  X,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import toast from "react-hot-toast";
 
 const currentYear = new Date().getFullYear();
 
 const Footer = () => {
   const [categories, setCategories] = useState<any[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -29,6 +36,30 @@ const Footer = () => {
       }
     } catch (err) {
       console.error("Failed to fetch categories");
+    }
+  };
+
+  const submitEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Subscribed successfully!");
+        setIsOpen(false);
+        setEmail("");
+      } else {
+        toast.error(data.msg || "Subscription failed.");
+      }
+    } catch (error) {
+      toast.error("Something went wrong.");
+    } finally {
+      setLoading(false);
     }
   };
 
