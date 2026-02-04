@@ -62,7 +62,7 @@ const MainProducts = () => {
       <div className="container mx-auto px-4 md:px-8">
 
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-gray-100 pb-6 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start mb-12 border-b border-gray-100 pb-6 gap-4">
           <div>
             <span className="font-serif text-[#b48a3c] text-sm tracking-[0.2em] mb-2 block uppercase">
               Featured
