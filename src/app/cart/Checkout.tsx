@@ -41,11 +41,11 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
     try {
       const { payload } = await dispatch(getUserDetails());
       console.log("User details payload:", payload); // Debug log
-      
+
       if (payload?.success && payload?.user) {
         const address = payload.user.defaultAddress;
         console.log("Default address:", address); // Debug log
-        
+
         if (address && address.name && address.address) {
           setShippingAddress(address);
         } else {
@@ -72,7 +72,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
       setPaymentState('idle');
       setErrorMessage("");
     }
-    
+
     return () => {
       // Cleanup on unmount
       console.log("Modal closed/unmounting");
@@ -150,7 +150,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
         key: keyData.keyId,
         amount: razorRes.data.amount,
         currency: "INR",
-        name: "Sanskara Shades",
+        name: "Swaarasya",
         description: "Thank you for your purchase",
         order_id: razorRes.data.id,
         handler: async (response: any) => {
@@ -226,9 +226,9 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
 
   if (paymentState === 'failed') {
     return (
-      <PaymentFailedScreen 
-        onGoHome={handleGoHome} 
-        onContactSupport={handleContactSupport} 
+      <PaymentFailedScreen
+        onGoHome={handleGoHome}
+        onContactSupport={handleContactSupport}
         errorMessage={errorMessage}
       />
     );
@@ -344,7 +344,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
         <div className="bg-gray-50 p-6">
           <Button
             disabled={!shippingAddress || isProcessing || loadingAddress}
-            className="w-full"
+            className="w-full bg-red-500 text-white"
             variant="blood"
             onClick={initiatePayment}
           >

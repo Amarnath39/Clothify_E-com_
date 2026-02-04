@@ -453,7 +453,7 @@ export async function POST(req: NextRequest) {
                                 order.shippingAddress.name,
                                 order.shippingAddress.mobile,
                                 order.orderId,
-                                "Sanskara Shades",
+                                "Swaarasya",
                                 "DTDC"
                             );
                             console.log("  ✅ WhatsApp order confirmation sent");
