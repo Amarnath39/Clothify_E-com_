@@ -76,9 +76,15 @@ jobs:
             # Authenticate with Normalized Credentials
             docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
             
-            # Variables from Build Job
-            NEW_IMAGE_NAME="${{ needs.docker_build.outputs.imageName }}"
+            # Variables
+            # Reconstruct Image Name directly to avoid empty output issues
+            RAW_NAME="${{ secrets.DOCKER_IMAGE_NAME }}"
+            LOWER_NAME=$(echo "$RAW_NAME" | tr '[:upper:]' '[:lower:]')
+            NEW_IMAGE_NAME="weteams/${LOWER_NAME}"
+            
             NEW_IMAGE_TAG="${{ needs.docker_build.outputs.imageTag }}"
+            
+            echo "Target Image: ${NEW_IMAGE_NAME}:${NEW_IMAGE_TAG}"
             
             # Search pattern uses original secret to match existing file content
             SEARCH_IMAGE_PREFIX="weteams/${{ secrets.DOCKER_IMAGE_NAME }}"
