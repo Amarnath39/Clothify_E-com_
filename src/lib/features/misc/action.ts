@@ -14,7 +14,7 @@ export const getSearchSuggestion = createAsyncThunk<any, string, AppThunkConfig>
     try {
       const response = await apiConnector(
         "get",
-        `/api/search/?search=${searchQuery}`,
+        `/api/search?search=${encodeURIComponent(searchQuery)}`,
         null,
         {},
         null
@@ -25,6 +25,7 @@ export const getSearchSuggestion = createAsyncThunk<any, string, AppThunkConfig>
     }
   }
 );
+
 
 export const getImageTextData = createAsyncThunk<any, void, AppThunkConfig>(
   "misc/getImageTextData",
