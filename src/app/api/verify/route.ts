@@ -19,16 +19,20 @@ export async function POST(req: Request) {
     }
 
     // Find order
+    console.log("🔍 Verification request for Razorpay Order ID:", razorpay_order_id);
     const order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
     if (!order) {
+      console.error("❌ Order not found for Razorpay Order ID:", razorpay_order_id);
       return NextResponse.json(
         { success: false, msg: "Order not found" },
         { status: 404 }
       );
     }
+    console.log("✅ Found DB Order ID:", order._id, "Order Number:", order.orderId);
 
     // If already verified (idempotent)
     if (order.paymentStatus === "PAYMENT_SUCCESS") {
+      console.log("⚠️ Payment already verified for order:", order.orderId);
       return NextResponse.json({
         success: true,
         msg: "Payment already verified",
@@ -46,6 +50,7 @@ export async function POST(req: Request) {
     const isValid = expectedSignature === razorpay_signature;
 
     if (!isValid) {
+      console.error("❌ Invalid Razorpay signature for order:", order.orderId);
       await Order.findByIdAndUpdate(order._id, {
         paymentStatus: "PAYMENT_DECLINED",
         paymentError: "Invalid signature",
@@ -58,6 +63,7 @@ export async function POST(req: Request) {
     }
 
     // ONLY mark as success — NOTHING ELSE
+    console.log("✅ Signature valid. Updating order to PAYMENT_SUCCESS...");
     await Order.findByIdAndUpdate(
       order._id,
       {
@@ -65,9 +71,11 @@ export async function POST(req: Request) {
         paymentStatus: "PAYMENT_SUCCESS",
         paymentMethod: "RAZORPAY",
         paidAt: new Date(),
+        currentStatus: "PENDING", // ⭐ Transition from CHECKOUT to PENDING
       },
       { new: true }
     );
+    console.log("✅ Order updated successfully");
 
     return NextResponse.json({
       success: true,

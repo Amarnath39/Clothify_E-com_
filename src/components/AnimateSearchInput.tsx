@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { FaSearch } from "react-icons/fa";
 import { IoMdTrendingUp } from "react-icons/io";
@@ -10,28 +10,32 @@ import { useRouter } from "next/navigation";
 import { getAllCategories } from "@/lib/features/catogary";
 import { shuffleArray } from "@/helpers/helpers";
 import { IoCloseOutline } from "react-icons/io5";
+import { AnimatePresence, motion } from "framer-motion";
 
 const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any>([]);
   const [trendingItems, setTrendingItems] = useState<any>([]);
+  const [isFocused, setIsFocused] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchCategories = async () => {
+    try {
+      const { payload } = await dispatch(getAllCategories() as any);
+      if (payload.success) {
+        setTrendingItems(shuffleArray(payload.categories).slice(0, 4));
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { payload } = await dispatch(getAllCategories() as any);
-        if (payload.success) {
-          setTrendingItems(shuffleArray(payload.categories).slice(0, 4));
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
-
     fetchCategories();
   }, [dispatch]);
 
@@ -39,17 +43,21 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
     async (value) => {
       if (!value.trim()) {
         setSearchResults([]);
+        setIsLoading(false);
         return;
       }
 
       try {
         setIsLoading(true);
         const { payload } = await dispatch(getSearchSuggestion(value) as any);
-        if (payload.success) {
-          setSearchResults(payload.suggestion);
+        if (payload?.success) {
+          setSearchResults(payload?.suggestion || []);
+        } else {
+          setSearchResults([]);
         }
       } catch (error) {
         console.error("Error fetching search suggestions:", error);
+        setSearchResults([]);
       } finally {
         setIsLoading(false);
       }
@@ -60,8 +68,60 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInputValue(value);
-    fetchSearchSuggestions(value);
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (!value.trim()) {
+      setSearchResults([]);
+      setIsLoading(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      fetchSearchSuggestions(value);
+    }, 300);
   };
+
+  const handleSuggestionClick = (name: string) => {
+    router.push(`/products/?search=${encodeURIComponent(name)}`);
+    closeModal();
+  };
+
+  const handleFocus = () => {
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
+    setIsFocused(true);
+  };
+
+  const handleBlur = () => {
+    blurTimeoutRef.current = setTimeout(() => {
+      setIsFocused(false);
+    }, 200);
+  };
+
+  const dropdownVariants = {
+    hidden: { opacity: 0, y: 8, scale: 0.98 },
+    visible: { opacity: 1, y: 0, scale: 1 },
+    exit: { opacity: 0, y: 8, scale: 0.98 },
+  };
+
+  const filteredSuggestions = (inputValue.trim()
+    ? (searchResults || []).filter((x: any) => (x?.type ?? "product") === "product")
+    : trendingItems
+  ).map((item: any) => {
+    const text = item?.name ?? "";
+    const type = inputValue.trim() ? "product" : "trending";
+    return {
+      id: `${type}-${text}`,
+      text,
+      type,
+      raw: item,
+    };
+  });
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -82,17 +142,17 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
 
       {/* Modal Overlay */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-start justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4">
           <div
-            className="w-full max-w-2xl bg-white rounded-lg shadow-lg overflow-hidden animate-in slide-in-from-top duration-300"
+            className="relative w-full max-w-2xl bg-white rounded-lg shadow-lg overflow-visible animate-in slide-in-from-top duration-300"
             style={{ maxHeight: "calc(100vh - 2rem)" }}
           >
             {/* Search Header - Fixed */}
-            <div className="sticky top-0 bg-white border-b z-10 py-3 px-4">
+            <div className="sticky top-0 bg-white border-b z-50 py-3 px-4">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  router.push(`/products/?search=${inputValue}`);
+                  router.push(`/products/?search=${encodeURIComponent(inputValue)}`);
                   closeModal();
                 }}
                 className="relative"
@@ -101,6 +161,8 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
                   type="text"
                   value={inputValue}
                   onChange={handleInputChange}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
                   placeholder="Search for products..."
                   className="w-full text-base border-0 focus:ring-0 py-4 pl-12 pr-12"
                   autoFocus
@@ -117,56 +179,86 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
             </div>
 
             {/* Results Container - Scrollable */}
-            <div
-              className="overflow-y-auto"
-              style={{ maxHeight: "calc(100vh - 8rem)" }}
-            >
-              {isLoading ? (
-                <div className="p-4 text-center text-gray-500">Loading...</div>
-              ) : inputValue.trim() ? (
-                // Search Results
-                searchResults.length > 0 ? (
-                  <div className="py-2">
-                    {searchResults.map((item) => (
-                      <div
-                        key={item.name}
-                        className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer flex items-center space-x-2"
-                        onClick={() => {
-                          router.push(`/products/?search=${item.name}`);
-                          closeModal();
-                        }}
-                      >
-                        <FaSearch className="text-gray-400 text-sm flex-shrink-0" />
-                        <span className="truncate">{item.name}</span>
-                      </div>
-                    ))}
+            <div className="overflow-y-auto relative z-0 p-4" style={{ maxHeight: "calc(100vh - 8rem)" }}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={inputValue.trim() ? "suggestions" : "trending"}
+                  variants={dropdownVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden p-2"
+                >
+                  <div className="px-4 py-2 text-xs font-semibold text-stone-400 uppercase tracking-wider">
+                    {inputValue.trim() ? "Suggestions" : "Recent & Trending"}
                   </div>
-                ) : (
-                  <div className="p-4 text-gray-500 text-center">
-                    No results found
-                  </div>
-                )
-              ) : (
-                // Trending Searches
-                <div className="py-2">
-                  <h3 className="px-4 py-2 text-sm font-medium text-gray-500">
-                    Trending Searches
-                  </h3>
-                  {trendingItems.map((item) => (
-                    <div
-                      key={item._id}
-                      className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer flex items-center space-x-2"
-                      onClick={() => {
-                        router.push(`/categories/${item._id}`);
-                        closeModal();
-                      }}
-                    >
-                      <IoMdTrendingUp className="text-blue-500 flex-shrink-0" />
-                      <span className="truncate">{item.name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+
+                  <ul className="space-y-1">
+                    {isLoading ? (
+                      <li className="px-4 py-6 text-center text-stone-400">Loading...</li>
+                    ) : inputValue.trim() ? (
+                      filteredSuggestions.map((item: any) => (
+                        <motion.li
+                          key={item.id}
+                          layout
+                          whileHover={{
+                            scale: 1.02,
+                            backgroundColor: "rgba(0,0,0,0.03)",
+                            transition: { duration: 0.2 },
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                          className="group flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer text-stone-700"
+                          onClick={() => {
+                            if (item.text) handleSuggestionClick(item.text);
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-full bg-stone-100 text-stone-500">
+                              <FaSearch className="w-4 h-4" />
+                            </div>
+                            <span className="font-medium">{item.text}</span>
+                          </div>
+                          <span className="text-stone-400 text-sm">→</span>
+                        </motion.li>
+                      ))
+                    ) : (
+                      trendingItems.map((item: any) => (
+                        <motion.li
+                          key={item._id}
+                          layout
+                          whileHover={{
+                            scale: 1.02,
+                            backgroundColor: "rgba(0,0,0,0.03)",
+                            transition: { duration: 0.2 },
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                          className="group flex items-center justify-between px-4 py-3 rounded-2xl cursor-pointer text-stone-700"
+                          onClick={() => {
+                            router.push(`/categories/${item._id}`);
+                            closeModal();
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-full bg-blue-50 text-blue-500">
+                              <IoMdTrendingUp className="w-4 h-4" />
+                            </div>
+                            <span className="font-medium">{item.name}</span>
+                          </div>
+                          <span className="text-stone-400 text-sm">→</span>
+                        </motion.li>
+                      ))
+                    )}
+
+                    {!isLoading && inputValue.trim() && filteredSuggestions.length === 0 && (
+                      <li className="px-4 py-8 text-center text-stone-400">No results found</li>
+                    )}
+
+                    {!isLoading && !inputValue.trim() && (!trendingItems || trendingItems.length === 0) && (
+                      <li className="px-4 py-8 text-center text-stone-400">No trending items</li>
+                    )}
+                  </ul>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </div>

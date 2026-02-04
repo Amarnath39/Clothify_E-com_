@@ -57,7 +57,7 @@ const WishList = () => {
         {wishListItems.map((item, index) => (
           <Card
             key={item.id}
-            className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+            className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col h-full"
           >
             <CardHeader className="p-0">
               <div className="relative aspect-square overflow-hidden">
@@ -68,14 +68,14 @@ const WishList = () => {
                 />
               </div>
             </CardHeader>
-            <CardContent className="p-2 sm:p-3 md:p-4">
+            <CardContent className="p-2 sm:p-3 md:p-4 flex flex-col flex-1">
               <CardTitle className="text-sm sm:text-base md:text-lg font-semibold mb-1 sm:mb-2 line-clamp-1 md:line-clamp-2">
                 {item.name}
               </CardTitle>
               <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2 line-clamp-2 md:line-clamp-3">
                 {item?.description}
               </p>
-              <p className="font-bold text-sm sm:text-base md:text-lg text-primary">
+              <p className="font-bold text-sm sm:text-base md:text-lg text-primary mt-auto">
                 ₹{item?.amount?.toFixed(2)}
               </p>
               {/* <div className="mt-2 flex flex-wrap gap-1 sm:gap-2">
@@ -89,7 +89,7 @@ const WishList = () => {
                 ))}
               </div> */}
             </CardContent>
-            <CardFooter className="flex justify-between items-center p-2 sm:p-3 md:p-4 bg-gray-50">
+            <CardFooter className="mt-auto flex justify-between items-center p-2 sm:p-3 md:p-4 bg-gray-50">
               <Button
                 onClick={() => handleDetails(item)}
                 variant="outline"

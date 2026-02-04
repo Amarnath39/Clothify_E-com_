@@ -13,7 +13,8 @@ export const uploadFile = async (filepath: string, file: File) => {
             await mkdir(dirPath, { recursive: true });
         }
         await writeFile(path.join(dirPath, filename), buffer);
-        return `/assets/${filepath}/${filename}`;
+        // Ensure strictly forward slashes for URL path
+        return `/assets/${filepath}/${filename}`.replace(/\\/g, '/');
     } catch (error) {
         console.log("Error to upload file", error);
         return null;

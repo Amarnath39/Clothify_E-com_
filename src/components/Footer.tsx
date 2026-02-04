@@ -35,9 +35,9 @@ const Footer = () => {
   return (
     <footer className="bg-[#3b2f2a] text-[#d6c6b2] pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-6">
-        {/* Top Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-16">
-          {/* Brand */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+
+          {/* Brand Column - From Source */}
           <div className="space-y-6">
             <img
               src="/assets/static/logo/saw.svg"
@@ -107,9 +107,14 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-white">
-                  Contact Us
-                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsOpen(true)}
+                  className="mt-2 border-black text-black hover:bg-black hover:text-white"
+                >
+                  SUBSCRIBE NOW
+                </Button>
               </li>
             </ul>
           </div>
@@ -151,6 +156,34 @@ const Footer = () => {
           </div>
         </div>
       </div>
+
+      {/* Subscription Modal Logic retained from Target */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+          <div className="bg-white p-8 rounded-2xl max-w-md w-full relative shadow-2xl">
+            <button onClick={() => setIsOpen(false)} className="absolute right-4 top-4 text-gray-400 hover:text-black">
+              <X className="w-6 h-6" />
+            </button>
+            <div className="text-center space-y-4">
+              <h2 className="text-2xl font-serif">Join Swaarasya</h2>
+              <p className="text-gray-500 text-sm">Subscribe to receive updates on new collections and exclusive heritage offers.</p>
+              <form onSubmit={submitEmail} className="space-y-4 pt-4">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="rounded-full border-gray-200"
+                  required
+                />
+                <Button type="submit" className="w-full rounded-full bg-black text-white" disabled={loading}>
+                  {loading ? "Subscribing..." : "SUBSCRIBE"}
+                </Button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </footer>
   );
 };
