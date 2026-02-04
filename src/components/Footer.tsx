@@ -2,18 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Instagram, Facebook, Twitter, Mail, Phone, MapPin, X } from "lucide-react";
+import {
+  Instagram,
+  Facebook,
+  Twitter,
+  Mail,
+  Phone,
+  MapPin,
+} from "lucide-react";
 
 const currentYear = new Date().getFullYear();
 
 const Footer = () => {
   const [categories, setCategories] = useState<any[]>([]);
-  const [email, setEmail] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -21,98 +22,90 @@ const Footer = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`/api/category`, { method: "GET" });
-      if (!response.ok) throw new Error("Network response was not ok");
-      const data = await response.json();
+      const res = await fetch("/api/category");
+      const data = await res.json();
       if (data.msg === "Success") {
-        // Get the latest 5 categories for the 'Shop' column
         setCategories(data.categories.slice(-5).reverse());
       }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
-
-  const submitEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/subscribe`, {
-        method: "POST",
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setEmail("");
-        toast.success("Thank you for subscribing!");
-        setIsOpen(false);
-      } else {
-        toast.error(data?.msg || "Subscription failed");
-      }
     } catch (err) {
-      toast.error("An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch categories");
     }
   };
 
   return (
-    <footer className="bg-white text-black pt-16 pb-8 border-t border-gray-100 mb-16 md:mb-0">
+    <footer className="bg-[#3b2f2a] text-[#d6c6b2] pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
 
           {/* Brand Column - From Source */}
           <div className="space-y-6">
-            <div>
-              <img
-                src="/assets/static/logo/saw.svg"
-                alt="SWAARASYA Logo"
-                className="h-20 w-auto mb-4"
-              />
-              <p className="text-[10px] uppercase tracking-widest text-[#b48a3c] font-medium">
-                Heritage of Kerala
-              </p>
-            </div>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              Celebrating the timeless elegance of Kerala's weaving traditions
+            <img
+              src="/assets/static/logo/saw.svg"
+              alt="Swaarasya"
+              className="h-20"
+            />
+            <p className="text-xs uppercase tracking-widest text-[#c9a45c]">
+              Heritage of Kerala
+            </p>
+            <p className="text-sm leading-relaxed text-[#cfc3b4]">
+              Celebrating the timeless elegance of Kerala’s weaving traditions
               and temple artistry. Handcrafted with love, delivered with grace.
             </p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-[#b48a3c] transition-colors">
-                <Instagram className="h-5 w-5" />
-              </a>
-              {/* <a href="#" className="text-gray-400 hover:text-[#b48a3c] transition-colors">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-[#b48a3c] transition-colors">
-                <Twitter className="h-5 w-5" />
-              </a> */}
+            <div className="flex gap-4 text-[#c9a45c]">
+              <Instagram className="w-5 h-5 hover:text-white cursor-pointer" />
+              <Facebook className="w-5 h-5 hover:text-white cursor-pointer" />
+              <Twitter className="w-5 h-5 hover:text-white cursor-pointer" />
             </div>
           </div>
 
-          {/* Shop Links - Dynamic from Target API */}
+          {/* Shop */}
           <div>
-            <h4 className="text-lg font-serif font-medium mb-6 text-black">Shop</h4>
-            <ul className="space-y-4 text-sm text-gray-600">
+            <h4 className="text-lg font-serif mb-6 text-[#c9a45c]">Shop</h4>
+            <ul className="space-y-4 text-sm">
               {categories.map((cat) => (
                 <li key={cat._id}>
-                  <Link href={`/categories/${cat._id}`} className="hover:text-[#b48a3c] transition-colors uppercase tracking-tight">
+                  <Link
+                    href={`/categories/${cat._id}`}
+                    className="hover:text-white transition"
+                  >
                     {cat.name}
                   </Link>
                 </li>
               ))}
-              <li><Link href="/collections" className="hover:text-[#b48a3c]">NEW ARRIVALS</Link></li>
+              <li>
+                <Link href="/collections" className="hover:text-white">
+                  New Arrivals
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Support/Information - Merged */}
+          {/* Support */}
           <div>
-            <h4 className="text-lg font-serif font-medium mb-6 text-black">Information</h4>
-            <ul className="space-y-4 text-sm text-gray-600">
-              <li><Link href="/about" className="hover:text-[#b48a3c]">ABOUT US</Link></li>
-              <li><Link href="/policy/return-policy" className="hover:text-[#b48a3c]">RETURNS & REFUNDS</Link></li>
-              <li><Link href="/policy/shipping-policy" className="hover:text-[#b48a3c]">SHIPPING POLICY</Link></li>
-              <li><Link href="/contact" className="hover:text-[#b48a3c]">CONTACT US</Link></li>
+            <h4 className="text-lg font-serif mb-6 text-[#c9a45c]">
+              Support
+            </h4>
+            <ul className="space-y-4 text-sm">
+              <li>
+                <Link href="/track-order" className="hover:text-white">
+                  Track Order
+                </Link>
+              </li>
+              <li>
+                <Link href="/policy/shipping-policy" className="hover:text-white">
+                  Shipping Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/policy/return-policy" className="hover:text-white">
+                  Returns & Exchange
+                </Link>
+              </li>
+              <li>
+                <Link href="/care" className="hover:text-white">
+                  Saree Care Guide
+                </Link>
+              </li>
               <li>
                 <Button
                   variant="outline"
@@ -126,41 +119,40 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Column - From Source */}
+          {/* Contact */}
           <div>
-            <h4 className="text-lg font-serif font-medium mb-6 text-black">Contact</h4>
-            <ul className="space-y-4 text-sm text-gray-600">
-              <li className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-[#b48a3c] shrink-0" />
-                <span>BiBi Square, Shop No 2,Chalad, Kannur 670014</span>
+            <h4 className="text-lg font-serif mb-6 text-[#c9a45c]">
+              Contact
+            </h4>
+            <ul className="space-y-4 text-sm">
+              <li className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-[#c9a45c]" />
+                <span>
+                  Fort Kochi, Kerala, India – <br /> 682001
+                </span>
               </li>
-              <li className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-[#b48a3c] shrink-0" />
+              <li className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-[#c9a45c]" />
                 <span>+91 98765 43210</span>
               </li>
-              <li className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-[#b48a3c] shrink-0" />
+              <li className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-[#c9a45c]" />
                 <span>hello@swaarasya.com</span>
               </li>
             </ul>
-            <div className="mt-6">
-              <h5 className="text-[10px] uppercase tracking-widest text-gray-400 mb-3">Accepted Payments</h5>
-              <div className="flex gap-2 grayscale hover:grayscale-0 transition-all">
-                <img src="/assets/static/logo/visa.png" alt="Visa" className="h-6 object-contain" />
-                <img src="/assets/static/logo/card.png" alt="Mastercard" className="h-6 object-contain" />
-                <img src="/assets/static/logo/rupay-logo-icon.png" alt="RuPay" className="h-6 object-contain" />
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-400">
-          <p>&copy; {currentYear} Swaarasya. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link href="https://trackcourier.io/" target="_blank" className="hover:text-black">TRACK ORDER</Link>
-            <Link href="/policy/privacy-policy" className="hover:text-black">PRIVACY</Link>
-            <p>Crafted by <Link href="https://www.webgeon.com/" className="text-red-600 font-bold">Webgeon</Link></p>
+        <div className="border-t border-[#5a4a42] pt-6 flex flex-col md:flex-row justify-between items-center text-sm text-[#b9ab9c]">
+          <p>© {currentYear} Swaarasya. All rights reserved.</p>
+          <div className="flex gap-8 mt-4 md:mt-0">
+            <Link href="/policy/privacy-policy" className="hover:text-white">
+              Privacy Policy
+            </Link>
+            <Link href="/policy/terms" className="hover:text-white">
+              Terms of Service
+            </Link>
           </div>
         </div>
       </div>
