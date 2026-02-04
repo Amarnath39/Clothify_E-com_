@@ -1,62 +1,51 @@
 name: VPS Deployment
-
 on:
   push:
     branches:
       - main
-
 jobs:
-  # 🔹 STEP 1: Get Commit & Push (Tag handling)
   get_commit_hash:
     runs-on: self-hosted
-    name: Get Commit Hash
+    name: get_commit_hash
     outputs:
-      short_sha: ${{ steps.get_sha.outputs.SHA }}
+      commitHash: ${{ steps.create_commit_hash.outputs.SHORT_COMMIT_HASH }}
     steps:
-      - name: Extract Short SHA
-        id: get_sha
-        run: echo "SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
-
-  # 🔹 STEP 2: Docker Build & Push
+      - name: Get short commit hash
+        id: create_commit_hash
+        run: echo "SHORT_COMMIT_HASH=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+      - name: Show commit hash
+        run: echo "Short commit hash is ${{ steps.create_commit_hash.outputs.SHORT_COMMIT_HASH }}"
   docker_build:
-    needs: get_commit_hash
     runs-on: self-hosted
-    name: Build & Push
+    name: docker_build
+    needs:
+      - get_commit_hash
+    outputs:
+      imageTag: ${{ steps.get_docker_image_tag.outputs.DOCKER_IMAGE_TAG }}
     steps:
-      - uses: actions/checkout@v4
-      
+      - uses: actions/checkout@v2
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-          
-      - name: Build and Push Docker Image
-        run: |
-          # Define Variables
-          # Using 'weteams' namespace based on existing infrastructure context
-          # Ensuring lowercase naming 'sway'
-          IMAGE_REPO="weteams/sway"
-          TAG="commit-${{ needs.get_commit_hash.outputs.short_sha }}"
-          FULL_IMAGE="$IMAGE_REPO:$TAG"
-          
-          echo "Building image: $FULL_IMAGE"
-          
-          # Build
-          docker build -t $FULL_IMAGE .
-          
-          # Push
-          docker push $FULL_IMAGE
-          
-          echo "✅ Pushed: $FULL_IMAGE"
-
-  # 🔹 STEP 3: Deploy via SSH (SAFE deployment)
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: weteams/${{ secrets.DOCKER_IMAGE_NAME }}:commit_${{needs.get_commit_hash.outputs.commitHash}}
+      - name: Get docker image tag
+        id: get_docker_image_tag
+        run: echo "DOCKER_IMAGE_TAG=commit_${{needs.get_commit_hash.outputs.commitHash}}" >> $GITHUB_OUTPUT
   deploy:
-    needs: [get_commit_hash, docker_build]
     runs-on: self-hosted
-    name: SSH Deployment
+    name: Continuous Deployment
+    needs:
+      - docker_build
     steps:
-      - name: Deploy to Server
+      - name: Deploy using ssh
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -64,67 +53,17 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
           script: |
-            # --- Configuration ---
-            IMAGE_REPO="weteams/sway"
-            TAG="commit-${{ needs.get_commit_hash.outputs.short_sha }}"
-            FULL_IMAGE="$IMAGE_REPO:$TAG"
-            CONTAINER_NAME="sway"
-            HOST_PORT=7034
-            CONTAINER_PORT=3000
-            PROJECT_DIR="/root/sway"
-            
-            echo "🚀 Starting Deployment for $CONTAINER_NAME..."
-            
-            # 1. Login to Docker Hub
-            echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-            
-            # 2. Pull the newly built image
-            echo "📥 Pulling $FULL_IMAGE..."
-            docker pull $FULL_IMAGE
-            
-            # 3. Stop & Remove old container (Idempotent)
-            if [ "$(docker ps -aq -f name=^/${CONTAINER_NAME}$)" ]; then
-                echo "🛑 Stopping existing container..."
-                docker stop $CONTAINER_NAME || true
-                docker rm $CONTAINER_NAME || true
-            else
-                echo "ℹ️ No existing container found. Proceeding..."
-            fi
-            
-            # 4. Create & Run new container
-            echo "▶️ Starting new container..."
-            
-            # Ensure project directory exists and enter it (for .env file reference)
-            mkdir -p $PROJECT_DIR
-            cd $PROJECT_DIR
-            
-            # Check for .env file to preserve existing configuration
-            ENV_OPTS=""
-            if [ -f .env ]; then
-                echo "✅ Found .env file, injecting environment variables..."
-                ENV_OPTS="--env-file .env"
-            else
-                echo "⚠️ No .env file found in $PROJECT_DIR. Starting without env file."
-            fi
-            
-            # Run Command
-            # host 7034 -> container 3000
-            docker run -d \
-              --name $CONTAINER_NAME \
-              -p $HOST_PORT:$CONTAINER_PORT \
-              --restart unless-stopped \
-              $ENV_OPTS \
-              $FULL_IMAGE
-              
-            # 5. Verification
-            sleep 5
-            if [ "$(docker inspect -f '{{.State.Running}}' $CONTAINER_NAME)" = "true" ]; then
-                echo "✅ Deployment Successful! App reachable at port $HOST_PORT"
-            else
-                echo "❌ Deployment Failed: Container exited."
-                docker logs $CONTAINER_NAME --tail 20
-                exit 1
-            fi
-            
-            # Cleanup old images
-            docker image prune -a -f --filter "until=24h"
+            docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+            IFS=',' read -ra PROJECTS <<< "${{ vars.PROJECT_NAMES }}"
+            for PROJECT_NAME in "${PROJECTS[@]}"; do
+              cd /root/$PROJECT_NAME/
+              docker compose down
+              IMAGE_NAME="weteams/${{ secrets.DOCKER_IMAGE_NAME }}"
+              IMAGE_TAG="${{ needs.docker_build.outputs.imageTag }}"
+              sed -i -E "s|${IMAGE_NAME}:[^\"']*|${IMAGE_NAME}:${IMAGE_TAG}|g" docker-compose.yaml
+              docker compose up -d
+            done
+            cd /root/proxy
+            docker compose down proxy
+            docker compose up -d proxy
+            docker image prune -a -f
