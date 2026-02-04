@@ -16,7 +16,7 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
 
     const companyDetails = {
         name: "Swaarasya",
-        address: "Kannur, Kerala, India",
+        address: "BiBi Square, Shop No 2,Chalad, Kannur 670014",
         footer: "Thank you for shopping with Swaarasya!",
     };
 

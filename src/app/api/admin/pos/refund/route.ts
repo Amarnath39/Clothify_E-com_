@@ -38,9 +38,16 @@ export const POST = async (req: NextRequest) => {
             });
         });
 
+        interface IRefundItem {
+            product: string;
+            sizeId: string;
+            quantity: number;
+            amount: number;
+        }
+
         // 4. Validate & Prepare Items
         let totalRefundAmount = 0;
-        const validItems = [];
+        const validItems: IRefundItem[] = [];
 
         for (const item of items) {
             const originalItem = order.productDetails.find((p: any) =>

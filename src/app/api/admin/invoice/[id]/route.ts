@@ -61,9 +61,9 @@ export const GET = async (
       order.totalPrice - (order.payablePrice - (order.shippingCost || 0));
 
     const companyDetails = {
-      name: "SIS",
+      name: "Swaarasya",
       address:
-        "Trivandrum, Kerala, Pin: 670102",
+        "BiBi Square, Shop No 2,Chalad, Kannur 670014",
     };
 
     // Create a new PDF document
@@ -146,20 +146,18 @@ export const GET = async (
       { align: "right" }
     );
     doc.text(
-      `Date: ${
-        order.createdAt
-          ? new Date(order.createdAt).toLocaleDateString("en-IN")
-          : "N/A"
+      `Date: ${order.createdAt
+        ? new Date(order.createdAt).toLocaleDateString("en-IN")
+        : "N/A"
       }`,
       doc.internal.pageSize.width - 15,
       58,
       { align: "right" }
     );
     doc.text(
-      `Payment Method: ${
-        order.paymentStatus === "NOT_INITIATED"
-          ? "Pending"
-          : order.paymentMethod || "Online Payment" // Default to "Online Payment"
+      `Payment Method: ${order.paymentStatus === "NOT_INITIATED"
+        ? "Pending"
+        : order.paymentMethod || "Online Payment" // Default to "Online Payment"
       }`,
       doc.internal.pageSize.width - 15,
       64,
@@ -202,8 +200,7 @@ export const GET = async (
 
       if (shippingAddress.city) {
         doc.text(
-          `${shippingAddress.city}${
-            shippingAddress.zipCode ? ` - ${shippingAddress.zipCode}` : ""
+          `${shippingAddress.city}${shippingAddress.zipCode ? ` - ${shippingAddress.zipCode}` : ""
           }`,
           15,
           shipYPos

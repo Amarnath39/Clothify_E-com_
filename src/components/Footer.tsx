@@ -60,7 +60,7 @@ const Footer = () => {
     <footer className="bg-white text-black pt-16 pb-8 border-t border-gray-100 mb-16 md:mb-0">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          
+
           {/* Brand Column - From Source */}
           <div className="space-y-6">
             <div>
@@ -114,14 +114,14 @@ const Footer = () => {
               <li><Link href="/policy/shipping-policy" className="hover:text-[#b48a3c]">SHIPPING POLICY</Link></li>
               <li><Link href="/contact" className="hover:text-[#b48a3c]">CONTACT US</Link></li>
               <li>
-                 <Button 
-                   variant="outline" 
-                   size="sm" 
-                   onClick={() => setIsOpen(true)}
-                   className="mt-2 border-black text-black hover:bg-black hover:text-white"
-                 >
-                   SUBSCRIBE NOW
-                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsOpen(true)}
+                  className="mt-2 border-black text-black hover:bg-black hover:text-white"
+                >
+                  SUBSCRIBE NOW
+                </Button>
               </li>
             </ul>
           </div>
@@ -132,7 +132,7 @@ const Footer = () => {
             <ul className="space-y-4 text-sm text-gray-600">
               <li className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-[#b48a3c] shrink-0" />
-                <span>Fort Kochi, Kerala, India - 682001</span>
+                <span>BiBi Square, Shop No 2,Chalad, Kannur 670014</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-[#b48a3c] shrink-0" />
@@ -176,13 +176,13 @@ const Footer = () => {
               <h2 className="text-2xl font-serif">Join Swaarasya</h2>
               <p className="text-gray-500 text-sm">Subscribe to receive updates on new collections and exclusive heritage offers.</p>
               <form onSubmit={submitEmail} className="space-y-4 pt-4">
-                <Input 
-                  type="email" 
-                  placeholder="Enter your email" 
-                  value={email} 
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="rounded-full border-gray-200"
-                  required 
+                  required
                 />
                 <Button type="submit" className="w-full rounded-full bg-black text-white" disabled={loading}>
                   {loading ? "Subscribing..." : "SUBSCRIBE"}
