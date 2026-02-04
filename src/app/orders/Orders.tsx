@@ -87,11 +87,16 @@ const OrderCard = ({ order }: any) => {
                 </span>
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="link" size="sm" className="text-blue-600 hover:text-blue-800 h-auto p-0 text-xs sm:text-sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600 hover:text-blue-800 p-0 h-auto"
+                    >
                       View details <FiChevronRight className="w-3 h-3 ml-1" />
                     </Button>
+
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[625px] mt-12 overflow-y-auto max-h-[86vh] z-[100] p-0">
+                  <DialogContent className="sm:max-w-[625px] mt-12 max-h-[86vh] overflow-y-auto z-[9999] p-0">
                     <DialogClose asChild className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10">
                       <Button variant="ghost" size="icon" className="h-6 w-6">
                         <Cross2Icon className="h-4 w-4" />

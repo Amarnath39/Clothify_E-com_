@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/../db";
 import Product from "@/model/Product";
 
+
 connectDB();
+
+export const dynamic = "force-dynamic";
 
 /**
  * 📍 GET /api/admin/pos/products/search
