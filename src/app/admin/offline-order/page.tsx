@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 import {
     FaUser,
     FaBox,
@@ -51,6 +52,7 @@ interface SelectedProduct {
 
 const CreateOfflineOrderPage = () => {
     const router = useRouter();
+    const { user } = useSelector((state: any) => state.auth);
 
     // Customer Details State
     const [customerName, setCustomerName] = useState("");
@@ -282,7 +284,9 @@ const CreateOfflineOrderPage = () => {
                 sendWhatsApp,
             };
 
-            const response = await axios.post("/api/admin/offline-order", payload);
+            const response = await axios.post("/api/admin/offline-order", payload, {
+                headers: { "x-admin-id": user?._id || localStorage.getItem("adminId") }
+            });
 
             if (response.data.success) {
                 toast.success("Offline order created successfully!");

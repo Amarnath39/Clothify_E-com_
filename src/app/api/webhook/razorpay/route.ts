@@ -12,7 +12,7 @@ import {
     sendAdminOrderEmail,
     OrderDetails,
 } from "../../../../helper/sendAdminOrderEmail";
-import { sendOrderConfirmation } from "../../../../helper/whatsappNotifier";
+import { sendOrderConfirmation, sendPOSInvoice } from "../../../../helper/whatsappNotifier";
 import { sseClients } from "../../../../lib/sseClients";
 import Razorpay from "razorpay";
 import { updateStock } from "@/lib/stockManager";
@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
                 order.transactionId = payment.id;
                 order.paymentStatus = "PAYMENT_SUCCESS";
                 order.paymentMethod = "RAZORPAY"; // ⭐ This is where it gets set
-                order.currentStatus = "PENDING";
+                order.currentStatus = order.order_type === "POS" ? "COMPLETED" : "PENDING";
                 order.paidAt = new Date();
 
                 // Update payment details
@@ -308,7 +308,8 @@ export async function POST(req: NextRequest) {
                         stockItems,
                         "SALE",
                         order.paymentMethod === "COD" ? "ONLINE" : (order.order_type === "POS" ? "POS" : "ONLINE"),
-                        order.orderId
+                        order.orderId,
+                        order.createdBy // Pass admin ID for POS attribution
                     );
 
                     if (!stockResult.success) {
@@ -406,14 +407,28 @@ export async function POST(req: NextRequest) {
                     // WhatsApp notification
                     if (order.shippingAddress?.mobile) {
                         try {
-                            await sendOrderConfirmation(
-                                order.shippingAddress.name,
-                                order.shippingAddress.mobile,
-                                order.orderId,
-                                "Swaarasya",
-                                "DTDC"
-                            );
-                            console.log("  ✅ WhatsApp order confirmation sent");
+                            if (order.order_type === "POS") {
+                                // ✅ Send POS-specific Invoice link
+                                const invoiceUrl = `https://www.swaarasya.com/invoice/${order.invoiceId}`;
+                                await sendPOSInvoice(
+                                    order.shippingAddress.name || "Customer",
+                                    order.shippingAddress.mobile,
+                                    order.orderId,
+                                    invoiceUrl,
+                                    "Swaarasya"
+                                );
+                                console.log("  ✅ WhatsApp POS invoice sent");
+                            } else {
+                                // Standard online order confirmation
+                                await sendOrderConfirmation(
+                                    order.shippingAddress.name,
+                                    order.shippingAddress.mobile,
+                                    order.orderId,
+                                    "Swaarasya",
+                                    "DTDC"
+                                );
+                                console.log("  ✅ WhatsApp order confirmation sent");
+                            }
                         } catch (e) {
                             console.error("  ❌ WhatsApp failed:", e);
                         }

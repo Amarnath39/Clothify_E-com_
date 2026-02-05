@@ -200,7 +200,7 @@ const AdminLogin = () => {
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
             <img
-              src="/assets/static/logo/SIS-LOGO.png"
+              src="/assets/static/logo/ogimage.png"
               alt="SIS Logo"
               className="h-[100px] w-auto object-contain"
             />
