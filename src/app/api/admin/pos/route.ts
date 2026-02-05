@@ -8,6 +8,7 @@ import Admin from "../../../../../src/model/Admin"; // Relative path
 import Razorpay from "razorpay";
 import { updateStock } from "../../../../../src/lib/stockManager"; // Relative path
 import { sendPOSInvoice } from "../../../../../src/helper/whatsappNotifier"; // Relative path
+import Counter from "../../../../../src/model/Counter"; // Relative path
 
 /**
  * ✅ Generate unique POS invoice number
@@ -49,15 +50,28 @@ const generatePOSInvoiceNumber = async (): Promise<string> => {
  */
 const generatePOSOrderId = async (): Promise<{ orderId: string; orderSeq: number }> => {
     try {
-        const lastOrder = await Order.findOne()
-            .sort({ orderSeq: -1 })
-            .select("orderSeq")
-            .lean() as { orderSeq: number } | null;
+        const counter = await Counter.findOneAndUpdate(
+            { id: "orderSeq" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
 
-        const nextSeq = (lastOrder?.orderSeq || 1799) + 1;
+        // If it's a new counter, we want to start from 1800 (as per current default)
+        if (counter.seq < 1800) {
+            const initialCounter = await Counter.findOneAndUpdate(
+                { id: "orderSeq" },
+                { $set: { seq: 1800 } },
+                { new: true, upsert: true }
+            );
+            return {
+                orderId: `ON-${initialCounter.seq.toString().padStart(6, "0")}`,
+                orderSeq: initialCounter.seq,
+            };
+        }
+
         return {
-            orderId: `ON-${nextSeq.toString().padStart(6, "0")}`,
-            orderSeq: nextSeq,
+            orderId: `ON-${counter.seq.toString().padStart(6, "0")}`,
+            orderSeq: counter.seq,
         };
     } catch (error) {
         console.error("Error generating POS order ID:", error);
@@ -233,7 +247,7 @@ export const POST = async (req: NextRequest) => {
             paymentMethod === "CARD" ||
             action === "COMPLETE"; // Explicit override
 
-        const paymentStatus = isImmediatePayment ? "PAYMENT_SUCCESS" : "PENDING";
+        const paymentStatus = isImmediatePayment ? "PAYMENT_SUCCESS" : "PAYMENT_PENDING";
         const currentStatus = isImmediatePayment ? "COMPLETED" : "PENDING";
         const paidAt = isImmediatePayment ? new Date() : null;
 

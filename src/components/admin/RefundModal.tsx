@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,7 @@ export default function RefundModal({ order, isOpen, onClose, onSuccess }: Refun
     const [condition, setCondition] = useState<"GOOD" | "DAMAGED">("GOOD");
     const [selectedItems, setSelectedItems] = useState<Record<string, number>>({});
     const [loading, setLoading] = useState(false);
+    const { user } = useSelector((state: any) => state.auth);
 
     if (!order) return null;
 
@@ -70,7 +72,7 @@ export default function RefundModal({ order, isOpen, onClose, onSuccess }: Refun
                 reason,
                 condition,
                 items: itemsToRefund,
-                createdBy: localStorage.getItem("adminId")
+                createdBy: user?._id || localStorage.getItem("adminId")
             });
 
             if (res.data.success) {

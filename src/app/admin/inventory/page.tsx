@@ -43,6 +43,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import toast from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSelector } from "react-redux";
 
 interface InventoryItem {
   _id: string;
@@ -81,6 +82,7 @@ interface HistoryItem {
 }
 
 const InventoryPage = () => {
+  const { user } = useSelector((state: any) => state.auth);
   // Inventory State
   const [data, setData] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,7 +167,7 @@ const InventoryPage = () => {
 
     setIsUpdating(true);
     try {
-      const adminId = localStorage.getItem("adminId");
+      const adminId = user?._id || localStorage.getItem("adminId");
       const res = await fetch("/api/admin/inventory", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

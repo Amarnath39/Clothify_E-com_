@@ -128,7 +128,7 @@ const Order = new mongoose.Schema(
     // ✅ POS-specific fields
     order_type: {
       type: String,
-      enum: ["normal", "prebooking", "POS"],
+      enum: ["normal", "prebooking", "POS", "OFFLINE"],
       default: "normal",
     },
     createdBy: {
@@ -138,6 +138,10 @@ const Order = new mongoose.Schema(
     },
     metadata: {
       type: Object,
+      default: null,
+    },
+    orderSource: {
+      type: String,
       default: null,
     },
   },

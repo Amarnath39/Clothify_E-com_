@@ -5,23 +5,24 @@ import Product from "../../../../model/Product";
 import Coupon from "../../../../model/Coupon";
 import { sendOrderConfirmation } from "../../../../helper/whatsappNotifier";
 import { sendOfflineOrderEmail } from "../../../../helper/sendOfflineOrderEmail";
+import { updateStock } from "../../../../../src/lib/stockManager";
+import Counter from "../../../../model/Counter";
+import mongoose from "mongoose";
+import axios from "axios";
+import { generateRandomId } from "../../../../helper/generateRandomId";
 
 connectDB();
 
 // ✅ Reuse existing order ID generation logic
 const generateOrderId = async (): Promise<string> => {
     try {
-        const lastOrder = await Order.findOneAndUpdate(
-            {},
-            { $inc: { orderSeq: 1 } },
-            {
-                sort: { orderSeq: -1 },
-                upsert: true,
-                new: true,
-            }
-        ).select("orderSeq");
+        const counter = await Counter.findOneAndUpdate(
+            { id: "orderSeq" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
 
-        const orderNumber = lastOrder?.orderSeq || 0;
+        const orderNumber = counter?.seq || 1801;
         return `ON-${orderNumber.toString().padStart(6, "0")}`;
     } catch (error) {
         console.error("Error generating order ID:", error);
@@ -32,18 +33,19 @@ const generateOrderId = async (): Promise<string> => {
 export const POST = async (req: NextRequest) => {
     try {
         // ✅ Check feature flag
-        if (process.env.ENABLE_ADMIN_OFFLINE_ORDERS !== "true") {
+        if (process.env.NEXT_PUBLIC_ENABLE_ADMIN_OFFLINE_ORDERS !== "true") {
             return NextResponse.json(
                 { success: false, msg: "Feature not enabled" },
                 { status: 403 }
             );
         }
 
-        // ✅ Verify admin authentication
-        const adminId = req.headers.get("x-user-id");
-        if (!adminId) {
+        // ✅ Verify admin authentication and valid ObjectId
+        const adminId = req.headers.get("x-admin-id");
+        if (!adminId || adminId === "null" || adminId === "undefined" || !mongoose.isValidObjectId(adminId)) {
+            console.error("❌ Invalid Admin ID provided:", adminId);
             return NextResponse.json(
-                { success: false, msg: "Admin authentication required" },
+                { success: false, msg: "Valid Admin authentication required" },
                 { status: 401 }
             );
         }
@@ -123,7 +125,10 @@ export const POST = async (req: NextRequest) => {
                     return {
                         product: product._id,
                         count: quantity,
-                        sizeId: sizeObj._id,
+                        size: {
+                            _id: sizeObj._id,
+                            size: sizeObj.size
+                        },
                         sizeLabel: sizeObj.size,
                         actualPrice: product.actualPrice,
                         offerPrice: sizeObj.offerPrice || product.actualPrice,
@@ -143,6 +148,14 @@ export const POST = async (req: NextRequest) => {
                 { status: 400 }
             );
         }
+
+        // Prepare items for stock update utility
+        const stockUpdateItems = processedProductDetails.map(item => ({
+            productId: item.product.toString(),
+            sizeId: item.size._id.toString(),
+            quantity: item.count,
+            productName: products.find(p => p._id.toString() === item.product.toString())?.name
+        }));
 
         // ✅ Apply coupon (optional, reuse existing logic)
         let discount = 0;
@@ -190,12 +203,14 @@ export const POST = async (req: NextRequest) => {
             paymentMethod: paymentMode,
             paymentStatus:
                 paymentStatus === "Paid" ? "PAYMENT_SUCCESS" : "NOT_INITIATED",
-            currentStatus: paymentStatus === "Paid" ? "CONFIRMED" : "PENDING",
+            currentStatus: paymentStatus === "Paid" ? "COMPLETED" : "PENDING",
             date: new Date(),
+            paidAt: paymentStatus === "Paid" ? new Date() : null,
 
             // ✅ NEW: Mark as offline order
+            order_type: "OFFLINE",
             orderSource: "ADMIN_OFFLINE",
-            createdByAdminId: adminId,
+            createdBy: adminId,
 
             // ✅ Set shipping details based on method
             deliveryPartner:
@@ -205,34 +220,35 @@ export const POST = async (req: NextRequest) => {
 
         await newOrder.save();
 
-        // ✅ Reduce inventory (ONLY IF PAID)
+        // ✅ Reduce inventory via centralized utility (ONLY IF PAID)
         if (paymentStatus === "Paid") {
-            for (const item of processedProductDetails) {
-                const product = await Product.findById(item.product);
-                if (product) {
-                    const sizeObj = product.sizes.find((s: any) =>
-                        s._id.equals(item.sizeId)
-                    );
-                    if (sizeObj) {
-                        sizeObj.stock = Math.max(0, sizeObj.stock - item.count);
-                        sizeObj.sellCount = (sizeObj.sellCount || 0) + item.count;
-                        await product.save();
-                    }
-                }
+            const stockResult = await updateStock(
+                stockUpdateItems as any,
+                "SALE",
+                "OFFLINE",
+                newOrder._id.toString(),
+                adminId
+            );
+
+            if (!stockResult.success) {
+                // Rollback Order if stock deduction fails
+                await Order.findByIdAndDelete(newOrder._id);
+                return NextResponse.json(
+                    { success: false, msg: "Stock deduction failed", errors: stockResult.errors },
+                    { status: 400 }
+                );
             }
         }
 
         // ✅ DTDC Integration (conditional - only when payment is completed)
         if (shippingMethod === "DTDC" && dtdcDetails && paymentStatus === "Paid") {
             try {
-                const axios = require("axios");
-                const { generateRandomId } = require("../../../../helper/generateRandomId");
 
                 const consignments = processedProductDetails.map((item: any) => {
                     const customerRef = generateRandomId(15);
 
                     return {
-                        customer_code: "OO3772",
+                        customer_code: process.env.DTDC_CUSTOMER_CODE || "OO3772",
                         service_type_id: "STD EXP-A",
                         load_type: "NON-DOCUMENT",
                         consignment_type: "Forward",
@@ -247,13 +263,13 @@ export const POST = async (req: NextRequest) => {
                         num_pieces: item.count.toString(),
 
                         origin_details: {
-                            name: "SIS BY MP",
-                            phone: 6282667959,
-                            address_line_1: "PERUKAVU ",
-                            address_line_2: "VILAVOORKAL , MALAYINKEEZHU,",
-                            pincode: dtdcDetails.pickupPincode || "695573",
-                            city: "THIRUVANANTHAPURAM",
-                            state: "KERALA",
+                            name: process.env.DTDC_ORIGIN_NAME || "SIS BY MP",
+                            phone: process.env.DTDC_ORIGIN_PHONE || "6282667959",
+                            address_line_1: process.env.DTDC_ORIGIN_ADDR1 || "PERUKAVU ",
+                            address_line_2: process.env.DTDC_ORIGIN_ADDR2 || "VILAVOORKAL , MALAYINKEEZHU,",
+                            pincode: dtdcDetails.pickupPincode || process.env.DTDC_ORIGIN_PINCODE || "695573",
+                            city: process.env.DTDC_ORIGIN_CITY || "THIRUVANANTHAPURAM",
+                            state: process.env.DTDC_ORIGIN_STATE || "KERALA",
                         },
 
                         destination_details: {
@@ -293,7 +309,7 @@ export const POST = async (req: NextRequest) => {
                         headers: {
                             accept: "application/json",
                             "Content-Type": "application/json",
-                            "api-key": "52256c0d05c94bda4c897dce29a485",
+                            "api-key": process.env.DTDC_API_KEY || "52256c0d05c94bda4c897dce29a485",
                         },
                     }
                 );
@@ -321,36 +337,62 @@ export const POST = async (req: NextRequest) => {
             }
         }
 
+        // ✅ Prepare plain order object for notifications
+        const orderForNotification = {
+            orderId: newOrder.orderId,
+            productDetails: processedProductDetails,
+            totalPrice: newOrder.totalPrice,
+            payablePrice: newOrder.payablePrice,
+            off: newOrder.off,
+            shippingCost: newOrder.shippingCost,
+            paymentMethod: newOrder.paymentMethod,
+            paymentStatus: newOrder.paymentStatus,
+            currentStatus: newOrder.currentStatus,
+            trackingId: newOrder.trackingId,
+        };
+
         // ✅ Send Email (if enabled and email provided)
         if (sendEmail && customerDetails.email) {
+            console.log(`📧 Attempting to send offline order email to ${customerDetails.email}...`);
             try {
-                await sendOfflineOrderEmail({
+                const emailResult = await sendOfflineOrderEmail({
                     customerEmail: customerDetails.email,
                     customerName: customerDetails.name,
                     orderId: newOrder.orderId,
-                    orderDetails: newOrder,
+                    orderDetails: orderForNotification,
                     paymentMode,
                     paymentStatus,
                     shippingMethod,
                     trackingId: newOrder.trackingId,
                 });
+                if (emailResult.success) {
+                    console.log("✅ Offline order email sent successfully");
+                } else {
+                    console.error("❌ Offline order email failed:", emailResult.message);
+                }
             } catch (emailErr) {
-                console.error("❌ Email send failed (non-blocking):", emailErr);
+                console.error("❌ Email helper crash (non-blocking):", emailErr);
             }
         }
 
         // ✅ Send WhatsApp (if enabled, reuse existing template)
         if (sendWhatsApp && customerDetails.phone) {
+            console.log(`📱 Attempting to send WhatsApp confirmation to ${customerDetails.phone}...`);
             try {
-                await sendOrderConfirmation(
+                const waResult = await sendOrderConfirmation(
                     customerDetails.name,
                     customerDetails.phone,
                     newOrder.orderId,
-                    "S.I.S",
-                    newOrder.deliveryPartner || ""
+                    "Swaarasya", // Consistent merchant name
+                    newOrder.deliveryPartner || "N/A"
                 );
+                if (waResult.success) {
+                    console.log("✅ WhatsApp confirmation sent successfully");
+                } else {
+                    console.error("❌ WhatsApp confirmation failed:", waResult.message);
+                }
             } catch (waErr) {
-                console.error("❌ WhatsApp send failed (non-blocking):", waErr);
+                console.error("❌ WhatsApp helper crash (non-blocking):", waErr);
             }
         }
 
@@ -358,7 +400,8 @@ export const POST = async (req: NextRequest) => {
             {
                 success: true,
                 msg: "Offline order created successfully",
-                offlorder: newOrder,
+                orderId: newOrder.orderId,
+                offlorder: orderForNotification,
             },
             { status: 201 }
         );

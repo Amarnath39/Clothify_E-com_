@@ -45,6 +45,7 @@ import { useDispatch } from "react-redux";
 import { IoIosRefresh } from "react-icons/io";
 import { LuLoader } from "react-icons/lu";
 import { Pagination } from "@/components/ui/pagination";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const OrdersPage = () => {
   const [expandedOrder, setExpandedOrder] = useState<any>(null);
@@ -56,7 +57,7 @@ const OrdersPage = () => {
   const [paymentStatus, setPaymentStatus] = useState("all");
   const [loading, setLoading] = useState(true);
   const [orderStatus, setOrderStatus] = useState("all");
-  const [orderSource, setOrderSource] = useState("all"); // ✅ NEW: Filter by order source
+  const [orderSource, setOrderSource] = useState("online"); // ✅ Default to Online Orders
   const [newStatuses, setNewStatuses] = useState<{ [key: string]: string }>({});
   const [dateRange, setDateRange] = useState<any>([null, null]);
   const [labelError, setLabelError] = useState<{ [key: string]: string }>({});
@@ -414,17 +415,7 @@ const OrdersPage = () => {
             </SelectItem>
           </SelectContent>
         </Select>
-        {/* ✅ NEW: Order Source Filter */}
-        <Select value={orderSource} onValueChange={setOrderSource}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Order Source" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Sources</SelectItem>
-            <SelectItem value="online">Online Orders</SelectItem>
-            {/* <SelectItem value="offline">Offline Orders</SelectItem> */}
-          </SelectContent>
-        </Select>
+        {/* Removed orderSource Select from here as it's now in Tabs */}
 
         <div className="relative w-full">
           <DatePicker
@@ -452,6 +443,19 @@ const OrdersPage = () => {
             Refresh pending transactions for accurate data
           </p>
         </CardHeader>
+
+        <div className="px-6 pb-2">
+          <Tabs value={orderSource} onValueChange={(val) => {
+            setCurrentPage(1);
+            setOrderSource(val);
+          }} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 max-w-md">
+              <TabsTrigger value="online">Online</TabsTrigger>
+              <TabsTrigger value="offline">Offline</TabsTrigger>
+              <TabsTrigger value="pos">POS</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
         <CardContent className="p-0 md:p-6">
 
           {/* ✅ DESKTOP VIEW (Table) */}

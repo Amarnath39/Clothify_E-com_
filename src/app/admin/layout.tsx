@@ -93,7 +93,7 @@ function AdminLayout({ children }) {
           href: "/admin/offline-order",
           title: "Create Offline Order",
           icon: <FaPlus size={24} className="text-white" />,
-          roles: ["SuperAdmin", "Admin"],
+          roles: ["SuperAdmin", "Admin", "Sales person"],
         },
       ]
       : []),

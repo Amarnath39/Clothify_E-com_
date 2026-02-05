@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import "./src/model/Product";
+import "./src/model/Category";
+import "./src/model/Order";
+import "./src/model/Counter";
 
 let isConnected = false;
 

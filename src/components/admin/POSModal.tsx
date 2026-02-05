@@ -30,6 +30,7 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
 
 // Razorpay SDK logic removed as per new requirements (Manual UPI/Card)
 
@@ -80,6 +81,9 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     const [isSearching, setIsSearching] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [completedOrder, setCompletedOrder] = useState<any>(null);
+
+    // ✅ Get Admin from Redux
+    const { user } = useSelector((state: any) => state.auth);
 
     // ✅ Refs
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -169,7 +173,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" && searchResults.length > 0) {
             const firstProduct = searchResults[0];
-            if (firstProduct.sizes.length === 1) {
+            if (firstProduct.sizes && firstProduct.sizes.length === 1) {
                 // Auto-add if only one size available
                 addToCart(firstProduct, firstProduct.sizes[0]._id, 1);
                 setSearchQuery("");
@@ -313,6 +317,13 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 quantity: item.quantity,
             }));
 
+            const adminId = user?._id || localStorage.getItem("adminId");
+            if (!adminId) {
+                toast.error("Admin ID not found. Please log in again.");
+                setIsProcessing(false);
+                return;
+            }
+
             const requestBody: any = {
                 customerPhone,
                 productDetails,
@@ -328,7 +339,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 const { data } = await axios.post(
                     "/api/admin/pos",
                     { ...requestBody, action: "GenerateLink" },
-                    { headers: { "x-admin-id": localStorage.getItem("adminId") } }
+                    { headers: { "x-admin-id": adminId } }
                 );
 
                 if (data.success) {
@@ -639,19 +650,23 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
                                                 {/* Size Selection */}
                                                 <div className="mt-2 flex gap-2 flex-wrap">
-                                                    {product.sizes.map((size) => (
-                                                        <Button
-                                                            key={size._id}
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => addToCart(product, size._id, 1)}
-                                                            disabled={size.stock === 0}
-                                                            className="text-xs"
-                                                        >
-                                                            {size.size} (₹{size.offerPrice || product.actualPrice})
-                                                            {size.stock === 0 && " - Out of Stock"}
-                                                        </Button>
-                                                    ))}
+                                                    {product.sizes && Array.isArray(product.sizes) ? (
+                                                        product.sizes.map((size) => (
+                                                            <Button
+                                                                key={size._id}
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => addToCart(product, size._id, 1)}
+                                                                disabled={size.stock === 0}
+                                                                className="text-xs"
+                                                            >
+                                                                {size.size} (₹{size.offerPrice || product.actualPrice})
+                                                                {size.stock === 0 && " - Out of Stock"}
+                                                            </Button>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-xs text-red-500">No sizes configured</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

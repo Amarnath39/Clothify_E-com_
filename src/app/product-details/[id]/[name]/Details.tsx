@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   FaStar,
   FaArrowLeft,
+  FaTshirt
 } from "react-icons/fa";
 import { Minus, Plus, Heart } from "lucide-react";
 
@@ -36,9 +37,10 @@ const ProductDetails = ({
   const [selectedSize, setSelectedSize] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
   const [currentIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const wishlistItems = useSelector((state: any) => state.wishlist.items);
-  const cartItems = useSelector((state: any) => state.cart.items);
+  const wishlistItems = useSelector((state: any) => state.wishlist?.items || []);
+  const cartItems = useSelector((state: any) => state.cart?.items || []);
 
   const isWishlist =
     productData && wishlistItems.some((i: any) => i.id === productData._id);
@@ -152,10 +154,10 @@ const ProductDetails = ({
   const discount =
     productData.actualPrice && selectedSize?.offerPrice
       ? Math.round(
-          ((productData.actualPrice - selectedSize.offerPrice) /
-            productData.actualPrice) *
-            100
-        )
+        ((productData.actualPrice - selectedSize.offerPrice) /
+          productData.actualPrice) *
+        100
+      )
       : 0;
 
   return (
@@ -166,12 +168,18 @@ const ProductDetails = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
         {/* LEFT IMAGE */}
-        <div className="bg-gray-50 flex items-center justify-center h-[60vh]">
-          <img
+        <div className="bg-gray-50 flex items-center justify-center h-[60vh] relative overflow-hidden group">
+          <ZoomableImage
             src={productData.img[currentIndex]}
             alt={productData.name}
             className="w-full h-full object-contain"
           />
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="absolute top-4 right-4 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <FaTshirt />
+          </button>
         </div>
 
         {/* RIGHT */}
@@ -211,21 +219,6 @@ const ProductDetails = ({
             {discount > 0 && (
               <span className="text-red-600 font-bold">{discount}% OFF</span>
             )}
-          </div> */}
-
-          {/* Main Image */}
-          <div className="flex-1 bg-gray-50 aspect-[3/4] relative overflow-hidden">
-            <ZoomableImage
-              src={productData.img[currentIndex]}
-              alt={productData.name}
-              className="w-full h-full"
-            />
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="absolute top-4 right-4 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <FaTshirt /> {/* You can replace this with a fullscreen icon if you prefer */}
-            </button>
           </div>
 
           {/* SIZE */}
@@ -235,11 +228,10 @@ const ProductDetails = ({
               <button
                 key={size._id}
                 onClick={() => setSelectedSize(size)}
-                className={`px-4 py-2 border mr-2 ${
-                  selectedSize?._id === size._id
+                className={`px-4 py-2 border mr-2 ${selectedSize?._id === size._id
                     ? "bg-black text-white"
                     : ""
-                }`}
+                  }`}
               >
                 {size.size}
               </button>

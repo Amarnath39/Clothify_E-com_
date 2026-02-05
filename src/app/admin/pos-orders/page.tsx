@@ -17,6 +17,7 @@ import { FaSearch, FaReceipt, FaFilter } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
 import RefundModal from "@/components/admin/RefundModal";
+import { useSelector } from "react-redux";
 
 interface POSOrder {
     _id: string;
@@ -36,6 +37,7 @@ interface POSOrder {
 }
 
 const POSOrdersPage = () => {
+    const { user } = useSelector((state: any) => state.auth);
     const [orders, setOrders] = useState<POSOrder[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
@@ -68,7 +70,7 @@ const POSOrdersPage = () => {
         try {
             const { data } = await axios.get("/api/admin/pos/orders", {
                 headers: {
-                    "x-admin-id": localStorage.getItem("adminId"),
+                    "x-admin-id": user?._id || localStorage.getItem("adminId"),
                 },
             });
 
