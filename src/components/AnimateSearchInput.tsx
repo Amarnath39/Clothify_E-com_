@@ -12,7 +12,7 @@ import { shuffleArray } from "@/helpers/helpers";
 import { IoCloseOutline } from "react-icons/io5";
 import { AnimatePresence, motion } from "framer-motion";
 
-const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
+const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen, showTrigger = true }) => {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any>([]);
@@ -132,13 +132,15 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
   return (
     <>
       {/* Search Trigger Button */}
-      <div
-        className="flex items-center space-x-2 cursor-pointer border rounded-lg p-2.5 hover:border-gray-400 transition-colors w-full max-w-lg py-2"
-        onClick={() => setIsModalOpen(true)}
-      >
-        <FaSearch className="text-gray-500" />
-        <span className="text-gray-500 text-sm">Search for products...</span>
-      </div>
+      {showTrigger && (
+        <div
+          className="flex items-center space-x-2 cursor-pointer border rounded-lg p-2.5 hover:border-gray-400 transition-colors w-full max-w-lg py-2"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <FaSearch className="text-gray-500" />
+          <span className="text-gray-500 text-sm">Search for products...</span>
+        </div>
+      )}
 
       {/* Modal Overlay */}
       {isModalOpen && (
@@ -148,7 +150,7 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
             style={{ maxHeight: "calc(100vh - 2rem)" }}
           >
             {/* Search Header - Fixed */}
-            <div className="sticky top-0 bg-white border-b z-50 py-3 px-4">
+            <div className="sticky top-0 bg-white z-50 py-3 px-4">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -164,16 +166,16 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   placeholder="Search for products..."
-                  className="w-full text-base border-0 focus:ring-0 py-4 pl-12 pr-12"
+                  className="w-full bg-transparent border-0 shadow-none focus-visible:ring-0 text-stone-800 placeholder-stone-400 text-lg font-medium pl-10 pr-4 py-6 h-auto"
                   autoFocus
                 />
-                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
                 <button
                   type="button"
                   onClick={closeModal}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <IoCloseOutline size={24} color="black"/>
+                  <IoCloseOutline size={24} color="black" />
                 </button>
               </form>
             </div>
@@ -187,7 +189,7 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen }) => {
                   initial="hidden"
                   animate="visible"
                   exit="exit"
-                  className="bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden p-2"
+                  className="bg-white rounded-3xl overflow-hidden p-2"
                 >
                   <div className="px-4 py-2 text-xs font-semibold text-stone-400 uppercase tracking-wider">
                     {inputValue.trim() ? "Suggestions" : "Recent & Trending"}
