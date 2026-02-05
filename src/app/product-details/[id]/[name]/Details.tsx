@@ -153,7 +153,7 @@ const ProductDetails = ({
 
 
   return (
-    <div className="container mx-auto px-4 md:px-6 py-12 pt-28">
+    <div className="container mx-auto px-4 md:px-6 py-6">
       <Button variant="ghost" className="mb-6 pl-0 hover:bg-transparent hover:text-[#b48a3c] transition-colors" onClick={() => router.back()}>
         <FaArrowLeft className="mr-2" /> Back
       </Button>
