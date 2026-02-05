@@ -159,24 +159,26 @@ const AnimatedSearchInput = ({ setIsModalOpen, isModalOpen, showTrigger = true }
                 }}
                 className="relative"
               >
-                <Input
-                  type="text"
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  placeholder="Search for products..."
-                  className="w-full bg-transparent border-0 shadow-none focus-visible:ring-0 text-stone-800 placeholder-stone-400 text-lg font-medium pl-10 pr-4 py-6 h-auto"
-                  autoFocus
-                />
-                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <IoCloseOutline size={24} color="black" />
-                </button>
+                <div className="relative bg-gray-100 rounded-full border border-gray-200 hover:border-gray-300 transition-all duration-200">
+                  <Input
+                    type="text"
+                    value={inputValue}
+                    onChange={handleInputChange}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    placeholder="Search for products..."
+                    className="w-full bg-transparent border-0 shadow-none focus-visible:ring-0 focus:ring-0 focus:outline-none text-stone-800 placeholder-stone-500 text-base font-medium pl-12 pr-4 py-3 h-auto"
+                    autoFocus
+                  />
+                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <IoCloseOutline size={20} />
+                  </button>
+                </div>
               </form>
             </div>
 

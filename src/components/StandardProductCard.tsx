@@ -120,7 +120,7 @@ const StandardProductCard = ({ product }: Props) => {
   };
 
   return (
-    <div className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
+    <div className="group/card relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300">
       {/* Image */}
       <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
         <Link
@@ -132,13 +132,13 @@ const StandardProductCard = ({ product }: Props) => {
           <img
             src={product.img[0]}
             alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover/card:scale-105"
           />
           {product.img[1] && (
             <img
               src={product.img[1]}
               alt={product.name}
-              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
             />
           )}
         </Link>
@@ -168,7 +168,7 @@ const StandardProductCard = ({ product }: Props) => {
         <button
           onClick={handleWishlist}
           className="hidden md:flex absolute top-3 right-3 p-2 bg-white/80 backdrop-blur rounded-full
-          opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all"
+          opacity-0 translate-y-2 group-hover/card:opacity-100 group-hover/card:translate-y-0 transition-all"
         >
           <Heart
             className={`w-5 h-5 ${
@@ -178,7 +178,7 @@ const StandardProductCard = ({ product }: Props) => {
         </button>
 
         {/* Quick Add / Remove (desktop only) */}
-        <div className="hidden md:block absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform">
+        <div className="hidden md:block absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover/card:translate-y-0 transition-transform">
           <button
             onClick={handleCartToggle}
             className={`w-full rounded-full py-2 shadow-lg transition-colors
