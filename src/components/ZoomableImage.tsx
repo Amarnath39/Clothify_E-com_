@@ -53,6 +53,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseMove={handleMouseMove}
+    style={{ cursor: isHovered ? 'zoom-in' : 'default' }}
     >
       <img
         src={src}
