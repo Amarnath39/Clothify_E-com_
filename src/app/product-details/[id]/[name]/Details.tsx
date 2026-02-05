@@ -229,8 +229,8 @@ const ProductDetails = ({
                 key={size._id}
                 onClick={() => setSelectedSize(size)}
                 className={`px-4 py-2 border mr-2 ${selectedSize?._id === size._id
-                    ? "bg-black text-white"
-                    : ""
+                  ? "bg-black text-white"
+                  : ""
                   }`}
               >
                 {size.size}
@@ -284,6 +284,16 @@ const ProductDetails = ({
 
       <RecentlyViewed />
       <YouMayAlsoLike currentProductId={productData._id} />
+
+      <ProductSizeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={productData}
+        onAddToCart={handleAddToCart}
+        setSelectedSize={setSelectedSize}
+        selectedSize={selectedSize}
+        isInCart={isInCart}
+      />
     </div>
   );
 };
