@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { BsGraphUpArrow } from "react-icons/bs";
 import {
   FaShoppingCart,
@@ -15,6 +15,9 @@ import {
   FaHamburger,
   FaInstagram,
   FaBoxOpen,
+  FaCashRegister,
+  FaReceipt,
+  FaPercent,
 } from "react-icons/fa";
 import { SiSublimetext } from "react-icons/si";
 import { FcRules } from "react-icons/fc";
@@ -27,11 +30,15 @@ import { Button } from "@/components/ui/button";
 import { MdVideoLibrary } from "react-icons/md";
 import NotificationDropdown from "@/components/admin/NotificationDropdown";
 
+// ✅ Lazy load POS Modal for performance
+const POSModal = lazy(() => import("@/components/admin/POSModal"));
+
 function AdminLayout({ children }) {
   const pathname = usePathname();
   const [showSidebar, setShowSidebar] = useState(true);
   const dispatch = useDispatch<any>();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showPOSModal, setShowPOSModal] = useState(false); // ✅ POS Modal state
   const router = useRouter();
   const { user } = useSelector((state: any) => state.auth);
 
@@ -61,6 +68,24 @@ function AdminLayout({ children }) {
       icon: <FaShoppingCart size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin", "Sales person"],
     },
+    // ✅ NEW: POS System (feature-flagged, modal-based)
+    ...(process.env.NEXT_PUBLIC_ENABLE_POS === "true"
+      ? [
+        {
+          href: "#",
+          title: "POS",
+          icon: <FaCashRegister size={24} className="text-white" />,
+          roles: ["SuperAdmin", "Admin", "Sales person"],
+          onClick: () => setShowPOSModal(true), // ✅ Open modal instead of navigation
+        },
+        {
+          href: "/admin/pos-orders",
+          title: "POS Orders",
+          icon: <FaReceipt size={24} className="text-white" />,
+          roles: ["SuperAdmin", "Admin", "Sales person"],
+        },
+      ]
+      : []),
     // ✅ NEW: Offline Order Creation (feature-flagged)
     ...(process.env.NEXT_PUBLIC_ENABLE_ADMIN_OFFLINE_ORDERS === "true"
       ? [
@@ -88,6 +113,12 @@ function AdminLayout({ children }) {
       href: "/admin/categories",
       title: "Categories",
       icon: <FaList size={24} className="text-white" />,
+      roles: ["SuperAdmin", "Admin"],
+    },
+    {
+      href: "/admin/gst-settings",
+      title: "GST Settings",
+      icon: <FaPercent size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin"],
     },
     {
@@ -143,9 +174,10 @@ function AdminLayout({ children }) {
       title: "Add Video",
       icon: <MdVideoLibrary size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin"],
-    },    {
-      href: "/admin/scrolltext",
-      title: "Scroll Text",
+    },
+    {
+      href: "/admin/marquee",
+      title: "Marquee Text",
       icon: <SiSublimetext size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin"],
     },    // {
@@ -210,25 +242,45 @@ function AdminLayout({ children }) {
         </div>
 
         <nav className="mt-4 pb-20">
-          {filteredAdminCards.map((card, index) => (
-            <Link
-              key={index}
-              href={card.href}
-              className={`flex items-center px-4 py-3 text-sm transition-all duration-200
-                  ${pathname === card.href
-                  ? "bg-gray-800 text-white border-l-4 border-white"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-white hover:border-l-4 hover:border-gray-400"
-                } visited:text-gray-300 focus:bg-gray-800 active:bg-gray-800
-                `}
-              onClick={() => {
-                // Auto-close sidebar on mobile when link clicked
-                if (window.innerWidth < 768) setShowSidebar(false);
-              }}
-            >
-              <span className="mr-3">{card.icon}</span>
-              {card.title}
-            </Link>
-          ))}
+          {filteredAdminCards.map((card, index) => {
+            // ✅ Handle modal-based items (like POS)
+            if (card.onClick) {
+              return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    card.onClick?.();
+                    if (window.innerWidth < 768) setShowSidebar(false);
+                  }}
+                  className={`w-full flex items-center px-4 py-3 text-sm transition-all duration-200 text-gray-300 hover:bg-gray-800 hover:text-white hover:border-l-4 hover:border-gray-400`}
+                >
+                  <span className="mr-3">{card.icon}</span>
+                  {card.title}
+                </button>
+              );
+            }
+
+            // ✅ Normal link items
+            return (
+              <Link
+                key={index}
+                href={card.href}
+                className={`flex items-center px-4 py-3 text-sm transition-all duration-200
+                    ${pathname === card.href
+                    ? "bg-gray-800 text-white border-l-4 border-white"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-white hover:border-l-4 hover:border-gray-400"
+                  } visited:text-gray-300 focus:bg-gray-800 active:bg-gray-800
+                  `}
+                onClick={() => {
+                  // Auto-close sidebar on mobile when link clicked
+                  if (window.innerWidth < 768) setShowSidebar(false);
+                }}
+              >
+                <span className="mr-3">{card.icon}</span>
+                {card.title}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="p-4 text-base text-white border-t border-gray-800 text-center">
@@ -251,6 +303,13 @@ function AdminLayout({ children }) {
         message="Are you sure you want to log out?"
       />
 
+      {/* ✅ POS Modal (Lazy Loaded) */}
+      {showPOSModal && (
+        <Suspense fallback={<div>Loading POS...</div>}>
+          <POSModal isOpen={showPOSModal} onClose={() => setShowPOSModal(false)} />
+        </Suspense>
+      )}
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-y-auto bg-gray-50">
         {/* Top Header */}
@@ -261,8 +320,8 @@ function AdminLayout({ children }) {
           {/* Logo */}
           <div className="flex items-center">
             <img
-              src="/assets/static/logo/fyncartlogo.png"
-              alt="Logo"
+              src="/assets/static/logo/saw.svg"
+              alt="Swaarasya Logo"
               className="h-8 md:h-10 w-auto object-contain"
             />
           </div>

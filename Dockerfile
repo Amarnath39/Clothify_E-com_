@@ -18,6 +18,9 @@ ENV NODE_ENV=production
 ENV ENABLE_ADMIN_OFFLINE_ORDERS=true
 ENV NEXT_PUBLIC_ENABLE_ADMIN_OFFLINE_ORDERS=true
 
+# ✅ POS System Feature Flag
+ENV NEXT_PUBLIC_ENABLE_POS=true
+
 RUN npm run build
 
 CMD ["npm", "start"]

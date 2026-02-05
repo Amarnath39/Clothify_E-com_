@@ -5,13 +5,19 @@ import { Home, ShoppingCart, Package, User, Phone } from "lucide-react";
 import Link from "next/link";
 import useWindowSize from "@/hooks/useWindowSize";
 import { useSelector } from "react-redux";
+import { usePathname } from "next/navigation";
 
 const BottomNavbar = () => {
   const [activeTab, setActiveTab] = useState("home");
   const { width } = useWindowSize();
   const isMobile = width < 768; // Show only on small screens (sm)
   const cartItems = useSelector((state: any) => state.cart.items);
-  if (!isMobile) return null;
+  const pathname = usePathname();
+
+  // Hide bottom navbar on admin and invoice routes
+  const shouldHide = pathname.startsWith("/admin") || pathname.startsWith("/adminLogin") || pathname.startsWith("/invoice");
+
+  if (!isMobile || shouldHide) return null;
   return (
     <div
       className="fixed bottom-0 left-0 w-full bg-[#000000] shadow-md border-t border-white flex justify-around items-center py-3 sm:py-4 footer-main"
@@ -23,16 +29,14 @@ const BottomNavbar = () => {
         className="flex flex-col items-center"
       >
         <Home
-          className={`w-6 h-6 ${
-            activeTab === "home" ? "text-navbarText scale-110" : "text-white"
-          } transition-all`}
+          className={`w-6 h-6 ${activeTab === "home" ? "text-navbarText scale-110" : "text-white"
+            } transition-all`}
         />
         <span
-          className={`text-xs ${
-            activeTab === "home"
+          className={`text-xs ${activeTab === "home"
               ? "text-navbarText font-semibold"
               : "text-white"
-          }`}
+            }`}
         >
           Home
         </span>
@@ -44,9 +48,8 @@ const BottomNavbar = () => {
         className="flex flex-col items-center relative"
       >
         <ShoppingCart
-          className={`w-6 h-6 ${
-            activeTab === "cart" ? "text-navbarText scale-110" : "text-white"
-          } transition-all`}
+          className={`w-6 h-6 ${activeTab === "cart" ? "text-navbarText scale-110" : "text-white"
+            } transition-all`}
         />
         <div className="absolute -top-1 left-1">
           {cartItems.length > 0 && (
@@ -56,11 +59,10 @@ const BottomNavbar = () => {
           )}
         </div>
         <span
-          className={`text-xs ${
-            activeTab === "cart"
+          className={`text-xs ${activeTab === "cart"
               ? "text-navbarText font-semibold"
               : "text-white"
-          }`}
+            }`}
         >
           Cart
         </span>
@@ -72,18 +74,16 @@ const BottomNavbar = () => {
         className="flex flex-col items-center"
       >
         <Package
-          className={`w-6 h-6 ${
-            activeTab === "orders"
+          className={`w-6 h-6 ${activeTab === "orders"
               ? "text-navbarText scale-110"
               : "text-white"
-          } transition-all`}
+            } transition-all`}
         />
         <span
-          className={`text-xs ${
-            activeTab === "orders"
+          className={`text-xs ${activeTab === "orders"
               ? "text-navbarText font-semibold"
               : "text-white"
-          }`}
+            }`}
         >
           Orders
         </span>
@@ -95,18 +95,16 @@ const BottomNavbar = () => {
         className="flex flex-col items-center"
       >
         <Phone
-          className={`w-6 h-6 ${
-            activeTab === "contact"
+          className={`w-6 h-6 ${activeTab === "contact"
               ? "text-navbarText scale-110"
               : "text-white"
-          } transition-all`}
+            } transition-all`}
         />
         <span
-          className={`text-xs ${
-            activeTab === "contact"
+          className={`text-xs ${activeTab === "contact"
               ? "text-navbarText font-semibold"
               : "text-white"
-          }`}
+            }`}
         >
           Contact
         </span>
@@ -117,18 +115,16 @@ const BottomNavbar = () => {
         className="flex flex-col items-center"
       >
         <User
-          className={`w-6 h-6 ${
-            activeTab === "profile"
+          className={`w-6 h-6 ${activeTab === "profile"
               ? "text-navbarText scale-110"
               : "text-white"
-          } transition-all`}
+            } transition-all`}
         />
         <span
-          className={`text-xs ${
-            activeTab === "profile"
+          className={`text-xs ${activeTab === "profile"
               ? "text-navbarText font-semibold"
               : "text-white"
-          }`}
+            }`}
         >
           Profile
         </span>

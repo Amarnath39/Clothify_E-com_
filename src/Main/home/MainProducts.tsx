@@ -15,7 +15,8 @@ const MainProducts = () => {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
   const dispatch = useDispatch<any>();
-  const [products, setProducts] = useState<any>({});
+  const [products, setProducts] = useState<{products: any[];}>({ products: [] });
+
   const [loading, setLoading] = useState(true);
 
   const fetchProducts = useCallback(
@@ -48,7 +49,7 @@ const MainProducts = () => {
     fetchProducts(1);
   }, [fetchProducts]);
 
-  const SkeletonCard = ({ uniqueKey }) => (
+  const SkeletonCard = ({ uniqueKey }: { uniqueKey: string }) => (
     <div key={uniqueKey} className="flex flex-col">
       <div className="aspect-[3/4] bg-gray-200 animate-pulse mb-4 rounded-sm"></div>
       <div className="h-4 bg-gray-200 animate-pulse w-3/4 mb-2"></div>
@@ -61,7 +62,7 @@ const MainProducts = () => {
       <div className="container mx-auto px-4 md:px-8">
 
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-gray-100 pb-6 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start mb-12 border-b border-gray-100 pb-6 gap-4">
           <div>
             <span className="font-serif text-[#b48a3c] text-sm tracking-[0.2em] mb-2 block uppercase">
               Featured
@@ -84,18 +85,20 @@ const MainProducts = () => {
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
               {Array.from({ length: 8 }).map((_, index) => (
-                <SkeletonCard key={`sk-${index}`} uniqueKey={`sk-${index}`} />
+                <SkeletonCard uniqueKey={`sk-${index}`} />
               ))}
             </div>
           ) : products.products?.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-8 md:gap-y-12">
-              {products.products.map((product, index) => (
-                <StandardProductCard
-                  key={product._id}
-                  product={product}
-                  index={index}
-                />
+              {products.products.map((product: any) => (
+                <div key={product._id}>
+                  <StandardProductCard
+                    product={product}
+                  />
+                </div>
               ))}
+
+
             </div>
           ) : (
             <NotFound height="400px" text="No Featured Products Found" />

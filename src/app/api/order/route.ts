@@ -100,8 +100,10 @@ export const POST = async (req: NextRequest) => {
           return {
             product: product._id,
             count: quantity,
-            sizeId: sizeObj._id,
-            sizeLabel: sizeObj.size,
+            size: {
+              _id: sizeObj._id,
+              size: sizeObj.size
+            },
             actualPrice: product.actualPrice,
             offerPrice: sizeObj.offerPrice || product.actualPrice,
           };

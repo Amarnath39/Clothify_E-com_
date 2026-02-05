@@ -8,7 +8,7 @@ const config = {
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
   ],
-  safelist: ["gradient-bar"], 
+  safelist: ["gradient-bar"],
   prefix: "",
   theme: {
     container: {
@@ -31,6 +31,7 @@ const config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         blood: "#E3242B",
+        burgundy: "#800020",
         black: "#220B1B",
         navbarBackground: "#07363c",
         navbarText: "#e4c19d",
@@ -50,8 +51,8 @@ const config = {
         },
         foreground: "hsl(var(--foreground))",
         primary: {
-           DEFAULT: "#e41347",
-      
+          DEFAULT: "#e41347",
+
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {

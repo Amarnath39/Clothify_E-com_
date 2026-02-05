@@ -22,6 +22,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toggleItem } from "@/lib/features/wishlist";
 import AnimatedSearchInput from "@/components/AnimateSearchInput";
 import ProductSizeModal from "@/components/ProductSizeModal";
+import StandardProductCard from "@/components/StandardProductCard";
+
 
 const Products = () => {
   const searchParams = useSearchParams();
@@ -166,8 +168,7 @@ const Products = () => {
       >
         {!isFilterOpen && (
           <button
-            className="md:hidden absolute top-[140px] right-4 z-50 bg-black text-black p-4 rounded-full shadow-lg"
-            onClick={() => setIsFilterOpen(true)}
+            className="md:hidden fixed top-[90px] right-4 z-[9999] bg-black p-4 rounded-full shadow-lg"
           >
             <FaFilter size={24} color="white" />
           </button>
@@ -219,92 +220,12 @@ const Products = () => {
                 ) : products.products?.length > 0 ? (
                   <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                     {products.products.map((product: any) => (
-                      <div
-                        style={{ border: "none" }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          window.location.href = `/product-details/${product._id
-                            }/${product.name.split(" ").join("-")}`;
-                        }}
-                        key={product._id}
-                        className="flex flex-col overflow-hidden group cursor-pointer relative rounded-2xl bg-white border-none"
-                      >
-                        <CardContent className="flex-grow p-0">
-                          <div className="relative overflow-hidden rounded-2xl">
-                            <img
-                              src={product.img[0]}
-                              alt={product.name}
-                              className="object-cover object-center w-full h-[260px] sm:h-[400px] transition-transform duration-300 ease-in-out md:group-hover:scale-105"
-                            />
-                            {product.img[1] && (
-                              <img
-                                src={product.img[1]}
-                                alt={product.name}
-                                className="absolute top-0 left-0 object-cover w-full h-[260px] sm:h-[400px] opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
-                              />
-                            )}
-                            {product?.off > 0 && (
-                              <span className="absolute top-3 left-3 text-xs font-medium bg-primaryRed text-white p-[5px] rounded-lg">
-                                {Math.round(product?.off)}% OFF
-                              </span>
-                            )}
-                            {product?.is_prebooking && (
-                              <span className={`absolute ${product?.off > 0 ? "top-12" : "top-3"} left-3 text-xs font-medium bg-blue-600 text-white p-[5px] rounded-lg z-10`}>
-                                Pre-Booking
-                              </span>
-                            )}
-                            <button
-                              onClick={(e: any) =>
-                                handleWishlistToggle(product, e)
-                              }
-                              className="absolute top-3 right-3  bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-sm"
-                            >
-                              {wishlistItems.some(
-                                (item) => item.id === product._id
-                              ) ? (
-                                <FaHeart size={20} className="text-red-600" />
-                              ) : (
-                                <FaRegHeart size={20} className="text-black" />
-                              )}
-                            </button>
-                            {/* Shopping Bag Icon - Hidden on mobile, shows on hover for larger screens */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setIsSizeModalOpen(true);
-                                setSelectedProduct(product);
-                              }}
-                              className="absolute bottom-3 right-3 text-white bg-black backdrop-blur-sm rounded-full p-3 shadow-sm 
-                                    transition-all duration-300 ease-in-out
-                                    md:opacity-0 md:translate-y-full md:group-hover:opacity-100 md:group-hover:translate-y-0"
-                            >
-                              <FaShoppingBag size={20} />
-                            </button>
-                          </div>
-                          <div className="p-4 flex flex-col space-y-1 sm:space-y-2">
-                            <CardTitle className="text-lg sm:text-xl font-medium text-gray-900">
-                              {product.name}
-                            </CardTitle>
-                            <div className="flex items-baseline space-x-2">
-                              <span className="text-lg sm:text-xl font-semibold text-gray-900">
-                                ₹{product.sizes[0].offerPrice.toFixed(2)}
-                              </span>
-                              {product.actualPrice && product.sizes[0].offerPrice < product.actualPrice && (
-                                <span className="text-xs text-gray-500 line-through">
-                                  ₹{product.actualPrice.toFixed(2)}
-                                </span>
-                              )}
-                            </div>
-                            {product.sizes.length > 1 && (
-                              <span className="text-sm text-gray-600">
-                                +{product?.sizes?.length - 1} More sizes
-                                available
-                              </span>
-                            )}
-                          </div>
-                        </CardContent>
-                      </div>
-                    ))}
+                    <StandardProductCard
+                      key={product._id}
+                      product={product}
+                    />
+                  ))}
+
                   </div>
                 ) : (
                   <NotFound height="80vh" text="Products" />

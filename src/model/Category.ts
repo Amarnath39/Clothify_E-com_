@@ -4,7 +4,7 @@ const Category = new mongoose.Schema({
     name: {
         type: String,
     },
-    description: { type: String},
+    description: { type: String },
     img: {
         type: String,
     },
@@ -23,7 +23,15 @@ const Category = new mongoose.Schema({
     showInHome: {
         type: Boolean,
         default: false,
+    },
+    gst: {
+        type: Number,
+        default: 0
+    },
+    displayOrder: { // Added based on conversation history mentioning display order
+        type: Number,
+        default: 0,
     }
-}, {timestamps: true});
+}, { timestamps: true });
 
 export default mongoose.models.Category || mongoose.model("Category", Category);

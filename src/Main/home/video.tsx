@@ -2,30 +2,30 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Quicksand } from "next/font/google";
-// The unused Bodoni_Moda import has been removed.
+import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
 interface Video {
   videoId: string;
   filename: string;
   url: string;
 }
-const quicksand = Quicksand({ subsets: ["latin"], weight: ["400", "700"] });
 
-export default function VideoList() {
+const PLACEHOLDER_COUNT = 6;
+
+export default function WatchAndShop() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const [videos, setVideos] = useState<Video[]>([]);
-  const [message, setMessage] = useState("");
-  const videoRefs = useRef<HTMLVideoElement[]>([]);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchVideos = async () => {
     try {
       const res = await axios.get("/api/videos/list");
-      setVideos(res.data.videos);
-    } catch (err) {
-      console.error("Error fetching videos:", err);
-      setMessage("Failed to load videos");
+      setVideos(res.data.videos || []);
+    } catch (error) {
+      console.error("Failed to load videos");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,102 +33,105 @@ export default function VideoList() {
     fetchVideos();
   }, []);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const video = entry.target as HTMLVideoElement;
-          if (entry.isIntersecting) {
-            video.play().catch(() => {});
-          } else {
-            video.pause();
-          }
-        });
-      },
-      { threshold: 0.6 }
-    );
-
-    videoRefs.current.forEach((video) => {
-      if (video) observer.observe(video);
-    });
-
-    return () => {
-      videoRefs.current.forEach((video) => {
-        if (video) observer.unobserve(video);
-      });
-    };
-  }, [videos]);
-
   const scroll = (direction: "left" | "right") => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      const scrollAmount = 250;
-      container.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
+    if (!scrollRef.current) return;
+
+    const scrollAmount = 400;
+    scrollRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
   };
 
   return (
-    <div className="p-0 w-full">
-      {/* Heading */}
-      <div className={`flex items-center justify-center mb-8 mt-12 ${quicksand.className}`}>
-        <h1 className="relative text-3xl mt-12 tracking-wider py-2 pt-6 text-center mx-auto animated-underline">
-          WATCH & SHOP
-        </h1>
-      </div>
+    <section className="py-20 bg-white">
+      <div className="max-w-9xl mx-auto px-8 sm:px-8 lg:px-16">
+        {/* Header */}
+        <div className="text-center mb-14">
+          <h2 className="text-3xl md:text-4xl font-serif text-charcoal mb-2">
+            Watch & Shop
+          </h2>
+          <p className="text-gray-500 font-body">
+            Discover styling tips and product stories
+          </p>
+        </div>
 
-      {/* Error message if any */}
-      {message && <p className="text-red-600 px-4 py-2">{message}</p>}
-
-      {/* Videos */}
-      {videos.length === 0 ? (
-        <p className="px-4 py-2">No videos uploaded yet.</p>
-      ) : (
-        <div className="relative w-full mt-8">
-          {/* Left Arrow */}
+        {/* Carousel + Arrows */}
+        <div className="flex items-center gap-6">
+          {/* Left Arrow (desktop only) */}
           <button
             onClick={() => scroll("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white bg-opacity-70 rounded-full shadow p-2"
+            className="hidden md:flex shrink-0 bg-white/90 backdrop-blur p-3 rounded-full shadow-lg hover:bg-white transition"
           >
-            <ChevronLeft size={24} />
+            <ChevronLeft className="w-6 h-6 text-charcoal" />
           </button>
 
-          {/* Scrollable video list */}
-          <div className="w-full flex justify-center">
+          {/* 🔑 CLIPPING WRAPPER */}
+          <div className="w-full overflow-hidden">
+            {/* Scrollable Carousel */}
             <div
-              ref={scrollContainerRef}
-              className="inline-flex overflow-x-hidden no-scrollbar space-x-6 px-10 w-full"
+              ref={scrollRef}
+              className="flex gap-0 md:gap-6 overflow-x-auto md:overflow-x-scroll scrollbar-hide scroll-smooth"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {videos.map((video, index) => (
-                <video
-                  key={video.videoId}
-                  ref={(el) => {
-                    if (el) videoRefs.current[index] = el;
-                  }}
-                  muted
-                  playsInline
-                  autoPlay
-                  loop={true}
-                  className="w-[230px] h-[400px] object-cover rounded-xl flex-shrink-0"
-                >
-                  <source src={video.url} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              ))}
+              {Array.from({ length: PLACEHOLDER_COUNT }).map((_, index) => {
+                const video = videos[index];
+
+                return (
+                  <div
+                    key={index}
+                    className="flex-shrink-0 w-full sm:w-64 group cursor-pointer"
+                  >
+                    <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-gray-200">
+                      {!loading && video ? (
+                        <video
+                          src={video.url}
+                          muted
+                          loop
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-300 animate-pulse">
+                          <Play className="w-12 h-12 text-gray-500 ml-1" />
+                        </div>
+                      )}
+
+                      {/* Overlay */}
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
+
+                      {/* Play Button */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-16 h-16 bg-white/90 backdrop-blur rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <Play
+                            className="w-8 h-8 text-burgundy ml-1"
+                            fill="currentColor"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Title */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                        <p className="font-serif text-sm">
+                          {video?.filename || "Coming Soon"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Right Arrow */}
+          {/* Right Arrow (desktop only) */}
           <button
             onClick={() => scroll("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white bg-opacity-70 rounded-full shadow p-2"
+            className="hidden md:flex shrink-0 bg-white/90 backdrop-blur p-3 rounded-full shadow-lg hover:bg-white transition"
           >
-            <ChevronRight size={24} />
+            <ChevronRight className="w-6 h-6 text-charcoal" />
           </button>
         </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
 }

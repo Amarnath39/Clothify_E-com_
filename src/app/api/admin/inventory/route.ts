@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
                 img: p.img?.[0],
                 totalStock: total,
                 availableStock: available,
-                soldStock: p.sellCount || 0,
+                soldStock: Math.max(0, total - available), // ✅ CALCULATED: Always accurate
                 lowStockThreshold: p.lowStockThreshold,
                 status,
                 sizes: p.sizes

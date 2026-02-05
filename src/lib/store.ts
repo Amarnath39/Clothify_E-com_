@@ -25,12 +25,13 @@ import orderSlice from "./features/order";
 import productSlice from "./features/products";
 import addressSlice from "./features/address";
 import recentlyViewedSlice from "./features/recentlyViewed";
+import marqueeSlice from "./features/marquee";
 
 // Define the persist config
 const persistConfig = {
   key: "siskerala",
   storage,
-  whitelist: ["cart", "auth", "wishlist", "order", "recentlyViewed"],
+  whitelist: ["cart", "auth", "wishlist", "order", "recentlyViewed", "marquee"],
 };
 
 // Combine your reducers
@@ -47,6 +48,7 @@ const rootReducer = combineReducers({
   order: orderSlice,
   product: productSlice,
   recentlyViewed: recentlyViewedSlice,
+  marquee: marqueeSlice,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
