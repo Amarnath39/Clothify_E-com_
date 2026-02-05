@@ -74,6 +74,8 @@ const Order = new mongoose.Schema(
         "PAYMENT_DECLINED",
         "PAYMENT_ERROR",
         "PAYMENT_CANCELLED",
+        "PAYMENT_FAILED",
+        "PAYMENT_AMOUNT_MISMATCH",
         "COD_PENDING",
       ],
       default: "NOT_INITIATED",

@@ -51,26 +51,26 @@ const generatePOSInvoiceNumber = async (): Promise<string> => {
 const generatePOSOrderId = async (): Promise<{ orderId: string; orderSeq: number }> => {
     try {
         const counter = await Counter.findOneAndUpdate(
-            { id: "orderSeq" },
+            { id: "posOrderSeq" },
             { $inc: { seq: 1 } },
             { new: true, upsert: true }
         );
 
-        // If it's a new counter, we want to start from 1800 (as per current default)
-        if (counter.seq < 1800) {
+        // Start POS sequence from 1000 if new
+        if (counter.seq < 1000) {
             const initialCounter = await Counter.findOneAndUpdate(
-                { id: "orderSeq" },
-                { $set: { seq: 1800 } },
+                { id: "posOrderSeq" },
+                { $set: { seq: 1000 } },
                 { new: true, upsert: true }
             );
             return {
-                orderId: `ON-${initialCounter.seq.toString().padStart(6, "0")}`,
+                orderId: `POS-${initialCounter.seq.toString().padStart(6, "0")}`,
                 orderSeq: initialCounter.seq,
             };
         }
 
         return {
-            orderId: `ON-${counter.seq.toString().padStart(6, "0")}`,
+            orderId: `POS-${counter.seq.toString().padStart(6, "0")}`,
             orderSeq: counter.seq,
         };
     } catch (error) {
