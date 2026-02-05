@@ -30,6 +30,7 @@ import UniversalShare from "@/components/UniversalShare";
 import RecentlyViewed from "@/components/RecentlyViewed";    // New Component
 import YouMayAlsoLike from "@/components/YouMayAlsoLike";    // New Component
 import { Skeleton } from "@/components/ui/skeleton";
+import ZoomableImage from "@/components/ZoomableImage";
 import ProductSizeModal from "@/components/ProductSizeModal"; // Import just in case, though we used buttons
 
 
@@ -174,7 +175,7 @@ const ProductDetails = ({
           </div>
 
           {/* Main Image */}
-          <div className="flex-1 bg-gray-50 aspect-[3/4] relative overflow-hidden group">
+          {/* <div className="flex-1 bg-gray-50 aspect-[3/4] relative overflow-hidden group">
             <img
               src={productData.img[currentIndex]}
               alt={productData.name}
@@ -184,18 +185,33 @@ const ProductDetails = ({
             <button
               onClick={() => setIsModalOpen(true)}
               className="absolute top-4 right-4 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <FaTshirt /> {/* Placeholder for zoom icon */}
-            </button>
+            > */}
+          {/* <FaTshirt /> Placeholder for zoom icon */}
+          {/* </button> */}
 
-            {/* Zoom Modal Logic */}
-            {isModalOpen && (
+          {/* Zoom Modal Logic */}
+          {/* {isModalOpen && (
               <ProductGalleryPage
                 productData={productData}
                 setIsModalOpen={setIsModalOpen}
                 isModalOpen={isModalOpen}
               />
             )}
+          </div> */}
+
+          {/* Main Image */}
+          <div className="flex-1 bg-gray-50 aspect-[3/4] relative overflow-hidden">
+            <ZoomableImage
+              src={productData.img[currentIndex]}
+              alt={productData.name}
+              className="w-full h-full"
+            />
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="absolute top-4 right-4 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <FaTshirt /> {/* You can replace this with a fullscreen icon if you prefer */}
+            </button>
           </div>
         </div>
 
