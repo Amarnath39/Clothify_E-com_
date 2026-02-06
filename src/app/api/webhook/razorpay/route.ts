@@ -313,7 +313,7 @@ export async function POST(req: NextRequest) {
                         stockItems,
                         "SALE",
                         orderSource,
-                        order.orderId,
+                        order._id.toString(), // Fix: Pass Mongo ID
                         order.createdBy // Pass admin ID for POS/Offline attribution
                     );
                     if (!stockResult.success) {
@@ -409,33 +409,37 @@ export async function POST(req: NextRequest) {
                     }
 
                     // WhatsApp notification
-                    if (order.shippingAddress?.mobile) {
+                    const customerPhone = order.shippingAddress?.mobile || order.shippingAddress?.phone;
+
+                    if (customerPhone) {
                         try {
                             if (order.order_type === "POS") {
                                 // ✅ Send POS-specific Invoice link
                                 const invoiceUrl = `https://www.swaarasya.com/invoice/${order.invoiceId}`;
                                 await sendPOSInvoice(
                                     order.shippingAddress.name || "Customer",
-                                    order.shippingAddress.mobile,
+                                    customerPhone,
                                     order.orderId,
                                     invoiceUrl,
                                     "Swaarasya"
                                 );
-                                console.log("  ✅ WhatsApp POS invoice sent");
+                                console.log(`  ✅ WhatsApp POS invoice sent to ${customerPhone}`);
                             } else {
                                 // Standard online order confirmation
                                 await sendOrderConfirmation(
-                                    order.shippingAddress.name,
-                                    order.shippingAddress.mobile,
+                                    order.shippingAddress.name || "Customer",
+                                    customerPhone,
                                     order.orderId,
                                     "Swaarasya",
-                                    "DTDC"
+                                    order.deliveryPartner || "DTDC"
                                 );
-                                console.log("  ✅ WhatsApp order confirmation sent");
+                                console.log(`  ✅ WhatsApp order confirmation sent to ${customerPhone}`);
                             }
                         } catch (e) {
                             console.error("  ❌ WhatsApp failed:", e);
                         }
+                    } else {
+                        console.warn("  ⚠️ No phone number found for WhatsApp notification");
                     }
                 });
 
@@ -648,7 +652,7 @@ export async function POST(req: NextRequest) {
                         stockItems,
                         "SALE",
                         orderSource,
-                        order.orderId,
+                        order._id.toString(), // Fix: Pass Mongo ID
                         adminId
                     );
 
