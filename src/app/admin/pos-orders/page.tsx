@@ -34,6 +34,11 @@ interface POSOrder {
     };
     productDetails: any[];
     transactionId?: string;
+    // Refund status
+    isRefunded?: boolean;
+    isFullyRefunded?: boolean;
+    refundedQty?: number;
+    totalOrderQty?: number;
 }
 
 const POSOrdersPage = () => {
@@ -87,11 +92,19 @@ const POSOrdersPage = () => {
     };
 
     const downloadInvoice = (order: POSOrder) => {
-        // Implement invoice download/print functionality
-        toast.success(`Invoice for ${order.invoiceId} downloaded`);
+        // Implementation: Open invoice page in new tab for printing/downloading
+        if (order.invoiceId) {
+            window.open(`/invoice/${order.invoiceId}`, '_blank');
+        } else {
+            toast.error("Invoice ID missing for this order");
+        }
     };
 
     const handleRefundClick = (order: POSOrder) => {
+        if (order.isFullyRefunded) {
+            toast.error("This order has already been fully refunded.");
+            return;
+        }
         setOrderToRefund(order);
         setIsRefundModalOpen(true);
     };
@@ -198,7 +211,7 @@ const POSOrdersPage = () => {
                                             {order.productDetails.length} item(s)
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 items-center">
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
@@ -210,11 +223,20 @@ const POSOrdersPage = () => {
                                                 <Button
                                                     size="sm"
                                                     variant="secondary"
-                                                    className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200"
+                                                    className={`${order.isFullyRefunded
+                                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                                                        : "bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200"
+                                                        }`}
                                                     onClick={() => handleRefundClick(order)}
+                                                    disabled={order.isFullyRefunded}
                                                 >
-                                                    Returns
+                                                    {order.isFullyRefunded ? "Refunded ✓" : "Returns"}
                                                 </Button>
+                                                {order.isRefunded && !order.isFullyRefunded && (
+                                                    <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300">
+                                                        Partial
+                                                    </Badge>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>

@@ -452,7 +452,7 @@ const InventoryPage = () => {
                         <TableCell>
                           {h.orderId ? (
                             <Badge variant="outline" className="font-mono bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer">
-                              #{h.orderId.orderId}
+                              #{typeof h.orderId === 'object' ? h.orderId.orderId : h.orderId}
                             </Badge>
                           ) : (
                             <span className="text-gray-400 text-xs italic">-</span>

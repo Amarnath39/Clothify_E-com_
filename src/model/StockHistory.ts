@@ -8,8 +8,7 @@ const StockHistorySchema = new mongoose.Schema(
             required: true,
         },
         orderId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Order",
+            type: String, // Changed to String to support custom IDs (ON-, POS-, etc.)
         },
         sizeId: {
             type: mongoose.Schema.Types.ObjectId, // If stock is tracked per size
@@ -38,8 +37,7 @@ const StockHistorySchema = new mongoose.Schema(
             type: String,
         },
         adminId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Admin", // If changed manually by admin
+            type: String, // Changed to String to support "SYSTEM" or manual Admin IDs
         },
     },
     { timestamps: true }

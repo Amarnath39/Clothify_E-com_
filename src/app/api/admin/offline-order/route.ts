@@ -40,6 +40,42 @@ const generateOfflineOrderId = async (): Promise<string> => {
     }
 };
 
+/**
+ * ✅ Generate unique Offline invoice number
+ * Format: OFF-INV-YYYYMMDD-0001
+ */
+const generateOfflineInvoiceNumber = async (): Promise<string> => {
+    try {
+        const today = new Date();
+        const dateStr = today.toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
+        const todayStart = new Date(today.setHours(0, 0, 0, 0));
+        const todayEnd = new Date(today.setHours(23, 59, 59, 999));
+
+        const lastOfflineOrder = await Order.findOne({
+            order_type: "OFFLINE",
+            createdAt: { $gte: todayStart, $lte: todayEnd },
+        })
+            .sort({ createdAt: -1 })
+            .select("invoiceId")
+            .lean() as { invoiceId: string } | null;
+
+        let sequenceNumber = 1;
+
+        if (lastOfflineOrder?.invoiceId) {
+            const parts = lastOfflineOrder.invoiceId.split("-");
+            // OFF-INV-YYYYMMDD-XXXX -> parts are 4
+            if (parts.length === 4) {
+                sequenceNumber = parseInt(parts[3]) + 1;
+            }
+        }
+
+        return `OFF-INV-${dateStr}-${sequenceNumber.toString().padStart(4, "0")}`;
+    } catch (error) {
+        console.error("Error generating offline invoice number:", error);
+        throw error;
+    }
+};
+
 export const POST = async (req: NextRequest) => {
     try {
         // ✅ Check feature flag
@@ -202,16 +238,19 @@ export const POST = async (req: NextRequest) => {
         totalPayablePrice = Math.max(totalPayablePrice, 1);
 
         // ✅ Create order
-        const newOrderId = await generateOfflineOrderId();
-        const invoiceId = `INV-${newOrderId}`; // Simple invoice ID for offline
-
-        // If Razorpay Link, status is PENDING
         const isRazorpayLink = paymentMode === "RAZORPAY_LINK";
         const initialPaymentStatus = isRazorpayLink ? "PAYMENT_PENDING" : (paymentStatus === "Paid" ? "PAYMENT_SUCCESS" : "NOT_INITIATED");
         const initialCurrentStatus = isRazorpayLink ? "PENDING" : (paymentStatus === "Paid" ? "COMPLETED" : "PENDING");
 
+        // ✅ 3. Generate Order ID and Invoice ID
+        const orderId = await generateOfflineOrderId();
+        const invoiceId = await generateOfflineInvoiceNumber();
+
+        // ✅ 4. Create Order Object
         const newOrder = new Order({
-            orderId: newOrderId,
+            orderId,
+            invoiceId,
+            order_type: "OFFLINE",
             productDetails: processedProductDetails,
             totalPrice: totalActualPrice,
             payablePrice: totalPayablePrice,
@@ -482,6 +521,7 @@ export const POST = async (req: NextRequest) => {
                 success: true,
                 msg: isRazorpayLink ? "Payment Link Generated" : "Offline order created successfully",
                 orderId: newOrder.orderId,
+                invoiceId: newOrder.invoiceId, // Include in response
                 offlorder: orderForNotification,
                 paymentLink: paymentLinkData
             },

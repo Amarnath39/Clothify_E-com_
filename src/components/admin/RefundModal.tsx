@@ -130,10 +130,12 @@ export default function RefundModal({ order, isOpen, onClose, onSuccess }: Refun
                     <div className="border rounded-md p-2 max-h-60 overflow-y-auto">
                         <Label className="mb-2 block">Select Items to Return:</Label>
                         {order.productDetails.map((item: any, idx: number) => {
-                            const key = `${item.product._id || item.product}_${item.size._id}`;
-                            // Note: item.product might be populated (object) or ID (string). 
-                            // POSOrdersPage usually populates. Handle safe check.
-                            // Assuming order passed from POSOrdersPage is populated.
+                            // Handle both populated and unpopulated product/size fields
+                            const productId = item.product?._id || item.product;
+                            const sizeId = item.size?._id || item.sizeId || item._id; // Fallback to item._id if no size
+                            const key = `${productId}_${sizeId}`;
+                            const productName = item.product?.name || "Product";
+                            const sizeLabel = item.size?.size || item.sizeLabel || "N/A";
                             const isSelected = !!selectedItems[key];
 
                             return (
@@ -144,9 +146,9 @@ export default function RefundModal({ order, isOpen, onClose, onSuccess }: Refun
                                             onCheckedChange={(c) => handleItemCheck(key, !!c, item.count)}
                                         />
                                         <div>
-                                            <p className="text-sm font-medium">{item.product.name || "Product"}</p>
+                                            <p className="text-sm font-medium">{productName}</p>
                                             <p className="text-xs text-gray-500">
-                                                Size: {item.size.size} | Qty: {item.count}
+                                                Size: {sizeLabel} | Qty: {item.count}
                                             </p>
                                         </div>
                                     </div>
@@ -166,6 +168,7 @@ export default function RefundModal({ order, isOpen, onClose, onSuccess }: Refun
                                 </div>
                             );
                         })}
+
                     </div>
 
                     {/* Reason */}
