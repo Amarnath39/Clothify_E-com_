@@ -99,7 +99,7 @@ const CategoryList = () => {
 
         {/* Grid Layout */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
-          {categories.slice(0, 4).map((cat: any, idx: number) => (
+          {categories.map((cat: any, idx: number) => (
             <CategoryCard
               key={cat._id}
               name={cat.name}
