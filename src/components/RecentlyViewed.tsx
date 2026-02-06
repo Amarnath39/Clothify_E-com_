@@ -31,7 +31,7 @@ const RecentlyViewed = () => {
                 <h2 className="font-serif text-2xl md:text-3xl text-gray-900">Recently Viewed</h2>
             </div>
 
-            <div className="relative group">
+            <div className="relative group/rv">
                 <Swiper
                     modules={[Navigation]}
                     spaceBetween={16}
@@ -55,10 +55,10 @@ const RecentlyViewed = () => {
                 </Swiper>
 
                 {/* Custom Navigation */}
-                <button className="rv-prev absolute left-0 top-1/2 -translate-y-[150%] z-10 w-10 h-10 bg-white/80 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center text-gray-800 hover:bg-[#b48a3c] hover:text-white transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 -ml-4">
+                <button className="rv-prev absolute left-0 top-1/2 -translate-y-[150%] z-10 w-10 h-10 bg-white/80 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center text-gray-800 hover:bg-[#b48a3c] hover:text-white transition-all opacity-0 group-hover/rv:opacity-100 disabled:opacity-0 -ml-4">
                     <ChevronLeft size={20} />
                 </button>
-                <button className="rv-next absolute right-0 top-1/2 -translate-y-[150%] z-10 w-10 h-10 bg-white/80 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center text-gray-800 hover:bg-[#b48a3c] hover:text-white transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 -mr-4">
+                <button className="rv-next absolute right-0 top-1/2 -translate-y-[150%] z-10 w-10 h-10 bg-white/80 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center text-gray-800 hover:bg-[#b48a3c] hover:text-white transition-all opacity-0 group-hover/rv:opacity-100 disabled:opacity-0 -mr-4">
                     <ChevronRight size={20} />
                 </button>
             </div>

@@ -74,6 +74,11 @@ body {
   font-family: var(--font-roboto);
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 
 @layer base {
   :root {
