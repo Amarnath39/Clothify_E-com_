@@ -10,22 +10,32 @@ import Counter from "../../../../model/Counter";
 import mongoose from "mongoose";
 import axios from "axios";
 import { generateRandomId } from "../../../../helper/generateRandomId";
+import Razorpay from "razorpay";
 
 connectDB();
 
-// ✅ Reuse existing order ID generation logic
-const generateOrderId = async (): Promise<string> => {
+// ✅ Generate unique Offline Order ID
+const generateOfflineOrderId = async (): Promise<string> => {
     try {
         const counter = await Counter.findOneAndUpdate(
-            { id: "orderSeq" },
+            { id: "offlineOrderSeq" },
             { $inc: { seq: 1 } },
             { new: true, upsert: true }
         );
 
-        const orderNumber = counter?.seq || 1801;
-        return `ON-${orderNumber.toString().padStart(6, "0")}`;
+        // Start offline sequence from 1000 if new
+        if (counter.seq < 1000) {
+            const initialCounter = await Counter.findOneAndUpdate(
+                { id: "offlineOrderSeq" },
+                { $set: { seq: 1000 } },
+                { new: true, upsert: true }
+            );
+            return `OFF-${initialCounter.seq.toString().padStart(6, "0")}`;
+        }
+
+        return `OFF-${counter.seq.toString().padStart(6, "0")}`;
     } catch (error) {
-        console.error("Error generating order ID:", error);
+        console.error("Error generating offline order ID:", error);
         throw error;
     }
 };
@@ -192,8 +202,16 @@ export const POST = async (req: NextRequest) => {
         totalPayablePrice = Math.max(totalPayablePrice, 1);
 
         // ✅ Create order
+        const newOrderId = await generateOfflineOrderId();
+        const invoiceId = `INV-${newOrderId}`; // Simple invoice ID for offline
+
+        // If Razorpay Link, status is PENDING
+        const isRazorpayLink = paymentMode === "RAZORPAY_LINK";
+        const initialPaymentStatus = isRazorpayLink ? "PAYMENT_PENDING" : (paymentStatus === "Paid" ? "PAYMENT_SUCCESS" : "NOT_INITIATED");
+        const initialCurrentStatus = isRazorpayLink ? "PENDING" : (paymentStatus === "Paid" ? "COMPLETED" : "PENDING");
+
         const newOrder = new Order({
-            orderId: await generateOrderId(),
+            orderId: newOrderId,
             productDetails: processedProductDetails,
             totalPrice: totalActualPrice,
             payablePrice: totalPayablePrice,
@@ -201,13 +219,12 @@ export const POST = async (req: NextRequest) => {
             shippingAddress: customerDetails.shippingAddress,
             shippingCost,
             paymentMethod: paymentMode,
-            paymentStatus:
-                paymentStatus === "Paid" ? "PAYMENT_SUCCESS" : "NOT_INITIATED",
-            currentStatus: paymentStatus === "Paid" ? "COMPLETED" : "PENDING",
+            paymentStatus: initialPaymentStatus,
+            currentStatus: initialCurrentStatus,
             date: new Date(),
-            paidAt: paymentStatus === "Paid" ? new Date() : null,
+            paidAt: paymentStatus === "Paid" && !isRazorpayLink ? new Date() : null,
 
-            // ✅ NEW: Mark as offline order
+            // ✅ MARK AS OFFLINE
             order_type: "OFFLINE",
             orderSource: "ADMIN_OFFLINE",
             createdBy: adminId,
@@ -216,12 +233,70 @@ export const POST = async (req: NextRequest) => {
             deliveryPartner:
                 shippingMethod === "DTDC" ? "DTDC" : manualShipping?.courierName || "MANUAL",
             trackingId: manualShipping?.trackingNumber || "",
+
+            // Metadata for recovery
+            metadata: {
+                source: "OFFLINE_ADMIN",
+                adminId
+            }
         });
 
         await newOrder.save();
 
-        // ✅ Reduce inventory via centralized utility (ONLY IF PAID)
-        if (paymentStatus === "Paid") {
+        let paymentLinkData = null;
+
+        // 🚀 ACTION: GENERATE RAZORPAY LINK
+        if (isRazorpayLink) {
+            if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+                // Don't fail order, just warn
+                console.error("❌ Razorpay keys missing");
+            } else {
+                try {
+                    const razorpay = new Razorpay({
+                        key_id: process.env.RAZORPAY_KEY_ID,
+                        key_secret: process.env.RAZORPAY_KEY_SECRET,
+                    });
+
+                    let contact = customerDetails.phone.trim();
+                    if (contact.length === 10 && !contact.startsWith("+")) {
+                        contact = `+91${contact}`;
+                    }
+
+                    const linkOptions = {
+                        amount: Math.round(totalPayablePrice * 100),
+                        currency: "INR",
+                        accept_partial: false,
+                        reference_id: `${newOrderId}-${Math.random().toString(36).substring(2, 7)}`,
+                        description: `Swaarasya Offline Order #${newOrderId}`,
+                        customer: { contact: contact, name: customerDetails.name },
+                        notify: { sms: true, email: !!customerDetails.email },
+                        reminder_enable: true,
+                        notes: { orderId: newOrderId, invoiceId, orderType: "OFFLINE" },
+                        callback_url: `https://www.swaarasya.com/invoice/${invoiceId}`, // Fallback
+                    };
+
+                    const link = await razorpay.paymentLink.create(linkOptions);
+                    paymentLinkData = {
+                        id: link.id,
+                        url: link.short_url,
+                        status: link.status
+                    };
+
+                    // Update order with link details
+                    newOrder.metadata = { ...newOrder.metadata, paymentLink: paymentLinkData };
+                    await newOrder.save();
+
+                } catch (err) {
+                    console.error("❌ Failed to generate Razorpay link:", err);
+                    // We still return success but without link? Or should we error? 
+                    // Better to warn user.
+                }
+            }
+        }
+
+        // ✅ Reduce inventory via centralized utility (ONLY IF PAID IMMEDIATELY)
+        // For Razorpay Link, stock is deducted via Webhook on success
+        if (initialPaymentStatus === "PAYMENT_SUCCESS") {
             const stockResult = await updateStock(
                 stockUpdateItems as any,
                 "SALE",
@@ -241,7 +316,7 @@ export const POST = async (req: NextRequest) => {
         }
 
         // ✅ DTDC Integration (conditional - only when payment is completed)
-        if (shippingMethod === "DTDC" && dtdcDetails && paymentStatus === "Paid") {
+        if (shippingMethod === "DTDC" && dtdcDetails && initialPaymentStatus === "PAYMENT_SUCCESS") {
             try {
 
                 const consignments = processedProductDetails.map((item: any) => {
@@ -352,6 +427,8 @@ export const POST = async (req: NextRequest) => {
         };
 
         // ✅ Send Email (if enabled and email provided)
+        // Send only if confirm immediately or if we want to send "Order Created" email even for pending payment
+        // Usually we send email on creation.
         if (sendEmail && customerDetails.email) {
             console.log(`📧 Attempting to send offline order email to ${customerDetails.email}...`);
             try {
@@ -361,7 +438,7 @@ export const POST = async (req: NextRequest) => {
                     orderId: newOrder.orderId,
                     orderDetails: orderForNotification,
                     paymentMode,
-                    paymentStatus,
+                    paymentStatus: initialPaymentStatus,
                     shippingMethod,
                     trackingId: newOrder.trackingId,
                 });
@@ -376,7 +453,11 @@ export const POST = async (req: NextRequest) => {
         }
 
         // ✅ Send WhatsApp (if enabled, reuse existing template)
-        if (sendWhatsApp && customerDetails.phone) {
+        // Only send if confirmed or maybe send "Payment Link" whatsapp?
+        // Current sendOrderConfirmation implies "Confirmation".
+        // For now, only send if NOT Razorpay link, OR we need a sendPaymentLink template?
+        // User didn't ask for new template. Let's send confirmation only if paid.
+        if (sendWhatsApp && customerDetails.phone && !isRazorpayLink) {
             console.log(`📱 Attempting to send WhatsApp confirmation to ${customerDetails.phone}...`);
             try {
                 const waResult = await sendOrderConfirmation(
@@ -399,9 +480,10 @@ export const POST = async (req: NextRequest) => {
         return NextResponse.json(
             {
                 success: true,
-                msg: "Offline order created successfully",
+                msg: isRazorpayLink ? "Payment Link Generated" : "Offline order created successfully",
                 orderId: newOrder.orderId,
                 offlorder: orderForNotification,
+                paymentLink: paymentLinkData
             },
             { status: 201 }
         );

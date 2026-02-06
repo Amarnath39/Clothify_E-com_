@@ -121,9 +121,9 @@ export async function POST(req: NextRequest) {
                     .populate("productDetails.product");
             }
 
-            // Fallback: Parse Description (e.g. "Swaarasya POS Order #ON-12345")
+            // Fallback: Parse Description (e.g. "Swaarasya POS Order #ON-12345" or "OFF-12345")
             if (!order && payment.description) {
-                const match = payment.description.match(/Order #(ON-\d+)/);
+                const match = payment.description.match(/Order #((?:ON|POS|OFF)-\d+)/);
                 if (match) {
                     const extractedId = match[1];
                     console.log("🔍 Looking up order by description:", extractedId);
@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
                 order.transactionId = payment.id;
                 order.paymentStatus = "PAYMENT_SUCCESS";
                 order.paymentMethod = "RAZORPAY"; // ⭐ This is where it gets set
-                order.currentStatus = order.order_type === "POS" ? "COMPLETED" : "PENDING";
+                order.currentStatus = order.order_type === "POS" ? "COMPLETED" : "PENDING"; // Offline/Online remain PENDING for shipping
                 order.paidAt = new Date();
 
                 // Update payment details
@@ -304,14 +304,18 @@ export async function POST(req: NextRequest) {
                         sizeLabel: item.size?.size
                     })).filter((i: any) => i.sizeId);
 
+                    // Determine Source: ONLINE, POS, or OFFLINE
+                    const orderSource = order.paymentMethod === "COD" ? "ONLINE" :
+                        (order.order_type === "POS" ? "POS" :
+                            (order.order_type === "OFFLINE" ? "OFFLINE" : "ONLINE"));
+
                     const stockResult = await updateStock(
                         stockItems,
                         "SALE",
-                        order.paymentMethod === "COD" ? "ONLINE" : (order.order_type === "POS" ? "POS" : "ONLINE"),
+                        orderSource,
                         order.orderId,
-                        order.createdBy // Pass admin ID for POS attribution
+                        order.createdBy // Pass admin ID for POS/Offline attribution
                     );
-
                     if (!stockResult.success) {
                         const errorMsg = stockResult.errors?.join("; ") || "Stock update failed";
                         console.error("❌ Stock Update Failed:", errorMsg);

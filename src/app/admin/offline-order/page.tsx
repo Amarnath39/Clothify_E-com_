@@ -86,6 +86,13 @@ const CreateOfflineOrderPage = () => {
     const [paymentMode, setPaymentMode] = useState("Cash");
     const [paymentStatus, setPaymentStatus] = useState("Paid");
 
+    // Auto-update status when mode changes
+    React.useEffect(() => {
+        if (paymentMode === "RAZORPAY_LINK") {
+            setPaymentStatus("Pending");
+        }
+    }, [paymentMode]);
+
     // Shipping
     const [shippingMethod, setShippingMethod] = useState("MANUAL");
     const [shippingCost, setShippingCost] = useState(0);
@@ -108,6 +115,11 @@ const CreateOfflineOrderPage = () => {
 
     // Loading
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // RAZORPAY LINK STATE
+    const [paymentLinkData, setPaymentLinkData] = useState<any>(null);
+    const [isWaitingForPayment, setIsWaitingForPayment] = useState(false);
+    const [createdOrderId, setCreatedOrderId] = useState("");
 
     // ✅ Search Products
     const handleProductSearch = async () => {
@@ -137,6 +149,44 @@ const CreateOfflineOrderPage = () => {
             setIsSearching(false);
         }
     };
+
+    // 📡 SSE: Listen for Payment Confirmation
+    React.useEffect(() => {
+        let eventSource: EventSource | null = null;
+
+        if (isWaitingForPayment && createdOrderId) {
+            console.log(`📡 Listening for payment updates for ${createdOrderId}...`);
+            eventSource = new EventSource(`/api/sse/order-status?orderId=${createdOrderId}`);
+
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log("📡 SSE Update:", data);
+
+                    if (data.paymentStatus === "PAYMENT_SUCCESS") {
+                        toast.success("Payment Received!");
+                        setPaymentLinkData(null);
+                        setIsWaitingForPayment(false);
+                        router.push(`/admin/get-orders`); // Or stay on page? Better to go to list or details.
+                    }
+                } catch (err) {
+                    console.error("Error parsing SSE data:", err);
+                }
+            };
+
+            eventSource.onerror = (err) => {
+                console.error("SSE Error:", err);
+                eventSource?.close();
+            };
+        }
+
+        return () => {
+            if (eventSource) {
+                console.log("🔌 Closing SSE connection");
+                eventSource.close();
+            }
+        };
+    }, [isWaitingForPayment, createdOrderId, router]);
 
     // ✅ Add Product to Order
     const handleAddProduct = (product: Product, sizeId: string, quantity: number) => {
@@ -289,8 +339,16 @@ const CreateOfflineOrderPage = () => {
             });
 
             if (response.data.success) {
-                toast.success("Offline order created successfully!");
-                router.push(`/admin/get-orders`);
+                if (response.data.paymentLink) {
+                    // 🚀 Show Payment Link Modal
+                    setCreatedOrderId(response.data.orderId);
+                    setPaymentLinkData(response.data.paymentLink);
+                    setIsWaitingForPayment(true);
+                    toast.success("Payment Link Generated!");
+                } else {
+                    toast.success("Offline order created successfully!");
+                    router.push(`/admin/get-orders`);
+                }
             } else {
                 toast.error(response.data.msg || "Failed to create order");
             }
@@ -303,6 +361,74 @@ const CreateOfflineOrderPage = () => {
             setIsSubmitting(false);
         }
     };
+
+    // ✅ Copy Link Helper
+    const copyToClipboard = () => {
+        if (paymentLinkData?.url) {
+            navigator.clipboard.writeText(paymentLinkData.url);
+            toast.success("Link copied!");
+        }
+    };
+
+    // 🟢 RENDER PAYMENT LINK MODAL
+    if (paymentLinkData) {
+        return (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <Card className="w-full max-w-md bg-white shadow-xl animate-in fade-in zoom-in">
+                    <CardHeader className="text-center border-b pb-4">
+                        <div className="mx-auto bg-blue-100 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-2">
+                            <FaCreditCard className="text-blue-600 text-2xl" />
+                        </div>
+                        <CardTitle>Payment Link Generated</CardTitle>
+                        <p className="text-sm text-gray-500">Order ID: {createdOrderId}</p>
+                    </CardHeader>
+                    <CardContent className="space-y-6 pt-6">
+                        <div className="text-center space-y-2">
+                            <p className="font-medium">Amount to Pay</p>
+                            <p className="text-3xl font-bold text-green-600">₹{total.toFixed(2)}</p>
+                        </div>
+
+                        <div className="bg-gray-50 p-3 rounded-lg flex items-center gap-2 border">
+                            <Input
+                                readOnly
+                                value={paymentLinkData.url}
+                                className="bg-white border-none shadow-none focus-visible:ring-0"
+                            />
+                            <Button size="sm" onClick={copyToClipboard}>Copy</Button>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-center gap-2 text-blue-600 animate-pulse">
+                                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                <span className="font-medium">Waiting for customer to pay...</span>
+                            </div>
+                            <p className="text-xs text-center text-gray-400">
+                                This screen will automatically update when payment is received.
+                            </p>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => {
+                                    // Allow manual exit
+                                    if (window.confirm("Payment is still pending. Leave this page?")) {
+                                        router.push('/admin/get-orders');
+                                    }
+                                }}
+                            >
+                                Close & Check Later
+                            </Button>
+                            {/* Optional: Manual Refresh or Check Status button could go here */}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto p-6 space-y-6">
@@ -562,12 +688,17 @@ const CreateOfflineOrderPage = () => {
                                     <SelectItem value="UPI">UPI</SelectItem>
                                     <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
                                     <SelectItem value="COD">COD</SelectItem>
+                                    <SelectItem value="RAZORPAY_LINK">Razorpay Link (SMS/Email)</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
                             <Label>Payment Status</Label>
-                            <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                            <Select
+                                value={paymentStatus}
+                                onValueChange={setPaymentStatus}
+                                disabled={paymentMode === "RAZORPAY_LINK"} // Auto-set to Pending for Link
+                            >
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
