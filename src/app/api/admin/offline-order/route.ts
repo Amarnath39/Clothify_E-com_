@@ -243,7 +243,7 @@ export const POST = async (req: NextRequest) => {
 
         await newOrder.save();
 
-        let paymentLinkData = null;
+        let paymentLinkData: { id: string; url: string; status: string } | null = null;
 
         // 🚀 ACTION: GENERATE RAZORPAY LINK
         if (isRazorpayLink) {

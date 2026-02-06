@@ -8,18 +8,19 @@ export const POST = async (req: NextRequest) => {
     await connectDB();
 
     const userId = req.headers.get("x-user-id");
-    console.log("User ID from headers:", userId);
+
     if (!userId) {
       return NextResponse.json(
-        { success: false, msg: "Missing user ID" },
+        { success: false, msg: "Please provide User Id" },
         { status: 400 }
       );
     }
 
     const user = await User.findById(userId);
+
     if (!user) {
       return NextResponse.json(
-        { success: false, msg: "Unauthorized user" },
+        { success: false, msg: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -42,9 +43,8 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    // console.log(userId,user,orderId)
-
-    if (order.user.toString() !== userId) {
+    // Authorization Check
+    if (order.user && order.user.toString() !== userId) {
       return NextResponse.json(
         { success: false, msg: "Unauthorized access to order" },
         { status: 403 }

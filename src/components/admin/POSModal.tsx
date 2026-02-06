@@ -480,6 +480,12 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
     // ✅ Close and reset
     const handleClose = () => {
+        // If payment link is generated, close immediately without confirm (as link is active)
+        if (paymentLinkInfo) {
+            onClose();
+            return;
+        }
+
         if (cart.length > 0 && !completedOrder) {
             if (!confirm("Cart has items. Are you sure you want to close?")) {
                 return;
