@@ -150,43 +150,41 @@ const CreateOfflineOrderPage = () => {
         }
     };
 
-    // 📡 SSE: Listen for Payment Confirmation
+    // ✅ 📡 Poll for Payment Confirmation (Replaces SSE)
     React.useEffect(() => {
-        let eventSource: EventSource | null = null;
+        let pollTimer: NodeJS.Timeout;
 
         if (isWaitingForPayment && createdOrderId) {
-            console.log(`📡 Listening for payment updates for ${createdOrderId}...`);
-            eventSource = new EventSource(`/api/sse/order-status?orderId=${createdOrderId}`);
+            console.log(`📡 Polling for payment updates for ${createdOrderId}...`);
 
-            eventSource.onmessage = (event) => {
+            pollTimer = setInterval(async () => {
                 try {
-                    const data = JSON.parse(event.data);
-                    console.log("📡 SSE Update:", data);
+                    const { data } = await axios.get(`/api/admin/order/${createdOrderId}`, {
+                        headers: { "x-admin-id": user?._id || localStorage.getItem("adminId") }
+                    });
 
-                    if (data.paymentStatus === "PAYMENT_SUCCESS") {
-                        toast.success("Payment Received!");
-                        setPaymentLinkData(null);
-                        setIsWaitingForPayment(false);
-                        router.push(`/admin/get-orders`); // Or stay on page? Better to go to list or details.
+                    if (data.success && data.order) {
+                        const status = data.order.paymentStatus;
+                        console.log(`🔄 Poll Status: ${status}`);
+
+                        if (status === "PAYMENT_SUCCESS") {
+                            toast.success("Payment Received!");
+                            setPaymentLinkData(null);
+                            setIsWaitingForPayment(false);
+                            router.push(`/admin/get-orders`);
+                        }
                     }
-                } catch (err) {
-                    console.error("Error parsing SSE data:", err);
+                } catch (error) {
+                    console.error("Polling error:", error);
+                    // Don't stop polling on transient errors
                 }
-            };
-
-            eventSource.onerror = (err) => {
-                console.error("SSE Error:", err);
-                eventSource?.close();
-            };
+            }, 3000); // Poll every 3 seconds
         }
 
         return () => {
-            if (eventSource) {
-                console.log("🔌 Closing SSE connection");
-                eventSource.close();
-            }
+            if (pollTimer) clearInterval(pollTimer);
         };
-    }, [isWaitingForPayment, createdOrderId, router]);
+    }, [isWaitingForPayment, createdOrderId, router, user]);
 
     // ✅ Add Product to Order
     const handleAddProduct = (product: Product, sizeId: string, quantity: number) => {

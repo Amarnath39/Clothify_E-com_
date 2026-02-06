@@ -532,6 +532,9 @@ export async function POST(req: NextRequest) {
         // ═════════════════════════════════════════════════════════════════════════
         // EVENT: payment_link.paid → Payment Link Successfully Paid
         // ═════════════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════════════
+        // EVENT: payment_link.paid → Payment Link Successfully Paid
+        // ═════════════════════════════════════════════════════════════════════════
         if (webhookEvent === "payment_link.paid") {
             const paymentLink = payload.payload.payment_link.entity;
 
@@ -602,6 +605,8 @@ export async function POST(req: NextRequest) {
             }
 
             // Check if already processed
+            // Note: We check if paymentStatus is success AND stockUpdated to be sure.
+            // But for offline orders initialized as PENDING, we need to process even if paymentStatus was somehow set (rare via link).
             if (order.paymentStatus === "PAYMENT_SUCCESS" && order.stockUpdated) {
                 console.log("⚠️ Payment link already processed:", order.orderId);
                 return NextResponse.json({
@@ -610,24 +615,129 @@ export async function POST(req: NextRequest) {
                 });
             }
 
-            // NOTE: The actual stock deduction will happen when payment.captured webhook fires
-            // This event just marks the payment link as paid
-            order.metadata.paymentLinkStatus = "paid";
-            order.metadata.paymentLinkPaidAt = new Date();
+            // 🚀 FULL FULFILLMENT LOGIC (Offline Order Fix)
+            try {
+                // 1. Update Status
+                order.paymentStatus = "PAYMENT_SUCCESS";
+                order.metadata.paymentLinkStatus = "paid";
+                order.metadata.paymentLinkPaidAt = new Date();
+                order.paidAt = new Date();
+                order.paymentMethod = order.paymentMethod || "RAZORPAY_LINK";
 
-            order.paymentLogs = order.paymentLogs || [];
-            order.paymentLogs.push({
-                status: "PAYMENT_LINK_PAID",
-                timestamp: new Date(),
-                details: {
-                    paymentLinkId: paymentLink.id,
-                    amount: paymentLink.amount / 100,
-                    status: paymentLink.status
+                // Update current status if it was just created (Pending)
+                if (order.currentStatus === "PENDING" || order.currentStatus === "CHECKOUT") {
+                    order.currentStatus = order.order_type === "POS" ? "COMPLETED" : "PENDING";
                 }
-            });
 
-            await order.save();
-            console.log("✅ Payment link marked as paid:", order.orderId);
+                // 2. Deduct Stock Only if NOT already done
+                if (!order.stockUpdated) {
+                    console.log("📦 Payment Link Paid: Reducing Stock...");
+
+                    const stockItems = order.productDetails.map((item: any) => ({
+                        productId: item.product._id.toString(),
+                        sizeId: item.size?._id?.toString(),
+                        quantity: item.count + (item.freeCount || 0),
+                        productName: item.product?.name,
+                        sizeLabel: item.size?.size
+                    })).filter((i: any) => i.sizeId);
+
+                    const orderSource = order.order_type === "OFFLINE" ? "OFFLINE" : (order.order_type === "POS" ? "POS" : "ONLINE");
+                    const adminId = order.metadata?.adminId || order.createdBy;
+
+                    const stockResult = await updateStock(
+                        stockItems,
+                        "SALE",
+                        orderSource,
+                        order.orderId,
+                        adminId
+                    );
+
+                    if (stockResult.success) {
+                        order.stockUpdated = true;
+                        console.log("✅ Stock updated for payment link order");
+                    } else {
+                        console.log("❌ Stock update failed for payment link:", stockResult.errors);
+                        order.fulfillmentError = "Stock update failed: " + (stockResult.errors || []).join(", ");
+                    }
+                }
+
+                // 3. Save Order
+                await order.save();
+                console.log("✅ Order updated via Payment Link event");
+
+                // 4. Notifications (WhatsApp & Email)
+                setImmediate(async () => {
+
+                    // WhatsApp: Handle "phone" vs "mobile" field mismatch for Offline Orders
+                    const customerPhone = order.shippingAddress?.mobile || order.shippingAddress?.phone;
+
+                    if (customerPhone) {
+                        try {
+                            if (order.order_type === "POS") {
+                                // POS Invoice
+                                const invoiceUrl = `https://www.swaarasya.com/invoice/${order.invoiceId}`;
+                                await sendPOSInvoice(
+                                    order.shippingAddress.name || "Customer",
+                                    customerPhone,
+                                    order.orderId,
+                                    invoiceUrl,
+                                    "Swaarasya"
+                                );
+                            } else {
+                                // Standard / Offline Confirmation
+                                await sendOrderConfirmation(
+                                    order.shippingAddress.name || "Customer",
+                                    customerPhone,
+                                    order.orderId,
+                                    "Swaarasya",
+                                    order.deliveryPartner || "DTDC"
+                                );
+                            }
+                            console.log(`✅ WhatsApp sent to ${customerPhone}`);
+                        } catch (e) {
+                            console.error("❌ WhatsApp failed:", e);
+                        }
+                    } else {
+                        console.warn("⚠️ No phone number found for WhatsApp notification");
+                    }
+
+                    // Email (Offline orders might want re-confirmation or usually just initial creation email. 
+                    // But if this is a "Payment Received" flow, we might want to send admin email or user email if not sent.)
+                    // Use existing helpers.
+                    try {
+                        // Send User Email
+                        /* 
+                          Note: sendUserOrderEmail helper usually expects standard structure.
+                          If offline order has email in user object (which might be null), fallback to shippingAddress email if stored?
+                          Offline orders usually store email in customerDetails (shippingAddress/billingAddress doesn't strictly enforce email field in schema usually).
+                          Let's check if we can send based on metadata or user.
+                        */
+                        if (order.user) {
+                            await sendUserOrderEmail(order);
+                            console.log("✅ User email sent");
+                        } else if (order.metadata?.customerEmail) {
+                            // Custom logic if valid, but for now skip if no linked user to avoid crash
+                        }
+
+                        // Send Admin Notification
+                        const orderInfo: OrderDetails = {
+                            orderId: order.orderId,
+                            customerName: order.shippingAddress?.name || "Customer",
+                            customerEmail: order.user?.email || "Offline Customer",
+                            totalAmount: order.payablePrice,
+                            orderDate: new Date().toLocaleDateString("en-IN"),
+                        };
+                        await sendAdminOrderEmail(orderInfo);
+                        console.log("✅ Admin email sent");
+
+                    } catch (e) { console.error("❌ Email notifications failed", e) }
+
+                });
+
+            } catch (err: any) {
+                console.error("❌ Payment Link Processing Failed:", err);
+                // Don't fail the webhook response, just log
+            }
 
             return NextResponse.json({ success: true, orderId: order.orderId });
         }
