@@ -264,7 +264,7 @@ export const POST = async (req: NextRequest) => {
             paidAt: paymentStatus === "Paid" && !isRazorpayLink ? new Date() : null,
 
             // ✅ MARK AS OFFLINE
-            order_type: "OFFLINE",
+            // order_type: "OFFLINE", // Removed duplicate
             orderSource: "ADMIN_OFFLINE",
             createdBy: adminId,
 
@@ -305,12 +305,12 @@ export const POST = async (req: NextRequest) => {
                         amount: Math.round(totalPayablePrice * 100),
                         currency: "INR",
                         accept_partial: false,
-                        reference_id: `${newOrderId}-${Math.random().toString(36).substring(2, 7)}`,
-                        description: `Swaarasya Offline Order #${newOrderId}`,
+                        reference_id: `${orderId}-${Math.random().toString(36).substring(2, 7)}`,
+                        description: `Swaarasya Offline Order #${orderId}`,
                         customer: { contact: contact, name: customerDetails.name },
                         notify: { sms: true, email: !!customerDetails.email },
                         reminder_enable: true,
-                        notes: { orderId: newOrderId, invoiceId, orderType: "OFFLINE" },
+                        notes: { orderId: orderId, invoiceId, orderType: "OFFLINE" },
                         callback_url: `https://www.swaarasya.com/invoice/${invoiceId}`, // Fallback
                     };
 
