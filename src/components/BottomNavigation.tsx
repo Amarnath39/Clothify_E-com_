@@ -1,16 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Home, ShoppingCart, Package, User, Phone } from "lucide-react";
 import Link from "next/link";
 import useWindowSize from "@/hooks/useWindowSize";
 import { useSelector } from "react-redux";
 import { usePathname } from "next/navigation";
+import { Home, ShoppingCart, Package, Phone, User } from "lucide-react";
 
 const BottomNavbar = () => {
-  const [activeTab, setActiveTab] = useState("home");
   const { width } = useWindowSize();
-  const isMobile = width < 768; // Show only on small screens (sm)
+  const isMobile = width < 768;
   const cartItems = useSelector((state: any) => state.cart.items);
   const pathname = usePathname();
 
@@ -18,118 +16,72 @@ const BottomNavbar = () => {
   const shouldHide = pathname.startsWith("/admin") || pathname.startsWith("/adminLogin") || pathname.startsWith("/invoice");
 
   if (!isMobile || shouldHide) return null;
+
+  const navItems = [
+    { href: "/", icon: Home, label: "Home" },
+    { href: "/cart", icon: ShoppingCart, label: "Cart", badge: cartItems.length },
+    { href: "/orders", icon: Package, label: "Orders" },
+    { href: "/contact", icon: Phone, label: "Contact" },
+    { href: "/profile", icon: User, label: "Account" },
+  ];
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
+
   return (
-    <div
-      className="fixed bottom-0 inset-x-0 w-full bg-[#000000] shadow-md border-t border-white flex justify-around items-center py-3 sm:py-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] footer-main"
-      style={{ zIndex: 100 }}
+    <nav
+      className="fixed bottom-0 inset-x-0 w-full shadow-lg"
+      style={{
+        zIndex: 100,
+        backgroundColor: "#800020",
+      }}
     >
-      <Link
-        href="/"
-        onClick={() => setActiveTab("home")}
-        className="flex flex-col items-center"
-      >
-        <Home
-          className={`w-6 h-6 ${activeTab === "home" ? "text-navbarText scale-110" : "text-white"
-            } transition-all`}
-        />
-        <span
-          className={`text-xs ${activeTab === "home"
-              ? "text-navbarText font-semibold"
-              : "text-white"
-            }`}
-        >
-          Home
-        </span>
-      </Link>
+      <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
+        {navItems.map((item) => {
+          const active = isActive(item.href);
+          const Icon = item.icon;
 
-      <Link
-        href="/cart"
-        onClick={() => setActiveTab("cart")}
-        className="flex flex-col items-center relative"
-      >
-        <ShoppingCart
-          className={`w-6 h-6 ${activeTab === "cart" ? "text-navbarText scale-110" : "text-white"
-            } transition-all`}
-        />
-        <div className="absolute -top-1 left-1">
-          {cartItems.length > 0 && (
-            <span className="absolute left-0 w-4 h-4 z-[100] rounded-full top-0 text-black items-center flex justify-center bg-white">
-              {cartItems.length}
-            </span>
-          )}
-        </div>
-        <span
-          className={`text-xs ${activeTab === "cart"
-              ? "text-navbarText font-semibold"
-              : "text-white"
-            }`}
-        >
-          Cart
-        </span>
-      </Link>
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="relative flex flex-col items-center justify-center flex-1 h-full group"
+            >
+              {/* Icon container */}
+              <div className="relative">
+                <Icon
+                  className={`w-6 h-6 transition-all duration-200 ${active
+                      ? "text-[#C9A24D] scale-110"
+                      : "text-white/80 group-active:scale-95"
+                    }`}
+                  strokeWidth={active ? 2.5 : 1.5}
+                />
 
-      <Link
-        href="/orders"
-        onClick={() => setActiveTab("orders")}
-        className="flex flex-col items-center"
-      >
-        <Package
-          className={`w-6 h-6 ${activeTab === "orders"
-              ? "text-navbarText scale-110"
-              : "text-white"
-            } transition-all`}
-        />
-        <span
-          className={`text-xs ${activeTab === "orders"
-              ? "text-navbarText font-semibold"
-              : "text-white"
-            }`}
-        >
-          Orders
-        </span>
-      </Link>
+                {/* Cart badge */}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="absolute -top-2 -right-2.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#C9A24D] text-[#800020] text-[10px] font-bold px-1 shadow-sm">
+                    {item.badge > 99 ? "99+" : item.badge}
+                  </span>
+                )}
+              </div>
 
-      <Link
-        href="/contact"
-        onClick={() => setActiveTab("contact")}
-        className="flex flex-col items-center"
-      >
-        <Phone
-          className={`w-6 h-6 ${activeTab === "contact"
-              ? "text-navbarText scale-110"
-              : "text-white"
-            } transition-all`}
-        />
-        <span
-          className={`text-xs ${activeTab === "contact"
-              ? "text-navbarText font-semibold"
-              : "text-white"
-            }`}
-        >
-          Contact
-        </span>
-      </Link>
-      <Link
-        href="/profile"
-        onClick={() => setActiveTab("profile")}
-        className="flex flex-col items-center"
-      >
-        <User
-          className={`w-6 h-6 ${activeTab === "profile"
-              ? "text-navbarText scale-110"
-              : "text-white"
-            } transition-all`}
-        />
-        <span
-          className={`text-xs ${activeTab === "profile"
-              ? "text-navbarText font-semibold"
-              : "text-white"
-            }`}
-        >
-          Profile
-        </span>
-      </Link>
-    </div>
+              {/* Label */}
+              <span
+                className={`mt-0.5 text-[10px] font-medium tracking-wide transition-colors duration-200 ${active
+                    ? "text-[#C9A24D]"
+                    : "text-white/70"
+                  }`}
+              >
+                {item.label}
+              </span>
+
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 };
 
