@@ -32,11 +32,13 @@ interface HeroBanner {
   id: string;
   _id: string;
   file: File | null;
+  mobileFile: File | null;
   title: string;
   description: string;
   url: string;
   position: number;
   img: string;
+  mobileImg?: string;
   type: "image" | "video";
 }
 
@@ -69,12 +71,18 @@ const AdminHeroBanner: React.FC = () => {
 
     try {
       if (isEditing && selectedBanner) {
-        // If editing, only include the file if a new one is selected
+        // If editing, only include the files if new ones are selected
         const fileInput = event.currentTarget.querySelector(
-          'input[type="file"]'
+          'input[name="file"]'
+        ) as HTMLInputElement;
+        const mobileFileInput = event.currentTarget.querySelector(
+          'input[name="mobileFile"]'
         ) as HTMLInputElement;
         if (!isFileSelected(fileInput)) {
           formData.delete("file");
+        }
+        if (!isFileSelected(mobileFileInput)) {
+          formData.delete("mobileFile");
         }
 
         await axios.patch(`/api/admin/banner/${selectedBanner._id}`, formData, {
@@ -129,7 +137,7 @@ const AdminHeroBanner: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      
+
       <h1 className="text-2xl font-bold mb-4">Admin Hero Banner</h1>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -158,18 +166,36 @@ const AdminHeroBanner: React.FC = () => {
                   <SelectItem value="video">Video</SelectItem>
                 </SelectContent>
               </Select>
-              <Input
-                type="file"
-                name="file"
-                accept={
-                  selectedBanner?.type === "video" ? "video/*" : "image/*"
-                }
-              />
-              {isEditing && selectedBanner && (
-                <p className="text-sm text-gray-500">
-                  Current file: {selectedBanner.img.split("/").pop()}
-                </p>
-              )}
+              <div>
+                <label className="text-sm font-medium">Desktop Banner</label>
+                <Input
+                  type="file"
+                  name="file"
+                  accept={
+                    selectedBanner?.type === "video" ? "video/*" : "image/*"
+                  }
+                />
+                {isEditing && selectedBanner && (
+                  <p className="text-sm text-gray-500">
+                    Current file: {selectedBanner.img.split("/").pop()}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium">Mobile Banner (Optional)</label>
+                <Input
+                  type="file"
+                  name="mobileFile"
+                  accept={
+                    selectedBanner?.type === "video" ? "video/*" : "image/*"
+                  }
+                />
+                {isEditing && selectedBanner?.mobileImg && (
+                  <p className="text-sm text-gray-500">
+                    Current mobile file: {selectedBanner.mobileImg.split("/").pop()}
+                  </p>
+                )}
+              </div>
               <Input
                 type="text"
                 name="title"
@@ -209,20 +235,39 @@ const AdminHeroBanner: React.FC = () => {
             </CardHeader>
             <CardContent className="overflow-hidden">
               <div className="mb-4">
+                <p className="text-xs text-gray-500 mb-1">Desktop</p>
                 {banner.type === "image" ? (
                   <img
                     src={banner.img}
                     alt={banner.title}
-                    className="w-full h-48 object-cover rounded-md"
+                    className="w-full h-32 object-cover rounded-md"
                   />
                 ) : (
                   <video
                     src={banner.img}
-                    className="w-full h-48 object-cover rounded-md"
+                    className="w-full h-32 object-cover rounded-md"
                     controls
                   />
                 )}
               </div>
+              {banner.mobileImg && (
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 mb-1">Mobile</p>
+                  {banner.type === "image" ? (
+                    <img
+                      src={banner.mobileImg}
+                      alt={`${banner.title} - mobile`}
+                      className="w-full h-24 object-cover rounded-md"
+                    />
+                  ) : (
+                    <video
+                      src={banner.mobileImg}
+                      className="w-full h-24 object-cover rounded-md"
+                      controls
+                    />
+                  )}
+                </div>
+              )}
               <p className="mb-2">{banner.description}</p>
               <p className="mb-2">URL: {banner.url}</p>
               <p className="mb-2">Type: {banner.type}</p>

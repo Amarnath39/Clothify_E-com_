@@ -22,6 +22,7 @@ export const POST = async (req: NextRequest) => {
         const formData = await req.formData();
 
         const file = formData.get('file') as File;
+        const mobileFile = formData.get('mobileFile') as File;
         const type = formData.get('type') as string || "image";
         const title = formData.get('title') as string;
         const description = formData.get('description') as string;
@@ -32,9 +33,15 @@ export const POST = async (req: NextRequest) => {
             return NextResponse.json({ success: false, msg: "No files received." }, { status: 400 });
         }
 
-        //Upload image
+        //Upload desktop image
         const imgUrl = await uploadFile('server/banner', file);
         if (imgUrl === null) return NextResponse.json({ success: false, msg: "Internal Server Error" }, { status: 500 });
+
+        // Upload mobile image (optional)
+        let mobileImgUrl: string | null = null;
+        if (mobileFile) {
+            mobileImgUrl = await uploadFile('server/banner/mobile', mobileFile);
+        }
 
         // Store in DB
         const banner = await HeroBanner.create({
@@ -42,6 +49,7 @@ export const POST = async (req: NextRequest) => {
             description,
             position,
             img: imgUrl,
+            mobileImg: mobileImgUrl,
             type,
             url
         });
