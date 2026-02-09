@@ -17,6 +17,15 @@ import { sseClients } from "../../../../lib/sseClients";
 import Razorpay from "razorpay";
 import { updateStock } from "@/lib/stockManager";
 
+// Helper for debugging SSE
+function logSseStatus(orderId: string) {
+    const keys = Array.from(sseClients.keys());
+    console.log(`📊 SSE Map Status [Searching for: ${orderId}]`);
+    console.log(`📊 Active SSE Keys:`, keys.length > 0 ? keys : "NONE");
+    const found = sseClients.has(orderId);
+    console.log(`📊 Found Match: ${found ? "✅ YES" : "❌ NO"}`);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // WEBHOOK HANDLER
 // ═══════════════════════════════════════════════════════════════════════════
@@ -88,8 +97,10 @@ export async function POST(req: NextRequest) {
         if (webhookEvent === "payment.captured") {
             const payment = payload.payload.payment.entity;
 
-            if (!payment?.order_id) {
-                console.log("⚠️ No order_id in payment.captured event");
+            // ⭐ QR payments and some Link payments don't have a top-level order_id
+            // We should only return if we have ABSOLUTELY no way to identify the order
+            if (!payment?.order_id && !payment?.notes?.orderId && !payment?.description && !payment?.qr_code_id) {
+                console.log("⚠️ No identification (order_id/notes/description/qr_id) in payment.captured event");
                 return NextResponse.json({ success: true });
             }
 
@@ -106,22 +117,31 @@ export async function POST(req: NextRequest) {
                 status: payment.status,
             });
 
-            // ───────────────────────────────────────────────────────────────────────
-            // Find Order
-            // ───────────────────────────────────────────────────────────────────────
-            let order = await Order.findOne({ razorpayOrderId: payment.order_id })
-                .populate("user")
-                .populate("productDetails.product");
+            // 1. Try Razorpay Order ID (Standard Checkout)
+            let order;
+            if (payment.order_id) {
+                order = await Order.findOne({ razorpayOrderId: payment.order_id })
+                    .populate("user")
+                    .populate("productDetails.product");
+            }
 
+            // 2. Try QR Code ID (New)
+            if (!order && payment.qr_code_id) {
+                console.log("🔍 Looking up order by QR Code ID:", payment.qr_code_id);
+                order = await Order.findOne({ "metadata.qrCodeId": payment.qr_code_id })
+                    .populate("user")
+                    .populate("productDetails.product");
+            }
+
+            // 3. Fallback for Payment Links / QR (Notes)
             if (!order && payment.notes?.orderId) {
-                // Fallback for Payment Links (Notes)
                 console.log("🔍 Looking up order by notes:", payment.notes.orderId);
                 order = await Order.findOne({ orderId: payment.notes.orderId })
                     .populate("user")
                     .populate("productDetails.product");
             }
 
-            // Fallback: Parse Description (e.g. "Swaarasya POS Order #ON-12345" or "OFF-12345")
+            // 4. Fallback: Parse Description (e.g. "Swaarasya POS Order #ON-12345" or "OFF-12345")
             if (!order && payment.description) {
                 const match = payment.description.match(/Order #((?:ON|POS|OFF)-\d+)/);
                 if (match) {
@@ -139,6 +159,7 @@ export async function POST(req: NextRequest) {
             }
 
             console.log("✅ Order found for payment capture:", order.orderId);
+            logSseStatus(order.orderId);
 
             // ⭐ VALIDATE PAYMENT AMOUNT
             const expectedAmount = Math.round(order.payablePrice * 100); // Convert to paise
@@ -841,7 +862,7 @@ export async function POST(req: NextRequest) {
             const qrCode = payload.payload.qr_code.entity;
             const payment = payload.payload.payment.entity;
 
-            console.log("✅ QR Code credited:", {
+            console.log("✅ QR Code credited event received:", {
                 qrCodeId: qrCode.id,
                 paymentId: payment.id,
                 amount: payment.amount / 100,
@@ -861,9 +882,12 @@ export async function POST(req: NextRequest) {
             }
 
             if (!order) {
-                console.error("❌ Order not found for QR payment:", qrCode.id);
+                console.error("❌ Order not found for QR payment:", qrCode.id, "Notes:", qrCode.notes);
                 return NextResponse.json({ success: true });
             }
+
+            console.log("✅ Order found for QR payment:", order.orderId);
+            logSseStatus(order.orderId);
 
             // Reuse fulfillment logic (Since we are in the middle of a massive file, 
             // the logic above for captured is very similar, but for now we'll 
@@ -915,9 +939,12 @@ export async function POST(req: NextRequest) {
             // SSE Update
             const client = sseClients.get(order.orderId);
             if (client) {
+                console.log("🚀 Sending SUCCESS signal to client for:", order.orderId);
                 client.write(`data: ${JSON.stringify({ paymentStatus: "PAYMENT_SUCCESS", orderId: order.orderId })}\n\n`);
                 client.end();
                 sseClients.delete(order.orderId);
+            } else {
+                console.warn("⚠️ No SSE client found to notify for:", order.orderId);
             }
 
             return NextResponse.json({ success: true, orderId: order.orderId });

@@ -149,16 +149,19 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
         eventSource.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                console.log("📩 SSE Message Received:", data);
+                console.log("📩 SSE Message Received: ", data);
 
                 if (data.paymentStatus === "PAYMENT_SUCCESS") {
+                    console.log("✅ Payment Success observed via SSE!");
                     toast.success("Payment confirmed!");
                     // Fetch final order details to show success screen
                     fetchOrderDetails(orderId);
                     eventSource.close();
+                } else {
+                    console.log("ℹ️ Other SSE status update: ", data.paymentStatus);
                 }
             } catch (err) {
-                console.error("Failed to parse SSE data:", err);
+                console.error("Failed to parse SSE data: ", err, event.data);
             }
         };
 

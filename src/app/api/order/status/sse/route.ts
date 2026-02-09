@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
                 },
                 pollTimer: keepAlive // Reuse the timer field for cleanup
             });
+            console.log(`✅ Registered SSE client for order: ${orderId}. Total active: ${sseClients.size}`);
 
             // Cleanup when client disconnects
             req.signal.addEventListener("abort", () => {
