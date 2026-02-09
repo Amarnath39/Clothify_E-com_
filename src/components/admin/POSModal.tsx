@@ -93,7 +93,6 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ NEW: Payment Link State
     const [paymentLinkInfo, setPaymentLinkInfo] = useState<{
         link: string;
-        qrCodeUrl?: string;
         orderId: string;
         invoiceId: string;
     } | null>(null);
@@ -410,7 +409,6 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
                     setPaymentLinkInfo({
                         link: data.paymentLink,
-                        qrCodeUrl: data.qrCodeUrl,
                         orderId: data.order.orderId,
                         invoiceId: data.invoiceId,
                     });
@@ -605,15 +603,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
                                 {/* QR Code */}
                                 <div className="flex flex-col items-center justify-center bg-white p-4 rounded-lg border border-gray-200">
-                                    {paymentLinkInfo.qrCodeUrl ? (
-                                        <img
-                                            src={paymentLinkInfo.qrCodeUrl}
-                                            alt="Scan to Pay"
-                                            className="w-48 h-48 object-contain"
-                                        />
-                                    ) : (
-                                        <QRCode value={paymentLinkInfo.link} size={150} />
-                                    )}
+                                    <QRCode value={paymentLinkInfo.link} size={150} />
                                     <p className="mt-2 text-sm font-semibold text-gray-600">Scan to Pay</p>
                                 </div>
 
