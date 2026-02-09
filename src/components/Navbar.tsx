@@ -163,7 +163,7 @@ const Navbar = () => {
     // 3. Prepend static items
     return [
       { name: "Home", path: "/" },
-      { name: "Collections", path: "/categories" },
+      //{ name: "Collections", path: "/categories" },
       { name: "AboutUs", path: "/about" },
 
       ...dynamicItems,
@@ -363,7 +363,7 @@ const Navbar = () => {
 
 
             {/* Cart */}
-            <Link
+            {/*<Link
               href="/cart"
               className="text-gray-700 hover:text-[#b48a3c] transition-colors relative"
             >
@@ -373,7 +373,7 @@ const Navbar = () => {
                   {cartItems.length}
                 </span>
               )}
-            </Link>
+            </Link>*/}
           </div>
         </div>
 
@@ -464,7 +464,7 @@ const Navbar = () => {
             </div>
 
             {/* Links */}
-            <div className="flex-1 overflow-y-auto p-8 flex flex-col space-y-8 items-center justify-center text-center">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-8 flex flex-col gap-4 sm:gap-5 items-center text-center max-h-[calc(100vh-80px)]">
               {navItems.map((item) => (
                 <motion.div
                   key={item.name}

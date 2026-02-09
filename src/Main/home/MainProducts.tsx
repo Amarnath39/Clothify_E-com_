@@ -70,6 +70,7 @@ const MainProducts = () => {
             <h2 className="font-serif text-3xl md:text-5xl text-gray-900 leading-tight">
               Curated Collection
             </h2>
+            
           </div>
           <Link
             href="/products"
