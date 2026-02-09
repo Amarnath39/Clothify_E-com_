@@ -31,6 +31,7 @@ import {
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
+import QRCode from "react-qr-code";
 
 // Razorpay SDK logic removed as per new requirements (Manual UPI/Card)
 
@@ -92,6 +93,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ NEW: Payment Link State
     const [paymentLinkInfo, setPaymentLinkInfo] = useState<{
         link: string;
+        qrCodeUrl?: string;
         orderId: string;
         invoiceId: string;
     } | null>(null);
@@ -408,6 +410,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
                     setPaymentLinkInfo({
                         link: data.paymentLink,
+                        qrCodeUrl: data.qrCodeUrl,
                         orderId: data.order.orderId,
                         invoiceId: data.invoiceId,
                     });
@@ -598,6 +601,20 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                 <p className="text-sm font-semibold text-gray-700">Payment Link:</p>
                                 <div className="bg-white p-4 rounded border border-blue-200 break-all text-blue-600 font-mono text-sm">
                                     {paymentLinkInfo.link}
+                                </div>
+
+                                {/* QR Code */}
+                                <div className="flex flex-col items-center justify-center bg-white p-4 rounded-lg border border-gray-200">
+                                    {paymentLinkInfo.qrCodeUrl ? (
+                                        <img
+                                            src={paymentLinkInfo.qrCodeUrl}
+                                            alt="Scan to Pay"
+                                            className="w-48 h-48 object-contain"
+                                        />
+                                    ) : (
+                                        <QRCode value={paymentLinkInfo.link} size={150} />
+                                    )}
+                                    <p className="mt-2 text-sm font-semibold text-gray-600">Scan to Pay</p>
                                 </div>
 
                                 <div className="flex gap-2">

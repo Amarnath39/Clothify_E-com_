@@ -323,10 +323,35 @@ export const POST = async (req: NextRequest) => {
 
                 console.log("Generating Razorpay Link...", JSON.stringify(linkOptions));
 
+                // 1. Generate Payment Link
                 const paymentLink = await razorpay.paymentLink.create(linkOptions);
+
+                // 2. Generate UPI QR Code (Fixed Amount)
+                const qrOptions = {
+                    type: "upi_qr",
+                    name: "Swaarasya Logic",
+                    usage: "single_use",
+                    fixed_amount: true,
+                    payment_amount: linkOptions.amount, // paise
+                    description: linkOptions.description,
+                    customer_id: paymentLink.customer_id, // Reuse customer if possible, or omit
+                    close_by: Math.floor(Date.now() / 1000) + 15 * 60, // 15 mins expiry
+                    notes: linkOptions.notes
+                };
+
+                let qrCodeUrl = null;
+                try {
+                    console.log("Generating Razorpay QR...");
+                    const qrCode = await razorpay.qrCode.create(qrOptions);
+                    qrCodeUrl = qrCode.image_url;
+                } catch (qrErr) {
+                    console.error("⚠️ QR Code Generation Failed:", qrErr);
+                    // Fallback: We still have the link, so we don't fail the request
+                }
 
                 newOrder.metadata.paymentLinkId = paymentLink.id;
                 newOrder.metadata.paymentLinkUrl = paymentLink.short_url;
+                newOrder.metadata.qrCodeUrl = qrCodeUrl;
                 newOrder.metadata.paymentLinkStatus = "created";
 
                 await newOrder.save();
@@ -335,9 +360,10 @@ export const POST = async (req: NextRequest) => {
 
                 return NextResponse.json({
                     success: true,
-                    message: "Payment Link Generated",
+                    message: "Payment Link & QR Generated",
                     paymentLink: paymentLink.short_url,
                     paymentLinkId: paymentLink.id,
+                    qrCodeUrl: qrCodeUrl,
                     invoiceId: invoiceId,
                     order: newOrder
                 });

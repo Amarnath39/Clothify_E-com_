@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import { BsGraphUpArrow } from "react-icons/bs";
 import {
   FaShoppingCart,
@@ -54,6 +54,19 @@ function AdminLayout({ children }) {
       console.error("Error during logout:", error);
     }
   };
+
+  // ✅ Redirect if no user/role found (lost state)
+  const isAuth = user && user.role;
+
+  useEffect(() => {
+    if (!isAuth) {
+      router.push("/login/admin");
+    }
+  }, [isAuth, router]);
+
+  if (!isAuth) {
+    return null;
+  }
 
   const allAdminCards = [
     {
