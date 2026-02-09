@@ -27,6 +27,12 @@ import {
     FaBarcode,
     FaCopy,
     FaExternalLinkAlt,
+    FaMobileAlt,
+    FaLink,
+    FaMoneyBillWave,
+    FaCreditCard,
+    FaQrcode,
+    FaWallet
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -74,7 +80,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ Core State
     const [invoiceNumber, setInvoiceNumber] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "CARD" | "RAZORPAY_PAYMENT_LINK">("CASH");
+    const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "CARD" | "RAZORPAY_PAYMENT_LINK" | "RAZORPAY_QR">("CASH");
     const [transactionDetails, setTransactionDetails] = useState(""); // ✅ For UPI/Card transaction ID
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -93,6 +99,12 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ NEW: Payment Link State
     const [paymentLinkInfo, setPaymentLinkInfo] = useState<{
         link: string;
+        orderId: string;
+        invoiceId: string;
+    } | null>(null);
+
+    const [paymentQRInfo, setPaymentQRInfo] = useState<{
+        qrCode: string;
         orderId: string;
         invoiceId: string;
     } | null>(null);
@@ -127,11 +139,12 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
     // ✅ Real-time Payment Listener (SSE)
     useEffect(() => {
-        if (!paymentLinkInfo?.orderId || completedOrder) return;
+        const orderId = paymentLinkInfo?.orderId || paymentQRInfo?.orderId;
+        if (!orderId || completedOrder) return;
 
-        console.log("📡 Starting SSE listener for order:", paymentLinkInfo.orderId);
+        console.log("📡 Starting SSE listener for order:", orderId);
 
-        const eventSource = new EventSource(`/api/order/status/sse?orderId=${paymentLinkInfo.orderId}`);
+        const eventSource = new EventSource(`/api/order/status/sse?orderId=${orderId}`);
 
         eventSource.onmessage = (event) => {
             try {
@@ -141,7 +154,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 if (data.paymentStatus === "PAYMENT_SUCCESS") {
                     toast.success("Payment confirmed!");
                     // Fetch final order details to show success screen
-                    fetchOrderDetails(paymentLinkInfo.orderId);
+                    fetchOrderDetails(orderId);
                     eventSource.close();
                 }
             } catch (err) {
@@ -158,7 +171,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
             console.log("📡 Closing SSE listener");
             eventSource.close();
         };
-    }, [paymentLinkInfo, completedOrder]);
+    }, [paymentLinkInfo, paymentQRInfo, completedOrder]);
 
     // ✅ Helper to fetch order details after payment
     const fetchOrderDetails = async (orderId: string) => {
@@ -177,7 +190,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
             // Fallback: just show a generic success if we can't get details
             setCompletedOrder({
                 orderId: orderId,
-                invoiceId: paymentLinkInfo?.invoiceId,
+                invoiceId: paymentLinkInfo?.invoiceId || paymentQRInfo?.invoiceId,
                 payablePrice: totals.total,
                 paymentMethod: "RAZORPAY",
                 customerPhone: customerPhone
@@ -419,6 +432,29 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 }
             }
             // ═════════════════════════════════════════════════════════════════════
+            // CASE 1.5: Razorpay Dynamic QR (Requires Webhook Confirmation)
+            // ═════════════════════════════════════════════════════════════════════
+            else if (paymentMethod === "RAZORPAY_QR") {
+                const { data } = await axios.post(
+                    "/api/admin/pos",
+                    { ...requestBody, action: "GenerateQR" },
+                    { headers: { "x-admin-id": adminId } }
+                );
+
+                if (data.success) {
+                    console.log("✅ QR Code generated successfully:", data);
+                    toast.success("QR Code Generated!");
+
+                    setPaymentQRInfo({
+                        qrCode: data.qrCode,
+                        orderId: data.order.orderId,
+                        invoiceId: data.invoiceId,
+                    });
+                } else {
+                    toast.error(data.message || "Failed to generate QR");
+                }
+            }
+            // ═════════════════════════════════════════════════════════════════════
             // CASE 2: CASH, UPI (Offline), CARD (Offline) -> Immediate Completion
             // ═════════════════════════════════════════════════════════════════════
             else {
@@ -476,13 +512,14 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
         setSearchResults([]);
         setCompletedOrder(null);
         setPaymentLinkInfo(null);
+        setPaymentQRInfo(null);
         generateInvoiceNumber();
     };
 
     // ✅ Close and reset
     const handleClose = () => {
-        // If payment link is generated, close immediately without confirm (as link is active)
-        if (paymentLinkInfo) {
+        // If payment link or QR is generated, close immediately without confirm (as link/QR is active)
+        if (paymentLinkInfo || paymentQRInfo) {
             onClose();
             return;
         }
@@ -499,6 +536,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
     console.log("🛠️ POS Modal Render State:", {
         paymentLinkInfo: !!paymentLinkInfo,
+        paymentQRInfo: !!paymentQRInfo,
         completedOrder: !!completedOrder,
         isOpen
     });
@@ -573,372 +611,522 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                     CASE 2: Awaiting Payment (Link Generated)
                     ═════════════════════════════════════════════════════════════════════ */
                 paymentLinkInfo ? (
-                    <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                            <DialogTitle className="text-center text-blue-600 text-2xl">
-                                🔗 Payment Link Generated
-                            </DialogTitle>
-                        </DialogHeader>
-
-                        <div className="space-y-6 py-4">
-                            {/* Status Indicator with Live Listener */}
-                            <div className="bg-green-50 border-2 border-green-300 rounded-lg p-6 text-center space-y-4">
-                                <div className="flex items-center justify-center gap-3">
-                                    <div className="animate-pulse w-3 h-3 bg-green-500 rounded-full" />
-                                    <p className="text-lg font-semibold text-gray-800">
-                                        Awaiting Payment...
-                                    </p>
+                    <DialogContent className="max-w-4xl p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
+                        <div className="flex flex-col md:flex-row bg-white min-h-[500px]">
+                            {/* Left Side: Large QR Display */}
+                            <div className="w-full md:w-1/2 bg-indigo-50 flex flex-col items-center justify-center p-8 border-r border-indigo-100 relative">
+                                <div className="absolute top-6 left-8 bg-indigo-600 text-white px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase shadow-lg">
+                                    SCAN TO PAY
                                 </div>
-                                <p className="text-sm text-gray-600">
-                                    Link sent to <strong>{customerPhone}</strong>. The window will automatically confirm once paid.
-                                </p>
+
+                                <div className="relative p-8 bg-white border-4 border-indigo-200 rounded-[3rem] shadow-2xl group transition-all duration-500 hover:border-indigo-400">
+                                    <QRCode value={paymentLinkInfo.link} size={300} className="rounded-xl" />
+                                    {/* Corner Accents */}
+                                    <div className="absolute top-0 left-0 w-12 h-12 border-t-8 border-l-8 border-indigo-500 rounded-tl-3xl -m-2"></div>
+                                    <div className="absolute bottom-0 right-0 w-12 h-12 border-b-8 border-r-8 border-indigo-500 rounded-br-3xl -m-2"></div>
+                                </div>
+                                <div className="mt-8 text-center">
+                                    <p className="text-sm font-bold text-indigo-400 mb-2">SCAN WITH ANY UPI APP</p>
+                                    <div className="flex gap-4 items-center justify-center opacity-40 grayscale contrast-125">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" className="h-4" alt="UPI" />
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Google_Pay_Logo.svg" className="h-4" alt="GPay" />
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" className="h-4" alt="Paytm" />
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* Payment Link Display */}
-                            <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 space-y-4">
-                                <p className="text-sm font-semibold text-gray-700">Payment Link:</p>
-                                <div className="bg-white p-4 rounded border border-blue-200 break-all text-blue-600 font-mono text-sm">
-                                    {paymentLinkInfo.link}
+                            {/* Right Side: Order Info & Actions */}
+                            <div className="w-full md:w-1/2 p-10 flex flex-col justify-between space-y-8">
+                                <div className="space-y-6">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Payment Link</h2>
+                                            <p className="text-gray-500 font-medium">Remote Secure Checkout</p>
+                                        </div>
+                                        <div className="bg-green-100 text-green-700 p-3 rounded-2xl flex items-center gap-2">
+                                            <div className="relative flex">
+                                                <div className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></div>
+                                                <div className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></div>
+                                            </div>
+                                            <span className="text-xs font-black uppercase tracking-wider">Live Status</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100">
+                                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Total Payable</p>
+                                        <p className="text-5xl font-black text-indigo-600">₹{totals.total}</p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                                <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Order ID</span>
+                                                <span className="text-xs font-bold text-gray-800">{paymentLinkInfo.orderId}</span>
+                                            </div>
+                                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                                <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Customer</span>
+                                                <span className="text-xs font-bold text-gray-800">{customerPhone}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl">
+                                            <span className="text-[10px] uppercase font-bold text-indigo-400 block mb-2">Short Link</span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex-1 truncate font-mono text-xs text-indigo-600 font-bold bg-white px-3 py-2 rounded-lg border border-indigo-200">
+                                                    {paymentLinkInfo.link}
+                                                </div>
+                                                <Button size="icon" variant="ghost" className="shrink-0 text-indigo-600 hover:bg-indigo-100" onClick={copyPaymentLink}>
+                                                    <FaCopy />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* QR Code */}
-                                <div className="flex flex-col items-center justify-center bg-white p-4 rounded-lg border border-gray-200">
-                                    <QRCode value={paymentLinkInfo.link} size={150} />
-                                    <p className="mt-2 text-sm font-semibold text-gray-600">Scan to Pay</p>
-                                </div>
-
-                                <div className="flex gap-2">
-                                    <Button
-                                        onClick={copyPaymentLink}
-                                        className="flex-1 bg-blue-600 hover:bg-blue-700"
-                                    >
-                                        <FaCopy className="mr-2" />
-                                        Copy Link
-                                    </Button>
+                                <div className="flex gap-4">
                                     <Button
                                         onClick={openPaymentLink}
-                                        className="flex-1 bg-green-600 hover:bg-green-700"
-                                        variant="default"
+                                        className="flex-1 h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-lg font-bold shadow-xl transition-all hover:translate-y-[-2px]"
                                     >
-                                        <FaExternalLinkAlt className="mr-2" />
                                         Open Link
                                     </Button>
+                                    <Button
+                                        onClick={handleClose}
+                                        className="h-14 w-14 rounded-2xl bg-gray-900 hover:bg-black text-white p-0 shadow-lg"
+                                        title="Close"
+                                    >
+                                        <FaPlus className="rotate-45 text-xl" />
+                                    </Button>
                                 </div>
-                            </div>
-
-                            {/* Order Details */}
-                            <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Order ID:</span>
-                                    <span className="font-bold">{paymentLinkInfo.orderId}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Invoice ID:</span>
-                                    <span className="font-bold">{paymentLinkInfo.invoiceId}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Customer Phone:</span>
-                                    <span className="font-bold">{customerPhone}</span>
-                                </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex gap-2">
-                                <Button
-                                    onClick={() => {
-                                        resetPOS();
-                                        searchInputRef.current?.focus();
-                                    }}
-                                    className="flex-1"
-                                    variant="outline"
-                                >
-                                    Start New Order
-                                </Button>
-                                <Button
-                                    onClick={handleClose}
-                                    variant="default"
-                                    className="flex-1"
-                                >
-                                    Close POS
-                                </Button>
                             </div>
                         </div>
                     </DialogContent>
                 ) :
 
                     /* ═════════════════════════════════════════════════════════════════════
-                        CASE 3: Main POS Cart / Checkout
+                        CASE 2.5: Awaiting Payment (Dynamic QR Generated)
                         ═════════════════════════════════════════════════════════════════════ */
-                    (
-                        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                                <DialogTitle className="text-2xl font-bold flex items-center justify-between">
-                                    <span>🏪 Point of Sale (POS)</span>
-                                    <span className="text-sm font-normal text-gray-600">
-                                        {invoiceNumber}
-                                    </span>
-                                </DialogTitle>
-                            </DialogHeader>
+                    paymentQRInfo ? (
+                        <DialogContent className="max-w-4xl p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
+                            <div className="flex flex-col md:flex-row bg-white min-h-[500px]">
+                                {/* Left Side: Large QR Display */}
+                                <div className="w-full md:w-1/2 bg-blue-50 flex flex-col items-center justify-center p-8 border-r border-blue-100 relative">
+                                    <div className="absolute top-6 left-8 bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase shadow-lg">
+                                        UPI DYNAMIC QR
+                                    </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {/* Left: Product Search & Cart */}
-                                <div className="md:col-span-2 space-y-4">
-                                    {/* Search Bar */}
-                                    <Card>
-                                        <CardContent className="p-4">
-                                            <Label className="flex items-center gap-2 mb-2">
-                                                <FaBarcode />
-                                                Scan Barcode / Enter SKU / Product Name
-                                            </Label>
-                                            <div className="relative">
-                                                <Input
-                                                    ref={searchInputRef}
-                                                    type="text"
-                                                    placeholder="Scan barcode or type product name..."
-                                                    value={searchQuery}
-                                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                                    onKeyDown={handleSearchKeyDown}
-                                                    className="pr-10"
-                                                />
-                                                <FaSearch className="absolute right-3 top-3 text-gray-400" />
-                                            </div>
-
-                                            {/* Search Results */}
-                                            {isSearching && (
-                                                <p className="text-sm text-gray-500 mt-2">Searching...</p>
-                                            )}
-
-                                            {searchResults.length > 0 && (
-                                                <div className="mt-3 max-h-64 overflow-y-auto border rounded-md">
-                                                    {searchResults.map((product) => (
-                                                        <div
-                                                            key={product._id}
-                                                            className="p-3 hover:bg-gray-50 border-b last:border-b-0"
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                <img
-                                                                    src={product.img[0] || "/placeholder.png"}
-                                                                    alt={product.name}
-                                                                    className="w-12 h-12 object-cover rounded"
-                                                                />
-                                                                <div className="flex-1">
-                                                                    <p className="font-medium text-sm">{product.name}</p>
-                                                                    <p className="text-xs text-gray-500">SKU: {product.sku}</p>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Size Selection */}
-                                                            <div className="mt-2 flex gap-2 flex-wrap">
-                                                                {product.sizes && Array.isArray(product.sizes) ? (
-                                                                    product.sizes.map((size) => (
-                                                                        <Button
-                                                                            key={size._id}
-                                                                            size="sm"
-                                                                            variant="outline"
-                                                                            onClick={() => addToCart(product, size._id, 1)}
-                                                                            disabled={size.stock === 0}
-                                                                            className="text-xs"
-                                                                        >
-                                                                            {size.size} (₹{size.offerPrice || product.actualPrice})
-                                                                            {size.stock === 0 && " - Out of Stock"}
-                                                                        </Button>
-                                                                    ))
-                                                                ) : (
-                                                                    <p className="text-xs text-red-500">No sizes configured</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </CardContent>
-                                    </Card>
-
-                                    {/* Cart Items */}
-                                    <Card>
-                                        <CardContent className="p-4">
-                                            <h3 className="font-bold mb-3">
-                                                Cart ({totals.totalItems} items)
-                                            </h3>
-
-                                            {cart.length === 0 ? (
-                                                <p className="text-gray-500 text-center py-8">
-                                                    Cart is empty. Scan products to add.
-                                                </p>
-                                            ) : (
-                                                <div className="space-y-3 max-h-96 overflow-y-auto">
-                                                    {cart.map((item, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                                                        >
-                                                            <img
-                                                                src={item.product.img[0] || "/placeholder.png"}
-                                                                alt={item.product.name}
-                                                                className="w-16 h-16 object-cover rounded"
-                                                            />
-
-                                                            <div className="flex-1">
-                                                                <p className="font-medium text-sm">
-                                                                    {item.product.name}
-                                                                </p>
-                                                                <p className="text-xs text-gray-600">
-                                                                    Size: {item.selectedSize.size}
-                                                                </p>
-                                                                <p className="text-sm font-bold text-blue-600">
-                                                                    ₹
-                                                                    {item.selectedSize.offerPrice ||
-                                                                        item.product.actualPrice}{" "}
-                                                                    × {item.quantity}
-                                                                </p>
-                                                            </div>
-
-                                                            <div className="flex items-center gap-2">
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() =>
-                                                                        updateQuantity(index, item.quantity - 1)
-                                                                    }
-                                                                >
-                                                                    <FaMinus />
-                                                                </Button>
-                                                                <span className="w-8 text-center font-bold">
-                                                                    {item.quantity}
-                                                                </span>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() =>
-                                                                        updateQuantity(index, item.quantity + 1)
-                                                                    }
-                                                                >
-                                                                    <FaPlus />
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="destructive"
-                                                                    onClick={() => removeFromCart(index)}
-                                                                >
-                                                                    <FaTrash />
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </CardContent>
-                                    </Card>
+                                    <div className="relative p-8 bg-white border-4 border-blue-200 rounded-[3rem] shadow-2xl group transition-all duration-500 hover:border-blue-400">
+                                        <img
+                                            src={paymentQRInfo.qrCode}
+                                            alt="Payment QR"
+                                            className="w-[320px] h-[320px] md:w-[400px] md:h-[400px] object-contain rounded-xl transition-transform duration-500 group-hover:scale-[1.03]"
+                                        />
+                                        {/* Corner Accents */}
+                                        <div className="absolute top-0 left-0 w-16 h-16 border-t-[10px] border-l-[10px] border-blue-500 rounded-tl-3xl -m-2"></div>
+                                        <div className="absolute bottom-0 right-0 w-16 h-16 border-b-[10px] border-r-[10px] border-blue-500 rounded-br-3xl -m-1"></div>
+                                    </div>
+                                    <div className="mt-8 text-center text-blue-400">
+                                        <p className="text-sm font-bold mb-2">SCAN TO PAY INSTANTLY</p>
+                                        <div className="flex gap-4 items-center justify-center opacity-40 grayscale contrast-125">
+                                            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" className="h-4" alt="UPI" />
+                                            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Google_Pay_Logo.svg" className="h-4" alt="GPay" />
+                                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" className="h-4" alt="Paytm" />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Right: Payment & Checkout */}
-                                <div className="space-y-4">
-                                    {/* Customer Info */}
-                                    <Card>
-                                        <CardContent className="p-4 space-y-3">
+                                {/* Right Side: Order Info & Actions */}
+                                <div className="w-full md:w-1/2 p-10 flex flex-col justify-between space-y-8">
+                                    <div className="space-y-8">
+                                        <div className="flex items-start justify-between">
                                             <div>
-                                                <Label htmlFor="customerPhone">
-                                                    Customer Phone <span className="text-red-500">*</span>
-                                                </Label>
-                                                <Input
-                                                    ref={phoneInputRef}
-                                                    id="customerPhone"
-                                                    type="tel"
-                                                    placeholder="10-digit phone number"
-                                                    value={customerPhone}
-                                                    onChange={(e) =>
-                                                        setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
-                                                    }
-                                                    maxLength={10}
-                                                />
+                                                <h2 className="text-4xl font-black text-gray-900 tracking-tight">Checkout</h2>
+                                                <p className="text-gray-500 font-medium">Auto-confirming through Razorpay</p>
                                             </div>
-
-                                            <div>
-                                                <Label htmlFor="paymentMethod">
-                                                    Payment Method <span className="text-red-500">*</span>
-                                                </Label>
-                                                <Select
-                                                    value={paymentMethod}
-                                                    onValueChange={(value: any) => setPaymentMethod(value)}
-                                                >
-                                                    <SelectTrigger id="paymentMethod">
-                                                        <SelectValue placeholder="Select payment method" />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="z-[9999]">
-                                                        <SelectItem value="CASH">💵 Cash (Immediate)</SelectItem>
-                                                        <SelectItem value="UPI">📱 UPI (Offline / Manual)</SelectItem>
-                                                        <SelectItem value="CARD">💳 Card (Offline / Swipe)</SelectItem>
-                                                        <SelectItem value="RAZORPAY_PAYMENT_LINK">🔗 Payment Link (Razorpay)</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            {/* ✅ NEW: Transaction Details for UPI/Card */}
-                                            {(paymentMethod === "UPI" || paymentMethod === "CARD") && (
-                                                <div>
-                                                    <Label htmlFor="transactionDetails">
-                                                        Transaction Note / Manual ID
-                                                        <span className="text-gray-500 text-xs ml-1">(Optional)</span>
-                                                    </Label>
-                                                    <Input
-                                                        id="transactionDetails"
-                                                        type="text"
-                                                        placeholder="Enter note or transaction ID..."
-                                                        value={transactionDetails}
-                                                        onChange={(e) => setTransactionDetails(e.target.value)}
-                                                    />
-                                                    <p className="text-xs text-gray-500 mt-1">
-                                                        For record keeping and verification
-                                                    </p>
+                                            <div className="bg-green-100 text-green-700 p-3 rounded-2xl flex items-center gap-2">
+                                                <div className="relative flex">
+                                                    <div className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></div>
+                                                    <div className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></div>
                                                 </div>
-                                            )}
-                                        </CardContent>
-                                    </Card>
-
-                                    {/* Totals */}
-                                    <Card>
-                                        <CardContent className="p-4 space-y-2">
-                                            <div className="flex justify-between text-sm">
-                                                <span>Subtotal:</span>
-                                                <span>₹{totals.subtotal.toFixed(2)}</span>
+                                                <span className="text-xs font-black uppercase tracking-wider">Live</span>
                                             </div>
-                                            <div className="flex justify-between text-sm text-gray-600">
-                                                <span>GST:</span>
-                                                <span>₹{totals.totalGst.toFixed(2)}</span>
-                                            </div>
-                                            {totals.discount > 0 && (
-                                                <div className="flex justify-between text-sm text-green-600">
-                                                    <span>Discount:</span>
-                                                    <span>-₹{totals.discount.toFixed(2)}</span>
-                                                </div>
-                                            )}
-                                            <div className="border-t pt-2 flex justify-between text-lg font-bold">
-                                                <span>Total:</span>
-                                                <span className="text-blue-600">₹{totals.total.toFixed(2)}</span>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                                        </div>
 
-                                    {/* Checkout Button */}
-                                    <Button
-                                        onClick={processPOSOrder}
-                                        disabled={isProcessing || cart.length === 0}
-                                        className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700"
-                                    >
-                                        {isProcessing ? "Processing..." : `Checkout - ₹${totals.total.toFixed(2)}`}
-                                    </Button>
+                                        <div className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
+                                            <p className="text-gray-400 text-xs font-black uppercase tracking-[0.2em] mb-2">Amount to Pay</p>
+                                            <p className="text-6xl font-black text-gray-900 leading-tight">₹{totals.total}</p>
+                                        </div>
 
-                                    <Button
-                                        onClick={resetPOS}
-                                        variant="outline"
-                                        className="w-full"
-                                    >
-                                        Clear Cart
-                                    </Button>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                                                <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1.5">Order ID</span>
+                                                <span className="text-sm font-bold text-gray-700">{paymentQRInfo.orderId}</span>
+                                            </div>
+                                            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                                                <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1.5">Invoice ID</span>
+                                                <span className="text-sm font-bold text-gray-700 truncate block">{paymentQRInfo.invoiceId}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <p className="text-center text-sm font-bold text-gray-400 animate-pulse uppercase tracking-[0.3em]">
+                                            Awaiting Scan...
+                                        </p>
+                                        <div className="flex gap-4">
+                                            <Button
+                                                onClick={() => {
+                                                    resetPOS();
+                                                    searchInputRef.current?.focus();
+                                                }}
+                                                className="flex-1 h-16 rounded-3xl text-lg font-bold transition-all hover:bg-gray-100"
+                                                variant="outline"
+                                            >
+                                                <FaPlus className="mr-2" /> New Order
+                                            </Button>
+                                            <Button
+                                                onClick={handleClose}
+                                                variant="default"
+                                                className="flex-1 h-16 rounded-3xl text-lg font-bold bg-gray-900 border-none transition-all hover:bg-black shadow-xl"
+                                            >
+                                                Close POS
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </DialogContent>
-                    )}
+                    ) :
+
+
+                        /* ═════════════════════════════════════════════════════════════════════
+                            CASE 3: Main POS Cart / Checkout
+                            ═════════════════════════════════════════════════════════════════════ */
+                        (
+                            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle className="text-2xl font-bold flex items-center justify-between">
+                                        <span>🏪 Point of Sale (POS)</span>
+                                        <span className="text-sm font-normal text-gray-600">
+                                            {invoiceNumber}
+                                        </span>
+                                    </DialogTitle>
+                                </DialogHeader>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {/* Left: Product Search & Cart */}
+                                    <div className="md:col-span-2 space-y-4">
+                                        {/* Search Bar */}
+                                        <Card>
+                                            <CardContent className="p-4">
+                                                <Label className="flex items-center gap-2 mb-2">
+                                                    <FaBarcode />
+                                                    Scan Barcode / Enter SKU / Product Name
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        ref={searchInputRef}
+                                                        type="text"
+                                                        placeholder="Scan barcode or type product name..."
+                                                        value={searchQuery}
+                                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                                        onKeyDown={handleSearchKeyDown}
+                                                        className="pr-10"
+                                                    />
+                                                    <FaSearch className="absolute right-3 top-3 text-gray-400" />
+                                                </div>
+
+                                                {/* Search Results */}
+                                                {isSearching && (
+                                                    <p className="text-sm text-gray-500 mt-2">Searching...</p>
+                                                )}
+
+                                                {searchResults.length > 0 && (
+                                                    <div className="mt-3 max-h-64 overflow-y-auto border rounded-md">
+                                                        {searchResults.map((product) => (
+                                                            <div
+                                                                key={product._id}
+                                                                className="p-3 hover:bg-gray-50 border-b last:border-b-0"
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <img
+                                                                        src={product.img[0] || "/placeholder.png"}
+                                                                        alt={product.name}
+                                                                        className="w-12 h-12 object-cover rounded"
+                                                                    />
+                                                                    <div className="flex-1">
+                                                                        <p className="font-medium text-sm">{product.name}</p>
+                                                                        <p className="text-xs text-gray-500">SKU: {product.sku}</p>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Size Selection */}
+                                                                <div className="mt-2 flex gap-2 flex-wrap">
+                                                                    {product.sizes && Array.isArray(product.sizes) ? (
+                                                                        product.sizes.map((size) => (
+                                                                            <Button
+                                                                                key={size._id}
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                onClick={() => addToCart(product, size._id, 1)}
+                                                                                disabled={size.stock === 0}
+                                                                                className="text-xs"
+                                                                            >
+                                                                                {size.size} (₹{size.offerPrice || product.actualPrice})
+                                                                                {size.stock === 0 && " - Out of Stock"}
+                                                                            </Button>
+                                                                        ))
+                                                                    ) : (
+                                                                        <p className="text-xs text-red-500">No sizes configured</p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Cart Items */}
+                                        <Card>
+                                            <CardContent className="p-4">
+                                                <h3 className="font-bold mb-3">
+                                                    Cart ({totals.totalItems} items)
+                                                </h3>
+
+                                                {cart.length === 0 ? (
+                                                    <p className="text-gray-500 text-center py-8">
+                                                        Cart is empty. Scan products to add.
+                                                    </p>
+                                                ) : (
+                                                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                                                        {cart.map((item, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                                                            >
+                                                                <img
+                                                                    src={item.product.img[0] || "/placeholder.png"}
+                                                                    alt={item.product.name}
+                                                                    className="w-16 h-16 object-cover rounded"
+                                                                />
+
+                                                                <div className="flex-1">
+                                                                    <p className="font-medium text-sm">
+                                                                        {item.product.name}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-600">
+                                                                        Size: {item.selectedSize.size}
+                                                                    </p>
+                                                                    <p className="text-sm font-bold text-blue-600">
+                                                                        ₹
+                                                                        {item.selectedSize.offerPrice ||
+                                                                            item.product.actualPrice}{" "}
+                                                                        × {item.quantity}
+                                                                    </p>
+                                                                </div>
+
+                                                                <div className="flex items-center gap-2">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        onClick={() =>
+                                                                            updateQuantity(index, item.quantity - 1)
+                                                                        }
+                                                                    >
+                                                                        <FaMinus />
+                                                                    </Button>
+                                                                    <span className="w-8 text-center font-bold">
+                                                                        {item.quantity}
+                                                                    </span>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        onClick={() =>
+                                                                            updateQuantity(index, item.quantity + 1)
+                                                                        }
+                                                                    >
+                                                                        <FaPlus />
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="destructive"
+                                                                        onClick={() => removeFromCart(index)}
+                                                                    >
+                                                                        <FaTrash />
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+
+                                    {/* Right: Payment & Checkout */}
+                                    <div className="space-y-4">
+                                        {/* Customer Info */}
+                                        <Card>
+                                            <CardContent className="p-4 space-y-3">
+                                                <div>
+                                                    <Label htmlFor="customerPhone">
+                                                        Customer Phone <span className="text-red-500">*</span>
+                                                    </Label>
+                                                    <Input
+                                                        ref={phoneInputRef}
+                                                        id="customerPhone"
+                                                        type="tel"
+                                                        placeholder="10-digit phone number"
+                                                        value={customerPhone}
+                                                        onChange={(e) =>
+                                                            setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                                                        }
+                                                        maxLength={10}
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <Label htmlFor="paymentMethod">
+                                                        Payment Method <span className="text-red-500">*</span>
+                                                    </Label>
+                                                    <Select
+                                                        value={paymentMethod}
+                                                        onValueChange={(value: any) => setPaymentMethod(value)}
+                                                    >
+                                                        <SelectTrigger id="paymentMethod" className="h-12 text-md font-semibold border-2 hover:border-gray-400 transition-colors">
+                                                            <SelectValue placeholder="Select payment method" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="z-[9999] min-w-[280px] p-2 rounded-xl border-gray-200">
+                                                            <SelectItem value="CASH" className="py-3 px-4 rounded-lg focus:bg-emerald-50 focus:text-emerald-700">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+                                                                        <FaMoneyBillWave />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-bold">Cash</span>
+                                                                        <span className="text-[10px] opacity-70">Immediate Payment</span>
+                                                                    </div>
+                                                                </div>
+                                                            </SelectItem>
+
+                                                            <SelectItem value="UPI" className="py-3 px-4 rounded-lg focus:bg-blue-50 focus:text-blue-700">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                                                        <FaWallet />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-bold">UPI</span>
+                                                                        <span className="text-[10px] opacity-70">Offline / Manual</span>
+                                                                    </div>
+                                                                </div>
+                                                            </SelectItem>
+
+                                                            <SelectItem value="RAZORPAY_QR" className="py-3 px-4 rounded-lg focus:bg-indigo-50 focus:text-indigo-700 border-l-4 border-indigo-500">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                                                                        <FaQrcode />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-bold">Razorpay Dynamic QR</span>
+                                                                        <span className="text-[10px] font-black text-indigo-500">AUTO-CONFIRMING</span>
+                                                                    </div>
+                                                                </div>
+                                                            </SelectItem>
+
+                                                            <SelectItem value="CARD" className="py-3 px-4 rounded-lg focus:bg-slate-50 focus:text-slate-700">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
+                                                                        <FaCreditCard />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-bold">Card</span>
+                                                                        <span className="text-[10px] opacity-70">Offline / Swipe</span>
+                                                                    </div>
+                                                                </div>
+                                                            </SelectItem>
+
+                                                            <SelectItem value="RAZORPAY_PAYMENT_LINK" className="py-3 px-4 rounded-lg focus:bg-purple-50 focus:text-purple-700">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                                                                        <FaLink />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-bold">Payment Link</span>
+                                                                        <span className="text-[10px] opacity-70">Remote Checkout</span>
+                                                                    </div>
+                                                                </div>
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                {/* ✅ NEW: Transaction Details for UPI/Card */}
+                                                {(paymentMethod === "UPI" || paymentMethod === "CARD") && (
+                                                    <div>
+                                                        <Label htmlFor="transactionDetails">
+                                                            Transaction Note / Manual ID
+                                                            <span className="text-gray-500 text-xs ml-1">(Optional)</span>
+                                                        </Label>
+                                                        <Input
+                                                            id="transactionDetails"
+                                                            type="text"
+                                                            placeholder="Enter note or transaction ID..."
+                                                            value={transactionDetails}
+                                                            onChange={(e) => setTransactionDetails(e.target.value)}
+                                                        />
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            For record keeping and verification
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Totals */}
+                                        <Card>
+                                            <CardContent className="p-4 space-y-2">
+                                                <div className="flex justify-between text-sm">
+                                                    <span>Subtotal:</span>
+                                                    <span>₹{totals.subtotal.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm text-gray-600">
+                                                    <span>GST:</span>
+                                                    <span>₹{totals.totalGst.toFixed(2)}</span>
+                                                </div>
+                                                {totals.discount > 0 && (
+                                                    <div className="flex justify-between text-sm text-green-600">
+                                                        <span>Discount:</span>
+                                                        <span>-₹{totals.discount.toFixed(2)}</span>
+                                                    </div>
+                                                )}
+                                                <div className="border-t pt-2 flex justify-between text-lg font-bold">
+                                                    <span>Total:</span>
+                                                    <span className="text-blue-600">₹{totals.total.toFixed(2)}</span>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Checkout Button */}
+                                        <Button
+                                            onClick={processPOSOrder}
+                                            disabled={isProcessing || cart.length === 0}
+                                            className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700"
+                                        >
+                                            {isProcessing ? "Processing..." : `Checkout - ₹${totals.total.toFixed(2)}`}
+                                        </Button>
+
+                                        <Button
+                                            onClick={resetPOS}
+                                            variant="outline"
+                                            className="w-full"
+                                        >
+                                            Clear Cart
+                                        </Button>
+                                    </div>
+                                </div>
+                            </DialogContent>
+                        )}
         </Dialog>
     );
 };

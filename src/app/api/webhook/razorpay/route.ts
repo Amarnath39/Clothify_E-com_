@@ -134,11 +134,11 @@ export async function POST(req: NextRequest) {
             }
 
             if (!order) {
-                console.error("❌ Order not found:", payment.order_id);
+                console.error("❌ Order not found for payment:", payment.id, "OrderId:", payment.order_id, "Notes:", payment.notes);
                 return NextResponse.json({ success: true });
             }
 
-            console.log("✅ Order found:", order.orderId);
+            console.log("✅ Order found for payment capture:", order.orderId);
 
             // ⭐ VALIDATE PAYMENT AMOUNT
             const expectedAmount = Math.round(order.payablePrice * 100); // Convert to paise
@@ -832,6 +832,95 @@ export async function POST(req: NextRequest) {
             }
 
             return NextResponse.json({ success: true });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════════
+        // EVENT: qr_code.credited → Dynamic QR Payment Received
+        // ═════════════════════════════════════════════════════════════════════════
+        if (webhookEvent === "qr_code.credited") {
+            const qrCode = payload.payload.qr_code.entity;
+            const payment = payload.payload.payment.entity;
+
+            console.log("✅ QR Code credited:", {
+                qrCodeId: qrCode.id,
+                paymentId: payment.id,
+                amount: payment.amount / 100,
+                notes: qrCode.notes
+            });
+
+            // Find order by QR Code ID or Notes
+            let order = await Order.findOne({ "metadata.qrCodeId": qrCode.id })
+                .populate("user")
+                .populate("productDetails.product");
+
+            if (!order && qrCode.notes?.orderId) {
+                console.log("🔍 Looking up order by QR notes:", qrCode.notes.orderId);
+                order = await Order.findOne({ orderId: qrCode.notes.orderId })
+                    .populate("user")
+                    .populate("productDetails.product");
+            }
+
+            if (!order) {
+                console.error("❌ Order not found for QR payment:", qrCode.id);
+                return NextResponse.json({ success: true });
+            }
+
+            // Reuse fulfillment logic (Since we are in the middle of a massive file, 
+            // the logic above for captured is very similar, but for now we'll 
+            // set properties and let it fall through or we can refactor.
+            // For now, I'll implement a targeted update here.)
+
+            if (order.paymentStatus === "PAYMENT_SUCCESS" && order.stockUpdated) {
+                console.log("⚠️ QR Payment already processed:", order.orderId);
+                return NextResponse.json({ success: true });
+            }
+
+            order.transactionId = payment.id;
+            order.paymentStatus = "PAYMENT_SUCCESS";
+            order.paymentMethod = "RAZORPAY_QR";
+            order.currentStatus = order.order_type === "POS" ? "COMPLETED" : "PENDING";
+            order.paidAt = new Date();
+
+            if (!order.paymentLogs) order.paymentLogs = [];
+            order.paymentLogs.push({
+                status: "PAYMENT_SUCCESS_QR",
+                timestamp: new Date(),
+                details: {
+                    paymentId: payment.id,
+                    qrCodeId: qrCode.id,
+                    amount: payment.amount / 100,
+                },
+            });
+
+            // Update Stock if needed
+            if (!order.stockUpdated) {
+                const stockItems = order.productDetails.map((item: any) => ({
+                    productId: item.product._id.toString(),
+                    sizeId: item.size?._id?.toString(),
+                    quantity: item.count + (item.freeCount || 0),
+                    productName: item.product?.name,
+                    sizeLabel: item.size?.size
+                })).filter((i: any) => i.sizeId);
+
+                const orderSource = order.order_type === "POS" ? "POS" : "OFFLINE";
+                const adminId = order.metadata?.adminId || order.createdBy;
+
+                const stockResult = await updateStock(stockItems, "SALE", orderSource, order._id.toString(), adminId);
+                if (stockResult.success) order.stockUpdated = true;
+            }
+
+            await order.save();
+            console.log("✅ Order fulfilled via QR Code event");
+
+            // SSE Update
+            const client = sseClients.get(order.orderId);
+            if (client) {
+                client.write(`data: ${JSON.stringify({ paymentStatus: "PAYMENT_SUCCESS", orderId: order.orderId })}\n\n`);
+                client.end();
+                sseClients.delete(order.orderId);
+            }
+
+            return NextResponse.json({ success: true, orderId: order.orderId });
         }
 
         // ═════════════════════════════════════════════════════════════════════════

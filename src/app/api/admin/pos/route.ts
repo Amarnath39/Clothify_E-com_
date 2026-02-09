@@ -353,6 +353,62 @@ export const POST = async (req: NextRequest) => {
         }
 
         // ==========================================
+        // 🚀 ACTION: GENERATE QR CODE
+        // ==========================================
+        else if (action === "GenerateQR") {
+            // Verify Razorpay Env
+            if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+                return NextResponse.json({ success: false, message: "Razorpay keys not configured on server" }, { status: 500 });
+            }
+
+            try {
+                const razorpay = new Razorpay({
+                    key_id: process.env.RAZORPAY_KEY_ID,
+                    key_secret: process.env.RAZORPAY_KEY_SECRET,
+                });
+
+                const qrOptions = {
+                    type: "upi_qr",
+                    usage: "single_use",
+                    fixed_amount: true,
+                    payment_amount: Math.round(totalPayablePrice * 100), // paise
+                    description: `Swaarasya POS Order #${newOrderId}`,
+                    customer_id: undefined, // Optional
+                    notes: { orderId: newOrderId, invoiceId, orderType: "POS" },
+                };
+
+                console.log("Generating Razorpay Dynamic QR...", JSON.stringify(qrOptions));
+
+                const qrCode = await (razorpay as any).qrCode.create(qrOptions);
+
+                newOrder.metadata.qrCodeId = qrCode.id;
+                newOrder.metadata.qrCodeImageUrl = (qrCode as any).image_url; // Razorpay SDK typings might be missing this
+                newOrder.metadata.qrCodeStatus = qrCode.status;
+                newOrder.paymentMethod = "RAZORPAY_QR";
+
+                await newOrder.save();
+
+                return NextResponse.json({
+                    success: true,
+                    message: "QR Code Generated",
+                    qrCode: (qrCode as any).image_url,
+                    qrCodeId: qrCode.id,
+                    orderId: newOrderId,
+                    invoiceId: invoiceId,
+                    order: newOrder
+                });
+
+            } catch (rzpError: any) {
+                console.error("Razorpay QR Creation Failed:", rzpError);
+                return NextResponse.json({
+                    success: false,
+                    message: "Razorpay API Failed (QR)",
+                    error: rzpError.error?.description || rzpError.message || "Unknown Razorpay Error"
+                }, { status: 502 });
+            }
+        }
+
+        // ==========================================
         // 🚀 ACTION: COMPLETE (Immediate Payment)
         // ==========================================
         else if (action === "COMPLETE" || isImmediatePayment) {
