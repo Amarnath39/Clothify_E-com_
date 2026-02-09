@@ -145,7 +145,7 @@ const Featured = () => {
             </motion.p>
 
             <Link
-              href={currentItem.url || "/about"}
+              href="/products"
               className="inline-flex items-center text-[#b48a3c] uppercase tracking-widest text-sm font-medium hover:opacity-70 transition-opacity"
             >
               Explore Collection <ArrowRight size={16} className="ml-2" />
