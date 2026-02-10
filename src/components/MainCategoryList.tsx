@@ -116,7 +116,7 @@ const CategoryList = () => {
          */}
         {/* {categories.length > 4 && (
           <div className="mt-12 text-center">
-            <Link href="/categories" className="inline-block border-b border-gray-900 pb-1 text-sm uppercase tracking-widest hover:text-[#b48a3c] hover:border-[#b48a3c] transition-colors">
+            <Link href="/products" className="inline-block border-b border-gray-900 pb-1 text-sm uppercase tracking-widest hover:text-[#b48a3c] hover:border-[#b48a3c] transition-colors">
               View All Categories
             </Link>
           </div>

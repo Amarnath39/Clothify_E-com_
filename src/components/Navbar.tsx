@@ -374,6 +374,20 @@ const Navbar = () => {
                 </span>
               )}
             </Link>*/}
+            {/* Cart – Desktop only */}
+<Link
+  href="/cart"
+  className="hidden md:block text-gray-700 hover:text-[#b48a3c] transition-colors relative"
+>
+  <ShoppingBag className="h-5 w-5" />
+  {cartItems.length > 0 && (
+    <span className="absolute -top-2 -right-2 bg-[#b48a3c] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-medium shadow-sm">
+      {cartItems.length}
+    </span>
+  )}
+</Link>
+
+
           </div>
         </div>
 
