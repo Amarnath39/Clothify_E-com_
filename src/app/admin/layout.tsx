@@ -55,19 +55,6 @@ function AdminLayout({ children }) {
     }
   };
 
-  // ✅ Redirect if no user/role found (lost state)
-  const isAuth = user && user.role;
-
-  useEffect(() => {
-    if (!isAuth) {
-      router.push("/login/admin");
-    }
-  }, [isAuth, router]);
-
-  if (!isAuth) {
-    return null;
-  }
-
   const allAdminCards = [
     {
       href: "/admin/dashboard",
@@ -208,8 +195,22 @@ function AdminLayout({ children }) {
   ];
 
   const filteredAdminCards = useMemo(() => {
+    if (!user || !user.role) return [];
     return allAdminCards.filter((card) => card.roles.includes(user.role));
   }, [user.role]);
+
+  // ✅ Redirect if no user/role found (lost state)
+  const isAuth = user && user.role;
+
+  useEffect(() => {
+    if (!isAuth) {
+      router.push("/login/admin");
+    }
+  }, [isAuth, router]);
+
+  if (!isAuth) {
+    return null;
+  }
 
   return (
     <div className="flex h-screen ">

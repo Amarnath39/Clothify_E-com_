@@ -20,7 +20,7 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [authData, setAuthData] = useState({ email: "", password: "" });
   const dispatch = useDispatch<any>();
- const router =useRouter()
+  const router = useRouter()
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setAuthData((prevData) => ({
@@ -47,14 +47,14 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-        <style>
-            {
-                `
+      <style>
+        {
+          `
                 .navbar-main{
                 display:none}
                 `
-            }
-        </style>
+        }
+      </style>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
@@ -104,7 +104,7 @@ const AdminLogin = () => {
           </div>
         </CardContent>
         <CardFooter>
-          <Button  onClick={submitForm} className="w-full bg-black text-white hover:bg-black" disabled={loading}>
+          <Button onClick={submitForm} className="w-full bg-black text-white hover:bg-black" disabled={loading}>
             {loading ? "Logging in..." : "Log In"}
           </Button>
         </CardFooter>

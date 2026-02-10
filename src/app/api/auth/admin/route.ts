@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../db";
-import Admin from "../../../../model/Admin";
+import Admin from "../../../../../src/model/Admin";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 var cookie = require("cookie");
