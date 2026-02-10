@@ -161,7 +161,8 @@ const ForgotPasswordDialog = () => {
 
 const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
-  const [authData, setAuthData] = useState({ email: "", password: "" });
+  const [authData, setAuthData] = useState({ email: "", password: "", otp: "" });
+  const [showOtp, setShowOtp] = useState(false);
   const dispatch = useDispatch<any>();
   const router = useRouter();
 
@@ -180,16 +181,23 @@ const AdminLogin = () => {
       setLoading(false);
 
       if (payload && payload.success) {
-        if (payload.user.role === "Sales person") {
+        if (payload.requires2FA) {
+          setShowOtp(true);
+          toast.success("Please enter your 2FA code");
+          return;
+        }
+
+        if (payload.user?.role === "Sales person") {
           router.push("/admin/products");
         } else {
           router.push("/admin/dashboard");
         }
       } else {
-        toast.error(payload.msg);
+        toast.error(payload?.msg || "Login failed");
       }
     } catch (error) {
       setLoading(false);
+      console.error("Login Error:", error);
       toast.error("An error occurred during login");
     }
   };
@@ -213,50 +221,74 @@ const AdminLogin = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-gray-700"
-            >
-              Email
-            </label>
-            <div className="relative">
-              <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                id="email"
-                placeholder="Enter your Email"
-                className="pl-10"
-                value={authData.email}
-                onChange={handleInputChange}
-              />
+          {!showOtp ? (
+            <>
+              <div className="space-y-2">
+                <label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Email
+                </label>
+                <div className="relative">
+                  <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input
+                    id="email"
+                    placeholder="Enter your Email"
+                    className="pl-10"
+                    value={authData.email}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={authData.password}
+                    placeholder="Enter your password"
+                    className="pl-10"
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 block text-center">
+                  Verification Code
+                </label>
+                <OtpInput
+                  value={authData.otp}
+                  onChange={(val) => setAuthData(prev => ({ ...prev, otp: val }))}
+                />
+              </div>
+              <button
+                onClick={() => setShowOtp(false)}
+                className="text-xs text-blue-600 hover:underline w-full text-center"
+              >
+                Back to credentials
+              </button>
             </div>
-          </div>
-          <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                id="password"
-                type="password"
-                value={authData.password}
-                placeholder="Enter your password"
-                className="pl-10"
-                onChange={handleInputChange}
-              />
+          )}
+          {!showOtp && (
+            <div className="text-right">
+              <ForgotPasswordDialog />
             </div>
-          </div>
-          <div className="text-right">
-            <ForgotPasswordDialog />
-          </div>
+          )}
         </CardContent>
         <CardFooter>
           <Button onClick={submitForm} className="w-full bg-black text-white hover:bg-black" disabled={loading}>
-            {loading ? "Logging in..." : "Log In"}
+            {loading ? "Processing..." : (showOtp ? "Verify & Log In" : "Log In")}
           </Button>
         </CardFooter>
       </Card>

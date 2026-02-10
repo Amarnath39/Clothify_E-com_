@@ -18,6 +18,7 @@ import {
   FaCashRegister,
   FaReceipt,
   FaPercent,
+  FaLock,
 } from "react-icons/fa";
 import { SiSublimetext } from "react-icons/si";
 import { FcRules } from "react-icons/fc";
@@ -190,6 +191,12 @@ function AdminLayout({ children }) {
       href: "/admin/instagram",
       title: "Instagram",
       icon: <FaInstagram size={24} className="text-white" />,
+      roles: ["SuperAdmin", "Admin"],
+    },
+    {
+      href: "/admin/settings/2fa",
+      title: "2FA Settings",
+      icon: <FaLock size={24} className="text-white" />,
       roles: ["SuperAdmin", "Admin"],
     },
   ];
