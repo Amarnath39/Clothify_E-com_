@@ -66,9 +66,8 @@ const FeaturedCollections = () => {
               Handpicked for the connoisseur in you
             </p>
           </div>
-
           <button
-            onClick={() => router.push("/collections")}
+            onClick={() => router.push("/products")}
             className="group flex items-center text-burgundy font-medium hover:text-burgundy-dark transition-colors"
           >
             View All

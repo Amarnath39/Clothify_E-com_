@@ -92,12 +92,13 @@ const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
     <div
       className={`
       min-h-[80vh] fixed md:sticky top-20 inset-y-0 left-0 z-40 
-      w-full md:w-80 bg-white border-r border-gray-200
+      w-full md:w-[420px] bg-white border-r border-gray-200
       md:max-h-[80vh] transition-transform duration-300 ease-in-out
       ${isOpen ? "translate-x-0 z-[9999]" : "-translate-x-full"}
       md:relative md:translate-x-0
     `}
-    >
+>
+
       <div className="flex flex-col h-full md:max-h-[80vh]">
         {/* Header */}
         <div className="p-4 border-b">
