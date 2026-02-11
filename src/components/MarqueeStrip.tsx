@@ -15,7 +15,7 @@ const MarqueeStrip = () => {
 
     const marqueeEntries = entries && entries.length > 0
         ? entries
-        : [{ text: "Free Shipping on Orders Above ₹5,000" }, { text: "Use Code: SANSKARA20 for 20% Off" }];
+        : [{ text: "Free Shipping charges inside Kerala and Outside Kerala around 175. " }, { text: "Use Code: SANSKARA20 for 20% Off" }];
 
     // We repeat the content multiple times for seamless scrolling
     const renderEntries = (keyPrefix: string) => (

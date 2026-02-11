@@ -26,7 +26,7 @@ const ReturnRefundPolicy = () => {
   {
     title: "Contact Support",
     content:
-      "📧 sisbymridhulaparvathy@gmail.com | 📞 +91 6282667959",
+      "📧 hello@swaarasya.com | 📞 +91 9876543210",
   },
   ];
 
@@ -56,7 +56,7 @@ const ReturnRefundPolicy = () => {
             Policy, please contact our customer support. at
             <a href="" className="text-blue-500">
               {" "}
-             sisbymridhulaparvathy@gmail.com
+             hello@swaarasya.com
             </a>
           </p>
         </div>
