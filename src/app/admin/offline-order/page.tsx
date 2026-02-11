@@ -1,11 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ZapanInput, ZapanTextarea, PageHeader, Card as ZapanCard, Badge } from "@/theme/components";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
     Select,
@@ -15,20 +12,22 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import {
-    FaUser,
-    FaBox,
-    FaCreditCard,
-    FaTruck,
-    FaSearch,
-    FaTrash,
-    FaPlus,
-} from "react-icons/fa";
+    FiUser,
+    FiBox,
+    FiCreditCard,
+    FiTruck,
+    FiSearch,
+    FiTrash2,
+    FiPlus,
+    FiExternalLink,
+    FiCheckCircle,
+    FiAlertCircle
+} from "react-icons/fi";
 
 interface Product {
     _id: string;
@@ -368,521 +367,521 @@ const CreateOfflineOrderPage = () => {
         }
     };
 
+
     // 🟢 RENDER PAYMENT LINK MODAL
     if (paymentLinkData) {
         return (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <Card className="w-full max-w-md bg-white shadow-xl animate-in fade-in zoom-in">
-                    <CardHeader className="text-center border-b pb-4">
-                        <div className="mx-auto bg-blue-100 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-2">
-                            <FaCreditCard className="text-blue-600 text-2xl" />
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+                <ZapanCard className="w-full max-w-md bg-white/95 backdrop-blur-xl shadow-2xl border-gray-100 p-8 rounded-[2.5rem]">
+                    <div className="text-center pb-6 border-b border-gray-100">
+                        <div className="mx-auto bg-blue-50 p-4 rounded-2xl w-20 h-20 flex items-center justify-center mb-4 shadow-inner">
+                            <FiCreditCard className="text-blue-600 text-3xl" />
                         </div>
-                        <CardTitle>Payment Link Generated</CardTitle>
-                        <p className="text-sm text-gray-500">Order ID: {createdOrderId}</p>
-                    </CardHeader>
-                    <CardContent className="space-y-6 pt-6">
+                        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Payment Link Generated</h2>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-2">{createdOrderId}</p>
+                    </div>
+                    <div className="space-y-6 pt-6">
                         <div className="text-center space-y-2">
-                            <p className="font-medium">Amount to Pay</p>
-                            <p className="text-3xl font-bold text-green-600">₹{total.toFixed(2)}</p>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Amount Due</p>
+                            <p className="text-4xl font-black text-emerald-600 tracking-tighter">₹{total.toFixed(2)}</p>
                         </div>
 
-                        <div className="bg-gray-50 p-3 rounded-lg flex items-center gap-2 border">
-                            <Input
+                        <div className="bg-gray-50 p-4 rounded-2xl flex items-center gap-3 border border-gray-100 group hover:bg-white hover:shadow-lg transition-all">
+                            <input
                                 readOnly
                                 value={paymentLinkData.url}
-                                className="bg-white border-none shadow-none focus-visible:ring-0"
+                                className="flex-1 bg-transparent border-none text-xs font-mono text-gray-600 focus:outline-none w-full"
                             />
-                            <Button size="sm" onClick={copyToClipboard}>Copy</Button>
+                            <Button size="sm" onClick={copyToClipboard} className="bg-white text-gray-900 shadow-sm border border-gray-200 hover:bg-gray-50 rounded-xl px-4 py-1 h-8 text-[10px] font-black uppercase tracking-widest">
+                                Copy
+                            </Button>
                         </div>
 
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-center gap-2 text-blue-600 animate-pulse">
-                                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                <span className="font-medium">Waiting for customer to pay...</span>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-center gap-3 text-blue-600">
+                                <span className="relative flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                                </span>
+                                <span className="text-[10px] font-black uppercase tracking-widest">Awaiting Customer Action...</span>
                             </div>
-                            <p className="text-xs text-center text-gray-400">
-                                This screen will automatically update when payment is received.
+                            <p className="text-[10px] text-center text-gray-400 font-medium">
+                                The dashboard will automatically synchronize upon payment confirmation.
                             </p>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                             <Button
                                 variant="outline"
-                                className="w-full"
+                                className="w-full h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border-gray-200 hover:bg-gray-50"
                                 onClick={() => {
-                                    // Allow manual exit
                                     if (window.confirm("Payment is still pending. Leave this page?")) {
                                         router.push('/admin/get-orders');
                                     }
                                 }}
                             >
-                                Close & Check Later
+                                Defer & Exit
                             </Button>
-                            {/* Optional: Manual Refresh or Check Status button could go here */}
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </ZapanCard>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">Create Offline Order</h1>
-                <Badge variant="outline" className="text-lg px-4 py-2">
-                    Admin Only
-                </Badge>
-            </div>
+        <div className="space-y-8 pb-20 animate-in fade-in duration-700">
+            <PageHeader
+                title="Create Offline Order"
+                description="Manually generate orders for offline customers or special requests."
+                action={
+                    <Badge variant="brand">
+                        Admin Protocol
+                    </Badge>
+                }
+            />
 
             {/* 1️⃣ CUSTOMER DETAILS */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center">
-                        <FaUser className="mr-2" /> Customer Details
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <Label>Full Name *</Label>
-                            <Input
-                                value={customerName}
-                                onChange={(e) => setCustomerName(e.target.value)}
-                                placeholder="Enter customer name"
-                            />
-                        </div>
-                        <div>
-                            <Label>Phone Number *</Label>
-                            <Input
-                                value={customerPhone}
-                                onChange={(e) => setCustomerPhone(e.target.value)}
-                                placeholder="Enter phone number"
-                            />
-                        </div>
-                        <div>
-                            <Label>Email (Optional)</Label>
-                            <Input
-                                type="email"
-                                value={customerEmail}
-                                onChange={(e) => setCustomerEmail(e.target.value)}
-                                placeholder="Enter email"
-                            />
-                        </div>
+            <ZapanCard className="p-8">
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 rounded-xl bg-[#7C1D3E]/10 text-[#7C1D3E] flex items-center justify-center">
+                        <FiUser size={20} />
                     </div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Customer Identity</h3>
+                </div>
 
-                    <Separator />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <ZapanInput
+                        label="Full Name"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Enter customer name"
+                        required
+                    />
+                    <ZapanInput
+                        label="Phone Number"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        placeholder="Enter phone number"
+                        required
+                    />
+                    <ZapanInput
+                        label="Email Address"
+                        type="email"
+                        value={customerEmail}
+                        onChange={(e) => setCustomerEmail(e.target.value)}
+                        placeholder="Enter email (optional)"
+                    />
+                </div>
 
-                    <h4 className="font-semibold">Billing Address</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="md:col-span-2">
-                            <Label>Address *</Label>
-                            <Textarea
-                                value={billingAddress}
-                                onChange={(e) => setBillingAddress(e.target.value)}
-                                placeholder="Enter billing address"
-                                rows={2}
+                <div className="h-px bg-gray-100 my-8"></div>
+
+                <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6">Billing Coordinates</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="md:col-span-2">
+                        <ZapanTextarea
+                            label="Billing Address"
+                            value={billingAddress}
+                            onChange={(e) => setBillingAddress(e.target.value)}
+                            placeholder="Enter full billing address"
+                            required
+                        />
+                    </div>
+                    <ZapanInput
+                        label="City"
+                        value={billingCity}
+                        onChange={(e) => setBillingCity(e.target.value)}
+                        placeholder="City"
+                        required
+                    />
+                    <ZapanInput
+                        label="State"
+                        value={billingState}
+                        onChange={(e) => setBillingState(e.target.value)}
+                        placeholder="State"
+                        required
+                    />
+                    <ZapanInput
+                        label="Pincode"
+                        value={billingZipCode}
+                        onChange={(e) => setBillingZipCode(e.target.value)}
+                        placeholder="ZIP Code"
+                        required
+                    />
+                </div>
+
+                <div className="h-px bg-gray-100 my-8"></div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl mb-8">
+                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Replicate billing for shipping</span>
+                    <Checkbox
+                        checked={shippingSameAsBilling}
+                        onCheckedChange={(checked) =>
+                            setShippingSameAsBilling(checked as boolean)
+                        }
+                        className="border-gray-300"
+                    />
+                </div>
+
+                {!shippingSameAsBilling && (
+                    <div className="animate-in slide-in-from-top-4 duration-500">
+                        <h4 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6">Shipping Coordinates</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <ZapanInput
+                                label="Recipient Name"
+                                value={shippingName}
+                                onChange={(e) => setShippingName(e.target.value)}
+                                placeholder="Recipient name"
                             />
-                        </div>
-                        <div>
-                            <Label>City *</Label>
-                            <Input
-                                value={billingCity}
-                                onChange={(e) => setBillingCity(e.target.value)}
+                            <ZapanInput
+                                label="Recipient Phone"
+                                value={shippingPhone}
+                                onChange={(e) => setShippingPhone(e.target.value)}
+                                placeholder="Recipient phone"
+                            />
+                            <div className="md:col-span-2">
+                                <ZapanTextarea
+                                    label="Shipping Address"
+                                    value={shippingAddress}
+                                    onChange={(e) => setShippingAddress(e.target.value)}
+                                    placeholder="Shipping address"
+                                />
+                            </div>
+                            <ZapanInput
+                                label="City"
+                                value={shippingCity}
+                                onChange={(e) => setShippingCity(e.target.value)}
                                 placeholder="City"
                             />
-                        </div>
-                        <div>
-                            <Label>State *</Label>
-                            <Input
-                                value={billingState}
-                                onChange={(e) => setBillingState(e.target.value)}
+                            <ZapanInput
+                                label="State"
+                                value={shippingState}
+                                onChange={(e) => setShippingState(e.target.value)}
                                 placeholder="State"
                             />
-                        </div>
-                        <div>
-                            <Label>ZIP Code *</Label>
-                            <Input
-                                value={billingZipCode}
-                                onChange={(e) => setBillingZipCode(e.target.value)}
+                            <ZapanInput
+                                label="Pincode"
+                                value={shippingZipCode}
+                                onChange={(e) => setShippingZipCode(e.target.value)}
                                 placeholder="ZIP Code"
                             />
                         </div>
                     </div>
+                )}
+            </ZapanCard>
 
-                    <Separator />
-
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            checked={shippingSameAsBilling}
-                            onCheckedChange={(checked) =>
-                                setShippingSameAsBilling(checked as boolean)
-                            }
-                        />
-                        <Label>Shipping address same as billing</Label>
-                    </div>
-
-                    {!shippingSameAsBilling && (
-                        <>
-                            <h4 className="font-semibold">Shipping Address</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label>Name</Label>
-                                    <Input
-                                        value={shippingName}
-                                        onChange={(e) => setShippingName(e.target.value)}
-                                        placeholder="Recipient name"
-                                    />
-                                </div>
-                                <div>
-                                    <Label>Phone</Label>
-                                    <Input
-                                        value={shippingPhone}
-                                        onChange={(e) => setShippingPhone(e.target.value)}
-                                        placeholder="Recipient phone"
-                                    />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <Label>Address</Label>
-                                    <Textarea
-                                        value={shippingAddress}
-                                        onChange={(e) => setShippingAddress(e.target.value)}
-                                        placeholder="Shipping address"
-                                        rows={2}
-                                    />
-                                </div>
-                                <div>
-                                    <Label>City</Label>
-                                    <Input
-                                        value={shippingCity}
-                                        onChange={(e) => setShippingCity(e.target.value)}
-                                        placeholder="City"
-                                    />
-                                </div>
-                                <div>
-                                    <Label>State</Label>
-                                    <Input
-                                        value={shippingState}
-                                        onChange={(e) => setShippingState(e.target.value)}
-                                        placeholder="State"
-                                    />
-                                </div>
-                                <div>
-                                    <Label>ZIP Code</Label>
-                                    <Input
-                                        value={shippingZipCode}
-                                        onChange={(e) => setShippingZipCode(e.target.value)}
-                                        placeholder="ZIP Code"
-                                    />
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </CardContent>
-            </Card>
 
             {/* 2️⃣ PRODUCT SELECTION */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center">
-                        <FaBox className="mr-2" /> Product Selection
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex gap-2">
-                        <Input
-                            placeholder="Search by product name or SKU..."
+            <ZapanCard className="p-8">
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 rounded-xl bg-[#7C1D3E]/10 text-[#7C1D3E] flex items-center justify-center">
+                        <FiBox size={20} />
+                    </div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Inventory Allocation</h3>
+                </div>
+
+                <div className="flex gap-4">
+                    <div className="flex-1 relative">
+                        <ZapanInput
+                            label="Search Inventory"
+                            placeholder="Enter product name or SKU..."
                             value={productSearch}
                             onChange={(e) => setProductSearch(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleProductSearch()}
                         />
-                        <Button onClick={handleProductSearch} disabled={isSearching}>
-                            <FaSearch className="mr-2" />
-                            {isSearching ? "Searching..." : "Search"}
-                        </Button>
-                    </div>
-
-                    {/* Search Results */}
-                    {searchResults.length > 0 && (
-                        <div className="border rounded-lg p-4 space-y-2 max-h-96 overflow-y-auto">
-                            {searchResults.map((product) => (
-                                <ProductSearchItem
-                                    key={product._id}
-                                    product={product}
-                                    onAdd={handleAddProduct}
-                                />
-                            ))}
+                        <div className="absolute right-3 top-1/2 translate-y-2 text-gray-400">
+                            <FiSearch />
                         </div>
-                    )}
+                    </div>
+                    <Button
+                        onClick={handleProductSearch}
+                        disabled={isSearching}
+                        className="h-14 mt-4 px-8 rounded-2xl bg-gray-900 text-white font-black uppercase tracking-widest shadow-lg shadow-gray-900/10 hover:scale-105 active:scale-95 transition-all"
+                    >
+                        {isSearching ? "Scanning..." : "Search"}
+                    </Button>
+                </div>
 
-                    {/* Selected Products */}
-                    {selectedProducts.length > 0 && (
-                        <>
-                            <Separator />
-                            <h4 className="font-semibold">Selected Products</h4>
-                            <div className="space-y-2">
-                                {selectedProducts.map((item, index) => {
-                                    const size = item.product.sizes.find(
-                                        (s) => s._id === item.selectedSize
-                                    );
-                                    const price = size?.offerPrice || item.product.actualPrice;
-                                    return (
-                                        <div
-                                            key={index}
-                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <img
-                                                    src={item.product.img[0]}
-                                                    alt={item.product.name}
-                                                    className="w-16 h-16 object-cover rounded"
-                                                />
-                                                <div>
-                                                    <p className="font-medium">{item.product.name}</p>
-                                                    <p className="text-sm text-gray-600">
-                                                        Size: {size?.size} | Qty: {item.quantity}
-                                                    </p>
-                                                    <p className="text-sm font-semibold">
-                                                        ₹{price} × {item.quantity} = ₹
-                                                        {(price * item.quantity).toFixed(2)}
-                                                    </p>
+                {/* Search Results */}
+                {searchResults.length > 0 && (
+                    <div className="mt-6 border border-gray-100 rounded-[2rem] p-6 space-y-4 max-h-[500px] overflow-y-auto bg-gray-50/50">
+                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Search Results</h4>
+                        {searchResults.map((product) => (
+                            <ProductSearchItem
+                                key={product._id}
+                                product={product}
+                                onAdd={handleAddProduct}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Selected Products */}
+                {selectedProducts.length > 0 && (
+                    <div className="mt-8 space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="h-px bg-gray-100 mb-8"></div>
+                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Allocated Units</h4>
+
+                        <div className="space-y-3">
+                            {selectedProducts.map((item, index) => {
+                                const size = item.product.sizes.find(
+                                    (s) => s._id === item.selectedSize
+                                );
+                                const price = size?.offerPrice || item.product.actualPrice;
+                                return (
+                                    <div
+                                        key={index}
+                                        className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <img
+                                                src={item.product.img[0]}
+                                                alt={item.product.name}
+                                                className="w-16 h-16 object-cover rounded-xl shadow-sm"
+                                            />
+                                            <div>
+                                                <p className="font-bold text-gray-900 text-sm">{item.product.name}</p>
+                                                <div className="flex items-center gap-3 mt-1">
+                                                    <span className="px-2 py-0.5 bg-gray-100 rounded-lg text-[10px] font-bold text-gray-600 uppercase tracking-wide">Size: {size?.size}</span>
+                                                    <span className="px-2 py-0.5 bg-blue-50 rounded-lg text-[10px] font-bold text-blue-600 uppercase tracking-wide">Qty: {item.quantity}</span>
                                                 </div>
                                             </div>
+                                        </div>
+                                        <div className="flex items-center gap-6">
+                                            <p className="text-sm font-black text-gray-900">
+                                                ₹{(price * item.quantity).toFixed(2)}
+                                            </p>
                                             <Button
-                                                variant="destructive"
+                                                variant="ghost"
                                                 size="sm"
                                                 onClick={() => handleRemoveProduct(index)}
+                                                className="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all p-0"
                                             >
-                                                <FaTrash />
+                                                <FiTrash2 size={16} />
                                             </Button>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </>
-                    )}
-                </CardContent>
-            </Card>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </ZapanCard>
+
 
             {/* 3️⃣ PAYMENT & PRICE SUMMARY */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center">
-                        <FaCreditCard className="mr-2" /> Payment & Price Summary
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <Label>Payment Mode</Label>
-                            <Select value={paymentMode} onValueChange={setPaymentMode}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Cash">Cash</SelectItem>
-                                    <SelectItem value="UPI">UPI</SelectItem>
-                                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                                    <SelectItem value="COD">COD</SelectItem>
-                                    <SelectItem value="RAZORPAY_LINK">Razorpay Link (SMS/Email)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label>Payment Status</Label>
-                            <Select
-                                value={paymentStatus}
-                                onValueChange={setPaymentStatus}
-                                disabled={paymentMode === "RAZORPAY_LINK"} // Auto-set to Pending for Link
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Paid">Paid</SelectItem>
-                                    <SelectItem value="Pending">Pending</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+            <ZapanCard className="p-8">
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 rounded-xl bg-[#7C1D3E]/10 text-[#7C1D3E] flex items-center justify-center">
+                        <FiCreditCard size={20} />
                     </div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Transaction Protocol</h3>
+                </div>
 
-                    <Separator />
-
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     <div className="space-y-2">
-                        <div className="flex justify-between">
-                            <span>Subtotal:</span>
-                            <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>Shipping:</span>
-                            <span className="font-semibold">₹{shippingCost.toFixed(2)}</span>
-                        </div>
-                        <Separator />
-                        <div className="flex justify-between text-lg font-bold">
-                            <span>Total:</span>
-                            <span>₹{total.toFixed(2)}</span>
-                        </div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Payment Mode</label>
+                        <Select value={paymentMode} onValueChange={setPaymentMode}>
+                            <SelectTrigger className="h-14 bg-gray-50 border-gray-100 rounded-2xl px-6 focus:ring-2 focus:ring-[#7C1D3E]/20 transition-all">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl border-gray-100 shadow-xl">
+                                <SelectItem value="Cash">Cash</SelectItem>
+                                <SelectItem value="UPI">UPI</SelectItem>
+                                <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                                <SelectItem value="COD">COD</SelectItem>
+                                <SelectItem value="RAZORPAY_LINK">Razorpay Link (SMS/Email)</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
-                </CardContent>
-            </Card>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Payment Status</label>
+                        <Select
+                            value={paymentStatus}
+                            onValueChange={setPaymentStatus}
+                            disabled={paymentMode === "RAZORPAY_LINK"} // Auto-set to Pending for Link
+                        >
+                            <SelectTrigger className="h-14 bg-gray-50 border-gray-100 rounded-2xl px-6 focus:ring-2 focus:ring-[#7C1D3E]/20 transition-all">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl border-gray-100 shadow-xl">
+                                <SelectItem value="Paid">Paid</SelectItem>
+                                <SelectItem value="Pending">Pending</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <div className="h-px bg-gray-100 my-8"></div>
+
+                <div className="bg-gray-50 rounded-[2rem] p-8 space-y-4">
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="font-bold text-gray-500 uppercase tracking-wide">Subtotal</span>
+                        <span className="font-black text-gray-900 text-lg">₹{subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="font-bold text-gray-500 uppercase tracking-wide">Shipping</span>
+                        <span className="font-black text-gray-900 text-lg">₹{shippingCost.toFixed(2)}</span>
+                    </div>
+                    <div className="h-px bg-gray-200 my-4"></div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-xl font-black text-[#7C1D3E] uppercase tracking-tighter">Total Payable</span>
+                        <span className="text-3xl font-black text-[#7C1D3E] tracking-tighter">₹{total.toFixed(2)}</span>
+                    </div>
+                </div>
+            </ZapanCard>
 
             {/* 4️⃣ SHIPPING */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center">
-                        <FaTruck className="mr-2" /> Shipping Method
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div>
-                        <Label>Shipping Cost (₹)</Label>
-                        <Input
-                            type="number"
-                            value={shippingCost}
-                            onChange={(e) => setShippingCost(Number(e.target.value))}
-                            placeholder="0"
-                        />
+            <ZapanCard className="p-8">
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 rounded-xl bg-[#7C1D3E]/10 text-[#7C1D3E] flex items-center justify-center">
+                        <FiTruck size={20} />
                     </div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Logistics Protocol</h3>
+                </div>
 
-                    <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                            <input
-                                type="radio"
-                                id="dtdc"
-                                checked={shippingMethod === "DTDC"}
-                                onChange={() => setShippingMethod("DTDC")}
-                            />
-                            <Label htmlFor="dtdc">Ship via DTDC</Label>
+                <div className="space-y-8">
+                    <ZapanInput
+                        label="Shipping Cost (₹)"
+                        type="number"
+                        value={shippingCost}
+                        onChange={(e) => setShippingCost(Number(e.target.value))}
+                        placeholder="0"
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div
+                            onClick={() => setShippingMethod("DTDC")}
+                            className={`cursor-pointer p-6 rounded-2xl border-2 transition-all flex items-center gap-4 ${shippingMethod === "DTDC" ? "border-[#7C1D3E] bg-[#7C1D3E]/5" : "border-gray-100 bg-white hover:border-gray-200"}`}
+                        >
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${shippingMethod === "DTDC" ? "border-[#7C1D3E]" : "border-gray-300"}`}>
+                                {shippingMethod === "DTDC" && <div className="w-2.5 h-2.5 rounded-full bg-[#7C1D3E]" />}
+                            </div>
+                            <span className="font-black text-gray-900 uppercase tracking-widest text-xs">Ship via DTDC</span>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <input
-                                type="radio"
-                                id="manual"
-                                checked={shippingMethod === "MANUAL"}
-                                onChange={() => setShippingMethod("MANUAL")}
-                            />
-                            <Label htmlFor="manual">Manual / Self Shipping</Label>
+
+                        <div
+                            onClick={() => setShippingMethod("MANUAL")}
+                            className={`cursor-pointer p-6 rounded-2xl border-2 transition-all flex items-center gap-4 ${shippingMethod === "MANUAL" ? "border-[#7C1D3E] bg-[#7C1D3E]/5" : "border-gray-100 bg-white hover:border-gray-200"}`}
+                        >
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${shippingMethod === "MANUAL" ? "border-[#7C1D3E]" : "border-gray-300"}`}>
+                                {shippingMethod === "MANUAL" && <div className="w-2.5 h-2.5 rounded-full bg-[#7C1D3E]" />}
+                            </div>
+                            <span className="font-black text-gray-900 uppercase tracking-widest text-xs">Manual / Self Shipping</span>
                         </div>
                     </div>
 
                     {shippingMethod === "DTDC" && (
-                        <div className="border rounded-lg p-4 space-y-4 bg-blue-50">
-                            <h4 className="font-semibold">DTDC Shipping Details</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label>Pickup Pincode</Label>
-                                    <Input
-                                        value={dtdcPickupPincode}
-                                        onChange={(e) => setDtdcPickupPincode(e.target.value)}
-                                    />
+                        <div className="animate-in slide-in-from-top-4 duration-500 bg-blue-50/50 border border-blue-100 rounded-[2rem] p-8 space-y-8">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                                    <FiExternalLink size={16} />
                                 </div>
-                                <div>
-                                    <Label>Delivery Pincode *</Label>
-                                    <Input
-                                        value={dtdcDeliveryPincode}
-                                        onChange={(e) => setDtdcDeliveryPincode(e.target.value)}
-                                        placeholder="Required"
-                                    />
-                                </div>
-                                <div>
-                                    <Label>Weight (kg)</Label>
-                                    <Input
-                                        value={dtdcWeight}
-                                        onChange={(e) => setDtdcWeight(e.target.value)}
-                                        placeholder="Auto-calculated if empty"
-                                    />
-                                </div>
-                                <div>
-                                    <Label>Length (cm)</Label>
-                                    <Input
+                                <h4 className="text-xs font-black text-blue-900 uppercase tracking-widest">DTDC Integration</h4>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <ZapanInput
+                                    label="Pickup Pincode"
+                                    value={dtdcPickupPincode}
+                                    onChange={(e) => setDtdcPickupPincode(e.target.value)}
+                                    className="bg-white"
+                                />
+                                <ZapanInput
+                                    label="Delivery Pincode"
+                                    value={dtdcDeliveryPincode}
+                                    onChange={(e) => setDtdcDeliveryPincode(e.target.value)}
+                                    placeholder="Required"
+                                    className="bg-white border-blue-200 focus:ring-blue-200/50"
+                                />
+                                <ZapanInput
+                                    label="Weight (kg)"
+                                    value={dtdcWeight}
+                                    onChange={(e) => setDtdcWeight(e.target.value)}
+                                    placeholder="Auto"
+                                    className="bg-white"
+                                />
+                                <div className="grid grid-cols-3 gap-4 md:col-span-1">
+                                    <ZapanInput
+                                        label="Len (cm)"
                                         value={dtdcLength}
                                         onChange={(e) => setDtdcLength(e.target.value)}
+                                        className="bg-white"
                                     />
-                                </div>
-                                <div>
-                                    <Label>Breadth (cm)</Label>
-                                    <Input
+                                    <ZapanInput
+                                        label="Bre (cm)"
                                         value={dtdcBreadth}
                                         onChange={(e) => setDtdcBreadth(e.target.value)}
+                                        className="bg-white"
                                     />
-                                </div>
-                                <div>
-                                    <Label>Height (cm)</Label>
-                                    <Input
+                                    <ZapanInput
+                                        label="Hgt (cm)"
                                         value={dtdcHeight}
                                         onChange={(e) => setDtdcHeight(e.target.value)}
+                                        className="bg-white"
                                     />
                                 </div>
                             </div>
                         </div>
                     )}
+
 
                     {shippingMethod === "MANUAL" && (
-                        <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
-                            <h4 className="font-semibold">Manual Shipping Details</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label>Courier Name *</Label>
-                                    <Input
-                                        value={manualCourierName}
-                                        onChange={(e) => setManualCourierName(e.target.value)}
-                                        placeholder="e.g., BlueDart, FedEx"
-                                    />
+                        <div className="animate-in slide-in-from-top-4 duration-500 bg-gray-50 border border-gray-100 rounded-[2rem] p-8 space-y-8">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-gray-200 text-gray-600 flex items-center justify-center">
+                                    <FiBox size={16} />
                                 </div>
-                                <div>
-                                    <Label>Tracking Number (Optional)</Label>
-                                    <Input
-                                        value={manualTrackingNumber}
-                                        onChange={(e) => setManualTrackingNumber(e.target.value)}
-                                        placeholder="Enter tracking number"
-                                    />
-                                </div>
+                                <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">Manual Logistics</h4>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <ZapanInput
+                                    label="Courier Service"
+                                    value={manualCourierName}
+                                    onChange={(e) => setManualCourierName(e.target.value)}
+                                    placeholder="e.g. Delhivery, BlueDart"
+                                    className="bg-white"
+                                />
+                                <ZapanInput
+                                    label="Tracking ID"
+                                    value={manualTrackingNumber}
+                                    onChange={(e) => setManualTrackingNumber(e.target.value)}
+                                    placeholder="AWB Number"
+                                    className="bg-white"
+                                />
                             </div>
                         </div>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </ZapanCard>
 
-            {/* 5️⃣ NOTIFICATION CONTROLS */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Notification Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            checked={sendEmail}
-                            onCheckedChange={(checked) => setSendEmail(checked as boolean)}
-                        />
-                        <Label>Send Email Confirmation</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            checked={sendWhatsApp}
-                            onCheckedChange={(checked) =>
-                                setSendWhatsApp(checked as boolean)
-                            }
-                        />
-                        <Label>Send WhatsApp Confirmation</Label>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* SUBMIT BUTTON */}
-            <div className="flex justify-end gap-4">
-                <Button variant="outline" onClick={() => router.back()}>
-                    Cancel
-                </Button>
-                <Button
-                    onClick={handleSubmitOrder}
-                    disabled={isSubmitting || selectedProducts.length === 0}
-                    size="lg"
-                >
-                    {isSubmitting ? "Creating Order..." : "Create Offline Order"}
-                </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-8">
+                <div className="flex items-center justify-between p-6 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                    <span className="text-xs font-black text-gray-500 uppercase tracking-widest">Email Notification</span>
+                    <Checkbox
+                        checked={sendEmail}
+                        onCheckedChange={(checked) => setSendEmail(checked as boolean)}
+                        className="border-gray-300"
+                    />
+                </div>
+                <div className="flex items-center justify-between p-6 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                    <span className="text-xs font-black text-gray-500 uppercase tracking-widest">WhatsApp Alert</span>
+                    <Checkbox
+                        checked={sendWhatsApp}
+                        onCheckedChange={(checked) => setSendWhatsApp(checked as boolean)}
+                        className="border-gray-300"
+                    />
+                </div>
             </div>
+
+            <Button
+                onClick={handleSubmitOrder}
+                disabled={isSubmitting}
+                className="w-full h-16 bg-gradient-to-r from-[#7C1D3E] to-[#E91E7B] text-white text-lg font-black uppercase tracking-widest rounded-3xl shadow-2xl shadow-[#7C1D3E]/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
+            >
+                {isSubmitting ? "Processing Order..." : "Create Offline Order"}
+            </Button>
         </div>
     );
 };
@@ -899,50 +898,56 @@ const ProductSearchItem = ({
     const [quantity, setQuantity] = useState(1);
 
     return (
-        <div className="flex items-start gap-4 p-3 border rounded-lg hover:bg-gray-50">
+        <div className="flex items-start gap-4 p-4 border border-gray-100 rounded-2xl hover:bg-white hover:shadow-lg transition-all bg-white mb-2 group">
             <img
                 src={product.img[0]}
                 alt={product.name}
-                className="w-20 h-20 object-cover rounded"
+                className="w-20 h-20 object-cover rounded-xl shadow-sm"
             />
             <div className="flex-1">
-                <h4 className="font-medium">{product.name}</h4>
-                <p className="text-sm text-gray-600">SKU: {product.sku}</p>
-                <p className="text-sm font-semibold text-green-600">
+                <h4 className="font-black text-gray-900 text-sm mb-1">{product.name}</h4>
+                <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="neutral" className="text-[10px] text-gray-400 font-bold uppercase tracking-wider border-gray-200">
+                        SKU: {product.sku}
+                    </Badge>
+                </div>
+                <p className="text-sm font-black text-[#7C1D3E]">
                     ₹{product.actualPrice}
                 </p>
             </div>
-            <div className="flex gap-2 items-end">
-                <div>
-                    <Label className="text-xs">Size</Label>
-                    <Select value={selectedSize} onValueChange={setSelectedSize}>
-                        <SelectTrigger className="w-24">
-                            <SelectValue placeholder="Size" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {product.sizes.map((size) => (
-                                <SelectItem key={size._id} value={size._id}>
-                                    {size.size} ({size.stock})
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <Label className="text-xs">Qty</Label>
-                    <Input
-                        type="number"
-                        min="1"
-                        value={quantity}
-                        onChange={(e) => setQuantity(Number(e.target.value))}
-                        className="w-16"
-                    />
+            <div className="flex flex-col gap-2 items-end">
+                <div className="flex gap-2">
+                    <div className="w-28">
+                        <Select value={selectedSize} onValueChange={setSelectedSize}>
+                            <SelectTrigger className="h-9 text-xs bg-gray-50 border-gray-100 rounded-lg">
+                                <SelectValue placeholder="Select Size" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl shadow-lg border-gray-100 p-1">
+                                {product.sizes.map((size) => (
+                                    <SelectItem key={size._id} value={size._id} className="text-xs rounded-lg cursor-pointer">
+                                        {size.size} (Qty: {size.stock})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="w-16">
+                        <ZapanInput
+                            type="number"
+                            min="1"
+                            value={quantity}
+                            onChange={(e) => setQuantity(Number(e.target.value))}
+                            className="h-9 text-xs py-0"
+                            placeholder="Qty"
+                        />
+                    </div>
                 </div>
                 <Button
                     size="sm"
                     onClick={() => onAdd(product, selectedSize, quantity)}
+                    className="w-full bg-gray-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
                 >
-                    <FaPlus />
+                    <FiPlus className="mr-2" /> Add to Order
                 </Button>
             </div>
         </div>

@@ -2,18 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
-    CardFooter,
-} from "@/components/ui/card";
+import { ZapanInput, PageHeader, Card as ZapanCard, Badge, Button } from "@/theme/components";
 import { toast } from "react-hot-toast";
 import axios from "axios";
+import { FiShield, FiSmartphone, FiCheckCircle, FiAlertTriangle, FiCopy } from "react-icons/fi";
 
 const TwoFASettings = () => {
     const { user } = useSelector((state: any) => state.auth);
@@ -102,84 +94,154 @@ const TwoFASettings = () => {
         }
     };
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast.success("Copied to clipboard");
+    }
+
     return (
-        <div className="max-w-4xl mx-auto p-4">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Two-Factor Authentication (2FA)</CardTitle>
-                    <CardDescription>
-                        Add an extra layer of security to your account.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {step === "status" && (
-                        <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
-                            <div>
-                                <p className="font-medium">Status</p>
-                                <p className={`text-sm ${status?.enabled ? "text-green-600" : "text-red-600"}`}>
-                                    {status?.enabled ? "Enabled" : "Disabled"}
-                                </p>
+        <div className="space-y-8 pb-20 animate-in fade-in duration-700">
+            <PageHeader
+                title="Two-Factor Authentication"
+                description="Secure your account with an extra layer of protection."
+                action={
+                    <Badge variant="brand">
+                        Security Protocol
+                    </Badge>
+                }
+            />
+
+            <ZapanCard className="max-w-3xl mx-auto p-8">
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 rounded-xl bg-[#7C1D3E]/10 text-[#7C1D3E] flex items-center justify-center">
+                        <FiShield size={20} />
+                    </div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Security Status</h3>
+                </div>
+
+                {step === "status" && (
+                    <div className="space-y-6">
+                        <div className={`flex items-center justify-between p-6 rounded-[2rem] border-2 ${status?.enabled ? "border-green-100 bg-green-50/50" : "border-red-100 bg-red-50/50"}`}>
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${status?.enabled ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
+                                    {status?.enabled ? <FiCheckCircle size={24} /> : <FiAlertTriangle size={24} />}
+                                </div>
+                                <div>
+                                    <h4 className={`text-lg font-black ${status?.enabled ? "text-green-900" : "text-red-900"}`}>
+                                        {status?.enabled ? "2FA is Active" : "2FA is Disabled"}
+                                    </h4>
+                                    <p className={`text-sm font-medium ${status?.enabled ? "text-green-700" : "text-red-700"}`}>
+                                        {status?.enabled ? "Your account is currently protected." : "Enable 2FA to secure your account."}
+                                    </p>
+                                </div>
                             </div>
+                        </div>
+
+                        <div className="flex justify-end pt-4">
                             {status?.enabled ? (
-                                <Button variant="destructive" onClick={handleDisable} disabled={loading}>
+                                <Button
+                                    variant="danger"
+                                    onClick={handleDisable}
+                                    disabled={loading}
+                                    className="rounded-xl px-8 py-3"
+                                >
                                     Disable 2FA
                                 </Button>
                             ) : (
-                                <Button onClick={handleEnableStart} disabled={loading}>
-                                    Enable 2FA
+                                <Button
+                                    onClick={handleEnableStart}
+                                    disabled={loading}
+                                    className="rounded-xl px-8 py-3"
+                                >
+                                    Enable 2FA Protection
                                 </Button>
                             )}
                         </div>
-                    )}
+                    </div>
+                )}
 
-                    {step === "setup" && setupData && (
-                        <div className="space-y-4 text-center">
-                            <p className="text-sm text-gray-600">
-                                Scan the QR code below with your Authenticator app (Google Authenticator, Microsoft Authenticator, etc.)
+                {step === "setup" && setupData && (
+                    <div className="animate-in slide-in-from-right-4 duration-500 space-y-8">
+                        <div className="text-center space-y-2">
+                            <div className="w-16 h-16 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mx-auto mb-4">
+                                <FiSmartphone size={32} />
+                            </div>
+                            <h4 className="text-xl font-black text-gray-900">Scan QR Code</h4>
+                            <p className="text-gray-500 max-w-md mx-auto">
+                                Open your authenticator app (Google Authenticator, Authy, etc.) and scan the QR code below.
                             </p>
-                            <div className="flex justify-center p-4 bg-white border rounded-lg">
-                                <img src={setupData.qr} alt="2FA QR Code" className="w-48 h-48" />
+                        </div>
+
+                        <div className="flex justify-center p-6 bg-white border border-gray-100 rounded-3xl shadow-sm max-w-xs mx-auto">
+                            <img src={setupData.qr} alt="2FA QR Code" className="w-48 h-48 mix-blend-multiply" />
+                        </div>
+
+                        <div className="bg-gray-50 rounded-2xl p-6 text-center space-y-3 max-w-md mx-auto">
+                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Manual Entry Key</p>
+                            <div className="flex items-center justify-center gap-2">
+                                <code className="text-sm font-mono font-bold text-gray-800 bg-white px-3 py-1 rounded-lg border border-gray-200">
+                                    {setupData.manualKey}
+                                </code>
+                                <button
+                                    onClick={() => copyToClipboard(setupData.manualKey)}
+                                    className="p-2 hover:bg-white rounded-lg transition-colors text-gray-500"
+                                >
+                                    <FiCopy size={14} />
+                                </button>
                             </div>
-                            <div className="text-left space-y-2">
-                                <p className="text-xs font-mono bg-gray-100 p-2 rounded break-all">
-                                    Manual Key: {setupData.manualKey}
-                                </p>
-                            </div>
-                            <Button onClick={() => setStep("verify")} className="w-full">
-                                I've scanned the code
-                            </Button>
-                            <Button variant="ghost" onClick={() => setStep("status")} className="w-full">
+                            <p className="text-[10px] text-gray-400">Save this key in a secure location.</p>
+                        </div>
+
+                        <div className="flex gap-4 pt-4">
+                            <Button variant="ghost" onClick={() => setStep("status")} className="flex-1">
                                 Cancel
                             </Button>
+                            <Button onClick={() => setStep("verify")} className="flex-1">
+                                Continue to Verification
+                            </Button>
                         </div>
-                    )}
+                    </div>
+                )}
 
-                    {step === "verify" && (
-                        <div className="space-y-4">
-                            <p className="text-sm text-center text-gray-600">
-                                Enter the 6-digit code from your authenticator app to verify.
+                {step === "verify" && (
+                    <div className="animate-in slide-in-from-right-4 duration-500 space-y-8 max-w-md mx-auto">
+                        <div className="text-center space-y-2">
+                            <div className="w-16 h-16 rounded-2xl bg-[#7C1D3E]/10 text-[#7C1D3E] flex items-center justify-center mx-auto mb-4">
+                                <FiShield size={32} />
+                            </div>
+                            <h4 className="text-xl font-black text-gray-900">Verify Code</h4>
+                            <p className="text-gray-500">
+                                Enter the 6-digit code generated by your authenticator app to confirm setup.
                             </p>
-                            <Input
+                        </div>
+
+                        <div className="space-y-4">
+                            <ZapanInput
                                 type="text"
                                 placeholder="000000"
                                 maxLength={6}
                                 value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                className="text-center text-2xl tracking-widest"
+                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                                className="text-center text-3xl tracking-[0.5em] font-mono h-20"
+                                label="Verification Code"
                             />
-                            <Button onClick={handleVerify} className="w-full" disabled={loading || otp.length !== 6}>
-                                {loading ? "Verifying..." : "Verify & Enable"}
+
+                            <Button
+                                onClick={handleVerify}
+                                className="w-full h-14 text-lg"
+                                disabled={loading || otp.length !== 6}
+                            >
+                                {loading ? "Verifying..." : "Verify & Enable 2FA"}
                             </Button>
+
                             <Button variant="ghost" onClick={() => setStep("setup")} className="w-full">
-                                Back
+                                Back to QR Code
                             </Button>
                         </div>
-                    )}
-                </CardContent>
-                <CardFooter className="text-xs text-gray-500">
-                    Make sure you have a backup of your manual key in case you lose access to your device.
-                </CardFooter>
-            </Card>
+                    </div>
+                )}
+
+            </ZapanCard>
         </div>
     );
 };

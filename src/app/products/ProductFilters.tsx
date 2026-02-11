@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -97,7 +99,7 @@ const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
       ${isOpen ? "translate-x-0 z-[9999]" : "-translate-x-full"}
       md:relative md:translate-x-0
     `}
->
+    >
 
       <div className="flex flex-col h-full md:max-h-[80vh]">
         {/* Header */}

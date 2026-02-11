@@ -1,136 +1,108 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-
-import { FaDollarSign, FaUsers, FaChartLine, FaRedoAlt } from "react-icons/fa";
-
-import SalesGraph from "./SalesGraph";
-import ProductSalesChart from "./ProductSalesChart";
-import MostSellingProductsPage from "./TopSelling";
-import SalesDataTable from "./Sales";
-import StatCard from "./StateCard";
+import { PageHeader, StatCardSimple } from "@/theme/components";
+import { TrendingUp, Users, DollarSign, RotateCcw } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import TopSellingProducts from "./TopSelling";
+import SalesGraph from "./SalesGraph";
+import ProductSalesChart from "./ProductSalesChart";
 
-const OrdersPage = () => {
+const DashboardPage = () => {
   const [stats, setStats] = useState<any>({});
   const [salesOverView, setSalesOverView] = useState<any>([]);
   const [performanceOverView, setPerformanceOverview] = useState<any>([]);
-  const [mostSelling, setMostSelling] = useState<any>([]);
-  const [salesData, setSalesData] = useState<any>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [page, setPage] = useState(1);
 
   const fetchStats = async () => {
     try {
       const { data } = await axios.get(`/api/admin/dashboard/stats`);
-      
       if (data.success) {
         setStats(data.data);
-      } else {
-        toast.error(data.msg);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
   };
 
   const fetchSalesoverview = async () => {
     try {
       const { data } = await axios.get(`/api/admin/dashboard/salesoverview`);
-
       if (data.success) {
         setSalesOverView(data.salesData);
-      } else {
-        toast.error(data.msg);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const fetchPerformanceOverView = async () => {
     try {
-      const { data } = await axios.get(
-        `/api/admin/dashboard/productperformance`
-      );
-
+      const { data } = await axios.get(`/api/admin/dashboard/productperformance`);
       if (data.success) {
         setPerformanceOverview(data.topProducts);
-      } else {
-        toast.error(data.msg);
       }
-    } catch (error) {}
-  };
-
-  const fetchMostSellingProduct = async () => {
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-
-      search: searchTerm,
-    });
-    try {
-      const { data } = await axios.get(`/api/admin/dashboard/mostselling`);
-
-      if (data.success) {
-        setMostSelling(data.mostSellingProducts);
-      } else {
-        toast.error(data.msg);
-      }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   useEffect(() => {
-    fetchPerformanceOverView();
-    fetchSalesoverview();
     fetchStats();
-
-    fetchMostSellingProduct();
+    fetchSalesoverview();
+    fetchPerformanceOverView();
   }, []);
 
   return (
-    <div className="container mx-auto px-6 pt-4 pb-2 space-y-6">
-      <div className="space-y-2 flex flex-col items-start">
-        
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader
+        title="Dashboard"
+        description="Monitor your store's performance, track sales, and analyze customer behavior."
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCardSimple
+          label="Total Revenue"
+          value={`₹${stats.totalRevenue?.overall?.toLocaleString() || "0"}`}
+          icon={<DollarSign size={20} className="text-white" />}
+          change="+12.5%"
+          changePositive={true}
+          highlighted
+        />
+        <StatCardSimple
+          label="Total Sales"
+          value={stats.totalSales || "0"}
+          icon={<TrendingUp size={20} className="text-[#7C1D3E]" />}
+          change="+8.2%"
+          changePositive={true}
+        />
+        <StatCardSimple
+          label="New Customers"
+          value={stats.totalUsers || "0"}
+          icon={<Users size={20} className="text-[#E91E7B]" />}
+          change="+24%"
+          changePositive={true}
+        />
+        <StatCardSimple
+          label="Repeat Orders"
+          value={stats.repeatOrders || "0"}
+          icon={<RotateCcw size={20} className="text-[#C2185B]" />}
+          change="-2.4%"
+          changePositive={false}
+        />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Sales"
-          value={stats.totalSales}
-          icon={FaChartLine}
-          description="Total number of sales"
-        />
-        <StatCard
-          title="Total Revenue"
-          value={stats.totalRevenue}
-          icon={FaDollarSign}
-          description="Total revenue generated"
-        />
-        <StatCard
-          title="Total Users"
-          value={stats.totalUsers}
-          icon={FaUsers}
-          description="Total number of registered users"
-        />
-        <StatCard
-          title="Repeat Orders"
-          value={stats.repeatOrders}
-          icon={FaRedoAlt}
-          description="Number of repeat orders"
-        />
-      </div>
-
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <SalesGraph salesOverView={salesOverView} />
         <ProductSalesChart performanceOverView={performanceOverView} />
-      </div> */}
-
-      <div className="grid grid-cols-1 ">
-        <MostSellingProductsPage />
       </div>
-      {/* <div className="grid grid-cols-1 ">
-        <SalesDataTable />
-      </div> */}
+
+      <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
+        <div className="mb-8">
+          <h3 className="text-xl font-black text-gray-900 leading-tight">Top Performing Products</h3>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Inventory & Sales Analysis</p>
+        </div>
+        <TopSellingProducts />
+      </div>
     </div>
   );
 };
 
-export default OrdersPage;
+export default DashboardPage;
+

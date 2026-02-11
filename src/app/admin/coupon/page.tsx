@@ -1,11 +1,27 @@
-// admin/coupon.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  FiEdit,
+  FiTrash2,
+  FiPlus,
+  FiTag,
+  FiClock,
+  FiEye,
+  FiEyeOff,
+  FiZap,
+  FiShoppingBag,
+  FiCalendar
+} from "react-icons/fi";
+import {
+  PageHeader,
+  Card,
+  Button,
+  Badge,
+  ZapanInput,
+  ZapanTextarea,
+} from "@/theme/components";
 import {
   Table,
   TableBody,
@@ -20,7 +36,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -29,23 +44,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/components/ui/use-toast";
-import { Textarea } from "@/components/ui/textarea";
+import toast from "react-hot-toast";
+import { LuLoader } from "react-icons/lu";
 
 const Coupons = () => {
   const [coupons, setCoupons] = useState<any>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<any>(null);
-  const { toast } = useToast();
-  
-  // ✅ Use OLD field names
+  const [loading, setLoading] = useState(true);
+
   const [formData, setFormData] = useState<any>({
     couponCode: "",
     description: "",
     validity: "",
     type: "",
-    amount: "", // Discount value (percentage or flat)
-    maxDiscount: "", // Max discount cap (only for percentage)
+    amount: "",
+    maxDiscount: "",
     purchaseAmount: "",
     availableFor: "",
     visible: false,
@@ -57,100 +71,66 @@ const Coupons = () => {
   }, []);
 
   const fetchCoupons = async () => {
+    setLoading(true);
     try {
       const response = await axios.get("/api/coupon/all");
-      // console.log("Fetched coupons:", response.data);
       setCoupons(response.data.coupon || []);
     } catch (error) {
-      console.error("Error fetching coupons:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch coupons",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch coupons");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
+
     if (!formData.couponCode || !formData.validity || !formData.type || !formData.amount) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all required fields");
       return;
     }
 
     try {
-      // ✅ Use OLD field names for payload
       const payload = {
         couponCode: formData.couponCode.toUpperCase(),
         description: formData.description || "",
         validity: formData.validity,
         type: formData.type,
-        amount: parseFloat(formData.amount) || 0, // Discount value
-        maxDiscount: formData.type === "percentage" && formData.maxDiscount 
-          ? parseFloat(formData.maxDiscount) 
-          : null, // Max cap (for percentage)
+        amount: parseFloat(formData.amount) || 0,
+        maxDiscount: formData.type === "percentage" && formData.maxDiscount
+          ? parseFloat(formData.maxDiscount)
+          : null,
         purchaseAmount: parseFloat(formData.purchaseAmount) || 0,
         availableFor: parseInt(formData.availableFor) || 1,
         visible: formData.visible,
         multiUse: formData.multiUse,
-        categories: [], // Add if needed
-        off: "0", // Keep for backward compatibility
+        categories: [],
+        off: "0",
       };
-      
-      // console.log('Sending payload:', payload);
-      
+
       if (editingCoupon) {
-        const response = await axios.patch(`/api/admin/coupon/${editingCoupon._id}`, payload);
-        // console.log('Update response:', response.data);
-        toast({
-          title: "Success",
-          description: "Coupon updated successfully",
-        });
+        await axios.patch(`/api/admin/coupon/${editingCoupon._id}`, payload);
+        toast.success("Coupon updated successfully");
       } else {
-        const response = await axios.post("/api/admin/coupon", payload);
-        // console.log('Create response:', response.data);
-        toast({
-          title: "Success",
-          description: "Coupon created successfully",
-        });
+        await axios.post("/api/admin/coupon", payload);
+        toast.success("Coupon created successfully");
       }
       setIsDialogOpen(false);
       resetForm();
       fetchCoupons();
-    } catch (error) {
-      console.error('Error saving coupon:', error.response?.data || error.message);
-      toast({
-        title: "Error",
-        description: error.response?.data?.msg || "Failed to save coupon",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      toast.error(error.response?.data?.msg || "Failed to save coupon");
     }
   };
 
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this coupon?"
-    );
-    if (confirmDelete) {
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this coupon?")) {
       try {
         await axios.delete(`/api/admin/coupon/${id}`);
-        toast({
-          title: "Success",
-          description: "Coupon deleted successfully",
-        });
+        toast.success("Coupon deleted successfully");
         fetchCoupons();
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to delete coupon",
-          variant: "destructive",
-        });
+        toast.error("Failed to delete coupon");
       }
     }
   };
@@ -174,7 +154,6 @@ const Coupons = () => {
   const openDialog = (coupon: any = null) => {
     setEditingCoupon(coupon);
     if (coupon) {
-      // ✅ Map OLD field names to form
       setFormData({
         couponCode: coupon.couponCode,
         description: coupon.description || "",
@@ -193,314 +172,339 @@ const Coupons = () => {
     setIsDialogOpen(true);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: any) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  // ✅ Use OLD field names for display
   const formatCouponDisplay = (coupon: any) => {
     if (coupon.type === "percentage") {
-      const discount = `${coupon.amount}% off`;
-      const cap = coupon.maxDiscount ? ` (max ₹${coupon.maxDiscount})` : "";
+      const discount = `${coupon.amount}% OFF`;
+      const cap = coupon.maxDiscount ? ` (Up to ₹${coupon.maxDiscount})` : "";
       return discount + cap;
     } else {
-      return `₹${coupon.amount} off`;
+      return `₹${coupon.amount} OFF`;
     }
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Coupon Management</h1>
-        <Button onClick={() => openDialog()}>
-          <FiPlus className="mr-2" /> Add New Coupon
-        </Button>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader
+        title="Promo Codes"
+        description="Drive growth with high-converting discounts and multi-tiered coupons."
+        action={
+          <Button variant="primary" className="h-11 px-6 rounded-xl shadow-lg shadow-[#7C1D3E]/30" onClick={() => openDialog()}>
+            <FiPlus className="mr-2" size={18} /> New Promotion
+          </Button>
+        }
+      />
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Coupon Code</TableHead>
-              <TableHead>Discount</TableHead>
-              <TableHead>Min Purchase</TableHead>
-              <TableHead>Validity</TableHead>
-              <TableHead>Usage</TableHead>
-              <TableHead>Visible</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {coupons.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  No coupons found. Create your first coupon!
-                </TableCell>
+      <Card className="overflow-hidden border-gray-100 shadow-xl shadow-gray-200/40">
+        <div className="overflow-x-auto scrollbar-thin">
+          <Table>
+            <TableHeader className="bg-gray-50/50">
+              <TableRow className="border-b border-gray-100">
+                <TableHead className="py-5 px-8">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <FiTag size={12} /> Coupon Identity
+                  </div>
+                </TableHead>
+                <TableHead className="py-5 px-8 text-center">
+                  <div className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <FiZap size={12} /> Offer Value
+                  </div>
+                </TableHead>
+                <TableHead className="py-5 px-8 text-center">
+                  <div className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <FiShoppingBag size={12} /> Min. Spend
+                  </div>
+                </TableHead>
+                <TableHead className="py-5 px-8 text-center">
+                  <div className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <FiCalendar size={12} /> Expiration
+                  </div>
+                </TableHead>
+                <TableHead className="py-5 px-8 text-center">
+                  <div className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    Utilization
+                  </div>
+                </TableHead>
+                <TableHead className="py-5 px-8 text-center">
+                  <div className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    Exposure
+                  </div>
+                </TableHead>
+                <TableHead className="py-5 px-8 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  Management
+                </TableHead>
               </TableRow>
-            ) : (
-              coupons.map((coupon: any) => (
-                <TableRow key={coupon._id}>
-                  <TableCell className="font-semibold">{coupon.couponCode}</TableCell>
-                  <TableCell>{formatCouponDisplay(coupon)}</TableCell>
-                  <TableCell>₹{coupon.purchaseAmount || 0}</TableCell>
-                  <TableCell>
-                    {new Date(coupon.validity).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    {coupon.userCount || 0} / {coupon.availableFor || 0}
-                  </TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      coupon.visible ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {coupon.visible ? "Yes" : "No"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openDialog(coupon)}
-                      >
-                        <FiEdit className="mr-1" /> Edit
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(coupon._id)}
-                      >
-                        <FiTrash2 className="mr-1" /> Delete
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {loading && coupons.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-20">
+                    <LuLoader className="w-10 h-10 animate-spin text-[#7C1D3E] mx-auto" />
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-6">Decoding Active Promos...</p>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : coupons.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-32 text-gray-400">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-200">
+                      <FiTag size={32} />
+                    </div>
+                    <p className="font-bold text-gray-600">No active campaigns found.</p>
+                    <p className="text-xs mt-1">Start your first promotion to drive sales.</p>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                coupons.map((coupon: any) => (
+                  <TableRow key={coupon._id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-100 last:border-0 text-black">
+                    <TableCell className="py-5 px-8">
+                      <div className="flex items-center gap-4">
+                        <div className="w-11 h-11 rounded-2xl bg-[#7C1D3E]/5 flex items-center justify-center text-[#7C1D3E] border border-[#7C1D3E]/10 group-hover:bg-[#7C1D3E] group-hover:text-white transition-all shadow-sm">
+                          <FiTag size={20} />
+                        </div>
+                        <div>
+                          <span className="font-black text-gray-900 tracking-widest text-sm block">{coupon.couponCode}</span>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{coupon.description || 'Global Campaign'}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5 px-8 text-center">
+                      <Badge variant="brand" className="h-7 px-4 rounded-xl text-[11px] font-black uppercase tracking-wider">{formatCouponDisplay(coupon)}</Badge>
+                    </TableCell>
+                    <TableCell className="py-5 px-8 text-center">
+                      <div className="flex flex-col items-center">
+                        <span className="text-sm font-black text-gray-900">₹{coupon.purchaseAmount || 0}</span>
+                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Threshold</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5 px-8 text-center">
+                      <div className="flex flex-col items-center">
+                        <span className="text-sm font-black text-gray-900">{new Date(coupon.validity).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        <span className="text-[9px] font-bold text-red-400 uppercase tracking-widest mt-0.5 flex items-center gap-1"><FiClock size={10} /> Valid Until</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5 px-8 text-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="text-center">
+                          <p className="text-sm font-black text-gray-900">{coupon.userCount || 0}</p>
+                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Redeemed</p>
+                        </div>
+                        <div className="w-px h-8 bg-gray-100"></div>
+                        <div className="text-center text-black">
+                          <p className="text-sm font-black text-gray-900">{coupon.availableFor === 2147483647 ? '∞' : coupon.availableFor || '∞'}</p>
+                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Cap</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5 px-8 text-center">
+                      {coupon.visible ? (
+                        <div className="flex flex-col items-center gap-1.5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                          <span className="text-[10px] font-black text-green-600 uppercase tracking-[0.2em] flex items-center gap-1">Publicly Discoverable</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1.5 opacity-40">
+                          <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
+                          <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] flex items-center gap-1">Exclusive Link Only</span>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-5 px-8 text-right">
+                      <div className="flex items-center justify-end gap-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openDialog(coupon)}
+                          className="h-10 w-10 p-0 rounded-xl bg-gray-50 text-gray-400 hover:text-[#7C1D3E] hover:bg-[#7C1D3E]/10"
+                        >
+                          <FiEdit size={18} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(coupon._id)}
+                          className="h-10 w-10 p-0 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                        >
+                          <FiTrash2 size={18} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingCoupon ? "Edit Coupon" : "Create New Coupon"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Coupon Code */}
-            <div>
-              <Label htmlFor="couponCode">Coupon Code *</Label>
-              <Input
-                id="couponCode"
+        <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
+          <div className="bg-[#7C1D3E] p-10 text-white relative">
+            <DialogTitle className="text-3xl font-black">{editingCoupon ? "Modify Promo" : "Launch Promo"}</DialogTitle>
+            <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] mt-2">{editingCoupon ? "Updating campaign parameters" : "Craft your next viral marketing offer"}</p>
+            <div className="absolute top-10 right-10 w-14 h-14 rounded-3xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
+              <FiTag className="transform -rotate-12" size={30} />
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-10 space-y-8 bg-white max-h-[75vh] overflow-y-auto scrollbar-thin">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <ZapanInput
+                label="Coupon Secret Code *"
                 name="couponCode"
                 value={formData.couponCode}
                 onChange={handleInputChange}
-                placeholder="e.g., SAVE20"
-                className="uppercase"
+                placeholder="E.g. VEDA2025"
+                className="text-lg tracking-widest uppercase h-14"
                 required
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Will be automatically converted to uppercase
-              </p>
-            </div>
-
-            {/* Description */}
-            <div>
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="e.g., Get 20% off on all products"
-                rows={2}
-              />
-            </div>
-
-            {/* Type and Amount */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="type">Discount Type *</Label>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Reward Mechanism *</label>
                 <Select
                   value={formData.type}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, type: value }))
-                  }
+                  onValueChange={(value) => setFormData((prev: any) => ({ ...prev, type: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-14 rounded-2xl border-gray-100 bg-gray-50 font-black text-sm text-gray-900 border-2 focus:ring-[#7C1D3E]/20">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
-
-                  <SelectContent position="popper" className="z-[9999]">
-                    <SelectItem value="percentage">Percentage (%)</SelectItem>
-                    <SelectItem value="flat">Flat Amount (₹)</SelectItem>
+                  <SelectContent className="rounded-2xl border-gray-100 shadow-xl z-[99999]" position="popper" sideOffset={5}>
+                    <SelectItem value="percentage" className="font-bold py-3">Percentage (%) Calculation</SelectItem>
+                    <SelectItem value="flat" className="font-bold py-3">Flat Value (₹) Rebate</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              <div>
-                <Label htmlFor="amount">
-                  {formData.type === "percentage" ? "Percentage Value *" : "Discount Amount *"}
-                </Label>
-                <Input
-                  id="amount"
-                  name="amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={handleInputChange}
-                  placeholder={formData.type === "percentage" ? "e.g., 20 (for 20%)" : "e.g., 100 (for ₹100)"}
-                  required
-                />
-              </div>
             </div>
 
-            {/* Max Discount Cap (only for percentage) */}
-            {formData.type === "percentage" && (
-              <div>
-                <Label htmlFor="maxDiscount">Maximum Discount Cap (Optional)</Label>
-                <Input
-                  id="maxDiscount"
+            <ZapanTextarea
+              label="Campaign Headline"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              className="h-24"
+              placeholder="Why should customers use this? (e.g., Opening celebration offer)"
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <ZapanInput
+                label={formData.type === "percentage" ? "Percentage Multiplier *" : "Rebate Amount *"}
+                name="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.amount}
+                onChange={handleInputChange}
+                className="h-14 font-black text-xl text-[#7C1D3E]"
+                placeholder={formData.type === "percentage" ? "E.g. 15" : "E.g. 1000"}
+                required
+              />
+              {formData.type === "percentage" && (
+                <ZapanInput
+                  label="Liability Cap"
                   name="maxDiscount"
                   type="number"
                   min="0"
                   step="0.01"
                   value={formData.maxDiscount}
                   onChange={handleInputChange}
-                  placeholder="e.g., 500 (max ₹500 discount)"
+                  className="h-14 border-dashed"
+                  placeholder="Maximum possible discount (₹)"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Leave empty for no cap
-                </p>
-              </div>
-            )}
-
-            {/* Purchase Amount and Available For */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="purchaseAmount">Minimum Purchase Amount</Label>
-                <Input
-                  id="purchaseAmount"
-                  name="purchaseAmount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.purchaseAmount}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 500"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="availableFor">Total Usage Limit *</Label>
-                <Input
-                  id="availableFor"
-                  name="availableFor"
-                  type="number"
-                  min="1"
-                  value={formData.availableFor}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 100"
-                  required
-                />
-              </div>
+              )}
             </div>
 
-            {/* Validity */}
-            <div>
-              <Label htmlFor="validity">Valid Until *</Label>
-              <Input
-                id="validity"
-                name="validity"
-                type="date"
-                value={formData.validity}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <ZapanInput
+                label="Minimum Order Basket"
+                name="purchaseAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.purchaseAmount}
                 onChange={handleInputChange}
-                min={new Date().toISOString().split("T")[0]}
+                className="h-14"
+                placeholder="₹ 0.00"
+              />
+              <ZapanInput
+                label="Total Redemption Pool *"
+                name="availableFor"
+                type="number"
+                min="1"
+                value={formData.availableFor}
+                onChange={handleInputChange}
+                className="h-14"
+                placeholder="2147483647"
                 required
               />
             </div>
 
-            {/* Toggles */}
-            <div className="space-y-3 border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="visible">Show in Coupon List</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Display this coupon to customers
-                  </p>
+            <ZapanInput
+              label="Campaign Expiry Cutoff *"
+              name="validity"
+              type="date"
+              value={formData.validity}
+              onChange={handleInputChange}
+              className="h-14"
+              min={new Date().toISOString().split("T")[0]}
+              required
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-gray-100 group transition-all hover:bg-white hover:border-[#7C1D3E]/20">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-black text-gray-900 uppercase tracking-widest block">Public Display</label>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase">Visible on cart page</p>
                 </div>
                 <Switch
-                  id="visible"
-                  name="visible"
                   checked={formData.visible}
-                  onCheckedChange={(checked) =>
-                    handleInputChange({
-                      target: { name: "visible", type: "checkbox", checked },
-                    })
-                  }
+                  onCheckedChange={(checked) => handleInputChange({ target: { name: "visible", type: "checkbox", checked } })}
+                  className="data-[state=checked]:bg-[#7C1D3E]"
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="multiUse">Allow Multiple Uses Per User</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Users can use this coupon multiple times
-                  </p>
+              <div className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-gray-100 group transition-all hover:bg-white hover:border-[#7C1D3E]/20">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-black text-gray-900 uppercase tracking-widest block">Multiple Uses</label>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase">Repeat users allowed</p>
                 </div>
                 <Switch
-                  id="multiUse"
-                  name="multiUse"
                   checked={formData.multiUse}
-                  onCheckedChange={(checked) =>
-                    handleInputChange({
-                      target: { name: "multiUse", type: "checkbox", checked },
-                    })
-                  }
+                  onCheckedChange={(checked) => handleInputChange({ target: { name: "multiUse", type: "checkbox", checked } })}
+                  className="data-[state=checked]:bg-[#7C1D3E]"
                 />
               </div>
             </div>
 
-            {/* Preview */}
             {formData.type && formData.amount && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm font-semibold text-blue-900 mb-1">Preview:</p>
-                <p className="text-lg font-bold text-blue-700">
-                  {formData.type === "percentage" 
-                    ? `${formData.amount}% off${formData.maxDiscount ? ` (max ₹${formData.maxDiscount})` : ""}`
-                    : `₹${formData.amount} off`
+              <div className="bg-[#7C1D3E] rounded-[2rem] p-8 text-center shadow-2xl shadow-[#7C1D3E]/30 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <p className="text-[10px] text-white/60 font-black uppercase tracking-[0.3em] mb-3">Live Discount Preview</p>
+                <h4 className="text-5xl font-black text-white">
+                  {formData.type === "percentage"
+                    ? `${formData.amount}% OFF`
+                    : `₹${formData.amount} OFF`
                   }
-                </p>
-                {formData.purchaseAmount && (
-                  <p className="text-sm text-blue-600 mt-1">
-                    On orders above ₹{formData.purchaseAmount}
-                  </p>
+                </h4>
+                {formData.maxDiscount && formData.type === 'percentage' && (
+                  <p className="text-[10px] text-white/50 mt-2 font-black uppercase tracking-widest italic">Capping liability at ₹{formData.maxDiscount}</p>
                 )}
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <p className="text-[10px] text-white/80 font-bold uppercase tracking-widest">
+                    Applies on checkout for baskets above <span className="text-white text-lg font-black ml-1">₹{formData.purchaseAmount || 0}</span>
+                  </p>
+                </div>
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" className="flex-1">
-                {editingCoupon ? "Update Coupon" : "Create Coupon"}
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsDialogOpen(false);
-                  resetForm();
-                }}
-              >
-                Cancel
+            <div className="flex gap-4 pt-4 pb-2">
+              <Button type="button" variant="ghost" className="flex-1 h-14 rounded-2xl font-black text-gray-400 border border-gray-100" onClick={() => setIsDialogOpen(false)}>Discard</Button>
+              <Button type="submit" variant="primary" className="flex-[2] h-14 rounded-2xl font-black text-xl shadow-2xl shadow-[#7C1D3E]/40">
+                {editingCoupon ? "Finalize Updates" : "Deploy Campaign"}
               </Button>
             </div>
           </form>
