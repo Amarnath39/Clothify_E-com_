@@ -282,6 +282,8 @@ export const POST = async (req: NextRequest) => {
                 transactionDetails: transactionDetails || null,
                 taxDetails,
                 totalGstAmount,
+                totalSgstAmount: totalGstAmount / 2,
+                totalCgstAmount: totalGstAmount / 2,
                 notes: { orderId: newOrderId, invoiceId } // For Webhook recovery
             },
         });

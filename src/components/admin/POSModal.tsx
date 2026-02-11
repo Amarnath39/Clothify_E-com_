@@ -554,7 +554,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ Main POS Interface
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className={`${completedOrder ? 'max-w-md' : (paymentLinkInfo || paymentQRInfo) ? 'max-w-4xl' : 'max-w-[1400px] w-[95vw] h-[90vh]'} p-0 overflow-hidden border-none shadow-2xl rounded-[2rem] bg-gray-50`}>
+            <DialogContent className={`${completedOrder ? 'max-w-md' : (paymentLinkInfo || paymentQRInfo) ? 'max-w-4xl h-fit' : 'max-w-[1400px] w-[95vw] h-[95vh] sm:h-[90vh]'} p-0 overflow-y-auto scrollbar-hide border-none shadow-2xl rounded-[1.5rem] md:rounded-[2rem] bg-gray-50`}>
                 {/* ═════════════════════════════════════════════════════════════════════
                     CASE 1: Success Screen (Order Completed)
                     ═════════════════════════════════════════════════════════════════════ */}
@@ -791,9 +791,9 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                 CASE 3: Main POS Cart / Checkout
                                 ═════════════════════════════════════════════════════════════════════ */
                             (
-                                <div className="h-full flex flex-col md:flex-row">
+                                <div className="flex flex-col lg:flex-row h-full min-h-0">
                                     {/* Left: Product Search & Cart */}
-                                    <div className="flex-1 flex flex-col h-full bg-white p-6 md:p-8 overflow-hidden">
+                                    <div className="flex-[1.5] flex flex-col h-full bg-white p-4 md:p-8 border-b lg:border-b-0 lg:border-r border-gray-100 overflow-hidden min-h-[400px] lg:min-h-0">
                                         <div className="flex items-center justify-between mb-8">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 bg-[#7C1D3E] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#7C1D3E]/30">
@@ -870,8 +870,8 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                             )}
                                         </div>
 
-                                        {/* Cart Items */}
-                                        <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+                                        {/* Cart Items List */}
+                                        <div className="flex-1 overflow-y-auto space-y-4 pr-1 min-h-0">
                                             {cart.length === 0 ? (
                                                 <div className="h-full flex flex-col items-center justify-center text-gray-300 space-y-4">
                                                     <FaBarcode className="text-6xl opacity-20" />
@@ -925,8 +925,8 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                     </div>
 
                                     {/* Right: Payment & Checkout */}
-                                    <div className="w-full md:w-[400px] lg:w-[450px] bg-gray-50 flex flex-col h-full border-l border-gray-100">
-                                        <div className="p-6 md:p-8 flex-1 overflow-y-auto space-y-6">
+                                    <div className="w-full lg:w-[400px] xl:w-[450px] bg-gray-50 flex flex-col h-full border-t lg:border-t-0 lg:border-l border-gray-100 min-h-0">
+                                        <div className="p-4 md:p-8 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
                                             {/* Customer */}
                                             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
                                                 <div className="flex items-center gap-2 text-[#7C1D3E] mb-2">
@@ -979,26 +979,26 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                         </div>
 
                                         {/* Summary Footer */}
-                                        <div className="bg-white p-8 rounded-t-[2.5rem] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] space-y-6 relative z-10">
-                                            <div className="space-y-3">
-                                                <div className="flex justify-between text-sm text-gray-500 font-medium">
+                                        <div className="bg-white p-4 md:p-8 rounded-t-[2rem] md:rounded-t-[2.5rem] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] space-y-4 md:space-y-6 z-10 sticky bottom-0 border-t border-gray-50">
+                                            <div className="space-y-2 md:space-y-3">
+                                                <div className="flex justify-between text-xs md:text-sm text-gray-500 font-medium">
                                                     <span>Subtotal</span>
                                                     <span>₹{totals.subtotal.toFixed(2)}</span>
                                                 </div>
-                                                <div className="flex justify-between text-sm text-gray-500 font-medium">
+                                                <div className="flex justify-between text-xs md:text-sm text-gray-500 font-medium">
                                                     <span>GST (Inc.)</span>
                                                     <span>₹{totals.totalGst.toFixed(2)}</span>
                                                 </div>
-                                                <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                                                    <span className="text-gray-900 font-black text-lg">Total Payable</span>
-                                                    <span className="text-[#7C1D3E] font-black text-3xl">₹{totals.total.toFixed(2)}</span>
+                                                <div className="flex justify-between items-center pt-2 md:pt-4 border-t border-gray-100">
+                                                    <span className="text-gray-900 font-black text-base md:text-lg">Total Payable</span>
+                                                    <span className="text-[#7C1D3E] font-black text-2xl md:text-3xl">₹{totals.total.toFixed(2)}</span>
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-3">
+                                            <div className="flex gap-2 md:gap-3">
                                                 <ZapanButton
                                                     onClick={resetPOS}
-                                                    className="flex-none w-14 h-14 bg-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-2xl"
+                                                    className="flex-none w-12 h-12 md:w-14 md:h-14 bg-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl md:rounded-2xl"
                                                     title="Clear Cart"
                                                 >
                                                     <FaTrash />
@@ -1006,7 +1006,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                                 <ZapanButton
                                                     onClick={processPOSOrder}
                                                     disabled={isProcessing || cart.length === 0}
-                                                    className={`flex-1 h-14 rounded-2xl text-base font-black uppercase tracking-widest shadow-xl transition-all
+                                                    className={`flex-1 h-12 md:h-14 rounded-xl md:rounded-2xl text-sm md:text-base font-black uppercase tracking-widest shadow-xl transition-all
                                                         ${isProcessing || cart.length === 0
                                                             ? 'bg-gray-200 text-gray-400 shadow-none'
                                                             : 'bg-[#7C1D3E] hover:bg-[#601630] text-white hover:scale-[1.02] shadow-[#7C1D3E]/30'

@@ -240,7 +240,9 @@ function AdminLayout({ children }) {
   const breadcrumbs = useMemo(() => {
     const segments = pathname.split("/").filter(Boolean);
     return segments.map((segment, index) => {
-      const href = "/" + segments.slice(0, index + 1).join("/");
+      let href = "/" + segments.slice(0, index + 1).join("/");
+      // Fix: First segment 'admin' should point to dashboard
+      if (segment === "admin") href = "/admin/dashboard";
       // Custom mapping for better titles
       let title = segment.replace(/-/g, " ");
       if (segment === "admin") title = "Dashboard";

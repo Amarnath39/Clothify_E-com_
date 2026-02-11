@@ -46,6 +46,8 @@ import { IoIosRefresh } from "react-icons/io";
 import { LuLoader } from "react-icons/lu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle } from "lucide-react";
+import { useSelector } from "react-redux";
+import ExportModal from "@/components/admin/ExportModal";
 
 /**
  * Standardized Input for forms within the Zapan system
@@ -76,6 +78,9 @@ const OrdersPage = () => {
   const dispatch = useDispatch<any>();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  const { user } = useSelector((state: any) => state.auth);
 
   const countRecentSuccessfulPayments = async (ordersList: any[]) => {
     const now: any = new Date();
@@ -256,16 +261,40 @@ const OrdersPage = () => {
         title="Orders Management"
         description="View and manage all customer orders, shipping labels, and status updates."
         action={
-          <div className="bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
-              <CheckCircle size={18} />
-            </div>
-            <div>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Recent Success</p>
-              <p className="text-lg font-bold text-gray-900">{ordersSuccess}</p>
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => setIsExportModalOpen(true)}
+              variant="outline"
+              className="h-12 px-6 rounded-xl border-gray-200 hover:text-[#7C1D3E] hidden md:flex items-center gap-2"
+            >
+              <FaDownload size={14} />
+              Export Data
+            </Button>
+            <div className="bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
+                <CheckCircle size={18} />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Recent Success</p>
+                <p className="text-lg font-bold text-gray-900">{ordersSuccess}</p>
+              </div>
             </div>
           </div>
         }
+      />
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        currentFilters={{
+          search: searchTerm,
+          paymentStatus: paymentStatus !== "all" ? paymentStatus : undefined,
+          orderStatus: orderStatus !== "all" ? orderStatus : undefined,
+          orderSource: orderSource !== "all" ? orderSource : undefined,
+          startDate: startDate?.toISOString(),
+          endDate: endDate?.toISOString(),
+        }}
+        adminId={user?._id}
       />
 
       <Card className="p-6">
