@@ -1,0 +1,47 @@
+{
+    "name": "Swaarasya Admin Panel",
+    "short_name": "Admin Panel",
+    "description": "Inventory and order management dashboard for Swaarasya",
+    "start_url": "/admin/dashboard",
+    "scope": "/admin/",
+    "display": "standalone",
+    "background_color": "#F8F9FA",
+    "theme_color": "#7C1D3E",
+    "orientation": "portrait-primary",
+    "categories": [
+        "business",
+        "productivity"
+    ],
+    "id": "/admin/dashboard",
+    "icons": [
+        {
+            "src": "/assets/static/logo/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/assets/static/logo/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/assets/static/logo/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/assets/static/logo/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/assets/static/logo/apple-touch-icon.png",
+            "sizes": "180x180",
+            "type": "image/png"
+        }
+    ]
+}
