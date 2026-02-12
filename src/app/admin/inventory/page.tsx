@@ -42,6 +42,7 @@ import toast from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSelector } from "react-redux";
 import { LuLoader } from "react-icons/lu";
+import useOnlineStatus from "@/hooks/useOnlineStatus";
 
 interface InventoryItem {
   _id: string;
@@ -99,6 +100,9 @@ const InventoryPage = () => {
   const [newStockValue, setNewStockValue] = useState("");
   const [updateReason, setUpdateReason] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // ✅ Online Status Check
+  const isOnline = useOnlineStatus();
 
   // Fetch Inventory
   const fetchInventory = async () => {
@@ -160,6 +164,15 @@ const InventoryPage = () => {
       return;
     }
 
+    // ✅ Prevent stock updates when offline
+    if (!isOnline) {
+      toast.error("You are offline. Stock updates are disabled.", {
+        icon: "📡",
+        duration: 4000,
+      });
+      return;
+    }
+
     setIsUpdating(true);
     try {
       const adminId = user?._id || localStorage.getItem("adminId");
@@ -214,7 +227,12 @@ const InventoryPage = () => {
         title="Inventory"
         description="Monitor stock levels, manage variants, and track all inventory movements."
         action={
-          <Button onClick={fetchInventory} variant="outline" className="h-10 rounded-xl bg-white">
+          <Button
+            onClick={fetchInventory}
+            variant="outline"
+            className="h-10 rounded-xl bg-white"
+            disabled={!isOnline}
+          >
             <FiRefreshCw className={`mr-2 ${loading ? "animate-spin" : ""}`} size={16} />
             Sync Stock
           </Button>
@@ -319,11 +337,18 @@ const InventoryPage = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
+                              if (!isOnline) {
+                                toast.error("You are offline. Cannot edit inventory.", {
+                                  icon: "📡",
+                                });
+                                return;
+                              }
                               setEditItem(item);
                               setNewStockValue(item.totalStock.toString());
                               setUpdateReason("");
                             }}
                             className="h-8 w-8 p-0 rounded-lg text-gray-400 hover:text-[#7C1D3E] hover:bg-[#7C1D3E]/5"
+                            disabled={!isOnline}
                           >
                             <FiEdit3 size={16} />
                           </Button>
@@ -478,6 +503,7 @@ const InventoryPage = () => {
                           placeholder="New"
                           className="w-20 h-10 text-center font-bold bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7C1D3E]/20 focus:border-[#7C1D3E]/50 transition-all text-sm"
                           defaultValue={size.stock}
+                          disabled={!isOnline}
                           onBlur={(e) => {
                             const val = e.target.value;
                             if (val !== "" && val !== size.stock.toString()) {
@@ -514,10 +540,10 @@ const InventoryPage = () => {
                 variant="primary"
                 className="w-full h-14 rounded-2xl text-md font-bold shadow-xl shadow-[#7C1D3E]/20"
                 onClick={() => handleUpdateStock(editItem?._id || "", undefined, newStockValue)}
-                disabled={isUpdating}
+                disabled={isUpdating || !isOnline}
               >
                 {isUpdating ? <LuLoader className="animate-spin mr-2" /> : <FiCheckCircle className="mr-2" />}
-                Confirm Stock Update
+                {!isOnline ? "Offline - Cannot Update" : "Confirm Stock Update"}
               </Button>
             )}
 

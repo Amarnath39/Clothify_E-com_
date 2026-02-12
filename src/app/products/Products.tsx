@@ -174,7 +174,7 @@ const Products = () => {
             <FaFilter size={24} color="white" />
           </button>
         )}
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col md:flex-row gap-8 ">
           <ProductFilters
             onFilterChange={handleFilterChange}
             isOpen={isFilterOpen}

@@ -89,14 +89,97 @@ const Profile = () => {
   console.log(addresses, "address");
 
   const [newAddress, setNewAddress] = useState(initialAddressState);
+  const [errors, setErrors] = useState<{ name?: string }>({});
+
 
   const handlePersonalInfoChange = (e) => {
     setPersonalInfo({ ...personalInfo, [e.target.name]: e.target.value });
   };
+  const validateName = (name: string) => {
+    if (!name.trim()) {
+      return "Name is required";
+    }
 
-  const handleNewAddressChange = (e) => {
-    setNewAddress({ ...newAddress, [e.target.name]: e.target.value });
+    if (name.trim().length < 2) {
+      return "Name must be at least 2 characters";
+    }
+
+    if (!/^[A-Za-z\s]+$/.test(name)) {
+      return "Name should contain only letters";
+    }
+
+    return "";
   };
+
+  const validateZipCode = (zipCode: string) => {
+    if (zipCode.length !== 6) {
+      return "Pin Code must be 6 digits";
+    }
+
+    if (!/^\d{6}$/.test(zipCode)) {
+      return "Pin Code must contain only digits";
+    }
+
+    if (zipCode.startsWith("0")) {
+      return "Pin Code cannot start with 0";
+    }
+
+    return "";
+  };
+
+
+  // const handleNewAddressChange = (e) => {
+  //   setNewAddress({ ...newAddress, [e.target.name]: e.target.value });
+  // };
+
+  const handleNewAddressChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.ChangeEvent<HTMLTextAreaElement>
+      | { target: { name: string; value: string } }
+  ) => {
+    const { name, value } = e.target;
+
+    setNewAddress((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (name === "name") {
+      const error = validateName(value);
+      setErrors((prev) => ({
+        ...prev,
+        name: error,
+      }));
+    }
+  };
+
+  const validateMobile = (mobile: string) => {
+    if (mobile.length !== 10) {
+      return "Mobile number must be 10 digits";
+    }
+
+    if (!/^[6-9]/.test(mobile)) {
+      return "Mobile number must start with 6, 7, 8, or 9";
+    }
+
+    return "";
+  };
+
+
+  const handleSubmit = () => {
+    const error = validateMobile(newAddress.mobile);
+
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
+    // proceed submit
+  };
+
+
+
 
   const callGetAllAddress = async () => {
     try {
@@ -134,6 +217,18 @@ const Profile = () => {
   }, []);
 
   const handleAddressSubmit = async () => {
+    const mobileError = validateMobile(newAddress.mobile);
+    if (mobileError) {
+      toast.error(mobileError);
+      return;
+    }
+
+    const zipError = validateZipCode(newAddress.zipCode);
+    if (zipError) {
+      toast.error(zipError);
+      return;
+    }
+
     // Check if any field is empty
 
     const isAnyFieldEmpty = Object.values(newAddress).some(
@@ -452,19 +547,42 @@ const Profile = () => {
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
+                {/* <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="name" className="text-right">
                     Name
                   </Label>
                   <Input
-                    id="name"
-                    name="name"
+                   id="name"
+                     name="name"
                     value={newAddress.name}
                     onChange={handleNewAddressChange}
                     className="col-span-3"
                     required
                   />
+                </div> */}
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    Name
+                  </Label>
+
+                  <div className="col-span-3">
+                    <Input
+                      id="name"
+                      name="name"
+                      value={newAddress.name}
+                      onChange={handleNewAddressChange}
+                      className={errors.name ? "border-red-500" : ""}
+                      required
+                    />
+
+                    {errors.name && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.name}
+                      </p>
+                    )}
+                  </div>
                 </div>
+
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="address" className="text-right">
                     Address
@@ -483,14 +601,28 @@ const Profile = () => {
                     Mobile
                   </Label>
                   <Input
-                    type="number"
+                    type="tel"
                     id="mobile"
                     name="mobile"
                     value={newAddress.mobile}
-                    onChange={handleNewAddressChange}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      // ❌ block letters & special characters
+                      if (!/^\d*$/.test(value)) return;
+
+                      // ❌ limit to 10 digits
+                      if (value.length > 10) return;
+
+                      // ❌ first digit must be 6-9
+                      if (value.length === 1 && !/^[6-9]$/.test(value)) return;
+
+                      handleNewAddressChange(e);
+                    }}
                     className="col-span-3"
                     required
                   />
+
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="city" className="text-right">
@@ -550,7 +682,7 @@ const Profile = () => {
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select Country" />
                     </SelectTrigger>
-                    <SelectContent className="pt-10">
+                    <SelectContent className="z-50 pt-10" style={{ zIndex: 99999 }}>
                       <SelectItem value="India">India</SelectItem>
                       {/* Add more countries as needed */}
                     </SelectContent>
@@ -562,14 +694,28 @@ const Profile = () => {
                     Pin Code
                   </Label>
                   <Input
-                    type="number"
+                    type="text"
                     id="zipCode"
                     name="zipCode"
                     required
                     value={newAddress.zipCode}
-                    onChange={handleNewAddressChange}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      // allow digits only
+                      if (!/^\d*$/.test(value)) return;
+
+                      // max 6 digits
+                      if (value.length > 6) return;
+
+                      // optional: first digit should not be 0
+                      if (value.length === 1 && value === "0") return;
+
+                      handleNewAddressChange(e);
+                    }}
                     className="col-span-3"
                   />
+
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="addressType" className="text-right">
@@ -588,7 +734,7 @@ const Profile = () => {
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Address Type" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-50" style={{ zIndex: 99999 }}>
                       <SelectItem value="Home">Home</SelectItem>
                       <SelectItem value="Work">Work</SelectItem>
                       <SelectItem value="Other">Other</SelectItem>
