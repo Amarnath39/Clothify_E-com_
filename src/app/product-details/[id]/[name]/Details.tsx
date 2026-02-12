@@ -221,7 +221,7 @@ const ProductDetails = ({
           </div>
 
         </div>
-
+{/* ------------------- */}
 
 
         {/* Right: Info */}

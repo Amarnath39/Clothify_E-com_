@@ -24,13 +24,13 @@ const OrdersPage = () => {
   const fetchStats = async () => {
     try {
       const { data } = await axios.get(`/api/admin/dashboard/stats`);
-      
+
       if (data.success) {
         setStats(data.data);
       } else {
         toast.error(data.msg);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const fetchSalesoverview = async () => {
@@ -42,7 +42,7 @@ const OrdersPage = () => {
       } else {
         toast.error(data.msg);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const fetchPerformanceOverView = async () => {
@@ -56,7 +56,7 @@ const OrdersPage = () => {
       } else {
         toast.error(data.msg);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const fetchMostSellingProduct = async () => {
@@ -73,7 +73,7 @@ const OrdersPage = () => {
       } else {
         toast.error(data.msg);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   useEffect(() => {
@@ -87,11 +87,11 @@ const OrdersPage = () => {
   return (
     <div className="container mx-auto px-6 pt-4 pb-2 space-y-6">
       <div className="space-y-2 flex flex-col items-start">
-        
+
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Sales"
           value={stats.totalSales}
@@ -116,12 +116,61 @@ const OrdersPage = () => {
           icon={FaRedoAlt}
           description="Number of repeat orders"
         />
-      </div>
+      </div> */}
 
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         <SalesGraph salesOverView={salesOverView} />
         <ProductSalesChart performanceOverView={performanceOverView} />
       </div> */}
+
+      
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Total Sales"
+          value={stats.totalSales}
+          icon={FaChartLine}
+          iconSize={48}
+          percentage="28%"
+          description="3 pending orders"
+          subtitleDotColor="red"
+          lastUpdated="Just now"
+        />
+
+        <StatCard
+          title="Total Revenue"
+          value={stats.totalRevenue}
+          icon={FaDollarSign}
+          iconSize={48}
+          percentage="36%"
+          description="Target reached"
+          subtitleDotColor="green"
+          variant="highlighted" // Special styling for Revenue
+          lastUpdated="Today, 9:29 AM"
+        />
+
+        <StatCard
+          title="Total Users"
+          value={stats.totalUsers}
+          icon={FaUsers}
+          iconSize={48}
+          percentage="12%"
+          description="4 new signups"
+          subtitleDotColor="green"
+          lastUpdated="Jan 18, 9:29 AM"
+        />
+
+        <StatCard
+          title="Repeat Orders"
+          value={stats.repeatOrders}
+          icon={FaRedoAlt}
+          iconSize={48}
+          percentage="5%"
+          description="Low retention"
+          subtitleDotColor="red"
+          lastUpdated="Yesterday"
+        />
+      </div>
 
       <div className="grid grid-cols-1 ">
         <MostSellingProductsPage />

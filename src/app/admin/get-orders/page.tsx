@@ -56,7 +56,7 @@ const OrdersPage = () => {
   const [paymentStatus, setPaymentStatus] = useState("all");
   const [loading, setLoading] = useState(true);
   const [orderStatus, setOrderStatus] = useState("all");
-  const [orderSource, setOrderSource] = useState("all"); // ✅ NEW: Filter by order source
+  const [orderSource, setOrderSource] = useState("all"); // 
   const [newStatuses, setNewStatuses] = useState<{ [key: string]: string }>({});
   const [dateRange, setDateRange] = useState<any>([null, null]);
   const [labelError, setLabelError] = useState<{ [key: string]: string }>({});
@@ -97,7 +97,7 @@ const OrdersPage = () => {
           search: searchTerm,
           paymentStatus: paymentStatus !== "all" ? paymentStatus : undefined,
           orderStatus: orderStatus !== "all" ? orderStatus : undefined,
-          orderSource: orderSource !== "all" ? orderSource : undefined, // ✅ NEW
+          orderSource: orderSource !== "all" ? orderSource : undefined, // 
           startDate: startDate?.toISOString(),
           endDate: endDate?.toISOString(),
           limit: 500,
@@ -128,7 +128,7 @@ const OrdersPage = () => {
 
   useEffect(() => {
     callGetOrdersApi();
-  }, [searchTerm, paymentStatus, orderStatus, orderSource, endDate, currentPage]); // ✅ Added orderSource
+  }, [searchTerm, paymentStatus, orderStatus, orderSource, endDate, currentPage]); // 
 
   const validateShippingDetails = (order) => {
     const newStatus = newStatuses[order._id];
@@ -274,7 +274,7 @@ const OrdersPage = () => {
     } catch (error) { }
   };
 
-  // ✅ Handle shipping label print (no authentication required)
+  // Handle shipping label print (no authentication required)
   const handlePrintLabel = async (orderId: string) => {
     setLabelLoading({ ...labelLoading, [orderId]: true });
     setLabelError({ ...labelError, [orderId]: "" });
@@ -317,7 +317,7 @@ const OrdersPage = () => {
     }
   };
 
-  // ✅ NEW: Handle shipping label download
+  // NEW: Handle shipping label download
   const handleDownloadLabel = async (orderId: string) => {
     setLabelLoading({ ...labelLoading, [orderId]: true });
     setLabelError({ ...labelError, [orderId]: "" });
@@ -347,6 +347,90 @@ const OrdersPage = () => {
     } finally {
       setLabelLoading({ ...labelLoading, [orderId]: false });
     }
+  };
+
+  const statusConfig: Record<
+    string,
+    { color: string; bg: string; border: string; label: string }
+  > = {
+    CONFIRMED: {
+      color: "#2563eb",
+      bg: "#eff6ff",
+      border: "#dbeafe",
+      label: "Confirmed",
+    },
+    PROCESSING: {
+      color: "#d97706",
+      bg: "#fffbeb",
+      border: "#fef3c7",
+      label: "Processing",
+    },
+    SHIPPED: {
+      color: "#7c3aed",
+      bg: "#f5f3ff",
+      border: "#ede9fe",
+      label: "Shipped",
+    },
+    DELIVERED: {
+      color: "#16a34a",
+      bg: "#f0fdf4",
+      border: "#dcfce7",
+      label: "Delivered",
+    },
+    CANCELLED: {
+      color: "#dc2626",
+      bg: "#fef2f2",
+      border: "#fee2e2",
+      label: "Cancelled",
+    },
+    DEFAULT: {
+      color: "#4b5563",
+      bg: "#f9fafb",
+      border: "#f3f4f6",
+      label: "Pending",
+    },
+  };
+
+  const getStatusConfig = (status: any) => {
+    const key = String(status ?? "DEFAULT").toUpperCase();
+    return statusConfig[key] ?? statusConfig.DEFAULT;
+  };
+
+  const paymentStatusConfig: Record<
+    string,
+    { color: string; bg: string; border: string; label: string }
+  > = {
+    PAYMENT_PENDING: {
+      color: "#a16207",
+      bg: "#fef9c3",
+      border: "#fde68a",
+      label: "PAYMENT_PENDING",
+    },
+    PAYMENT_SUCCESS: {
+      color: "#16a34a",
+      bg: "#dcfce7",
+      border: "#bbf7d0",
+      label: "PAYMENT_SUCCESS",
+    },
+    INITIATED: {
+      color: "#2563eb",
+      bg: "#dbeafe",
+      border: "#bfdbfe",
+      label: "INITIATED",
+    },
+    NOT_INITIATED: {
+      color: "#dc2626",
+      bg: "#fee2e2",
+      border: "#fecaca",
+      label: "NOT_INITIATED",
+    },
+  };
+
+  const getPaymentStatusConfig = (status: any) => {
+    const key = String(status ?? "").toUpperCase();
+    if (key === "PENDING") return paymentStatusConfig.PAYMENT_PENDING;
+    if (key === "SUCCEEDED" || key === "SUCCESS") return paymentStatusConfig.PAYMENT_SUCCESS;
+    return paymentStatusConfig[key] ?? null;
   };
 
   if (loading) {
@@ -382,6 +466,7 @@ const OrdersPage = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="PAYMENT_PENDING">PAYMENT_PENDING</SelectItem>
             <SelectItem value="PAYMENT_SUCCESS">PAYMENT_SUCCESS</SelectItem>
             <SelectItem value="INITIATED">INITIATED</SelectItem>
             <SelectItem value="NOT_INITIATED">NOT_INITIATED</SelectItem>
@@ -406,15 +491,10 @@ const OrdersPage = () => {
             <SelectItem value="Delivered">Delivered</SelectItem>
             <SelectItem value="Cancelled">Cancelled</SelectItem>
             <SelectItem value="Exchange Approved">Exchange Approved</SelectItem>
-            <SelectItem value="Exchange Cancelled">
-              Exchange Cancelled
-            </SelectItem>
-            <SelectItem value="Applied for exchange">
-              Applied for exchange
-            </SelectItem>
+            <SelectItem value="Exchange Cancelled">Exchange Cancelled</SelectItem>
+            <SelectItem value="Applied for exchange">Applied for exchange</SelectItem>
           </SelectContent>
         </Select>
-        {/* ✅ NEW: Order Source Filter */}
         <Select value={orderSource} onValueChange={setOrderSource}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Order Source" />
@@ -422,7 +502,6 @@ const OrdersPage = () => {
           <SelectContent>
             <SelectItem value="all">All Sources</SelectItem>
             <SelectItem value="online">Online Orders</SelectItem>
-            {/* <SelectItem value="offline">Offline Orders</SelectItem> */}
           </SelectContent>
         </Select>
 
@@ -437,14 +516,13 @@ const OrdersPage = () => {
             customInput={
               <Button variant="outline" className="w-full justify-start text-left font-normal">
                 <FaCalendarAlt className="mr-2 h-4 w-4" />
-                {startDate
-                  ? startDate.toLocaleDateString()
-                  : "Select Date Range"}
+                {startDate ? startDate.toLocaleDateString() : "Select Date Range"}
               </Button>
             }
           />
         </div>
       </div>
+
       <Card>
         <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
           <CardTitle className="mt-[2px]">Orders List</CardTitle>
@@ -453,8 +531,6 @@ const OrdersPage = () => {
           </p>
         </CardHeader>
         <CardContent className="p-0 md:p-6">
-
-          {/* ✅ DESKTOP VIEW (Table) */}
           <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
@@ -477,8 +553,9 @@ const OrdersPage = () => {
                     <TableRow>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {order.orderId}
-                          {/* ✅ NEW: Show OFFLINE badge for admin-created orders */}
+                          <span style={{ color: "#7C1D3E", fontWeight: 600 }}>
+                            {order.orderId}
+                          </span>
                           {order.orderSource === "ADMIN_OFFLINE" && (
                             <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
                               OFFLINE
@@ -486,38 +563,45 @@ const OrdersPage = () => {
                           )}
                         </div>
                       </TableCell>
+                      <TableCell>{new Date(order?.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        {new Date(order?.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {order?.date &&
-                          new Date(order?.date).toLocaleDateString()}
+                        {order?.date && new Date(order?.date).toLocaleDateString()}
                       </TableCell>
                       <TableCell>{order?.user?.phone}</TableCell>
                       <TableCell>₹ {order?.payablePrice?.toFixed(2)}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            order.paymentStatus === "succeeded" || order.paymentStatus === "PAYMENT_SUCCESS"
-                              ? "default"
-                              : "secondary"
+                        {(() => {
+                          const cfg = getPaymentStatusConfig(order.paymentStatus);
+                          if (!cfg) {
+                            return <Badge variant="secondary">{order.paymentStatus}</Badge>;
                           }
-                        >
-                          {order.paymentStatus}
-                        </Badge>
+                          return (
+                            <Badge
+                              variant="outline"
+                              style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+                            >
+                              {cfg.label}
+                            </Badge>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{order.currentStatus}</Badge>
+                        {(() => {
+                          const cfg = getStatusConfig(order.currentStatus);
+                          return (
+                            <Badge
+                              variant="outline"
+                              style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+                            >
+                              {cfg.label}
+                            </Badge>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         {order.tempTransactionId && (
                           <div
-                            onClick={() =>
-                              refreshTransactionState(
-                                order._id,
-                                order.tempTransactionId
-                              )
-                            }
+                            onClick={() => refreshTransactionState(order._id, order.tempTransactionId)}
                             className="cursor-pointer hover:bg-gray-100 p-1 rounded"
                           >
                             <IoIosRefresh color="green" size={24} />
@@ -526,23 +610,19 @@ const OrdersPage = () => {
                       </TableCell>
                       <TableCell>
                         {order.currentStatus !== "CHECKOUT" &&
-                          (() => {
-                            const now: any = new Date();
-                            const twentyFourHoursAgo = new Date(
-                              now - 24 * 60 * 60 * 1000
-                            );
-                            const orderDate = new Date(order.date);
-                            return (
-                              orderDate >= twentyFourHoursAgo && orderDate <= now
-                            );
-                          })() ? (
+                        (() => {
+                          const now: any = new Date();
+                          const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000);
+                          const orderDate = new Date(order.date);
+                          return orderDate >= twentyFourHoursAgo && orderDate <= now;
+                        })() ? (
                           <div className="flex items-center gap-2">
                             <div
-                              className={`w-3 h-3 rounded-full animate-[pulse_1.5s_ease-in-out_infinite] 
-                          ${order.paymentStatus === "PAYMENT_SUCCESS"
+                              className={`w-3 h-3 rounded-full animate-[pulse_1.5s_ease-in-out_infinite] ${
+                                order.paymentStatus === "PAYMENT_SUCCESS"
                                   ? "bg-green-500"
                                   : "bg-red-500"
-                                }`}
+                              }`}
                             ></div>
                           </div>
                         ) : null}
@@ -565,14 +645,13 @@ const OrdersPage = () => {
                         </Button>
                       </TableCell>
                     </TableRow>
+
                     {expandedOrder === order._id && (
                       <TableRow>
                         <TableCell colSpan={10}>
-                          {/* Reusing the Expanded Card Logic Here (Desktop) */}
                           <Card className="mt-4">
-                            <CardContent className="space-y-6 mt-4 ">
+                            <CardContent className="space-y-6 mt-4">
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {/* User Details */}
                                 <Card className="shadow-sm">
                                   <CardHeader>
                                     <CardTitle className="text-lg flex items-center">
@@ -580,15 +659,20 @@ const OrdersPage = () => {
                                     </CardTitle>
                                   </CardHeader>
                                   <CardContent>
-                                    <div className="space-y-2">
-                                      <p><span className="font-semibold">Name:</span> {order?.user?.name}</p>
-                                      <p><span className="font-semibold">Phone:</span> {order?.user?.phone}</p>
-                                      <p><span className="font-semibold">Email:</span> {order?.user?.email}</p>
+                                    <div className="space-y-2 text-sm">
+                                      <p>
+                                        <span className="font-semibold">Name:</span> {order?.user?.name}
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold">Phone:</span> {order?.user?.phone}
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold">Email:</span> {order?.user?.email}
+                                      </p>
                                     </div>
                                   </CardContent>
                                 </Card>
 
-                                {/* Shipping Address */}
                                 <Card className="shadow-sm">
                                   <CardHeader>
                                     <CardTitle className="text-lg flex items-center">
@@ -597,17 +681,24 @@ const OrdersPage = () => {
                                   </CardHeader>
                                   <CardContent>
                                     <div className="space-y-1 text-sm">
-                                      <p className="font-medium">{order?.shippingAddress?.name}</p>
-                                      <p>{order?.shippingAddress?.houseNumber}, {order?.shippingAddress?.address}</p>
+                                      <p className="font-medium">
+                                        {order?.shippingAddress?.name}
+                                      </p>
+                                      <p>
+                                        {order?.shippingAddress?.houseNumber}, {order?.shippingAddress?.address}
+                                      </p>
                                       <p>{order?.shippingAddress?.landmark}</p>
-                                      <p>{order?.shippingAddress?.city}, {order?.shippingAddress?.state} - {order?.shippingAddress?.zip}</p>
+                                      <p>
+                                        {order?.shippingAddress?.city}, {order?.shippingAddress?.state} - {order?.shippingAddress?.zip}
+                                      </p>
                                       <p>{order?.shippingAddress?.country}</p>
-                                      <p className="mt-2 font-medium">Phone: {order?.shippingAddress?.mobile}</p>
+                                      <p className="mt-2 font-medium">
+                                        Phone: {order?.shippingAddress?.mobile}
+                                      </p>
                                     </div>
                                   </CardContent>
                                 </Card>
 
-                                {/* Payment Details */}
                                 <Card className="shadow-sm">
                                   <CardHeader>
                                     <CardTitle className="text-lg flex items-center">
@@ -615,19 +706,58 @@ const OrdersPage = () => {
                                     </CardTitle>
                                   </CardHeader>
                                   <CardContent>
-                                    <div className="space-y-2">
-                                      <p><span className="font-semibold">Method:</span> <Badge>{order?.paymentMethod || "N/A"}</Badge></p>
-                                      <p><span className="font-semibold">Status:</span> <Badge variant={order?.paymentStatus === "PAYMENT_SUCCESS" ? "default" : "destructive"}>{order?.paymentStatus}</Badge></p>
-                                      <p><span className="font-semibold">Transaction ID:</span> {order?.phonePeTransactionId || "N/A"}</p>
+                                    <div className="space-y-2 text-sm">
+                                      <p>
+                                        <span className="font-semibold">Method:</span>{" "}
+                                        <Badge>{order?.paymentMethod || "N/A"}</Badge>
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold">Status:</span>{" "}
+                                        {(() => {
+                                          const cfg = getPaymentStatusConfig(order?.paymentStatus);
+                                          if (!cfg) {
+                                            return (
+                                              <Badge
+                                                variant={
+                                                  order?.paymentStatus === "PAYMENT_SUCCESS"
+                                                    ? "default"
+                                                    : "destructive"
+                                                }
+                                              >
+                                                {order?.paymentStatus}
+                                              </Badge>
+                                            );
+                                          }
+                                          return (
+                                            <Badge
+                                              variant="outline"
+                                              style={{
+                                                backgroundColor: cfg.bg,
+                                                color: cfg.color,
+                                                borderColor: cfg.border,
+                                              }}
+                                            >
+                                              {cfg.label}
+                                            </Badge>
+                                          );
+                                        })()}
+                                      </p>
+                                      <p>
+                                        <span className="font-semibold">Transaction ID:</span>{" "}
+                                        {order?.phonePeTransactionId || "N/A"}
+                                      </p>
                                       <Separator className="my-2" />
-                                      <div className="text-lg font-bold text-green-600">Total: ₹ {order?.payablePrice?.toFixed(2)}</div>
+                                      <div className="text-lg font-bold text-green-600">
+                                        Total: ₹ {order?.payablePrice?.toFixed(2)}
+                                      </div>
                                     </div>
                                   </CardContent>
                                 </Card>
                               </div>
+
                               <Separator />
-                              {/* ✅ Product Details Section */}
-                              <Card className="shadow-sm mb-6">
+
+                              <Card className="shadow-sm">
                                 <CardHeader>
                                   <CardTitle className="text-lg flex items-center">
                                     <FaBox className="mr-2" /> Ordered Items ({order.productDetails?.length || 0})
@@ -636,7 +766,10 @@ const OrdersPage = () => {
                                 <CardContent>
                                   <div className="space-y-4">
                                     {order.productDetails?.map((item: any, idx: number) => (
-                                      <div key={idx} className="flex flex-col md:flex-row items-start md:items-center gap-4 border-b last:border-0 pb-4 last:pb-0">
+                                      <div
+                                        key={idx}
+                                        className="flex flex-col md:flex-row items-start md:items-center gap-4 border-b last:border-0 pb-4 last:pb-0"
+                                      >
                                         <div className="flex items-center gap-4 flex-1">
                                           {item.product?.img?.[0] ? (
                                             <img
@@ -650,30 +783,48 @@ const OrdersPage = () => {
                                             </div>
                                           )}
                                           <div>
-                                            <p className="font-semibold text-gray-800">{item.product?.name || "Unknown Product"}</p>
+                                            <p className="font-semibold text-gray-800">
+                                              {item.product?.name || "Unknown Product"}
+                                            </p>
                                             <div className="text-sm text-gray-500 mt-1 flex gap-2">
-                                              <Badge variant="outline" className="text-xs">Size: {item.sizeLabel}</Badge>
-                                              <Badge variant="outline" className="text-xs">Qty: {item.count}</Badge>
+                                              <Badge variant="outline" className="text-xs">
+                                                Size: {item.sizeLabel}
+                                              </Badge>
+                                              <Badge variant="outline" className="text-xs">
+                                                Qty: {item.count}
+                                              </Badge>
                                             </div>
                                           </div>
                                         </div>
                                         <div className="font-bold text-lg md:text-right">
-                                          ₹{item.offerPrice} <span className="text-xs font-normal text-gray-500">x {item.count}</span>
+                                          ₹{item.offerPrice}{" "}
+                                          <span className="text-xs font-normal text-gray-500">
+                                            x {item.count}
+                                          </span>
                                         </div>
                                       </div>
                                     ))}
                                   </div>
                                 </CardContent>
                               </Card>
+
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Shipping Update Panel */}
                                 <Card className="shadow-sm">
                                   <CardHeader>
-                                    <CardTitle className="text-lg flex items-center"><FaTruck className="mr-2" /> Shipping Details</CardTitle>
+                                    <CardTitle className="text-lg flex items-center">
+                                      <FaTruck className="mr-2" /> Shipping Details
+                                    </CardTitle>
                                   </CardHeader>
                                   <CardContent className="space-y-4">
-                                    <Select value={order.deliveryPartner || ""} onValueChange={(v) => handleShippingPartnerChange(order._id, v)}>
-                                      <SelectTrigger><SelectValue placeholder="Select delivery partner" /></SelectTrigger>
+                                    <Select
+                                      value={order.deliveryPartner || ""}
+                                      onValueChange={(v) =>
+                                        handleShippingPartnerChange(order._id, v)
+                                      }
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select delivery partner" />
+                                      </SelectTrigger>
                                       <SelectContent>
                                         <SelectItem value="fedex">FedEx</SelectItem>
                                         <SelectItem value="Delhivery">Delhivery</SelectItem>
@@ -686,91 +837,62 @@ const OrdersPage = () => {
                                         <SelectItem value="DHL">DHL</SelectItem>
                                       </SelectContent>
                                     </Select>
-                                    <Input placeholder="Enter tracking ID" value={order.trackingId || ""} onChange={(e) => handleTrackingIdChange(order._id, e.target.value)} />
-                                    <Button onClick={() => updateOrderApi(order._id)}>Update Shipping</Button>
+                                    <Input
+                                      placeholder="Enter tracking ID"
+                                      value={order.trackingId || ""}
+                                      onChange={(e) =>
+                                        handleTrackingIdChange(
+                                          order._id,
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                    <Button onClick={() => updateOrderApi(order._id)}>
+                                      Update Shipping
+                                    </Button>
                                   </CardContent>
                                 </Card>
 
-                                {/* Shipping Label Logic */}
-                                {order.paymentStatus === "PAYMENT_SUCCESS" && (
-                                  <Card className="shadow-sm">
-                                    <CardHeader>
-                                      <CardTitle className="text-lg flex items-center">
-                                        🖨️ Shipping Label
-                                      </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                      {order.dtdc?.referenceNumber ? (
-                                        <>
-                                          <div className="p-3 bg-purple-50 text-purple-700 rounded-md text-sm mb-2">
-                                            <strong>AWB Generated:</strong> {order.dtdc.referenceNumber}
-                                          </div>
-                                          <div className="flex gap-3">
-                                            <Button
-                                              variant="outline"
-                                              className="flex-1 border-purple-200 text-purple-700 hover:bg-purple-50"
-                                              onClick={() => window.open(`/api/admin/shipping-label/${order.orderId || order._id}`, '_blank')}
-                                            >
-                                              <FaSearch className="mr-2" /> View Label
-                                            </Button>
-                                            <Button
-                                              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                                              onClick={() => handlePrintLabel(order.orderId || order._id)}
-                                              disabled={labelLoading[order.orderId || order._id]}
-                                            >
-                                              {labelLoading[order.orderId || order._id] ? (
-                                                <LuLoader className="animate-spin" />
-                                              ) : (
-                                                <FaDownload className="mr-2" />
-                                              )}
-                                              Download
-                                            </Button>
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <div className="text-center p-4 border border-dashed border-red-200 rounded-lg bg-red-50">
-                                          <p className="text-red-600 font-medium text-sm">
-                                            Shipping label unavailable – shipment not created
-                                          </p>
-                                          <p className="text-xs text-red-500 mt-1">
-                                            AWB Reference Number missing.
-                                          </p>
-                                          <Button
-                                            variant="outline"
-                                            className="mt-3 w-full opacity-50 cursor-not-allowed"
-                                            disabled
-                                          >
-                                            <FaDownload className="mr-2" /> Download Label
-                                          </Button>
-                                        </div>
-                                      )}
-
-                                      {labelError[order.orderId || order._id] && (
-                                        <p className="text-sm text-red-600 mt-2 bg-red-50 p-2 rounded">
-                                          ⚠️ {labelError[order.orderId || order._id]}
-                                        </p>
-                                      )}
-                                    </CardContent>
-                                  </Card>
-                                )}
+                                <Card className="shadow-sm flex flex-col">
+                                  <CardHeader>
+                                    <CardTitle className="text-lg">Order Status</CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="flex flex-col gap-4 flex-1">
+                                    <Select
+                                      value={newStatuses[order._id] || order.currentStatus}
+                                      onValueChange={(v) =>
+                                        setNewStatuses((prev) => ({
+                                          ...prev,
+                                          [order._id]: v,
+                                        }))
+                                      }
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select status" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="PENDING">PENDING</SelectItem>
+                                        <SelectItem value="Processing">Processing</SelectItem>
+                                        <SelectItem value="Shipped">Shipped</SelectItem>
+                                        <SelectItem value="Delivered">Delivered</SelectItem>
+                                        <SelectItem value="Cancelled">Cancelled</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <Button
+                                      className="mt-auto w-fit px-4 py-2 text-sm"
+                                    
+                                      onClick={() =>
+                                        handleStatusChange(
+                                          order._id,
+                                          newStatuses[order._id] || order.currentStatus
+                                        )
+                                      }
+                                    >
+                                      Update Status
+                                    </Button>
+                                  </CardContent>
+                                </Card>
                               </div>
-
-                              <Card className="shadow-sm mt-6">
-                                <CardHeader><CardTitle className="text-lg">Order Status</CardTitle></CardHeader>
-                                <CardContent>
-                                  <Select value={newStatuses[order._id] || order.currentStatus} onValueChange={(v) => setNewStatuses(prev => ({ ...prev, [order._id]: v }))}>
-                                    <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="PENDING">PENDING</SelectItem>
-                                      <SelectItem value="Processing">Processing</SelectItem>
-                                      <SelectItem value="Shipped">Shipped</SelectItem>
-                                      <SelectItem value="Delivered">Delivered</SelectItem>
-                                      <SelectItem value="Cancelled">Cancelled</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <Button className="mt-4" onClick={() => handleStatusChange(order._id, newStatuses[order._id] || order.currentStatus)}>Update Status</Button>
-                                </CardContent>
-                              </Card>
                             </CardContent>
                           </Card>
                         </TableCell>
@@ -782,19 +904,31 @@ const OrdersPage = () => {
             </Table>
           </div>
 
-          {/* ✅ MOBILE VIEW (Cards) */}
           <div className="md:hidden space-y-4">
             {orders.map((order) => (
               <Card key={order._id} className="overflow-hidden border-l-4 border-l-purple-500 shadow-md">
                 <CardHeader className="bg-gray-50 p-4 pb-2">
                   <div className="flex justify-between items-start">
                     <div className="flex flex-col">
-                      <span className="font-bold text-md text-gray-800">#{order.orderId}</span>
+                      <span className="font-bold text-md" style={{ color: "#7C1D3E" }}>
+                        #{order.orderId}
+                      </span>
                       <span className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <Badge variant={order.paymentStatus === "PAYMENT_SUCCESS" ? "default" : "secondary"}>
-                      {order.paymentStatus}
-                    </Badge>
+                    {(() => {
+                      const cfg = getPaymentStatusConfig(order.paymentStatus);
+                      if (!cfg) {
+                        return <Badge variant="secondary">{order.paymentStatus}</Badge>;
+                      }
+                      return (
+                        <Badge
+                          variant="outline"
+                          style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+                        >
+                          {cfg.label}
+                        </Badge>
+                      );
+                    })()}
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 pt-2">
@@ -805,108 +939,70 @@ const OrdersPage = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-green-600">₹{order.payablePrice?.toFixed(2)}</p>
-                      <Badge variant="outline" className="text-xs">{order.currentStatus}</Badge>
+                      {(() => {
+                        const cfg = getStatusConfig(order.currentStatus);
+                        return (
+                          <Badge
+                            variant="outline"
+                            className="text-xs"
+                            style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+                          >
+                            {cfg.label}
+                          </Badge>
+                        );
+                      })()}
                     </div>
                   </div>
-
-                  <Button
-                    className="w-full mt-3 bg-purple-100 text-purple-700 hover:bg-purple-200"
-                    variant="ghost"
-                    onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
-                  >
-                    {expandedOrder === order._id ? "Hide Details" : "View Details"}
-                  </Button>
-
-                  {/* Mobile Expanded Details */}
+                  <div className="mt-3 flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => downloadInvoice(order._id)}
+                      className="gap-2"
+                    >
+                      <FaDownload />
+                      Invoice
+                    </Button>
+                  </div>
+                  <div className="mt-2 flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setExpandedOrder(
+                          expandedOrder === order._id ? null : order._id
+                        )
+                      }
+                      className="gap-2"
+                    >
+                      {expandedOrder === order._id ? <FaChevronUp /> : <FaChevronDown />}
+                      View Details
+                    </Button>
+                  </div>
                   {expandedOrder === order._id && (
-                    <div className="mt-4 space-y-4 border-t pt-4 animate-in fade-in slide-in-from-top-2">
-                      {/* Compact Mobile Details sections */}
-                      <div className="bg-white border rounded p-3 shadow-sm">
-                        <p className="font-bold text-gray-700 mb-2 flex items-center gap-2">
-                          <FaBox className="text-purple-600" /> Items ({order.productDetails?.length || 0})
-                        </p>
-                        <div className="space-y-3">
-                          {order.productDetails?.map((item: any, idx: number) => (
-                            <div key={idx} className="flex gap-3 border-b pb-3 last:border-0 last:pb-0">
-                              {item?.product?.img?.[0] ? (
-                                <img
-                                  src={item.product.img[0]}
-                                  className="w-12 h-12 object-cover rounded bg-gray-100"
-                                  alt=""
-                                />
-                              ) : (
-                                <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-xs">
-                                  No Img
-                                </div>
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-sm truncate">
-                                  {item?.product?.name || "Unknown Product"}
-                                </p>
-                                <div className="flex justify-between mt-1 text-xs text-gray-500">
-                                  <span>Qty: {item.count} | Size: {item.sizeLabel}</span>
-                                  <span className="font-bold text-gray-900">₹{item.offerPrice}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Delivery Address */}
-                      <div className="space-y-1 text-sm bg-gray-50 p-3 rounded">
-                        <p className="font-bold text-gray-700 mb-1">📍 Delivery To:</p>
-                        <p>{order?.shippingAddress?.name}</p>
-                        <p>{order?.shippingAddress?.address}, {order?.shippingAddress?.city}</p>
-                        <p>{order?.shippingAddress?.state} - {order?.shippingAddress?.zip}</p>
-                        <p>Phone: {order?.shippingAddress?.mobile}</p>
-                      </div>
-
-                      {/* Mobile Shipping Actions */}
-                      {order.paymentStatus === "PAYMENT_SUCCESS" && order.dtdc?.referenceNumber && (
-                        <div className="bg-purple-50 p-3 rounded border border-purple-100">
-                          <p className="text-xs font-bold text-purple-800 mb-2">AWB: {order.dtdc.referenceNumber}</p>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => window.open(`/api/admin/shipping-label/${order.orderId || order._id}`, '_blank')}>
-                              View
-                            </Button>
-                            <Button size="sm" className="flex-1 h-8 text-xs bg-purple-600" onClick={() => handlePrintLabel(order.orderId || order._id)}>
-                              Download
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="space-y-2">
-                        <p className="font-bold text-sm">Update Status:</p>
-                        <Select value={newStatuses[order._id] || order.currentStatus} onValueChange={(v) => setNewStatuses(prev => ({ ...prev, [order._id]: v }))}>
-                          <SelectTrigger className="h-9"><SelectValue placeholder="Status" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Processing">Processing</SelectItem>
-                            <SelectItem value="Shipped">Shipped</SelectItem>
-                            <SelectItem value="Delivered">Delivered</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button size="sm" className="w-full" onClick={() => handleStatusChange(order._id, newStatuses[order._id] || order.currentStatus)}>Update</Button>
-                      </div>
+                    <div className="mt-3 rounded border bg-white p-3 space-y-2 text-sm">
+                      <p className="font-semibold text-gray-800">Shipping</p>
+                      <p>{order?.shippingAddress?.name}</p>
+                      <p>{order?.shippingAddress?.address}, {order?.shippingAddress?.city}</p>
+                      <p>{order?.shippingAddress?.state} - {order?.shippingAddress?.zip}</p>
+                      <p className="font-semibold text-gray-800 pt-2">Items</p>
+                      <p>{order.productDetails?.length || 0} items</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
             ))}
           </div>
-        </CardContent >
-      </Card >
+
+        </CardContent>
+      </Card>
+
       {totalPages > 1 && (
         <div className="mt-8 flex justify-center">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
         </div>
       )}
-    </div >
+    </div>
   );
 };
 
