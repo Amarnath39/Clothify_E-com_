@@ -86,9 +86,24 @@ const ProductDetails = ({
   }, [params?.id, dispatch]);
 
 
+  // const handleQuantityChange = (type: "inc" | "dec") => {
+  //   if (type === "inc") setQuantity(q => q + 1);
+  //   if (type === "dec") setQuantity(q => Math.max(1, q - 1));
+  // };
   const handleQuantityChange = (type: "inc" | "dec") => {
-    if (type === "inc") setQuantity(q => q + 1);
-    if (type === "dec") setQuantity(q => Math.max(1, q - 1));
+    setQuantity((q) => {
+      if (type === "inc") {
+        // 🚫 block if quantity reached stock
+        if (q >= selectedSize.stock) return q;
+        return q + 1;
+      }
+
+      if (type === "dec") {
+        return Math.max(1, q - 1);
+      }
+
+      return q;
+    });
   };
 
   // Proceeding with toggle logic
@@ -159,7 +174,7 @@ const ProductDetails = ({
       </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
-       {/* Left: Gallery */}
+        {/* Left: Gallery */}
         <div className="flex flex-col gap-4 lg:max-h-[calc(100vh-8rem)]">
 
           {/* Main Image */}
@@ -209,11 +224,10 @@ const ProductDetails = ({
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`relative w-16 h-20 flex-shrink-0 border transition-all ${
-                  currentIndex === idx
+                className={`relative w-16 h-20 flex-shrink-0 border transition-all ${currentIndex === idx
                     ? "border-[#b48a3c]"
                     : "border-transparent hover:border-gray-200"
-                }`}
+                  }`}
               >
                 <img src={img} alt="" className="w-full h-full object-cover" />
               </button>
@@ -221,7 +235,7 @@ const ProductDetails = ({
           </div>
 
         </div>
-{/* ------------------- */}
+        {/* ------------------- */}
 
 
         {/* Right: Info */}
@@ -349,7 +363,7 @@ const ProductDetails = ({
               </Button>
             </div>
 
-            
+
           </div>
 
           {/* Details Section */}
@@ -420,7 +434,7 @@ const ProductDetails = ({
             </div>
           </div>
 
-          
+
         </div>
       </div>
 
