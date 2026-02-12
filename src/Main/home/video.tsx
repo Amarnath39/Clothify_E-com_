@@ -85,12 +85,15 @@ export default function WatchAndShop() {
                     <div className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-gray-200">
                       {!loading && video ? (
                         <video
-                          src={video.url}
-                          muted
-                          loop
-                          playsInline
-                          className="w-full h-full object-cover"
-                        />
+  autoPlay
+  muted
+  loop
+  playsInline
+  className="w-full h-full object-cover"
+>
+  <source src={video.url} type="video/mp4" />
+</video>
+
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-300 animate-pulse">
                           <Play className="w-12 h-12 text-gray-500 ml-1" />

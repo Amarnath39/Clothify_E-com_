@@ -169,6 +169,7 @@ const Products = () => {
         {!isFilterOpen && (
           <button
             className="md:hidden fixed top-[90px] right-4 z-[9999] bg-black p-4 rounded-full shadow-lg"
+            onClick={() => setIsFilterOpen(true)}
           >
             <FaFilter size={24} color="white" />
           </button>
@@ -181,7 +182,7 @@ const Products = () => {
             onfilterApply={onApplyFilters}
           />
 
-          <div key={searchQuery} className="mx-auto px-2 py-2 mt-4 md:mt-0">
+          <div key={searchQuery} className="flex-1 md:ml-8 px-2 py-2 mt-4 md:mt-0">
             <div className="flex flex-col md:flex-row gap-8 ">
               <div className="min-w-[60vw] mx-auto">
                 {loading ? (
