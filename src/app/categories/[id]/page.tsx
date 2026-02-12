@@ -168,7 +168,7 @@ const CatgeoryProducts = ({ params }) => {
             <FaFilter size={24} color="white" />
           </button>
         )}
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col md:flex-row">
           <ProductFilters
             onFilterChange={handleFilterChange}
             isOpen={isFilterOpen}
@@ -176,7 +176,7 @@ const CatgeoryProducts = ({ params }) => {
             onfilterApply={onApplyFilters}
           />
 
-          <div className="md:w-10/12">
+          <div className="flex-1 md:ml-8">
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Array.from({ length: 8 }).map((_, index) => (
