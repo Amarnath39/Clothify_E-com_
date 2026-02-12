@@ -73,8 +73,24 @@ const ProductDetails = ({
     fetchData();
   }, [params.id, dispatch]);
 
+  // const handleQuantityChange = (type: "inc" | "dec") => {
+  //   if (type === "inc") setQuantity(q => q + 1);
+  //   if (type === "dec") setQuantity(q => Math.max(1, q - 1));
+  // };
   const handleQuantityChange = (type: "inc" | "dec") => {
-    setQuantity((q) => (type === "inc" ? q + 1 : Math.max(1, q - 1)));
+    setQuantity((q) => {
+      if (type === "inc") {
+        // 🚫 block if quantity reached stock
+        if (q >= selectedSize.stock) return q;
+        return q + 1;
+      }
+
+      if (type === "dec") {
+        return Math.max(1, q - 1);
+      }
+
+      return q;
+    });
   };
 
   /* ---------------- ADD TO CART (TOGGLE) ---------------- */
@@ -167,44 +183,109 @@ const ProductDetails = ({
       </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
-        {/* LEFT IMAGE */}
-        <div className="bg-gray-50 flex items-center justify-center h-[60vh] relative overflow-hidden group">
-          <ZoomableImage
-            src={productData.img[currentIndex]}
-            alt={productData.name}
-            className="w-full h-full object-contain"
-          />
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="absolute top-4 right-4 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <FaTshirt />
-          </button>
+        {/* Left: Gallery */}
+        <div className="flex flex-col gap-4 lg:max-h-[calc(100vh-8rem)]">
+
+          {/* Main Image */}
+          {/* <div className="flex-1 bg-gray-50 aspect-[3/4] relative overflow-hidden group">
+            <img
+              src={productData.img[currentIndex]}
+              alt={productData.name}
+              className="w-full h-full object-contain mix-blend-multiply cursor-pointer"
+              onClick={() => setIsModalOpen(true)}
+            />
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="absolute top-4 right-4 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            > */}
+          {/* <FaTshirt /> Placeholder for zoom icon */}
+          {/* </button> */}
+
+          {/* Zoom Modal Logic */}
+          {/* {isModalOpen && (
+              <ProductGalleryPage
+                productData={productData}
+                setIsModalOpen={setIsModalOpen}
+                isModalOpen={isModalOpen}
+              />
+            )}
+          </div> */}
+
+          {/* Main Image */}
+          <div className="flex-1 bg-gray-50 aspect-[3/4] relative overflow-hidden">
+            <ZoomableImage
+              src={productData.img[currentIndex]}
+              alt={productData.name}
+              className="w-full h-full"
+            />
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="absolute top-4 right-4 bg-white/80 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <FaTshirt /> {/* You can replace this with a fullscreen icon if you prefer */}
+            </button>
+          </div>
+
+          {/* Thumbnails (bottom row) */}
+          <div className="flex gap-2 overflow-x-auto py-1">
+
+            {productData.img?.map((img: string, idx: number) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`relative w-16 h-20 flex-shrink-0 border transition-all ${currentIndex === idx
+                    ? "border-[#b48a3c]"
+                    : "border-transparent hover:border-gray-200"
+                  }`}
+              >
+                <img src={img} alt="" className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+
         </div>
+        {/* ------------------- */}
 
-        {/* RIGHT */}
-        <div>
-          <span className="text-sm tracking-widest text-[#b48a3c] uppercase">
-            Saree
-          </span>
 
-          <h1 className="text-3xl font-serif font-bold mb-2">
-            {productData.name}
-          </h1>
+        {/* Right: Info */}
+        <div className="flex flex-col lg:sticky lg:top-28 self-start">
+          <div className="mb-8 border-b border-gray-100 pb-8">
+            {productData.categories && productData.categories.length > 0 && (
+              <span className="text-sm text-[#b48a3c] font-medium tracking-widest uppercase mb-2 block">
+                {typeof productData.categories[0] === 'object' ? productData.categories[0].name : "Collection"}
+              </span>
+            )}
 
-          {/* ⭐ STAR RATING */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex text-[#c9a14a]">
-              {[...Array(5)].map((_, i) => (
-                <FaStar
-                  key={i}
-                  className={
-                    i < Math.floor(productData?.rating?.star || 4)
-                      ? "text-[#c9a14a]"
-                      : "text-gray-300"
-                  }
-                />
-              ))}
+            <h1 className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-4">
+              {productData.name}
+            </h1>
+
+            {/* Rating Placeholder (if data exists) */}
+            {productData.rating && (
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex text-[#b48a3c]">
+                  {[...Array(5)].map((_, i) => (
+                    <FaStar key={i} className={i < Math.floor(productData.rating.star || 4.5) ? "" : "text-gray-200"} />
+                  ))}
+                </div>
+                <span className="text-sm text-gray-500">({productData.rating.ratedBy || 12} reviews)</span>
+              </div>
+            )}
+
+            <div className="flex items-baseline gap-4 mb-6">
+              <span className="text-3xl font-medium text-gray-900">
+                ₹{selectedSize?.offerPrice?.toLocaleString() || productData.actualPrice?.toLocaleString()}
+              </span>
+              {productData.actualPrice && selectedSize?.offerPrice && productData.actualPrice > selectedSize.offerPrice && (
+                <>
+                  <span className="text-xl text-gray-400 line-through font-light">
+                    ₹{productData.actualPrice.toLocaleString()}
+                  </span>
+                  <span className="text-red-600 text-sm font-bold bg-red-50 px-2 py-1 rounded">
+                    {discount}% OFF
+                  </span>
+                </>
+              )}
             </div>
             <span className="text-sm text-gray-500">
               ({productData?.rating?.ratedBy || 65} reviews)
@@ -233,9 +314,11 @@ const ProductDetails = ({
                   : ""
                   }`}
               >
-                {size.size}
-              </button>
-            ))}
+                Buy Now
+              </Button>
+            </div>
+
+
           </div>
 
           {/* QUANTITY + ICONS */}
@@ -279,6 +362,8 @@ const ProductDetails = ({
               BUY NOW
             </Button>
           </div>
+
+
         </div>
       </div>
 
