@@ -90,6 +90,11 @@ export const updateStock = async (
             product.sizes[sizeIndex].sellCount = (sizeObj.sellCount || 0) + (-changeAmount);
             product.sellCount = (product.sellCount || 0) + (-changeAmount);
 
+            // ✅ Sync root stock fields
+            const calculatedTotal = product.sizes.reduce((acc: number, curr: any) => acc + (Number(curr.stock) || 0), 0);
+            product.totalStock = calculatedTotal;
+            product.availableStock = calculatedTotal - (product.reservedStock || 0);
+
             // Mark as modified
             product.markModified('sizes');
 

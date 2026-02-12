@@ -5,26 +5,73 @@ import Product from "../../../../model/Product";
 import Coupon from "../../../../model/Coupon";
 import { sendOrderConfirmation } from "../../../../helper/whatsappNotifier";
 import { sendOfflineOrderEmail } from "../../../../helper/sendOfflineOrderEmail";
+import { updateStock } from "../../../../../src/lib/stockManager";
+import Counter from "../../../../model/Counter";
+import mongoose from "mongoose";
+import axios from "axios";
+import { generateRandomId } from "../../../../helper/generateRandomId";
+import Razorpay from "razorpay";
 
 connectDB();
 
-// ✅ Reuse existing order ID generation logic
-const generateOrderId = async (): Promise<string> => {
+// ✅ Generate unique Offline Order ID
+const generateOfflineOrderId = async (): Promise<string> => {
     try {
-        const lastOrder = await Order.findOneAndUpdate(
-            {},
-            { $inc: { orderSeq: 1 } },
-            {
-                sort: { orderSeq: -1 },
-                upsert: true,
-                new: true,
-            }
-        ).select("orderSeq");
+        const counter = await Counter.findOneAndUpdate(
+            { id: "offlineOrderSeq" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
 
-        const orderNumber = lastOrder?.orderSeq || 0;
-        return `ON-${orderNumber.toString().padStart(6, "0")}`;
+        // Start offline sequence from 1000 if new
+        if (counter.seq < 1000) {
+            const initialCounter = await Counter.findOneAndUpdate(
+                { id: "offlineOrderSeq" },
+                { $set: { seq: 1000 } },
+                { new: true, upsert: true }
+            );
+            return `OFF-${initialCounter.seq.toString().padStart(6, "0")}`;
+        }
+
+        return `OFF-${counter.seq.toString().padStart(6, "0")}`;
     } catch (error) {
-        console.error("Error generating order ID:", error);
+        console.error("Error generating offline order ID:", error);
+        throw error;
+    }
+};
+
+/**
+ * ✅ Generate unique Offline invoice number
+ * Format: OFF-INV-YYYYMMDD-0001
+ */
+const generateOfflineInvoiceNumber = async (): Promise<string> => {
+    try {
+        const today = new Date();
+        const dateStr = today.toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
+        const todayStart = new Date(today.setHours(0, 0, 0, 0));
+        const todayEnd = new Date(today.setHours(23, 59, 59, 999));
+
+        const lastOfflineOrder = await Order.findOne({
+            order_type: "OFFLINE",
+            createdAt: { $gte: todayStart, $lte: todayEnd },
+        })
+            .sort({ createdAt: -1 })
+            .select("invoiceId")
+            .lean() as { invoiceId: string } | null;
+
+        let sequenceNumber = 1;
+
+        if (lastOfflineOrder?.invoiceId) {
+            const parts = lastOfflineOrder.invoiceId.split("-");
+            // OFF-INV-YYYYMMDD-XXXX -> parts are 4
+            if (parts.length === 4) {
+                sequenceNumber = parseInt(parts[3]) + 1;
+            }
+        }
+
+        return `OFF-INV-${dateStr}-${sequenceNumber.toString().padStart(4, "0")}`;
+    } catch (error) {
+        console.error("Error generating offline invoice number:", error);
         throw error;
     }
 };
@@ -32,18 +79,19 @@ const generateOrderId = async (): Promise<string> => {
 export const POST = async (req: NextRequest) => {
     try {
         // ✅ Check feature flag
-        if (process.env.ENABLE_ADMIN_OFFLINE_ORDERS !== "true") {
+        if (process.env.NEXT_PUBLIC_ENABLE_ADMIN_OFFLINE_ORDERS !== "true") {
             return NextResponse.json(
                 { success: false, msg: "Feature not enabled" },
                 { status: 403 }
             );
         }
 
-        // ✅ Verify admin authentication
-        const adminId = req.headers.get("x-user-id");
-        if (!adminId) {
+        // ✅ Verify admin authentication and valid ObjectId
+        const adminId = req.headers.get("x-admin-id");
+        if (!adminId || adminId === "null" || adminId === "undefined" || !mongoose.isValidObjectId(adminId)) {
+            console.error("❌ Invalid Admin ID provided:", adminId);
             return NextResponse.json(
-                { success: false, msg: "Admin authentication required" },
+                { success: false, msg: "Valid Admin authentication required" },
                 { status: 401 }
             );
         }
@@ -123,7 +171,10 @@ export const POST = async (req: NextRequest) => {
                     return {
                         product: product._id,
                         count: quantity,
-                        sizeId: sizeObj._id,
+                        size: {
+                            _id: sizeObj._id,
+                            size: sizeObj.size
+                        },
                         sizeLabel: sizeObj.size,
                         actualPrice: product.actualPrice,
                         offerPrice: sizeObj.offerPrice || product.actualPrice,
@@ -143,6 +194,14 @@ export const POST = async (req: NextRequest) => {
                 { status: 400 }
             );
         }
+
+        // Prepare items for stock update utility
+        const stockUpdateItems = processedProductDetails.map(item => ({
+            productId: item.product.toString(),
+            sizeId: item.size._id.toString(),
+            quantity: item.count,
+            productName: products.find(p => p._id.toString() === item.product.toString())?.name
+        }));
 
         // ✅ Apply coupon (optional, reuse existing logic)
         let discount = 0;
@@ -179,8 +238,19 @@ export const POST = async (req: NextRequest) => {
         totalPayablePrice = Math.max(totalPayablePrice, 1);
 
         // ✅ Create order
+        const isRazorpayLink = paymentMode === "RAZORPAY_LINK";
+        const initialPaymentStatus = isRazorpayLink ? "PAYMENT_PENDING" : (paymentStatus === "Paid" ? "PAYMENT_SUCCESS" : "NOT_INITIATED");
+        const initialCurrentStatus = isRazorpayLink ? "PENDING" : (paymentStatus === "Paid" ? "COMPLETED" : "PENDING");
+
+        // ✅ 3. Generate Order ID and Invoice ID
+        const orderId = await generateOfflineOrderId();
+        const invoiceId = await generateOfflineInvoiceNumber();
+
+        // ✅ 4. Create Order Object
         const newOrder = new Order({
-            orderId: await generateOrderId(),
+            orderId,
+            invoiceId,
+            order_type: "OFFLINE",
             productDetails: processedProductDetails,
             totalPrice: totalActualPrice,
             payablePrice: totalPayablePrice,
@@ -188,51 +258,111 @@ export const POST = async (req: NextRequest) => {
             shippingAddress: customerDetails.shippingAddress,
             shippingCost,
             paymentMethod: paymentMode,
-            paymentStatus:
-                paymentStatus === "Paid" ? "PAYMENT_SUCCESS" : "NOT_INITIATED",
-            currentStatus: paymentStatus === "Paid" ? "CONFIRMED" : "PENDING",
+            paymentStatus: initialPaymentStatus,
+            currentStatus: initialCurrentStatus,
             date: new Date(),
+            paidAt: paymentStatus === "Paid" && !isRazorpayLink ? new Date() : null,
 
-            // ✅ NEW: Mark as offline order
+            // ✅ MARK AS OFFLINE
+            // order_type: "OFFLINE", // Removed duplicate
             orderSource: "ADMIN_OFFLINE",
-            createdByAdminId: adminId,
+            createdBy: adminId,
 
             // ✅ Set shipping details based on method
             deliveryPartner:
                 shippingMethod === "DTDC" ? "DTDC" : manualShipping?.courierName || "MANUAL",
             trackingId: manualShipping?.trackingNumber || "",
+
+            // Metadata for recovery
+            metadata: {
+                source: "OFFLINE_ADMIN",
+                adminId
+            }
         });
 
         await newOrder.save();
 
-        // ✅ Reduce inventory (ONLY IF PAID)
-        if (paymentStatus === "Paid") {
-            for (const item of processedProductDetails) {
-                const product = await Product.findById(item.product);
-                if (product) {
-                    const sizeObj = product.sizes.find((s: any) =>
-                        s._id.equals(item.sizeId)
-                    );
-                    if (sizeObj) {
-                        sizeObj.stock = Math.max(0, sizeObj.stock - item.count);
-                        sizeObj.sellCount = (sizeObj.sellCount || 0) + item.count;
-                        await product.save();
+        let paymentLinkData: { id: string; url: string; status: string } | null = null;
+
+        // 🚀 ACTION: GENERATE RAZORPAY LINK
+        if (isRazorpayLink) {
+            if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+                // Don't fail order, just warn
+                console.error("❌ Razorpay keys missing");
+            } else {
+                try {
+                    const razorpay = new Razorpay({
+                        key_id: process.env.RAZORPAY_KEY_ID,
+                        key_secret: process.env.RAZORPAY_KEY_SECRET,
+                    });
+
+                    let contact = customerDetails.phone.trim();
+                    if (contact.length === 10 && !contact.startsWith("+")) {
+                        contact = `+91${contact}`;
                     }
+
+                    const linkOptions = {
+                        amount: Math.round(totalPayablePrice * 100),
+                        currency: "INR",
+                        accept_partial: false,
+                        reference_id: `${orderId}-${Math.random().toString(36).substring(2, 7)}`,
+                        description: `Swaarasya Offline Order #${orderId}`,
+                        customer: { contact: contact, name: customerDetails.name },
+                        notify: { sms: true, email: !!customerDetails.email },
+                        reminder_enable: true,
+                        notes: { orderId: orderId, invoiceId, orderType: "OFFLINE" },
+                        callback_url: `https://www.swaarasya.com/invoice/${invoiceId}`, // Fallback
+                    };
+
+                    const link = await razorpay.paymentLink.create(linkOptions);
+                    paymentLinkData = {
+                        id: link.id,
+                        url: link.short_url,
+                        status: link.status
+                    };
+
+                    // Update order with link details
+                    newOrder.metadata = { ...newOrder.metadata, paymentLink: paymentLinkData };
+                    await newOrder.save();
+
+                } catch (err) {
+                    console.error("❌ Failed to generate Razorpay link:", err);
+                    // We still return success but without link? Or should we error? 
+                    // Better to warn user.
                 }
             }
         }
 
+        // ✅ Reduce inventory via centralized utility (ONLY IF PAID IMMEDIATELY)
+        // For Razorpay Link, stock is deducted via Webhook on success
+        if (initialPaymentStatus === "PAYMENT_SUCCESS") {
+            const stockResult = await updateStock(
+                stockUpdateItems as any,
+                "SALE",
+                "OFFLINE",
+                newOrder._id.toString(),
+                adminId
+            );
+
+            if (!stockResult.success) {
+                // Rollback Order if stock deduction fails
+                await Order.findByIdAndDelete(newOrder._id);
+                return NextResponse.json(
+                    { success: false, msg: "Stock deduction failed", errors: stockResult.errors },
+                    { status: 400 }
+                );
+            }
+        }
+
         // ✅ DTDC Integration (conditional - only when payment is completed)
-        if (shippingMethod === "DTDC" && dtdcDetails && paymentStatus === "Paid") {
+        if (shippingMethod === "DTDC" && dtdcDetails && initialPaymentStatus === "PAYMENT_SUCCESS") {
             try {
-                const axios = require("axios");
-                const { generateRandomId } = require("../../../../helper/generateRandomId");
 
                 const consignments = processedProductDetails.map((item: any) => {
                     const customerRef = generateRandomId(15);
 
                     return {
-                        customer_code: "OO3772",
+                        customer_code: process.env.DTDC_CUSTOMER_CODE || "OO3772",
                         service_type_id: "STD EXP-A",
                         load_type: "NON-DOCUMENT",
                         consignment_type: "Forward",
@@ -247,13 +377,13 @@ export const POST = async (req: NextRequest) => {
                         num_pieces: item.count.toString(),
 
                         origin_details: {
-                            name: "SIS BY MP",
-                            phone: 6282667959,
-                            address_line_1: "PERUKAVU ",
-                            address_line_2: "VILAVOORKAL , MALAYINKEEZHU,",
-                            pincode: dtdcDetails.pickupPincode || "695573",
-                            city: "THIRUVANANTHAPURAM",
-                            state: "KERALA",
+                            name: process.env.DTDC_ORIGIN_NAME || "SIS BY MP",
+                            phone: process.env.DTDC_ORIGIN_PHONE || "6282667959",
+                            address_line_1: process.env.DTDC_ORIGIN_ADDR1 || "PERUKAVU ",
+                            address_line_2: process.env.DTDC_ORIGIN_ADDR2 || "VILAVOORKAL , MALAYINKEEZHU,",
+                            pincode: dtdcDetails.pickupPincode || process.env.DTDC_ORIGIN_PINCODE || "695573",
+                            city: process.env.DTDC_ORIGIN_CITY || "THIRUVANANTHAPURAM",
+                            state: process.env.DTDC_ORIGIN_STATE || "KERALA",
                         },
 
                         destination_details: {
@@ -293,7 +423,7 @@ export const POST = async (req: NextRequest) => {
                         headers: {
                             accept: "application/json",
                             "Content-Type": "application/json",
-                            "api-key": "52256c0d05c94bda4c897dce29a485",
+                            "api-key": process.env.DTDC_API_KEY || "52256c0d05c94bda4c897dce29a485",
                         },
                     }
                 );
@@ -321,44 +451,79 @@ export const POST = async (req: NextRequest) => {
             }
         }
 
+        // ✅ Prepare plain order object for notifications
+        const orderForNotification = {
+            orderId: newOrder.orderId,
+            productDetails: processedProductDetails,
+            totalPrice: newOrder.totalPrice,
+            payablePrice: newOrder.payablePrice,
+            off: newOrder.off,
+            shippingCost: newOrder.shippingCost,
+            paymentMethod: newOrder.paymentMethod,
+            paymentStatus: newOrder.paymentStatus,
+            currentStatus: newOrder.currentStatus,
+            trackingId: newOrder.trackingId,
+        };
+
         // ✅ Send Email (if enabled and email provided)
+        // Send only if confirm immediately or if we want to send "Order Created" email even for pending payment
+        // Usually we send email on creation.
         if (sendEmail && customerDetails.email) {
+            console.log(`📧 Attempting to send offline order email to ${customerDetails.email}...`);
             try {
-                await sendOfflineOrderEmail({
+                const emailResult = await sendOfflineOrderEmail({
                     customerEmail: customerDetails.email,
                     customerName: customerDetails.name,
                     orderId: newOrder.orderId,
-                    orderDetails: newOrder,
+                    orderDetails: orderForNotification,
                     paymentMode,
-                    paymentStatus,
+                    paymentStatus: initialPaymentStatus,
                     shippingMethod,
                     trackingId: newOrder.trackingId,
                 });
+                if (emailResult.success) {
+                    console.log("✅ Offline order email sent successfully");
+                } else {
+                    console.error("❌ Offline order email failed:", emailResult.message);
+                }
             } catch (emailErr) {
-                console.error("❌ Email send failed (non-blocking):", emailErr);
+                console.error("❌ Email helper crash (non-blocking):", emailErr);
             }
         }
 
         // ✅ Send WhatsApp (if enabled, reuse existing template)
-        if (sendWhatsApp && customerDetails.phone) {
+        // Only send if confirmed or maybe send "Payment Link" whatsapp?
+        // Current sendOrderConfirmation implies "Confirmation".
+        // For now, only send if NOT Razorpay link, OR we need a sendPaymentLink template?
+        // User didn't ask for new template. Let's send confirmation only if paid.
+        if (sendWhatsApp && customerDetails.phone && !isRazorpayLink) {
+            console.log(`📱 Attempting to send WhatsApp confirmation to ${customerDetails.phone}...`);
             try {
-                await sendOrderConfirmation(
+                const waResult = await sendOrderConfirmation(
                     customerDetails.name,
                     customerDetails.phone,
                     newOrder.orderId,
-                    "S.I.S",
-                    newOrder.deliveryPartner || ""
+                    "Swaarasya", // Consistent merchant name
+                    newOrder.deliveryPartner || "N/A"
                 );
+                if (waResult.success) {
+                    console.log("✅ WhatsApp confirmation sent successfully");
+                } else {
+                    console.error("❌ WhatsApp confirmation failed:", waResult.message);
+                }
             } catch (waErr) {
-                console.error("❌ WhatsApp send failed (non-blocking):", waErr);
+                console.error("❌ WhatsApp helper crash (non-blocking):", waErr);
             }
         }
 
         return NextResponse.json(
             {
                 success: true,
-                msg: "Offline order created successfully",
-                offlorder: newOrder,
+                msg: isRazorpayLink ? "Payment Link Generated" : "Offline order created successfully",
+                orderId: newOrder.orderId,
+                invoiceId: newOrder.invoiceId, // Include in response
+                offlorder: orderForNotification,
+                paymentLink: paymentLinkData
             },
             { status: 201 }
         );

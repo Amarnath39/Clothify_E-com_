@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -100,6 +102,7 @@ const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
     flex-shrink-0 
   `}
     >
+
       <div className="flex flex-col h-full md:max-h-[80vh]">
         {/* Header */}
         <div className="p-4 border-b">

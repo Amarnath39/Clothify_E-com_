@@ -115,6 +115,8 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                                 <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-center">Size</th>
                                 <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-center">Qty</th>
                                 <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-right">Price</th>
+                                <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-right whitespace-nowrap">SGST</th>
+                                <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-right whitespace-nowrap">CGST</th>
                                 <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-right">Total</th>
                             </tr>
                         </thead>
@@ -123,7 +125,20 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                                 const productName = item.product?.name || "Unknown Product";
                                 const size = item.sizeLabel || item.size?.size || "-";
                                 const price = item.product?.offerPrice || item.product?.actualPrice || 0;
-                                const total = price * item.quantity;
+                                const quantity = item.quantity || item.count || 0;
+                                const baseTotal = price * quantity;
+
+                                // Find tax details for this product from metadata
+                                const itemTaxInfo = order.metadata?.taxDetails?.find(
+                                    (td: any) => td.productId?.toString() === item.product?._id?.toString()
+                                );
+
+                                // If we have taxDetails, use stored amount, else if we have GST% calculate, else 0
+                                const totalGst = itemTaxInfo?.gstAmount || 0;
+                                const sgst = totalGst / 2;
+                                const cgst = totalGst / 2;
+
+                                const totalRow = baseTotal + totalGst;
 
                                 return (
                                     <tr key={index} className="border-b border-gray-100 last:border-0">
@@ -132,9 +147,11 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                                             {/* <div className="text-xs text-gray-500">SKU: {item.product?.sku}</div> */}
                                         </td>
                                         <td className="py-4 text-center">{size}</td>
-                                        <td className="py-4 text-center">{item.quantity}</td>
+                                        <td className="py-4 text-center">{quantity}</td>
                                         <td className="py-4 text-right">₹{price.toFixed(2)}</td>
-                                        <td className="py-4 text-right font-medium">₹{total.toFixed(2)}</td>
+                                        <td className="py-4 text-right">₹{sgst.toFixed(2)}</td>
+                                        <td className="py-4 text-right">₹{cgst.toFixed(2)}</td>
+                                        <td className="py-4 text-right font-medium">₹{totalRow.toFixed(2)}</td>
                                     </tr>
                                 );
                             })}
@@ -166,13 +183,28 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                                 ) : null;
                             })()}
 
-                            {/* GST */}
-                            {(order.metadata?.totalGstAmount > 0) && (
-                                <div className="flex justify-between text-gray-600">
-                                    <span>GST</span>
-                                    <span>₹{(order.metadata.totalGstAmount).toFixed(2)}</span>
-                                </div>
-                            )}
+                            {/* SGST and CGST Breakdown */}
+                            {(() => {
+                                const totalGst = order.metadata?.totalGstAmount || 0;
+                                if (totalGst <= 0) return null;
+
+                                // Use specific fields if available, otherwise calculate half
+                                const sgst = order.metadata?.totalSgstAmount ?? (totalGst / 2);
+                                const cgst = order.metadata?.totalCgstAmount ?? (totalGst / 2);
+
+                                return (
+                                    <>
+                                        <div className="flex justify-between text-gray-600">
+                                            <span>SGST</span>
+                                            <span>₹{sgst.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-gray-600">
+                                            <span>CGST</span>
+                                            <span>₹{cgst.toFixed(2)}</span>
+                                        </div>
+                                    </>
+                                );
+                            })()}
 
                             {/* Shipping */}
                             {order.shippingCost > 0 && (

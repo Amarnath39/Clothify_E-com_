@@ -52,12 +52,12 @@ export const POST = async (req: NextRequest) => {
     console.log("📍 Step 4: Extracted data - Products:", productDetails?.length, "Coupon:", couponCode, "OrderId:", orderId);
 
     // Validate input
-    if (!userId || !productDetails || !Array.isArray(productDetails) || productDetails.length === 0) {
+    if (!productDetails || !Array.isArray(productDetails) || productDetails.length === 0) {
       console.log("❌ Validation failed");
       return NextResponse.json({ success: false, msg: "Invalid input" }, { status: 400 });
     }
 
-    const uniqueProductIds = [...new Set(productDetails.map((pd) => pd.product))];
+    const uniqueProductIds = [...new Set(productDetails.map((pd: any) => pd.product))];
     console.log("📍 Step 5: Unique product IDs:", uniqueProductIds);
 
     const products = await Product.find({ _id: { $in: uniqueProductIds } });
@@ -81,7 +81,7 @@ export const POST = async (req: NextRequest) => {
     console.log("📍 Step 7.5: Shipping address found:", shippingAddress ? "Yes" : "No");
 
     const processedProductDetails = productDetails
-      .map((pd) => {
+      .map((pd: any) => {
         const product = products.find((p) => p._id.toString() === pd.product);
         if (product) {
           const quantity = pd.count || 1;
@@ -110,7 +110,7 @@ export const POST = async (req: NextRequest) => {
         }
         return null;
       })
-      .filter((pd) => pd !== null);
+      .filter((pd: any) => pd !== null);
 
     console.log("📍 Step 8: Processed products:", processedProductDetails.length, "Out of stock:", outOfStockProducts.length);
 

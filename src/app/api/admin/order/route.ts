@@ -64,12 +64,18 @@ export const GET = async (req: NextRequest) => {
 
     // ✅ NEW: Order Source Filter
     const orderSource = url.searchParams.get("orderSource");
-    if (orderSource) {
+    if (orderSource && orderSource !== "all") {
       if (orderSource === "offline") {
-        searchCriteria.orderSource = "ADMIN_OFFLINE";
+        searchCriteria.$or = [
+          { order_type: "OFFLINE" },
+          { orderSource: "ADMIN_OFFLINE" }
+        ];
       } else if (orderSource === "online") {
-        // Online orders don't have orderSource field set
-        searchCriteria.orderSource = { $exists: false };
+        // Online orders: Not POS, NOT OFFLINE, and NOT ADMIN_OFFLINE source
+        searchCriteria.order_type = { $nin: ["POS", "OFFLINE"] };
+        searchCriteria.orderSource = { $ne: "ADMIN_OFFLINE" };
+      } else if (orderSource === "pos") {
+        searchCriteria.order_type = "POS";
       }
     }
 

@@ -1,74 +1,90 @@
+"use client";
+
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/theme/components";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
+  Area,
+  AreaChart,
 } from "recharts";
+import { FiTrendingUp } from "react-icons/fi";
 
-const salesData = [
-  { name: "Jan", totalSales: 4000, onlineSales: 2400, target: 3800 },
-  { name: "Feb", totalSales: 3000, onlineSales: 1800, target: 3500 },
-  { name: "Mar", totalSales: 5000, onlineSales: 3000, target: 4000 },
-  { name: "Apr", totalSales: 4500, onlineSales: 2700, target: 4200 },
-  { name: "May", totalSales: 6000, onlineSales: 3600, target: 4500 },
-  { name: "Jun", totalSales: 5500, onlineSales: 3300, target: 5000 },
-];
+const SalesGraph = ({ salesOverView }: { salesOverView: any[] }) => {
+  const formatCurrency = (value: number) => `₹${value.toLocaleString()}`;
 
-const SalesGraph = ({salesOverView}) => {
-  const formatCurrency = (value) => `₹${value.toLocaleString()}`;
+  // Custom Tooltip component
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-4 border border-gray-100 shadow-xl rounded-xl">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
+              <p className="text-sm font-black text-gray-900">{formatCurrency(entry.value)}</p>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <Card className="w-full h-[500px]">
-      <CardHeader>
-        <CardTitle>Sales Overview</CardTitle>
-      </CardHeader>
-      <CardContent className="h-[420px]">
+    <Card className="p-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h3 className="text-lg font-black text-gray-900 leading-tight">Sales Performance</h3>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Monthly Revenue Comparison</p>
+        </div>
+        <div className="p-2 bg-green-50 rounded-lg text-green-600">
+          <FiTrendingUp size={20} />
+        </div>
+      </div>
+
+      <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
+          <AreaChart
             data={salesOverView}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis tickFormatter={formatCurrency} />
-            <Tooltip
-              formatter={(value, name: any) => [
-                formatCurrency(value),
-                name.replace(/([A-Z])/g, " $1").trim(),
-              ]}
-              labelFormatter={(label) => `Month: ${label}`}
+            <defs>
+              <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#7C1D3E" stopOpacity={0.1} />
+                <stop offset="95%" stopColor="#7C1D3E" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+            <XAxis
+              dataKey="month"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#9CA3AF', fontSize: 10, fontWeight: 700 }}
+              dy={10}
             />
-            <Legend />
-            <Line
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#9CA3AF', fontSize: 10, fontWeight: 700 }}
+              tickFormatter={(val) => `₹${val / 1000}k`}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Area
               type="monotone"
               dataKey="totalSales"
-              stroke="#8884d8"
-              activeDot={{ r: 8 }}
-              name="Total Sales"
+              stroke="#7C1D3E"
+              strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#colorSales)"
+              activeDot={{ r: 6, strokeWidth: 0, fill: '#7C1D3E' }}
             />
-            {/* <Line
-              type="monotone"
-              dataKey="onlineSales"
-              stroke="#82ca9d"
-              activeDot={{ r: 8 }}
-              name="Online Sales"
-            />
-            <Line
-              type="monotone"
-              dataKey="target"
-              stroke="#ff7300"
-              strokeDasharray="5 5"
-              name="Sales Target"
-            /> */}
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
-      </CardContent>
+      </div>
     </Card>
   );
 };

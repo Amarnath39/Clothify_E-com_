@@ -7,9 +7,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+    ZapanInput,
+    Button as ZapanButton,
+    Card as ZapanCard,
+    Badge as ZapanBadge
+} from "@/theme/components";
 import {
     Select,
     SelectContent,
@@ -17,7 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
+// Removed: Button, Input, Label, Card imports from shadcn
 import {
     FaSearch,
     FaTrash,
@@ -27,9 +30,18 @@ import {
     FaBarcode,
     FaCopy,
     FaExternalLinkAlt,
+    FaMobileAlt,
+    FaLink,
+    FaMoneyBillWave,
+    FaCreditCard,
+    FaQrcode,
+    FaWallet,
+    FaReceipt
 } from "react-icons/fa";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
+import QRCode from "react-qr-code";
 
 // Razorpay SDK logic removed as per new requirements (Manual UPI/Card)
 
@@ -72,7 +84,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ Core State
     const [invoiceNumber, setInvoiceNumber] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "CARD" | "RAZORPAY_PAYMENT_LINK">("CASH");
+    const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "CARD" | "RAZORPAY_PAYMENT_LINK" | "RAZORPAY_QR">("CASH");
     const [transactionDetails, setTransactionDetails] = useState(""); // ✅ For UPI/Card transaction ID
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -81,6 +93,9 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [completedOrder, setCompletedOrder] = useState<any>(null);
 
+    // ✅ Get Admin from Redux
+    const { user } = useSelector((state: any) => state.auth);
+
     // ✅ Refs
     const searchInputRef = useRef<HTMLInputElement>(null);
     const phoneInputRef = useRef<HTMLInputElement>(null);
@@ -88,6 +103,12 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     // ✅ NEW: Payment Link State
     const [paymentLinkInfo, setPaymentLinkInfo] = useState<{
         link: string;
+        orderId: string;
+        invoiceId: string;
+    } | null>(null);
+
+    const [paymentQRInfo, setPaymentQRInfo] = useState<{
+        qrCode: string;
         orderId: string;
         invoiceId: string;
     } | null>(null);
@@ -120,6 +141,71 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
         }
     };
 
+    // ✅ Real-time Payment Listener (SSE)
+    useEffect(() => {
+        const orderId = paymentLinkInfo?.orderId || paymentQRInfo?.orderId;
+        if (!orderId || completedOrder) return;
+
+        console.log("📡 Starting SSE listener for order:", orderId);
+
+        const eventSource = new EventSource(`/api/order/status/sse?orderId=${orderId}`);
+
+        eventSource.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                console.log("📩 SSE Message Received: ", data);
+
+                if (data.paymentStatus === "PAYMENT_SUCCESS") {
+                    console.log("✅ Payment Success observed via SSE!");
+                    toast.success("Payment confirmed!");
+                    // Fetch final order details to show success screen
+                    fetchOrderDetails(orderId);
+                    eventSource.close();
+                } else {
+                    console.log("ℹ️ Other SSE status update: ", data.paymentStatus);
+                }
+            } catch (err) {
+                console.error("Failed to parse SSE data: ", err, event.data);
+            }
+        };
+
+        eventSource.onerror = (err) => {
+            console.error("SSE Error:", err);
+            // Reconnects automatically by default, so we don't necessarily close
+        };
+
+        return () => {
+            console.log("📡 Closing SSE listener");
+            eventSource.close();
+        };
+    }, [paymentLinkInfo, paymentQRInfo, completedOrder]);
+
+    // ✅ Helper to fetch order details after payment
+    const fetchOrderDetails = async (orderId: string) => {
+        try {
+            // Find the database ID (_id) for this orderId (orderId like ORD-...)
+            // Actually, for POS orders, we might need to search by orderId string or pass _id in SSE
+            // Let's use the fetching endpoint I just added
+            const adminId = localStorage.getItem("adminId") || user?._id;
+            const { data } = await axios.get(`/api/admin/order/${orderId}`, {
+                headers: { "x-admin-id": adminId }
+            });
+            if (data.success) {
+                setCompletedOrder(data.order);
+            }
+        } catch (error) {
+            console.error("Failed to fetch order details:", error);
+            // Fallback: just show a generic success if we can't get details
+            setCompletedOrder({
+                orderId: orderId,
+                invoiceId: paymentLinkInfo?.invoiceId || paymentQRInfo?.invoiceId,
+                payablePrice: totals.total,
+                paymentMethod: "RAZORPAY",
+                customerPhone: customerPhone
+            });
+        }
+    };
+
     // ✅ Generate invoice number on modal open
     const generateInvoiceNumber = () => {
         const today = new Date();
@@ -139,9 +225,10 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
         setIsSearching(true);
         try {
+            const adminId = localStorage.getItem("adminId") || user?._id;
             const { data } = await axios.get(`/api/admin/pos/products/search?q=${query}`, {
                 headers: {
-                    "x-admin-id": localStorage.getItem("adminId"),
+                    "x-admin-id": adminId,
                 },
             });
 
@@ -169,7 +256,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" && searchResults.length > 0) {
             const firstProduct = searchResults[0];
-            if (firstProduct.sizes.length === 1) {
+            if (firstProduct.sizes && firstProduct.sizes.length === 1) {
                 // Auto-add if only one size available
                 addToCart(firstProduct, firstProduct.sizes[0]._id, 1);
                 setSearchQuery("");
@@ -313,6 +400,13 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 quantity: item.quantity,
             }));
 
+            const adminId = user?._id || localStorage.getItem("adminId");
+            if (!adminId) {
+                toast.error("Admin ID not found. Please log in again.");
+                setIsProcessing(false);
+                return;
+            }
+
             const requestBody: any = {
                 customerPhone,
                 productDetails,
@@ -328,10 +422,11 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 const { data } = await axios.post(
                     "/api/admin/pos",
                     { ...requestBody, action: "GenerateLink" },
-                    { headers: { "x-admin-id": localStorage.getItem("adminId") } }
+                    { headers: { "x-admin-id": adminId } }
                 );
 
                 if (data.success) {
+                    console.log("✅ Payment link generated successfully:", data);
                     toast.success("Payment Link Sent!");
 
                     setPaymentLinkInfo({
@@ -346,13 +441,37 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 }
             }
             // ═════════════════════════════════════════════════════════════════════
+            // CASE 1.5: Razorpay Dynamic QR (Requires Webhook Confirmation)
+            // ═════════════════════════════════════════════════════════════════════
+            else if (paymentMethod === "RAZORPAY_QR") {
+                const { data } = await axios.post(
+                    "/api/admin/pos",
+                    { ...requestBody, action: "GenerateQR" },
+                    { headers: { "x-admin-id": adminId } }
+                );
+
+                if (data.success) {
+                    console.log("✅ QR Code generated successfully:", data);
+                    toast.success("QR Code Generated!");
+
+                    setPaymentQRInfo({
+                        qrCode: data.qrCode,
+                        orderId: data.order.orderId,
+                        invoiceId: data.invoiceId,
+                    });
+                } else {
+                    toast.error(data.message || "Failed to generate QR");
+                }
+            }
+            // ═════════════════════════════════════════════════════════════════════
             // CASE 2: CASH, UPI (Offline), CARD (Offline) -> Immediate Completion
             // ═════════════════════════════════════════════════════════════════════
             else {
+                const adminId = localStorage.getItem("adminId") || user?._id;
                 const { data } = await axios.post(
                     "/api/admin/pos",
                     { ...requestBody, action: "COMPLETE" }, // Explicit action for immediate completion
-                    { headers: { "x-admin-id": localStorage.getItem("adminId") } }
+                    { headers: { "x-admin-id": adminId } }
                 );
 
                 if (data.success) {
@@ -403,11 +522,18 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
         setSearchResults([]);
         setCompletedOrder(null);
         setPaymentLinkInfo(null);
+        setPaymentQRInfo(null);
         generateInvoiceNumber();
     };
 
     // ✅ Close and reset
     const handleClose = () => {
+        // If payment link or QR is generated, close immediately without confirm (as link/QR is active)
+        if (paymentLinkInfo || paymentQRInfo) {
+            onClose();
+            return;
+        }
+
         if (cart.length > 0 && !completedOrder) {
             if (!confirm("Cart has items. Are you sure you want to close?")) {
                 return;
@@ -418,431 +544,481 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
     const totals = calculateTotals();
 
-    // ✅ PAYMENT LINK AWAITING SCREEN
-    if (paymentLinkInfo && !completedOrder) {
-        return (
-            <Dialog open={isOpen} onOpenChange={handleClose}>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle className="text-center text-blue-600 text-2xl">
-                            🔗 Payment Link Generated
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-6 py-4">
-                        {/* Payment Link Display */}
-                        <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 space-y-4">
-                            <p className="text-sm font-semibold text-gray-700">Payment Link:</p>
-                            <div className="bg-white p-4 rounded border border-blue-200 break-all text-blue-600 font-mono text-sm">
-                                {paymentLinkInfo.link}
-                            </div>
-
-                            <div className="flex gap-2">
-                                <Button
-                                    onClick={copyPaymentLink}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                                >
-                                    <FaCopy className="mr-2" />
-                                    Copy Link
-                                </Button>
-                                <Button
-                                    onClick={openPaymentLink}
-                                    className="flex-1 bg-green-600 hover:bg-green-700"
-                                    variant="default"
-                                >
-                                    <FaExternalLinkAlt className="mr-2" />
-                                    Open Link
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Status Indicator - NO SPINNER, Just Information */}
-                        <div className="bg-green-50 border-2 border-green-300 rounded-lg p-6 text-center space-y-4">
-                            <div className="flex items-center justify-center gap-3">
-                                <span className="text-2xl">✅</span>
-                                <p className="text-lg font-semibold text-gray-800">
-                                    Link Sent & Order Pending
-                                </p>
-                            </div>
-                            <p className="text-sm text-gray-600">
-                                The order has been created. Payment will be confirmed automatically via Webhook.
-                                You can close this window now.
-                            </p>
-                        </div>
-
-                        {/* Order Details */}
-                        <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Order ID:</span>
-                                <span className="font-bold">{paymentLinkInfo.orderId}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Invoice ID:</span>
-                                <span className="font-bold">{paymentLinkInfo.invoiceId}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">Customer Phone:</span>
-                                <span className="font-bold">{customerPhone}</span>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2">
-                            <Button
-                                onClick={() => {
-                                    resetPOS();
-                                    searchInputRef.current?.focus();
-                                }}
-                                className="flex-1"
-                                variant="outline"
-                            >
-                                Start New Order
-                            </Button>
-                            <Button
-                                onClick={handleClose}
-                                variant="default"
-                                className="flex-1"
-                            >
-                                Close POS
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        );
-    }
-
-    // ✅ If order completed, show success screen
-    if (completedOrder) {
-        return (
-            <Dialog open={isOpen} onOpenChange={handleClose}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="text-center text-green-600 text-2xl">
-                            ✅ Order Completed
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-4 py-4">
-                        <div className="text-center">
-                            <p className="text-sm text-gray-600">Invoice Number</p>
-                            <p className="text-xl font-bold">{completedOrder.invoiceId}</p>
-                        </div>
-
-                        <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                            <div className="flex justify-between">
-                                <span>Total Amount:</span>
-                                <span className="font-bold">₹{completedOrder.payablePrice}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Payment Method:</span>
-                                <span className="font-bold">{completedOrder.paymentMethod}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Customer Phone:</span>
-                                <span>{completedOrder.customerPhone}</span>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                            <Button
-                                onClick={printInvoice}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700"
-                            >
-                                <FaPrint className="mr-2" />
-                                Print Invoice
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    resetPOS();
-                                    searchInputRef.current?.focus();
-                                }}
-                                className="flex-1"
-                                variant="outline"
-                            >
-                                New Order
-                            </Button>
-                        </div>
-
-                        <Button
-                            onClick={handleClose}
-                            variant="ghost"
-                            className="w-full"
-                        >
-                            Close POS
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
-        );
-    }
+    console.log("🛠️ POS Modal Render State:", {
+        paymentLinkInfo: !!paymentLinkInfo,
+        paymentQRInfo: !!paymentQRInfo,
+        completedOrder: !!completedOrder,
+        isOpen
+    });
 
     // ✅ Main POS Interface
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold flex items-center justify-between">
-                        <span>🏪 Point of Sale (POS)</span>
-                        <span className="text-sm font-normal text-gray-600">
-                            {invoiceNumber}
-                        </span>
-                    </DialogTitle>
-                </DialogHeader>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Left: Product Search & Cart */}
-                    <div className="md:col-span-2 space-y-4">
-                        {/* Search Bar */}
-                        <Card>
-                            <CardContent className="p-4">
-                                <Label className="flex items-center gap-2 mb-2">
-                                    <FaBarcode />
-                                    Scan Barcode / Enter SKU / Product Name
-                                </Label>
-                                <div className="relative">
-                                    <Input
-                                        ref={searchInputRef}
-                                        type="text"
-                                        placeholder="Scan barcode or type product name..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        onKeyDown={handleSearchKeyDown}
-                                        className="pr-10"
-                                    />
-                                    <FaSearch className="absolute right-3 top-3 text-gray-400" />
+            <DialogContent className={`${completedOrder ? 'max-w-md' : (paymentLinkInfo || paymentQRInfo) ? 'max-w-4xl h-fit' : 'max-w-[1400px] w-[95vw] h-[95vh] sm:h-[90vh]'} p-0 overflow-y-auto scrollbar-hide border-none shadow-2xl rounded-[1.5rem] md:rounded-[2rem] bg-gray-50`}>
+                {/* ═════════════════════════════════════════════════════════════════════
+                    CASE 1: Success Screen (Order Completed)
+                    ═════════════════════════════════════════════════════════════════════ */}
+                {completedOrder ? (
+                    <div className="flex flex-col">
+                        <DialogHeader className="bg-emerald-50 p-6 border-b border-emerald-100">
+                            <DialogTitle className="text-center text-emerald-800 text-2xl font-black uppercase tracking-wider flex flex-col items-center gap-2">
+                                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-2">
+                                    <FaReceipt />
                                 </div>
+                                Order Completed
+                            </DialogTitle>
+                        </DialogHeader>
 
-                                {/* Search Results */}
-                                {isSearching && (
-                                    <p className="text-sm text-gray-500 mt-2">Searching...</p>
-                                )}
+                        <div className="space-y-6 p-8 bg-white">
+                            <div className="text-center">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Invoice Number</p>
+                                <p className="text-2xl font-black text-gray-900 font-mono tracking-tight">{completedOrder.invoiceId}</p>
+                            </div>
 
-                                {searchResults.length > 0 && (
-                                    <div className="mt-3 max-h-64 overflow-y-auto border rounded-md">
-                                        {searchResults.map((product) => (
-                                            <div
-                                                key={product._id}
-                                                className="p-3 hover:bg-gray-50 border-b last:border-b-0"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <img
-                                                        src={product.img[0] || "/placeholder.png"}
-                                                        alt={product.name}
-                                                        className="w-12 h-12 object-cover rounded"
-                                                    />
-                                                    <div className="flex-1">
-                                                        <p className="font-medium text-sm">{product.name}</p>
-                                                        <p className="text-xs text-gray-500">SKU: {product.sku}</p>
-                                                    </div>
-                                                </div>
+                            <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 space-y-3">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="font-bold text-gray-500">Total Amount</span>
+                                    <span className="font-black text-xl text-gray-900">₹{completedOrder.payablePrice}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="font-bold text-gray-500">Payment Method</span>
+                                    <ZapanBadge variant="neutral" className="bg-white border-gray-200 text-gray-900">{completedOrder.paymentMethod}</ZapanBadge>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="font-bold text-gray-500">Customer</span>
+                                    <span className="font-bold text-gray-900">{completedOrder.customerPhone}</span>
+                                </div>
+                            </div>
 
-                                                {/* Size Selection */}
-                                                <div className="mt-2 flex gap-2 flex-wrap">
-                                                    {product.sizes.map((size) => (
-                                                        <Button
-                                                            key={size._id}
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => addToCart(product, size._id, 1)}
-                                                            disabled={size.stock === 0}
-                                                            className="text-xs"
-                                                        >
-                                                            {size.size} (₹{size.offerPrice || product.actualPrice})
-                                                            {size.stock === 0 && " - Out of Stock"}
-                                                        </Button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                            <div className="flex gap-3">
+                                <ZapanButton
+                                    onClick={printInvoice}
+                                    className="flex-1 bg-gray-900 text-white hover:bg-black h-12 rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg"
+                                >
+                                    <FaPrint className="mr-2" />
+                                    Print
+                                </ZapanButton>
+                                <ZapanButton
+                                    variant="outline"
+                                    onClick={() => {
+                                        resetPOS();
+                                        searchInputRef.current?.focus();
+                                    }}
+                                    className="flex-1 bg-white border-2 border-gray-100 text-gray-900 hover:bg-gray-50 h-12 rounded-xl text-xs font-bold uppercase tracking-widest shadow-sm"
+                                >
+                                    New Order
+                                </ZapanButton>
+                            </div>
 
-                        {/* Cart Items */}
-                        <Card>
-                            <CardContent className="p-4">
-                                <h3 className="font-bold mb-3">
-                                    Cart ({totals.totalItems} items)
-                                </h3>
-
-                                {cart.length === 0 ? (
-                                    <p className="text-gray-500 text-center py-8">
-                                        Cart is empty. Scan products to add.
-                                    </p>
-                                ) : (
-                                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                                        {cart.map((item, index) => (
-                                            <div
-                                                key={index}
-                                                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                                            >
-                                                <img
-                                                    src={item.product.img[0] || "/placeholder.png"}
-                                                    alt={item.product.name}
-                                                    className="w-16 h-16 object-cover rounded"
-                                                />
-
-                                                <div className="flex-1">
-                                                    <p className="font-medium text-sm">
-                                                        {item.product.name}
-                                                    </p>
-                                                    <p className="text-xs text-gray-600">
-                                                        Size: {item.selectedSize.size}
-                                                    </p>
-                                                    <p className="text-sm font-bold text-blue-600">
-                                                        ₹
-                                                        {item.selectedSize.offerPrice ||
-                                                            item.product.actualPrice}{" "}
-                                                        × {item.quantity}
-                                                    </p>
-                                                </div>
-
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            updateQuantity(index, item.quantity - 1)
-                                                        }
-                                                    >
-                                                        <FaMinus />
-                                                    </Button>
-                                                    <span className="w-8 text-center font-bold">
-                                                        {item.quantity}
-                                                    </span>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            updateQuantity(index, item.quantity + 1)
-                                                        }
-                                                    >
-                                                        <FaPlus />
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="destructive"
-                                                        onClick={() => removeFromCart(index)}
-                                                    >
-                                                        <FaTrash />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                            <button
+                                onClick={handleClose}
+                                className="w-full text-center text-xs font-bold text-gray-400 hover:text-gray-900 uppercase tracking-widest transition-colors"
+                            >
+                                Close Window
+                            </button>
+                        </div>
                     </div>
+                ) :
 
-                    {/* Right: Payment & Checkout */}
-                    <div className="space-y-4">
-                        {/* Customer Info */}
-                        <Card>
-                            <CardContent className="p-4 space-y-3">
-                                <div>
-                                    <Label htmlFor="customerPhone">
-                                        Customer Phone <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Input
-                                        ref={phoneInputRef}
-                                        id="customerPhone"
-                                        type="tel"
-                                        placeholder="10-digit phone number"
-                                        value={customerPhone}
-                                        onChange={(e) =>
-                                            setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
-                                        }
-                                        maxLength={10}
-                                    />
+                    /* ═════════════════════════════════════════════════════════════════════
+                        CASE 2: Awaiting Payment (Link Generated)
+                        ═════════════════════════════════════════════════════════════════════ */
+                    paymentLinkInfo ? (
+                        <div className="flex flex-col md:flex-row bg-white min-h-[500px]">
+                            {/* Left Side: Large QR Display */}
+                            <div className="w-full md:w-1/2 bg-[#7C1D3E]/5 flex flex-col items-center justify-center p-10 border-r border-[#7C1D3E]/10 relative">
+                                <div className="absolute top-8 left-8 bg-[#7C1D3E] text-white px-4 py-2 rounded-full text-[10px] font-black tracking-[0.2em] uppercase shadow-lg shadow-[#7C1D3E]/30">
+                                    Scan to Pay
                                 </div>
 
-                                <div>
-                                    <Label htmlFor="paymentMethod">
-                                        Payment Method <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Select
-                                        value={paymentMethod}
-                                        onValueChange={(value: any) => setPaymentMethod(value)}
+                                <div className="relative p-8 bg-white border-4 border-[#7C1D3E]/20 rounded-[3rem] shadow-2xl group transition-all duration-500 hover:border-[#7C1D3E]/40">
+                                    <QRCode value={paymentLinkInfo.link} size={280} className="rounded-xl" />
+                                </div>
+                                <div className="mt-8 text-center">
+                                    <p className="text-xs font-black text-[#7C1D3E]/60 mb-3 uppercase tracking-widest">Supports Any UPI App</p>
+                                    <div className="flex gap-4 items-center justify-center opacity-50 grayscale hover:grayscale-0 transition-all">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" className="h-5" alt="UPI" />
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Google_Pay_Logo.svg" className="h-5" alt="GPay" />
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" className="h-4" alt="Paytm" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Side: Order Info & Actions */}
+                            <div className="w-full md:w-1/2 p-12 flex flex-col justify-between space-y-8">
+                                <div className="space-y-8">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Payment Link</h2>
+                                            <p className="text-gray-400 font-bold text-sm mt-1">Remote Checkout Session</p>
+                                        </div>
+                                        <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl flex items-center gap-2 border border-emerald-100">
+                                            <div className="relative flex">
+                                                <div className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></div>
+                                                <div className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></div>
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Live</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100">
+                                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Total Payable</p>
+                                        <p className="text-5xl font-black text-[#7C1D3E]">₹{totals.total}</p>
+                                    </div>
+
+                                    <div className="bg-[#7C1D3E]/5 border border-[#7C1D3E]/10 p-5 rounded-2xl">
+                                        <span className="text-[10px] uppercase font-black text-[#7C1D3E]/60 block mb-2 tracking-widest">Payment Link</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-1 truncate font-mono text-xs text-[#7C1D3E] font-bold bg-white px-4 py-3 rounded-xl border border-[#7C1D3E]/10 shadow-sm">
+                                                {paymentLinkInfo.link}
+                                            </div>
+                                            <ZapanButton size="lg" className="shrink-0 aspect-square p-0 bg-white text-[#7C1D3E] border border-[#7C1D3E]/20 hover:bg-[#7C1D3E] hover:text-white rounded-xl shadow-sm" onClick={copyPaymentLink}>
+                                                <FaCopy />
+                                            </ZapanButton>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <ZapanButton
+                                        variant="outline"
+                                        onClick={() => {
+                                            resetPOS();
+                                            searchInputRef.current?.focus();
+                                        }}
+                                        className="flex-1 h-14 rounded-2xl bg-white border-2 border-gray-100 hover:bg-gray-50 text-gray-900 text-sm font-bold uppercase tracking-widest"
                                     >
-                                        <SelectTrigger id="paymentMethod">
-                                            <SelectValue placeholder="Select payment method" />
-                                        </SelectTrigger>
-                                        <SelectContent className="z-[9999]">
-                                            <SelectItem value="CASH">💵 Cash (Immediate)</SelectItem>
-                                            <SelectItem value="UPI">📱 UPI (Offline / Manual)</SelectItem>
-                                            <SelectItem value="CARD">💳 Card (Offline / Swipe)</SelectItem>
-                                            <SelectItem value="RAZORPAY_PAYMENT_LINK">🔗 Payment Link (Razorpay)</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                        <FaPlus className="mr-2" /> New Order
+                                    </ZapanButton>
+                                    <ZapanButton
+                                        onClick={openPaymentLink}
+                                        className="flex-1 h-14 rounded-2xl bg-[#7C1D3E] hover:bg-[#601630] text-white text-sm font-bold uppercase tracking-widest shadow-xl shadow-[#7C1D3E]/20"
+                                    >
+                                        Open Link
+                                    </ZapanButton>
+                                    <ZapanButton
+                                        onClick={handleClose}
+                                        className="h-14 w-14 rounded-2xl bg-gray-900 hover:bg-black text-white p-0 shadow-lg"
+                                        title="Close"
+                                    >
+                                        <FaPlus className="rotate-45 text-xl" />
+                                    </ZapanButton>
                                 </div>
+                            </div>
+                        </div>
+                    ) :
 
-                                {/* ✅ NEW: Transaction Details for UPI/Card */}
-                                {(paymentMethod === "UPI" || paymentMethod === "CARD") && (
-                                    <div>
-                                        <Label htmlFor="transactionDetails">
-                                            Transaction Note / Manual ID
-                                            <span className="text-gray-500 text-xs ml-1">(Optional)</span>
-                                        </Label>
-                                        <Input
-                                            id="transactionDetails"
-                                            type="text"
-                                            placeholder="Enter note or transaction ID..."
-                                            value={transactionDetails}
-                                            onChange={(e) => setTransactionDetails(e.target.value)}
+                        /* ═════════════════════════════════════════════════════════════════════
+                            CASE 2.5: Awaiting Payment (Dynamic QR Generated)
+                            ═════════════════════════════════════════════════════════════════════ */
+                        paymentQRInfo ? (
+                            <div className="flex flex-col md:flex-row bg-white min-h-[500px]">
+                                {/* Left Side: Large QR Display */}
+                                <div className="w-full md:w-1/2 bg-blue-50 flex flex-col items-center justify-center p-10 border-r border-blue-100 relative">
+                                    <div className="absolute top-8 left-8 bg-blue-600 text-white px-4 py-2 rounded-full text-[10px] font-black tracking-[0.2em] uppercase shadow-lg shadow-blue-500/30">
+                                        UPI Dynamic QR
+                                    </div>
+
+                                    <div className="relative p-8 bg-white border-4 border-blue-200 rounded-[3rem] shadow-2xl group transition-all duration-500 hover:border-blue-400">
+                                        <img
+                                            src={paymentQRInfo.qrCode}
+                                            alt="Payment QR"
+                                            className="w-[280px] h-[280px] object-contain rounded-xl"
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            For record keeping and verification
-                                        </p>
                                     </div>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Totals */}
-                        <Card>
-                            <CardContent className="p-4 space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span>Subtotal:</span>
-                                    <span>₹{totals.subtotal.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm text-gray-600">
-                                    <span>GST:</span>
-                                    <span>₹{totals.totalGst.toFixed(2)}</span>
-                                </div>
-                                {totals.discount > 0 && (
-                                    <div className="flex justify-between text-sm text-green-600">
-                                        <span>Discount:</span>
-                                        <span>-₹{totals.discount.toFixed(2)}</span>
+                                    <div className="mt-8 text-center text-blue-400">
+                                        <p className="text-xs font-black mb-3 uppercase tracking-widest">Auto-Confirming Payment</p>
                                     </div>
-                                )}
-                                <div className="border-t pt-2 flex justify-between text-lg font-bold">
-                                    <span>Total:</span>
-                                    <span className="text-blue-600">₹{totals.total.toFixed(2)}</span>
                                 </div>
-                            </CardContent>
-                        </Card>
 
-                        {/* Checkout Button */}
-                        <Button
-                            onClick={processPOSOrder}
-                            disabled={isProcessing || cart.length === 0}
-                            className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700"
-                        >
-                            {isProcessing ? "Processing..." : `Checkout - ₹${totals.total.toFixed(2)}`}
-                        </Button>
+                                {/* Right Side: Order Info & Actions */}
+                                <div className="w-full md:w-1/2 p-12 flex flex-col justify-between space-y-8">
+                                    <div className="space-y-8">
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <h2 className="text-4xl font-black text-gray-900 tracking-tight">Checkout</h2>
+                                                <p className="text-gray-400 font-bold text-sm mt-1">Scanner Active</p>
+                                            </div>
+                                            <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl flex items-center gap-2 border border-blue-100">
+                                                <div className="animate-spin text-blue-600">
+                                                    <FaQrcode />
+                                                </div>
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Waiting</span>
+                                            </div>
+                                        </div>
 
-                        <Button
-                            onClick={resetPOS}
-                            variant="outline"
-                            className="w-full"
-                        >
-                            Clear Cart
-                        </Button>
-                    </div>
-                </div>
+                                        <div className="bg-gray-50 rounded-[2.5rem] p-8 border border-gray-100">
+                                            <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Amount to Pay</p>
+                                            <p className="text-6xl font-black text-gray-900 leading-tight">₹{totals.total}</p>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                                                <span className="text-[10px] uppercase font-black text-gray-400 block mb-1">Order Ref</span>
+                                                <span className="text-xs font-bold text-gray-700 font-mono">{paymentQRInfo.orderId}</span>
+                                            </div>
+                                            <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                                                <span className="text-[10px] uppercase font-black text-gray-400 block mb-1">Invoice</span>
+                                                <span className="text-xs font-bold text-gray-700 font-mono truncate block">{paymentQRInfo.invoiceId}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <ZapanButton
+                                            variant="outline"
+                                            onClick={() => {
+                                                resetPOS();
+                                                searchInputRef.current?.focus();
+                                            }}
+                                            className="flex-1 h-14 rounded-2xl bg-white border-2 border-gray-100 hover:bg-gray-50 text-gray-900 text-sm font-bold uppercase tracking-widest"
+                                        >
+                                            <FaPlus className="mr-2" /> New Order
+                                        </ZapanButton>
+                                        <ZapanButton
+                                            onClick={handleClose}
+                                            className="flex-1 h-14 rounded-2xl bg-gray-900 hover:bg-black text-white text-sm font-bold uppercase tracking-widest shadow-xl"
+                                        >
+                                            Close
+                                        </ZapanButton>
+                                    </div>
+                                </div>
+                            </div>
+                        ) :
+
+
+                            /* ═════════════════════════════════════════════════════════════════════
+                                CASE 3: Main POS Cart / Checkout
+                                ═════════════════════════════════════════════════════════════════════ */
+                            (
+                                <div className="flex flex-col lg:flex-row h-full min-h-0">
+                                    {/* Left: Product Search & Cart */}
+                                    <div className="flex-[1.5] flex flex-col h-full bg-white p-4 md:p-8 border-b lg:border-b-0 lg:border-r border-gray-100 overflow-hidden min-h-[400px] lg:min-h-0">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-[#7C1D3E] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#7C1D3E]/30">
+                                                    <FaBarcode className="text-xl" />
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">Point of Sale</h2>
+                                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest font-mono">{invoiceNumber}</p>
+                                                </div>
+                                            </div>
+                                            <ZapanBadge variant="brand" className="px-4 py-2 text-xs">Admin POS</ZapanBadge>
+                                        </div>
+
+                                        {/* Search Bar */}
+                                        <div className="mb-6 relative z-50">
+                                            <ZapanInput
+                                                ref={searchInputRef}
+                                                icon={FaSearch}
+                                                type="text"
+                                                placeholder="Scan barcode or type product name..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                onKeyDown={handleSearchKeyDown}
+                                                className="h-16 text-lg shadow-lg shadow-gray-200/50 border-gray-200 focus:border-[#7C1D3E]"
+                                                autoFocus
+                                            />
+
+                                            {/* Search Results Dropdown */}
+                                            {searchQuery && (
+                                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 max-h-[400px] overflow-y-auto z-[100]">
+                                                    {isSearching ? (
+                                                        <div className="p-8 text-center text-gray-400 font-bold uppercase tracking-widest text-xs">Searching...</div>
+                                                    ) : searchResults.length > 0 ? (
+                                                        <div className="p-2">
+                                                            {searchResults.map((product) => (
+                                                                <div key={product._id} className="p-4 hover:bg-gray-50 rounded-xl mb-1 group transition-colors">
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden">
+                                                                            <img src={product.img[0] || "/placeholder.png"} className="w-full h-full object-cover" alt="" />
+                                                                        </div>
+                                                                        <div className="flex-1">
+                                                                            <p className="font-bold text-gray-900 mb-0.5">{product.name}</p>
+                                                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SKU: {product.sku}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="mt-4 flex flex-wrap gap-2 pl-16">
+                                                                        {product.sizes && Array.isArray(product.sizes) ? (
+                                                                            product.sizes.map((size) => (
+                                                                                <button
+                                                                                    key={size._id}
+                                                                                    onClick={() => addToCart(product, size._id, 1)}
+                                                                                    disabled={size.stock === 0}
+                                                                                    className={`px-4 py-2 rounded-lg text-xs font-bold border-2 transition-all
+                                                                                        ${size.stock === 0
+                                                                                            ? 'border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50'
+                                                                                            : 'border-gray-200 text-gray-600 hover:border-[#7C1D3E] hover:text-[#7C1D3E] hover:bg-[#7C1D3E]/5'
+                                                                                        }`}
+                                                                                >
+                                                                                    {size.size} — ₹{size.offerPrice || product.actualPrice}
+                                                                                    {size.stock === 0 && " (Out)"}
+                                                                                </button>
+                                                                            ))
+                                                                        ) : (
+                                                                            <span className="text-xs text-red-500 font-bold">No sizes</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-8 text-center text-gray-400 font-bold text-sm">No products found</div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Cart Items List */}
+                                        <div className="flex-1 overflow-y-auto space-y-4 pr-1 min-h-0">
+                                            {cart.length === 0 ? (
+                                                <div className="h-full flex flex-col items-center justify-center text-gray-300 space-y-4">
+                                                    <FaBarcode className="text-6xl opacity-20" />
+                                                    <p className="font-bold uppercase tracking-widest text-sm text-center">Cart is empty<br />Scan to start</p>
+                                                </div>
+                                            ) : (
+                                                cart.map((item, index) => (
+                                                    <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-[#7C1D3E]/20 transition-colors">
+                                                        <div className="w-16 h-16 bg-white rounded-xl overflow-hidden shadow-sm shrink-0">
+                                                            <img src={item.product.img[0] || "/placeholder.png"} className="w-full h-full object-cover" alt="" />
+                                                        </div>
+
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-bold text-gray-900 truncate">{item.product.name}</p>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <span className="px-2 py-0.5 bg-white border border-gray-200 rounded text-[10px] font-black uppercase tracking-wider text-gray-500">
+                                                                    {item.selectedSize.size}
+                                                                </span>
+                                                                <span className="text-xs font-bold text-[#7C1D3E]">
+                                                                    ₹{item.selectedSize.offerPrice || item.product.actualPrice}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-3 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+                                                            <button
+                                                                onClick={() => updateQuantity(index, item.quantity - 1)}
+                                                                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
+                                                            >
+                                                                <FaMinus className="text-xs" />
+                                                            </button>
+                                                            <span className="w-6 text-center font-black text-sm">{item.quantity}</span>
+                                                            <button
+                                                                onClick={() => updateQuantity(index, item.quantity + 1)}
+                                                                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
+                                                            >
+                                                                <FaPlus className="text-xs" />
+                                                            </button>
+                                                        </div>
+
+                                                        <button
+                                                            onClick={() => removeFromCart(index)}
+                                                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all ml-2"
+                                                        >
+                                                            <FaTrash className="text-sm" />
+                                                        </button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Payment & Checkout */}
+                                    <div className="w-full lg:w-[400px] xl:w-[450px] bg-gray-50 flex flex-col h-full border-t lg:border-t-0 lg:border-l border-gray-100 min-h-0">
+                                        <div className="p-4 md:p-8 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
+                                            {/* Customer */}
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+                                                <div className="flex items-center gap-2 text-[#7C1D3E] mb-2">
+                                                    <FaMobileAlt />
+                                                    <span className="text-xs font-black uppercase tracking-widest">Customer Details</span>
+                                                </div>
+                                                <ZapanInput
+                                                    ref={phoneInputRef}
+                                                    label="Mobile Number *"
+                                                    placeholder="10-digit number"
+                                                    value={customerPhone}
+                                                    onChange={(e: any) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                                                    maxLength={10}
+                                                    className="bg-gray-50 border-gray-200"
+                                                />
+                                            </div>
+
+                                            {/* Payment */}
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+                                                <div className="flex items-center gap-2 text-[#7C1D3E] mb-2">
+                                                    <FaWallet />
+                                                    <span className="text-xs font-black uppercase tracking-widest">Payment Method</span>
+                                                </div>
+
+                                                <Select value={paymentMethod} onValueChange={(value: any) => setPaymentMethod(value)}>
+                                                    <SelectTrigger className="h-14 rounded-2xl border-2 border-gray-100 bg-gray-50 font-bold text-sm text-gray-900 focus:ring-[#7C1D3E]/20 hover:border-[#7C1D3E]/30 transition-colors">
+                                                        <SelectValue placeholder="Select Method" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-2xl border-gray-100 shadow-xl z-[99999]" position="popper" sideOffset={5}>
+                                                        <SelectItem value="CASH" className="py-3 px-4 font-bold text-gray-700 focus:bg-emerald-50 focus:text-emerald-700">💵 Cash Payment</SelectItem>
+                                                        <SelectItem value="UPI" className="py-3 px-4 font-bold text-gray-700 focus:bg-blue-50 focus:text-blue-700">📱 UPI (Manual)</SelectItem>
+                                                        <SelectItem value="CARD" className="py-3 px-4 font-bold text-gray-700 focus:bg-purple-50 focus:text-purple-700">💳 Card Swipe</SelectItem>
+                                                        <SelectItem value="RAZORPAY_QR" className="py-3 px-4 font-bold text-gray-700 focus:bg-indigo-50 focus:text-indigo-700">🔳 Dynamic QR</SelectItem>
+                                                        <SelectItem value="RAZORPAY_PAYMENT_LINK" className="py-3 px-4 font-bold text-gray-700 focus:bg-pink-50 focus:text-pink-700">🔗 Send Link</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+
+                                                {(paymentMethod === "UPI" || paymentMethod === "CARD") && (
+                                                    <div className="animate-in slide-in-from-top-2 pt-2">
+                                                        <ZapanInput
+                                                            label="Transaction ID (Optional)"
+                                                            placeholder="Enter Ref No."
+                                                            value={transactionDetails}
+                                                            onChange={(e: any) => setTransactionDetails(e.target.value)}
+                                                            className="bg-gray-50 border-gray-200"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Summary Footer */}
+                                        <div className="bg-white p-4 md:p-8 rounded-t-[2rem] md:rounded-t-[2.5rem] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] space-y-4 md:space-y-6 z-10 sticky bottom-0 border-t border-gray-50">
+                                            <div className="space-y-2 md:space-y-3">
+                                                <div className="flex justify-between text-xs md:text-sm text-gray-500 font-medium">
+                                                    <span>Subtotal</span>
+                                                    <span>₹{totals.subtotal.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs md:text-sm text-gray-500 font-medium">
+                                                    <span>GST (Inc.)</span>
+                                                    <span>₹{totals.totalGst.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center pt-2 md:pt-4 border-t border-gray-100">
+                                                    <span className="text-gray-900 font-black text-base md:text-lg">Total Payable</span>
+                                                    <span className="text-[#7C1D3E] font-black text-2xl md:text-3xl">₹{totals.total.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-2 md:gap-3">
+                                                <ZapanButton
+                                                    onClick={resetPOS}
+                                                    className="flex-none w-12 h-12 md:w-14 md:h-14 bg-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl md:rounded-2xl"
+                                                    title="Clear Cart"
+                                                >
+                                                    <FaTrash />
+                                                </ZapanButton>
+                                                <ZapanButton
+                                                    onClick={processPOSOrder}
+                                                    disabled={isProcessing || cart.length === 0}
+                                                    className={`flex-1 h-12 md:h-14 rounded-xl md:rounded-2xl text-sm md:text-base font-black uppercase tracking-widest shadow-xl transition-all
+                                                        ${isProcessing || cart.length === 0
+                                                            ? 'bg-gray-200 text-gray-400 shadow-none'
+                                                            : 'bg-[#7C1D3E] hover:bg-[#601630] text-white hover:scale-[1.02] shadow-[#7C1D3E]/30'
+                                                        }`}
+                                                >
+                                                    {isProcessing ? "Processing..." : "Complete Order"}
+                                                </ZapanButton>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
             </DialogContent>
         </Dialog>
     );

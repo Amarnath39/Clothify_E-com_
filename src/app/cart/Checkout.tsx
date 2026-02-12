@@ -156,12 +156,14 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
         handler: async (response: any) => {
           setPaymentState('verifying');
           try {
-            const verify = await axios.post("/api/verify", {
+            const verifyPayload: any = {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
               orderId: orderDetails._id,
-            });
+            };
+
+            const verify = await axios.post("/api/verify", verifyPayload);
 
             if (verify.data.success) {
               setPaymentState('verified');
@@ -182,9 +184,9 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
           }
         },
         prefill: {
-          name: orderDetails.shippingAddress?.name || "",
-          email: user.email || "",
-          contact: orderDetails.shippingAddress?.mobile || "",
+          name: shippingAddress?.name || "",
+          email: user?.email || "",
+          contact: shippingAddress?.mobile || "",
         },
         theme: { color: "#E3242B" },
         modal: {
@@ -301,7 +303,7 @@ const CheckoutModal = ({ isOpen, onClose, orderDetails, deliveryFee }) => {
               <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
                 <p className="font-medium">{shippingAddress.name}</p>
                 <p>{shippingAddress.address}</p>
-                <p>{shippingAddress.state}, {shippingAddress.country} {shippingAddress.zipCode}</p>
+                <p>{shippingAddress.city}, {shippingAddress.state} {shippingAddress.zipCode}</p>
                 <p>Mobile: {shippingAddress.mobile}</p>
                 <p className="text-sm text-gray-500 mt-1">{shippingAddress.addressType}</p>
                 <Button

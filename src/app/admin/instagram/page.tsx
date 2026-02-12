@@ -3,16 +3,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  FiPlus,
   FiTrash2,
   FiLink,
   FiImage,
   FiVideo,
   FiUpload,
+  FiInstagram,
+  FiPlus,
 } from "react-icons/fi";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button, ZapanInput, PageHeader, Card as ZapanCard, Badge } from "@/theme/components";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +19,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -39,6 +37,7 @@ const Instagram = () => {
     file: null,
     fileType: "",
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchPosts();
@@ -46,6 +45,7 @@ const Instagram = () => {
 
   const fetchPosts = async () => {
     try {
+      setLoading(true);
       const response = await axios.get("/api/instagram");
       if (response.data.success) {
         setPosts(response.data.instagramDetails);
@@ -56,7 +56,9 @@ const Instagram = () => {
           variant: "destructive",
         });
       }
+      setLoading(false);
     } catch (error) {
+      setLoading(false);
       toast({
         title: "Error",
         description: "Failed to fetch Instagram posts",
@@ -65,7 +67,7 @@ const Instagram = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formDataToSend = new FormData();
     formDataToSend.append("url", formData.url);
@@ -84,6 +86,7 @@ const Instagram = () => {
       });
       setIsDialogOpen(false);
       fetchPosts();
+      setFormData({ url: "", file: null, fileType: "" });
     } catch (error) {
       toast({
         title: "Error",
@@ -93,7 +96,8 @@ const Instagram = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this post?")) return;
     try {
       await axios.delete(`/api/admin/instagram/${id}`);
       toast({
@@ -110,16 +114,16 @@ const Instagram = () => {
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: any) => {
     const { name, value, files } = e.target;
     if (name === "file") {
-      setFormData((prev) => ({
+      setFormData((prev: any) => ({
         ...prev,
         file: files[0],
         fileType: files[0].type.startsWith("image/") ? "image" : "video",
       }));
     } else {
-      setFormData((prev) => ({
+      setFormData((prev: any) => ({
         ...prev,
         [name]: value,
       }));
@@ -127,26 +131,93 @@ const Instagram = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 bg-gray-100 min-h-screen">
-      
-      <h1 className="text-4xl font-bold mb-6 text-center text-gray-800">
-        Instagram Management
-      </h1>
-      <Button
-        onClick={() => setIsDialogOpen(true)}
-        className="mb-8 bg-black text-white hover:bg-black mx-auto block"
-      >
-        Add New Post
-      </Button>
+    <div className="space-y-8 pb-20 animate-in fade-in duration-700">
+      <PageHeader
+        title="Instagram Feed"
+        description="Manage your social media presence and showcase content."
+        action={
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="h-12 px-6 rounded-xl bg-gradient-to-r from-[#7C1D3E] to-[#E91E7B] text-white shadow-lg shadow-[#7C1D3E]/20 hover:scale-105 transition-all font-black uppercase tracking-widest text-xs">
+                <FiPlus className="mr-2" size={16} /> Add Post
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-8 border-gray-100">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-black text-gray-900 text-center">New Instagram Post</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+                <div className="space-y-4">
+                  <ZapanInput
+                    label="Instagram URL"
+                    id="url"
+                    name="url"
+                    value={formData.url}
+                    onChange={handleInputChange}
+                    placeholder="https://instagram.com/p/..."
+                  />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {posts.map((post: any) => (
-          <Card
-            key={post._id}
-            className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
-          >
-            <CardContent className="p-4">
-              <div className="aspect-square relative mb-4 rounded-lg overflow-hidden">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] ml-1">Media File</label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        id="file"
+                        name="file"
+                        onChange={handleInputChange}
+                        accept="image/*,video/*"
+                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#7C1D3E]/10 file:text-[#7C1D3E] hover:file:bg-[#7C1D3E]/20 cursor-pointer border border-gray-100 rounded-xl p-2 bg-gray-50"
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        <FiUpload size={16} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] ml-1">File Type</label>
+                    <Select
+                      value={formData.fileType}
+                      onValueChange={(value) =>
+                        handleInputChange({ target: { name: "fileType", value } })
+                      }
+                    >
+                      <SelectTrigger className="h-12 bg-gray-50 border-gray-100 rounded-xl px-4 focus:ring-2 focus:ring-[#7C1D3E]/20 transition-all">
+                        <SelectValue placeholder="Auto-detected type" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-gray-100 shadow-xl">
+                        <SelectItem value="image">Image</SelectItem>
+                        <SelectItem value="video">Video</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full h-12 rounded-xl text-sm font-black uppercase tracking-widest">
+                  Create Post
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        }
+      />
+
+      {posts.length === 0 && !loading ? (
+        <ZapanCard className="p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
+          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-gray-300">
+            <FiInstagram size={40} />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">No Posts Yet</h3>
+          <p className="text-gray-500 mb-8 max-w-xs">Start building your gallery by adding your first Instagram post.</p>
+        </ZapanCard>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {posts.map((post: any) => (
+            <div
+              key={post._id}
+              className="group relative bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            >
+              <div className="aspect-[4/5] relative bg-gray-100">
                 {post.fileType === "image" ? (
                   <img
                     src={post.fileLink}
@@ -160,102 +231,40 @@ const Instagram = () => {
                     controls
                   />
                 )}
-              </div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2 text-gray-600">
-                  {post.fileType === "image" ? (
-                    <FiImage className="text-blue-500" />
-                  ) : (
-                    <FiVideo className="text-green-500" />
-                  )}
-                  <span className="capitalize">{post.fileType}</span>
-                </div>
-                <a
-                  href={post.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-600 flex items-center"
-                >
-                  <FiLink className="mr-1" /> View on Instagram
-                </a>
-              </div>
-              <Button
-                
-                size="sm"
-                onClick={() => handleDelete(post._id)}
-                className="w-full bg-black text-white hover:bg-gray-800"
-              >
-                <FiTrash2 className="mr-2" /> Delete
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add New Instagram Post</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="url" className="text-right">
-                Instagram URL
-              </Label>
-              <Input
-                id="url"
-                name="url"
-                value={formData.url}
-                onChange={handleInputChange}
-                placeholder="https://www.instagram.com/p/..."
-                className="mt-1"
-              />
-              <p className="text-slate-300">
-                eg. https://www.instagram.com/123fdadadad
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="file" className="text-right">
-                Upload File
-              </Label>
-              <div className="mt-1 flex items-center space-x-2">
-                <Input
-                  id="file"
-                  name="file"
-                  type="file"
-                  onChange={handleInputChange}
-                  accept="image/*,video/*"
-                  className="flex-grow"
-                />
-                <FiUpload className="text-gray-400" />
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
+                  <div className="w-full flex items-center justify-between">
+                    <Badge variant="neutral" className="bg-white/20 text-white border-white/20 backdrop-blur-md">
+                      {post.fileType === "image" ? <FiImage className="mr-2" /> : <FiVideo className="mr-2" />}
+                      <span className="capitalize">{post.fileType}</span>
+                    </Badge>
+                    <a
+                      href={post.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-white text-black rounded-full hover:bg-white/90 transition-colors"
+                    >
+                      <FiLink size={16} />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 flex gap-2">
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleDelete(post._id)}
+                  className="w-full rounded-xl opacity-0 group-hover:opacity-100 transition-all font-bold text-xs"
+                >
+                  <FiTrash2 className="mr-2" /> Remove Post
+                </Button>
               </div>
             </div>
-            <div>
-              <Label htmlFor="fileType" className="text-right">
-                File Type
-              </Label>
-              <Select
-                name="fileType"
-                value={formData.fileType}
-                onValueChange={(value) =>
-                  handleInputChange({ target: { name: "fileType", value } })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select file type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="image">Image</SelectItem>
-                  <SelectItem value="video">Video</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" className="w-full bg-black text-white hover:bg-black">
-              Add Post
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

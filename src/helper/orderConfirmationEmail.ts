@@ -4,7 +4,7 @@ const orderConfirmationEmail = async (
   to: string,
   subject: string,
   html: string
-): Promise<void> => {
+): Promise<boolean> => {
   try {
     const transport = nodemailer.createTransport({
       host: "smtp.zeptomail.in",
@@ -23,9 +23,11 @@ const orderConfirmationEmail = async (
     };
 
     await transport.sendMail(mailOptions);
-    console.log("Email sent to:", to);
+    console.log("Email sent successfully to:", to);
+    return true;
   } catch (error) {
     console.error("Email send error:", error);
+    return false;
   }
 };
 

@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../db";
-import Admin from "../../../../model/Admin";
+import Admin from "../../../../../src/model/Admin";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { decrypt } from "../../../../../src/lib/encryption";
+import { verifyToken } from "../../../../../src/lib/twofa";
 var cookie = require("cookie");
 
 connectDB();
 
 export const POST = async (req: NextRequest) => {
   try {
-    const { email, password } = await req.json();
+    const { email, password, otp } = await req.json();
 
-    console.log("📩 Incoming login request:", { email });
+    console.log("📩 Incoming login request:", { email, hasOtp: !!otp });
 
     // Find admin by email
     const admin = await Admin.findOne({ email });
@@ -35,6 +37,26 @@ export const POST = async (req: NextRequest) => {
         { success: false, msg: "Invalid credentials" },
         { status: 401 }
       );
+    }
+
+    // 2FA Check
+    if (admin.twoFA && admin.twoFA.enabled) {
+      if (!otp) {
+        console.log("🔒 2FA required for:", email);
+        return NextResponse.json({ success: true, requires2FA: true });
+      }
+
+      const secret = decrypt(admin.twoFA.secret);
+      const valid = verifyToken(secret, otp);
+
+      if (!valid) {
+        console.warn("❌ Invalid OTP for:", email);
+        return NextResponse.json(
+          { success: false, msg: "Invalid OTP" },
+          { status: 401 }
+        );
+      }
+      console.log("🔓 2FA verified for:", email);
     }
 
     // Generate JWT
@@ -67,6 +89,9 @@ export const POST = async (req: NextRequest) => {
           _id: admin._id,
           name: admin.name,
           role: admin.role,
+          twoFA: {
+            enabled: admin.twoFA?.enabled || false
+          }
         },
       },
       {

@@ -1,8 +1,8 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button, ZapanInput, PageHeader, Card as ZapanCard, Badge } from "@/theme/components";
 import {
     Card,
     CardContent,
@@ -10,7 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiTrash2, FiMessageSquare, FiVolume2 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import {
     Dialog,
@@ -37,6 +37,7 @@ const AdminMarquee: React.FC = () => {
     const [selectedEntry, setSelectedEntry] = useState<MarqueeEntry | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchEntries();
@@ -63,6 +64,7 @@ const AdminMarquee: React.FC = () => {
         }
 
         try {
+            setLoading(true);
             if (isEditing && selectedEntry) {
                 await axios.patch(
                     `/api/admin/marquee/${selectedEntry._id}`,
@@ -90,7 +92,9 @@ const AdminMarquee: React.FC = () => {
             setIsEditing(false);
             setSelectedEntry(null);
             setIsModalOpen(false);
+            setLoading(false);
         } catch (error: any) {
+            setLoading(false);
             toast.error(error.response?.data?.msg || "Failed to save marquee entry");
         }
     };
@@ -126,71 +130,95 @@ const AdminMarquee: React.FC = () => {
         setIsEditing(false);
     };
 
-    // Preview text
-    const previewText = marqueeEntries.map(e => e.text).join(" | ");
-
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Marquee Text Management</h1>
-
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                    <Button
-                        className="bg-black text-white hover:bg-gray-800"
-                        onClick={() => setIsEditing(false)}
-                    >
-                        <FiPlus className="mr-2" /> Add New Entry
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {isEditing ? "Edit Marquee Entry" : "Create Marquee Entry"}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleSubmit}>
-                        <div className="space-y-4">
-                            <Input
-                                type="text"
-                                name="text"
-                                placeholder="Enter marquee text (e.g., Free Shipping on Orders Above ₹5,000)"
-                                defaultValue={selectedEntry?.text || ""}
-                            />
+        <div className="space-y-8 pb-20 animate-in fade-in duration-700">
+            <PageHeader
+                title="Marquee Announcements"
+                description="Manage scrolling announcements visible across your store."
+                action={
+                    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                        <DialogTrigger asChild>
                             <Button
-                                className="bg-black text-white hover:bg-black"
-                                type="submit"
+                                onClick={() => setIsEditing(false)}
+                                className="h-12 px-6 rounded-xl bg-gradient-to-r from-[#7C1D3E] to-[#E91E7B] text-white shadow-lg shadow-[#7C1D3E]/20 hover:scale-105 transition-all font-black uppercase tracking-widest text-xs"
                             >
-                                {isEditing ? "Update" : "Create"} Entry
+                                <FiPlus className="mr-2" size={16} /> New Announcement
                             </Button>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-8 border-gray-100">
+                            <DialogHeader>
+                                <DialogTitle className="text-xl font-black text-gray-900 text-center">
+                                    {isEditing ? "Edit Announcement" : "Create Announcement"}
+                                </DialogTitle>
+                            </DialogHeader>
+                            <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+                                <div className="space-y-2">
+                                    <ZapanInput
+                                        type="text"
+                                        label="Announcement Text"
+                                        name="text"
+                                        placeholder="E.g., Free Shipping on Orders Above ₹5,000"
+                                        defaultValue={selectedEntry?.text || ""}
+                                        autoFocus
+                                    />
+                                    <p className="text-[10px] text-gray-400 pl-1">This text will scroll horizontally at the top of your store.</p>
+                                </div>
+                                <Button
+                                    className="w-full h-12 rounded-xl text-sm font-black uppercase tracking-widest"
+                                    type="submit"
+                                    disabled={loading}
+                                >
+                                    {loading ? "Saving..." : (isEditing ? "Update Announcement" : "Publish Announcement")}
+                                </Button>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
+                }
+            />
 
-            {/* Entries List */}
-            <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {marqueeEntries.map((entry) => (
-                    <Card key={entry._id}>
-                        <CardHeader>
-                            <CardTitle className="text-sm">Marquee Entry</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm">{entry.text}</p>
-                        </CardContent>
-                        <CardFooter className="flex justify-between">
-                            <Button variant="outline" onClick={() => handleEdit(entry)}>
-                                <FiEdit2 className="mr-2" /> Edit
-                            </Button>
-                            <Button
-                                className="bg-black text-white hover:bg-gray-800"
-                                onClick={() => handleDelete(entry._id)}
-                            >
-                                <FiTrash2 className="mr-2" /> Delete
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                ))}
-            </div>
+            {marqueeEntries.length === 0 ? (
+                <ZapanCard className="p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
+                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-gray-300">
+                        <FiVolume2 size={40} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">No Announcements</h3>
+                    <p className="text-gray-500 mb-8 max-w-xs">Create your first scrolling announcement to inform customers about offers and updates.</p>
+                </ZapanCard>
+            ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {marqueeEntries.map((entry) => (
+                        <ZapanCard key={entry._id} className="group relative overflow-hidden flex flex-col h-full hover:shadow-lg transition-all duration-300">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#7C1D3E] to-[#E91E7B] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                            <div className="flex-1 p-6 space-y-4">
+                                <div className="w-10 h-10 rounded-xl bg-[#7C1D3E]/10 text-[#7C1D3E] flex items-center justify-center mb-2">
+                                    <FiMessageSquare size={20} />
+                                </div>
+                                <p className="text-lg font-medium text-gray-900 leading-relaxed">
+                                    "{entry.text}"
+                                </p>
+                                <div className="text-xs text-gray-400 font-mono pt-2 border-t border-gray-50">
+                                    Created: {new Date(entry.createdAt).toLocaleDateString()}
+                                </div>
+                            </div>
+
+                            <div className="p-4 bg-gray-50 flex justify-between items-center gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => handleEdit(entry)} className="flex-1 text-gray-600 hover:text-[#7C1D3E] hover:bg-[#7C1D3E]/10">
+                                    <FiEdit2 className="mr-2" /> Edit
+                                </Button>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => handleDelete(entry._id)}
+                                    className="flex-1"
+                                >
+                                    <FiTrash2 className="mr-2" /> Delete
+                                </Button>
+                            </div>
+                        </ZapanCard>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

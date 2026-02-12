@@ -74,6 +74,8 @@ const Order = new mongoose.Schema(
         "PAYMENT_DECLINED",
         "PAYMENT_ERROR",
         "PAYMENT_CANCELLED",
+        "PAYMENT_FAILED",
+        "PAYMENT_AMOUNT_MISMATCH",
         "COD_PENDING",
       ],
       default: "NOT_INITIATED",
@@ -128,7 +130,7 @@ const Order = new mongoose.Schema(
     // ✅ POS-specific fields
     order_type: {
       type: String,
-      enum: ["normal", "prebooking", "POS"],
+      enum: ["normal", "prebooking", "POS", "OFFLINE"],
       default: "normal",
     },
     createdBy: {
@@ -138,6 +140,10 @@ const Order = new mongoose.Schema(
     },
     metadata: {
       type: Object,
+      default: null,
+    },
+    orderSource: {
+      type: String,
       default: null,
     },
   },

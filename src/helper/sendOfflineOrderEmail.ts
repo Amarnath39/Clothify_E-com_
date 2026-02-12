@@ -1,37 +1,37 @@
 import orderConfirmationEmail from "./orderConfirmationEmail";
 
 interface OfflineOrderEmailParams {
-    customerEmail: string;
-    customerName: string;
-    orderId: string;
-    orderDetails: any;
-    paymentMode: string;
-    paymentStatus: string;
-    shippingMethod: string;
-    trackingId?: string;
+  customerEmail: string;
+  customerName: string;
+  orderId: string;
+  orderDetails: any;
+  paymentMode: string;
+  paymentStatus: string;
+  shippingMethod: string;
+  trackingId?: string;
 }
 
 export const sendOfflineOrderEmail = async (
-    params: OfflineOrderEmailParams
+  params: OfflineOrderEmailParams
 ): Promise<{ success: boolean; message: string; error?: any }> => {
-    try {
-        const {
-            customerEmail,
-            customerName,
-            orderId,
-            orderDetails,
-            paymentMode,
-            paymentStatus,
-            shippingMethod,
-            trackingId,
-        } = params;
+  try {
+    const {
+      customerEmail,
+      customerName,
+      orderId,
+      orderDetails,
+      paymentMode,
+      paymentStatus,
+      shippingMethod,
+      trackingId,
+    } = params;
 
-        // ✅ Build product list HTML
-        let productsHtml = "";
-        if (orderDetails.productDetails && orderDetails.productDetails.length > 0) {
-            productsHtml = orderDetails.productDetails
-                .map(
-                    (item: any) => `
+    // ✅ Build product list HTML
+    let productsHtml = "";
+    if (orderDetails.productDetails && orderDetails.productDetails.length > 0) {
+      productsHtml = orderDetails.productDetails
+        .map(
+          (item: any) => `
         <tr>
           <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
             ${item.sizeLabel || "N/A"} - Qty: ${item.count}
@@ -41,12 +41,12 @@ export const sendOfflineOrderEmail = async (
           </td>
         </tr>
       `
-                )
-                .join("");
-        }
+        )
+        .join("");
+    }
 
-        // ✅ Build email HTML template for offline orders
-        const htmlContent = `
+    // ✅ Build email HTML template for offline orders
+    const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -95,8 +95,8 @@ export const sendOfflineOrderEmail = async (
                         <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Payment Status:</td>
                         <td style="padding: 8px 0; text-align: right;">
                           <span style="background-color: ${paymentStatus === "Paid" ? "#d1fae5" : "#fef3c7"
-            }; color: ${paymentStatus === "Paid" ? "#065f46" : "#92400e"
-            }; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+      }; color: ${paymentStatus === "Paid" ? "#065f46" : "#92400e"
+      }; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
                             ${paymentStatus}
                           </span>
                         </td>
@@ -106,14 +106,14 @@ export const sendOfflineOrderEmail = async (
                         <td style="padding: 8px 0; color: #111827; font-size: 14px; text-align: right;">${shippingMethod}</td>
                       </tr>
                       ${trackingId
-                ? `
+        ? `
                       <tr>
                         <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Tracking ID:</td>
                         <td style="padding: 8px 0; color: #3b82f6; font-size: 14px; text-align: right; font-weight: 600;">${trackingId}</td>
                       </tr>
                       `
-                : ""
-            }
+        : ""
+      }
                     </table>
                   </td>
                 </tr>
@@ -138,30 +138,30 @@ export const sendOfflineOrderEmail = async (
                 <tr>
                   <td style="padding: 12px 0; font-size: 14px; color: #6b7280;">Subtotal:</td>
                   <td style="padding: 12px 0; font-size: 14px; color: #111827; text-align: right;">₹${orderDetails.totalPrice?.toFixed(
-                2
-            )}</td>
+        2
+      )}</td>
                 </tr>
                 ${orderDetails.off > 0
-                ? `
+        ? `
                 <tr>
                   <td style="padding: 12px 0; font-size: 14px; color: #6b7280;">Discount:</td>
                   <td style="padding: 12px 0; font-size: 14px; color: #059669; text-align: right;">-₹${orderDetails.off.toFixed(
-                    2
-                )}</td>
+          2
+        )}</td>
                 </tr>
                 `
-                : ""
-            }
+        : ""
+      }
                 <tr>
                   <td style="padding: 12px 0; font-size: 14px; color: #6b7280;">Shipping:</td>
                   <td style="padding: 12px 0; font-size: 14px; color: #111827; text-align: right;">₹${orderDetails.shippingCost?.toFixed(2) || "0.00"
-            }</td>
+      }</td>
                 </tr>
                 <tr style="border-top: 2px solid #e5e7eb;">
                   <td style="padding: 16px 0 0 0; font-size: 18px; color: #111827; font-weight: bold;">Total:</td>
                   <td style="padding: 16px 0 0 0; font-size: 18px; color: #111827; font-weight: bold; text-align: right;">₹${orderDetails.payablePrice?.toFixed(
-                2
-            )}</td>
+        2
+      )}</td>
                 </tr>
               </table>
 
@@ -195,25 +195,31 @@ export const sendOfflineOrderEmail = async (
 </html>
     `;
 
-        // ✅ Send email using existing transport
-        await orderConfirmationEmail(
-            customerEmail,
-            `Order Confirmation - ${orderId}`,
-            htmlContent
-        );
+    // ✅ Send email using existing transport
+    const success = await orderConfirmationEmail(
+      customerEmail,
+      `Order Confirmation - ${orderId}`,
+      htmlContent
+    );
 
-        console.log("✅ Offline order email sent to:", customerEmail);
-
-        return {
-            success: true,
-            message: "Offline order email sent successfully",
-        };
-    } catch (error: any) {
-        console.error("❌ Offline order email error:", error);
-        return {
-            success: false,
-            message: "Failed to send offline order email",
-            error: error.message,
-        };
+    if (success) {
+      console.log("✅ Offline order email sent to:", customerEmail);
+      return {
+        success: true,
+        message: "Offline order email sent successfully",
+      };
+    } else {
+      return {
+        success: false,
+        message: "Failed to send email via SMTP",
+      };
     }
+  } catch (error: any) {
+    console.error("❌ Offline order email error:", error);
+    return {
+      success: false,
+      message: "Failed to send offline order email",
+      error: error.message,
+    };
+  }
 };

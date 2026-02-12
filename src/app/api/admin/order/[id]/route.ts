@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import Order from "../../../../../model/Order";
 import Admin from "../../../../../model/Admin";
+import mongoose from "mongoose";
 import Product from "../../../../../model/Product";
 import { sendOrderShippedEmail } from "../../../../../helper/sendOrderShippedEmail";
 import { sendOrderConfirmation, sendOrderTracking } from "../../../../../helper/whatsappNotifier"; // ✅ Import your first function
@@ -150,6 +151,48 @@ export const PATCH = async (
     return NextResponse.json({ success: true, msg: "Success", order }, { status: 200 });
   } catch (error) {
     console.log("Error to update admin order details", error);
+    return NextResponse.json(
+      { success: false, msg: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+};
+
+export const GET = async (
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) => {
+  try {
+    const adminId = req.headers.get("x-admin-id");
+    if (!adminId) {
+      return NextResponse.json(
+        { success: false, msg: "Please provide Admin Id" },
+        { status: 400 }
+      );
+    }
+
+    const { id } = params;
+    if (!id || id === "undefined") {
+      return NextResponse.json({ success: false, msg: "Invalid Order ID" }, { status: 400 });
+    }
+
+    let order;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      order = await Order.findById(id).populate("user").populate("productDetails.product");
+    } else {
+      order = await Order.findOne({ orderId: id }).populate("user").populate("productDetails.product");
+    }
+
+    if (!order) {
+      return NextResponse.json(
+        { success: false, msg: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, order }, { status: 200 });
+  } catch (error) {
+    console.log("Error fetching admin order details", error);
     return NextResponse.json(
       { success: false, msg: "Internal Server Error" },
       { status: 500 }

@@ -62,8 +62,8 @@ const Navbar = () => {
 
   // Redux State
   const categories = useSelector((state: any) => state.auth.categories || []);
-  const cartItems = useSelector((state: any) => state.cart.items);
-  const wishlistItems = useSelector((state: any) => state.wishlist.items);
+  const cartItems = useSelector((state: any) => state.cart?.items || []);
+  const wishlistItems = useSelector((state: any) => state.wishlist?.items || []);
   const token = useSelector((state: any) => state.auth.token);
   const user = useSelector((state: any) => state.auth.user);
 
@@ -163,7 +163,7 @@ const Navbar = () => {
     // 3. Prepend static items
     return [
       { name: "Home", path: "/" },
-      { name: "Collections", path: "/categories" },
+      //{ name: "Collections", path: "/categories" },
       { name: "AboutUs", path: "/about" },
 
       ...dynamicItems,
@@ -299,7 +299,7 @@ const Navbar = () => {
             >
               <Search className="h-5 w-5" />
             </button>
-            
+
 
 
             {/* Wishlist */}
@@ -322,48 +322,48 @@ const Navbar = () => {
                 <User className="h-5 w-5" />
               </button>
 
-  <AnimatePresence>
-    {isUserMenuOpen && token && (
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.2 }}
-        className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
-      >
-        <Link
-          href="/profile"
-          onClick={() => setIsUserMenuOpen(false)}
-          className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#b48a3c]"
-        >
-          Profile
-        </Link>
+              <AnimatePresence>
+                {isUserMenuOpen && token && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
+                  >
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#b48a3c]"
+                    >
+                      Profile
+                    </Link>
 
-        <Link
-          href="/orders"
-          onClick={() => setIsUserMenuOpen(false)}
-          className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#b48a3c]"
-        >
-          Orders
-        </Link>
+                    <Link
+                      href="/orders"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#b48a3c]"
+                    >
+                      Orders
+                    </Link>
 
-        <button
-          onClick={() => {
-            setIsUserMenuOpen(false);
-            handleLogout();
-          }}
-          className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
-        >
-          Logout
-        </button>
-      </motion.div>
-    )}
-  </AnimatePresence>
-</div>
+                    <button
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      Logout
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
 
             {/* Cart */}
-            <Link
+            {/*<Link
               href="/cart"
               className="text-gray-700 hover:text-[#b48a3c] transition-colors relative"
             >
@@ -373,7 +373,21 @@ const Navbar = () => {
                   {cartItems.length}
                 </span>
               )}
-            </Link>
+            </Link>*/}
+            {/* Cart – Desktop only */}
+<Link
+  href="/cart"
+  className="hidden md:block text-gray-700 hover:text-[#b48a3c] transition-colors relative"
+>
+  <ShoppingBag className="h-5 w-5" />
+  {cartItems.length > 0 && (
+    <span className="absolute -top-2 -right-2 bg-[#b48a3c] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-medium shadow-sm">
+      {cartItems.length}
+    </span>
+  )}
+</Link>
+
+
           </div>
         </div>
 
@@ -464,7 +478,7 @@ const Navbar = () => {
             </div>
 
             {/* Links */}
-            <div className="flex-1 overflow-y-auto p-8 flex flex-col space-y-8 items-center justify-center text-center">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-8 flex flex-col gap-4 sm:gap-5 items-center text-center max-h-[calc(100vh-80px)]">
               {navItems.map((item) => (
                 <motion.div
                   key={item.name}
@@ -502,37 +516,37 @@ const Navbar = () => {
               <div className="w-16 h-[1px] bg-gray-200 my-4"></div>
 
               {/* Account / Action Links Mobile */}
-<div className="flex flex-col gap-3 w-full max-w-xs">
-  {token ? (
-    <>
-      <Link
-        href="/profile"
-        onClick={() => setIsMobileMenuOpen(false)}
-        className="flex items-center justify-center gap-2 text-gray-800 text-sm font-medium hover:text-[#b48a3c]"
-      >
-        <User size={18} /> My Account
-      </Link>
+              <div className="flex flex-col gap-3 w-full max-w-xs">
+                {token ? (
+                  <>
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center justify-center gap-2 text-gray-800 text-sm font-medium hover:text-[#b48a3c]"
+                    >
+                      <User size={18} /> My Account
+                    </Link>
 
-      <button
-        onClick={() => {
-          setIsMobileMenuOpen(false);
-          handleLogout();
-        }}
-        className="w-full border border-red-500 text-red-600 py-3 rounded-full text-sm font-semibold uppercase tracking-widest hover:bg-red-50 transition-colors"
-      >
-        Logout
-      </button>
-    </>
-  ) : (
-    <Link
-      href="/login"
-      onClick={() => setIsMobileMenuOpen(false)}
-      className="w-full bg-black text-white py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#b48a3c] transition-colors"
-    >
-      Login / Sign Up
-    </Link>
-  )}
-</div>
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full border border-red-500 text-red-600 py-3 rounded-full text-sm font-semibold uppercase tracking-widest hover:bg-red-50 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full bg-black text-white py-3 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-[#b48a3c] transition-colors"
+                  >
+                    Login / Sign Up
+                  </Link>
+                )}
+              </div>
 
             </div>
           </motion.div>
