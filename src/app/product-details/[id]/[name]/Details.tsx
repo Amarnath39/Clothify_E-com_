@@ -38,7 +38,7 @@ const ProductDetails = ({
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
-  const [currentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const wishlistItems = useSelector((state: any) => state.wishlist?.items || []);
@@ -97,36 +97,36 @@ const ProductDetails = ({
 
   /* ---------------- ADD TO CART (TOGGLE) ---------------- */
   const handleAddToCart = () => {
-  if (!selectedSize) return;
+    if (!selectedSize) return;
 
-  if (selectedSize.stock <= 0 && !isPreBooking) {
-    toast.error("Out of stock");
-    return;
-  }
+    if (selectedSize.stock <= 0 && !isPreBooking) {
+      toast.error("Out of stock");
+      return;
+    }
 
-  if (isInCart) {
-    dispatch(
-      removeFromCart({
-        id: productData._id,
-        sizeId: selectedSize._id,
-      })
-    );
-    toast.success("Removed from cart");
+    if (isInCart) {
+      dispatch(
+        removeFromCart({
+          id: productData._id,
+          sizeId: selectedSize._id,
+        })
+      );
+      toast.success("Removed from cart");
 
-    setQuantity(1); // ✅ Reset after remove
-  } else {
-    dispatch(
-      addToCart({
-        id: productData._id,
-        size: selectedSize,
-        quantity,
-      })
-    );
-    toast.success("Added to cart");
+      setQuantity(1); // ✅ Reset after remove
+    } else {
+      dispatch(
+        addToCart({
+          id: productData._id,
+          size: selectedSize,
+          quantity,
+        })
+      );
+      toast.success("Added to cart");
 
-    setQuantity(1); // ✅ Reset after add
-  }
-};
+      setQuantity(1); // ✅ Reset after add
+    }
+  };
 
 
   /* ---------------- BUY NOW ---------------- */
@@ -241,8 +241,8 @@ const ProductDetails = ({
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 className={`relative w-16 h-20 flex-shrink-0 border transition-all ${currentIndex === idx
-                    ? "border-[#b48a3c]"
-                    : "border-transparent hover:border-gray-200"
+                  ? "border-[#b48a3c]"
+                  : "border-transparent hover:border-gray-200"
                   }`}
               >
                 <img src={img} alt="" className="w-full h-full object-cover" />
@@ -300,7 +300,7 @@ const ProductDetails = ({
           </div>
 
           {/* PRICE */}
-          
+
           <div className="flex items-center gap-4 mb-6 flex-wrap">
             {/* Offer Price */}
             <span className="text-3xl font-medium text-black">
@@ -313,7 +313,7 @@ const ProductDetails = ({
                 <span className="text-lg text-gray-500 line-through">
                   ₹{productData.actualPrice}
                 </span>
-            )}
+              )}
 
             {/* Discount */}
             {discount > 0 && (
@@ -331,9 +331,9 @@ const ProductDetails = ({
               <button
                 key={size._id}
                 onClick={() => {
-                    setSelectedSize(size);
-                    setQuantity(1);
-                  }}
+                  setSelectedSize(size);
+                  setQuantity(1);
+                }}
 
                 className={`px-4 py-2 border mr-2 ${selectedSize?._id === size._id
                   ? "bg-black text-white"
@@ -342,7 +342,7 @@ const ProductDetails = ({
               >
                 {size.size}
               </button>
-              
+
             ))}
           </div>
 
@@ -355,7 +355,7 @@ const ProductDetails = ({
               <span className="px-4">{quantity}</span>
               <button
                 onClick={() => handleQuantityChange("inc")}
-                
+
                 className="disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus size={16} />
@@ -395,69 +395,69 @@ const ProductDetails = ({
 
           {/*Description*/}
           {/* PRODUCT INFO SECTION */}
-            <div className="mt-10 border-t pt-8 space-y-8">
+          <div className="mt-10 border-t pt-8 space-y-8">
 
-              {/* Description + Material (2 columns) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">
-                    Description
-                  </h3>
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {productData.description || "No description available."}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-600 mb-2">
-                    Material
-                  </h3>
-                  <p className="text-sm text-gray-900 font-medium">
-                    {productData.material || "N/A"}
-                  </p>
-                </div>
+            {/* Description + Material (2 columns) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-600 mb-2">
+                  Description
+                </h3>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {productData.description || "No description available."}
+                </p>
               </div>
-{/* Policies Section */}
-<div className="border-t pt-6 space-y-4">
 
-  {/* Shipping Policy Link */}
-  <div
-    onClick={() => router.push("/policy/shipping-policy")}
-    className="cursor-pointer group flex items-center justify-between border rounded-lg px-4 py-4 hover:border-[#b48a3c] hover:bg-gray-50 transition-all"
-  >
-    <div>
-      <h3 className="text-sm font-semibold text-gray-800 group-hover:text-[#b48a3c] transition-colors">
-        Shipping Policy
-      </h3>
-      <p className="text-xs text-gray-500">
-        View details about delivery timelines and charges
-      </p>
-    </div>
-    <FaArrowLeft className="rotate-180 text-gray-400 group-hover:text-[#b48a3c] transition-colors" />
-  </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-600 mb-2">
+                  Material
+                </h3>
+                <p className="text-sm text-gray-900 font-medium">
+                  {productData.material || "N/A"}
+                </p>
+              </div>
+            </div>
+            {/* Policies Section */}
+            <div className="border-t pt-6 space-y-4">
 
-  {/* Return Policy Link */}
-  <div
-    onClick={() => router.push("/policy/return-policy")}
-    className="cursor-pointer group flex items-center justify-between border rounded-lg px-4 py-4 hover:border-[#b48a3c] hover:bg-gray-50 transition-all"
-  >
-    <div>
-      <h3 className="text-sm font-semibold text-gray-800 group-hover:text-[#b48a3c] transition-colors">
-        Return Policy
-      </h3>
-      <p className="text-xs text-gray-500">
-        Learn about returns, exchanges and refunds
-      </p>
-    </div>
-    <FaArrowLeft className="rotate-180 text-gray-400 group-hover:text-[#b48a3c] transition-colors" />
-  </div>
+              {/* Shipping Policy Link */}
+              <div
+                onClick={() => router.push("/policy/shipping-policy")}
+                className="cursor-pointer group flex items-center justify-between border rounded-lg px-4 py-4 hover:border-[#b48a3c] hover:bg-gray-50 transition-all"
+              >
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-800 group-hover:text-[#b48a3c] transition-colors">
+                    Shipping Policy
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    View details about delivery timelines and charges
+                  </p>
+                </div>
+                <FaArrowLeft className="rotate-180 text-gray-400 group-hover:text-[#b48a3c] transition-colors" />
+              </div>
 
-</div>
-
-            
-              
+              {/* Return Policy Link */}
+              <div
+                onClick={() => router.push("/policy/return-policy")}
+                className="cursor-pointer group flex items-center justify-between border rounded-lg px-4 py-4 hover:border-[#b48a3c] hover:bg-gray-50 transition-all"
+              >
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-800 group-hover:text-[#b48a3c] transition-colors">
+                    Return Policy
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Learn about returns, exchanges and refunds
+                  </p>
+                </div>
+                <FaArrowLeft className="rotate-180 text-gray-400 group-hover:text-[#b48a3c] transition-colors" />
+              </div>
 
             </div>
+
+
+
+
+          </div>
 
         </div>
       </div>
