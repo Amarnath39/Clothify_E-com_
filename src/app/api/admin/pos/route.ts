@@ -190,25 +190,27 @@ export const POST = async (req: NextRequest) => {
                 }, { status: 400 });
             }
 
-            const itemPrice = sizeObj.offerPrice || product.actualPrice;
+            const itemPrice = sizeObj.offerPrice;
             totalActualPrice += product.actualPrice * pd.quantity;
             totalOfferPrice += itemPrice * pd.quantity;
 
-            // Calculate GST
+            // Calculate Inclusive GST
             let productGstPercent = 0;
             if (product.categories && Array.isArray(product.categories) && product.categories.length > 0) {
-                // Handle potential object/string structure in categories
                 productGstPercent = Math.max(...product.categories.map((c: any) => (typeof c === 'object' ? (c.gst || 0) : 0)));
             }
-            const itemTax = (itemPrice * productGstPercent / 100) * pd.quantity;
-            totalGstAmount += itemTax;
+
+            // Formula: Taxable Value = Total Price × 100 / (100 + GST Rate)
+            const itemTaxableValue = (itemPrice * 100) / (100 + productGstPercent);
+            const itemGstAmount = (itemPrice - itemTaxableValue) * pd.quantity;
+            totalGstAmount += itemGstAmount;
 
             taxDetails.push({
                 productId: product._id,
                 name: product.name,
                 gstPercent: productGstPercent,
-                gstAmount: itemTax,
-                price: itemPrice,
+                gstAmount: itemGstAmount,
+                price: itemPrice, // Total inclusive price
                 quantity: pd.quantity
             });
 
@@ -218,7 +220,9 @@ export const POST = async (req: NextRequest) => {
                 quantity: pd.quantity,
                 size: { _id: sizeObj._id, size: sizeObj.size },
                 sizeId: sizeObj._id,
-                sizeLabel: sizeObj.size
+                sizeLabel: sizeObj.size,
+                offerPrice: itemPrice, // Store inclusive price
+                actualPrice: product.actualPrice
             });
 
             stockCheckItems.push({
@@ -230,7 +234,8 @@ export const POST = async (req: NextRequest) => {
             });
         }
 
-        const totalPayablePrice = totalOfferPrice + totalGstAmount;
+        // With inclusive GST, total payable price is just the total offer price
+        const totalPayablePrice = totalOfferPrice;
 
         // 5. Generate Identifiers
         const invoiceId = await generatePOSInvoiceNumber();

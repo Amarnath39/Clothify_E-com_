@@ -5,6 +5,7 @@ import Coupon from "../../../model/Coupon";
 import Product from "../../../model/Product";
 import User from "../../../model/User";
 import Address from "../../../model/Address";
+import Category from "../../../model/Category";
 
 connectDB();
 
@@ -20,6 +21,43 @@ const generateOrderId = async (): Promise<string> => {
     return `ON-${nextSeq.toString().padStart(6, "0")}`;
   } catch (error) {
     console.error("Error generating order ID:", error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Generate sequential invoice ID for Online orders
+ * Format: INV-YYYYMMDD-0001
+ */
+const generateOnlineInvoiceNumber = async (): Promise<string> => {
+  try {
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
+    const todayStart = new Date(today.setHours(0, 0, 0, 0));
+    const todayEnd = new Date(today.setHours(23, 59, 59, 999));
+
+    const lastOrder = await Order.findOne({
+      order_type: { $in: ["normal", "prebooking"] },
+      createdAt: { $gte: todayStart, $lte: todayEnd },
+    })
+      .sort({ createdAt: -1 })
+      .select("invoiceId")
+      .lean() as { invoiceId: string } | null;
+
+    let sequenceNumber = 1;
+    if (lastOrder?.invoiceId && lastOrder.invoiceId.startsWith("INV-")) {
+      const parts = lastOrder.invoiceId.split("-");
+      if (parts.length === 3) {
+        const lastSeq = parseInt(parts[2]);
+        if (!isNaN(lastSeq)) {
+          sequenceNumber = lastSeq + 1;
+        }
+      }
+    }
+
+    return `INV-${dateStr}-${sequenceNumber.toString().padStart(4, "0")}`;
+  } catch (error) {
+    console.error("Error generating online invoice number:", error);
     throw error;
   }
 };
@@ -60,7 +98,7 @@ export const POST = async (req: NextRequest) => {
     const uniqueProductIds = [...new Set(productDetails.map((pd: any) => pd.product))];
     console.log("📍 Step 5: Unique product IDs:", uniqueProductIds);
 
-    const products = await Product.find({ _id: { $in: uniqueProductIds } });
+    const products = await Product.find({ _id: { $in: uniqueProductIds } }).populate("categories");
     console.log("📍 Step 6: Products found:", products.length);
 
     const isPreBookingOrder = products.some((p) => p.is_prebooking);
@@ -74,6 +112,8 @@ export const POST = async (req: NextRequest) => {
     let totalActualPrice = 0;
     let totalOfferPrice = 0;
     let totalQuantity = 0;
+    let totalGstAmount = 0;
+    const taxDetails: any[] = [];
     const outOfStockProducts: string[] = [];
 
     console.log("📍 Step 7: Fetching shipping address for:", user.defaultAddress);
@@ -93,9 +133,29 @@ export const POST = async (req: NextRequest) => {
             return null;
           }
 
+          const itemPrice = sizeObj.offerPrice || product.actualPrice;
           totalActualPrice += product.actualPrice * quantity;
-          totalOfferPrice += (sizeObj.offerPrice || product.actualPrice) * quantity;
+          totalOfferPrice += itemPrice * quantity;
           totalQuantity += quantity;
+
+          // GST Calculation (Inclusive)
+          let productGstPercent = 0;
+          if (product.categories && Array.isArray(product.categories)) {
+            productGstPercent = Math.max(0, ...product.categories.map((c: any) => (typeof c === 'object' ? (c.gst || 0) : 0)));
+          }
+
+          const itemTaxableValue = (itemPrice * 100) / (100 + productGstPercent);
+          const itemGstAmount = (itemPrice - itemTaxableValue) * quantity;
+          totalGstAmount += itemGstAmount;
+
+          taxDetails.push({
+            productId: product._id,
+            name: product.name,
+            gstPercent: productGstPercent,
+            gstAmount: itemGstAmount,
+            price: itemPrice, // Total inclusive price
+            quantity: quantity
+          });
 
           return {
             product: product._id,
@@ -105,7 +165,7 @@ export const POST = async (req: NextRequest) => {
               size: sizeObj.size
             },
             actualPrice: product.actualPrice,
-            offerPrice: sizeObj.offerPrice || product.actualPrice,
+            offerPrice: itemPrice,
           };
         }
         return null;
@@ -176,6 +236,13 @@ export const POST = async (req: NextRequest) => {
             shippingCost,
             couponCode: appliedCoupon,
             order_type: orderType,
+            invoiceId: await generateOnlineInvoiceNumber(),
+            metadata: {
+              taxDetails,
+              totalGstAmount,
+              totalSgstAmount: totalGstAmount / 2,
+              totalCgstAmount: totalGstAmount / 2,
+            },
           },
         },
         { new: true }
@@ -199,7 +266,14 @@ export const POST = async (req: NextRequest) => {
           shippingAddress,
           shippingCost,
           couponCode: appliedCoupon,
+          invoiceId: await generateOnlineInvoiceNumber(),
           order_type: orderType,
+          metadata: {
+            taxDetails,
+            totalGstAmount,
+            totalSgstAmount: totalGstAmount / 2,
+            totalCgstAmount: totalGstAmount / 2,
+          },
         });
 
         await newOrder.save();
@@ -222,7 +296,14 @@ export const POST = async (req: NextRequest) => {
         shippingAddress,
         shippingCost,
         couponCode: appliedCoupon,
+        invoiceId: await generateOnlineInvoiceNumber(),
         order_type: orderType,
+        metadata: {
+          taxDetails,
+          totalGstAmount,
+          totalSgstAmount: totalGstAmount / 2,
+          totalCgstAmount: totalGstAmount / 2,
+        },
       });
 
       await newOrder.save();

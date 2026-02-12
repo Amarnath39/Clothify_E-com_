@@ -235,10 +235,11 @@ const OrdersPage = () => {
   };
 
   const downloadInvoice = (order: any) => {
-    if (order.invoiceId) {
-      window.open(`/invoice/${order.invoiceId}`, '_blank');
+    const idToUse = order.invoiceId || order._id;
+    if (idToUse) {
+      window.open(`/invoice/${idToUse}`, '_blank');
     } else {
-      toast.error("Invoice ID missing for this order");
+      toast.error("Order ID missing for this order");
     }
   };
 

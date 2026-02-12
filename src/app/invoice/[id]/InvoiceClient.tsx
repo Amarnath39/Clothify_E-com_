@@ -108,50 +108,63 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
 
                 {/* Items Table */}
                 <div className="p-8">
-                    <table className="w-full text-left">
+                    <table className="w-full text-left border-collapse border border-gray-300">
                         <thead>
-                            <tr className="border-b-2 border-gray-300">
-                                <th className="py-2 text-sm font-semibold text-gray-600 uppercase">Description</th>
-                                <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-center">Size</th>
-                                <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-center">Qty</th>
-                                <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-right">Price</th>
-                                <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-right whitespace-nowrap">SGST</th>
-                                <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-right whitespace-nowrap">CGST</th>
-                                <th className="py-2 text-sm font-semibold text-gray-600 uppercase text-right">Total</th>
+                            <tr className="bg-gray-100">
+                                <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase border border-gray-300">Description</th>
+                                <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-center border border-gray-300">Size</th>
+                                <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-center border border-gray-300">Qty</th>
+                                <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-right border border-gray-300">Unit Price</th>
+                                <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-right border border-gray-300">Taxable Value</th>
+                                <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-right whitespace-nowrap border border-gray-300">SGST</th>
+                                <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-right whitespace-nowrap border border-gray-300">CGST</th>
+                                <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-right border border-gray-300">Total</th>
                             </tr>
                         </thead>
                         <tbody className="text-gray-700">
                             {order.productDetails.map((item: any, index: number) => {
                                 const productName = item.product?.name || "Unknown Product";
                                 const size = item.sizeLabel || item.size?.size || "-";
-                                const price = item.product?.offerPrice || item.product?.actualPrice || 0;
                                 const quantity = item.quantity || item.count || 0;
-                                const baseTotal = price * quantity;
+                                const unitPrice = item.offerPrice || item.product?.offerPrice || item.product?.actualPrice || 0;
 
                                 // Find tax details for this product from metadata
                                 const itemTaxInfo = order.metadata?.taxDetails?.find(
                                     (td: any) => td.productId?.toString() === item.product?._id?.toString()
                                 );
 
-                                // If we have taxDetails, use stored amount, else if we have GST% calculate, else 0
-                                const totalGst = itemTaxInfo?.gstAmount || 0;
-                                const sgst = totalGst / 2;
-                                const cgst = totalGst / 2;
+                                let totalGst = itemTaxInfo?.gstAmount;
 
-                                const totalRow = baseTotal + totalGst;
+                                // Fallback for orders without metadata tax details
+                                if (totalGst === undefined) {
+                                    let gstPercent = 0;
+                                    const categories = item.product?.categories;
+                                    if (categories && Array.isArray(categories)) {
+                                        gstPercent = Math.max(0, ...categories.map((c: any) => c.gst || 0));
+                                    }
+                                    const unitTaxableValue = (unitPrice * 100) / (100 + gstPercent);
+                                    totalGst = (unitPrice - unitTaxableValue) * quantity;
+                                }
+
+                                const unitGst = quantity > 0 ? (totalGst / quantity) : 0;
+                                const unitTaxable = unitPrice - unitGst;
+                                const sgstUnit = unitGst / 2;
+                                const cgstUnit = unitGst / 2;
+
+                                const totalRow = quantity * unitPrice;
 
                                 return (
-                                    <tr key={index} className="border-b border-gray-100 last:border-0">
-                                        <td className="py-4">
-                                            <div className="font-medium">{productName}</div>
-                                            {/* <div className="text-xs text-gray-500">SKU: {item.product?.sku}</div> */}
+                                    <tr key={index}>
+                                        <td className="py-3 px-3 border border-gray-300">
+                                            <div className="font-medium text-gray-900">{productName}</div>
                                         </td>
-                                        <td className="py-4 text-center">{size}</td>
-                                        <td className="py-4 text-center">{quantity}</td>
-                                        <td className="py-4 text-right">₹{price.toFixed(2)}</td>
-                                        <td className="py-4 text-right">₹{sgst.toFixed(2)}</td>
-                                        <td className="py-4 text-right">₹{cgst.toFixed(2)}</td>
-                                        <td className="py-4 text-right font-medium">₹{totalRow.toFixed(2)}</td>
+                                        <td className="py-3 px-3 text-center border border-gray-300">{size}</td>
+                                        <td className="py-3 px-3 text-center border border-gray-300">{quantity}</td>
+                                        <td className="py-3 px-3 text-right border border-gray-300">₹{unitPrice.toFixed(2)}</td>
+                                        <td className="py-3 px-3 text-right border border-gray-300">₹{unitTaxable.toFixed(2)}</td>
+                                        <td className="py-3 px-3 text-right border border-gray-300">₹{sgstUnit.toFixed(2)}</td>
+                                        <td className="py-3 px-3 text-right border border-gray-300">₹{cgstUnit.toFixed(2)}</td>
+                                        <td className="py-3 px-3 text-right font-medium text-gray-900 border border-gray-300">₹{totalRow.toFixed(2)}</td>
                                     </tr>
                                 );
                             })}
@@ -162,64 +175,35 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                 {/* Summary */}
                 <div className="p-8 bg-gray-50 border-t border-gray-200">
                     <div className="flex justify-end">
-                        <div className="w-full md:w-1/2 lg:w-1/3 space-y-3">
-                            <div className="flex justify-between text-gray-600">
-                                <span>Subtotal (MRP)</span>
-                                <span>₹{(order.totalPrice || 0).toFixed(2)}</span>
+                        <div className="w-full md:w-1/2 lg:w-1/3 space-y-4">
+                            <div className="flex justify-between items-center text-gray-700">
+                                <span className="font-semibold">Total Price (Incl. GST)</span>
+                                <span className="text-gray-900">₹{(order.payablePrice - (order.shippingCost || 0)).toFixed(2)}</span>
                             </div>
 
-                            {/* Calculate Discount dynamically */}
-                            {(() => {
-                                const gst = order.metadata?.totalGstAmount || 0;
-                                const shipping = order.shippingCost || 0;
-                                const effectivePrice = order.payablePrice - gst - shipping;
-                                const discount = (order.totalPrice || 0) - effectivePrice;
-
-                                return discount > 0 ? (
-                                    <div className="flex justify-between text-green-600">
-                                        <span>Discount</span>
-                                        <span>-₹{discount.toFixed(2)}</span>
-                                    </div>
-                                ) : null;
-                            })()}
-
-                            {/* SGST and CGST Breakdown */}
-                            {(() => {
-                                const totalGst = order.metadata?.totalGstAmount || 0;
-                                if (totalGst <= 0) return null;
-
-                                // Use specific fields if available, otherwise calculate half
-                                const sgst = order.metadata?.totalSgstAmount ?? (totalGst / 2);
-                                const cgst = order.metadata?.totalCgstAmount ?? (totalGst / 2);
-
-                                return (
-                                    <>
-                                        <div className="flex justify-between text-gray-600">
-                                            <span>SGST</span>
-                                            <span>₹{sgst.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between text-gray-600">
-                                            <span>CGST</span>
-                                            <span>₹{cgst.toFixed(2)}</span>
-                                        </div>
-                                    </>
-                                );
-                            })()}
-
-                            {/* Shipping */}
                             {order.shippingCost > 0 && (
-                                <div className="flex justify-between text-gray-600">
-                                    <span>Shipping</span>
-                                    <span>₹{order.shippingCost.toFixed(2)}</span>
+                                <div className="flex justify-between items-center text-gray-700">
+                                    <span className="font-semibold">Shipping Charges</span>
+                                    <span className="text-gray-900">₹{order.shippingCost.toFixed(2)}</span>
                                 </div>
                             )}
 
-                            <div className="border-t border-gray-300 pt-3 flex justify-between items-center">
-                                <span className="text-lg font-bold text-gray-800">Total</span>
-                                <span className="text-xl font-bold text-blue-900">₹{order.payablePrice.toFixed(2)}</span>
+                            <div className="border-t-2 border-gray-300 pt-4 flex justify-between items-center">
+                                <span className="text-xl font-black text-gray-900 uppercase">Grand Total</span>
+                                <span className="text-2xl font-black text-blue-900">₹{order.payablePrice.toFixed(2)}</span>
                             </div>
 
-                            <div className="text-right pt-2 text-xs text-gray-500 uppercase tracking-widest">
+                            <div className="flex justify-between items-center pt-2">
+                                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Payment Status</span>
+                                <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${order.paymentStatus === "PAYMENT_SUCCESS"
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : 'bg-amber-100 text-amber-700'
+                                    }`}>
+                                    {order.paymentStatus?.replace(/_/g, " ")}
+                                </div>
+                            </div>
+
+                            <div className="text-right pt-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
                                 Paid via {order.paymentMethod}
                             </div>
                         </div>

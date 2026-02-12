@@ -347,27 +347,31 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
 
     // ✅ Calculate totals
     const calculateTotals = () => {
-        let subtotal = 0;
+        let subtotal = 0; // Total Inclusive
         let totalItems = 0;
         let totalGst = 0;
 
         cart.forEach((item) => {
             const price = item.selectedSize.offerPrice || item.product.actualPrice;
-            subtotal += price * item.quantity;
-            totalItems += item.quantity;
+            const quantity = item.quantity;
+            const itemTotalInclusive = price * quantity;
 
-            // GST
+            subtotal += itemTotalInclusive;
+            totalItems += quantity;
+
+            // Extract GST for internal tracking if needed
             let gstPercent = 0;
             if (item.product.categories && Array.isArray(item.product.categories)) {
                 const gstValues = item.product.categories.map((c: any) => typeof c === 'object' ? (c.gst || 0) : 0);
                 if (gstValues.length > 0) gstPercent = Math.max(...gstValues);
             }
 
-            totalGst += (price * gstPercent / 100) * item.quantity;
+            const taxableValue = (itemTotalInclusive * 100) / (100 + gstPercent);
+            totalGst += (itemTotalInclusive - taxableValue);
         });
 
         const discount = 0;
-        const total = subtotal + totalGst - discount;
+        const total = subtotal - discount;
 
         return { subtotal, totalGst, discount, total, totalItems };
     };
@@ -984,10 +988,6 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                                                 <div className="flex justify-between text-xs md:text-sm text-gray-500 font-medium">
                                                     <span>Subtotal</span>
                                                     <span>₹{totals.subtotal.toFixed(2)}</span>
-                                                </div>
-                                                <div className="flex justify-between text-xs md:text-sm text-gray-500 font-medium">
-                                                    <span>GST (Inc.)</span>
-                                                    <span>₹{totals.totalGst.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center pt-2 md:pt-4 border-t border-gray-100">
                                                     <span className="text-gray-900 font-black text-base md:text-lg">Total Payable</span>

@@ -46,12 +46,14 @@ interface ExportModalProps {
 
 const AVAILABLE_FIELDS = [
     { id: "orderId", label: "Order ID", category: "Order Info" },
+    { id: "invoiceId", label: "Invoice ID", category: "Order Info" },
     { id: "totalPrice", label: "Total Price", category: "Payment" },
     { id: "payablePrice", label: "Payable Price", category: "Payment" },
     { id: "paymentStatus", label: "Payment Status", category: "Payment" },
     { id: "paymentMethod", label: "Payment Method", category: "Payment" },
     { id: "payerEmail", label: "Payer Email", category: "Customer" },
     { id: "orderType", label: "Order Type", category: "Order Info" },
+    { id: "orderSource", label: "Order Source", category: "Order Info" },
     { id: "productCount", label: "Product Count", category: "Order Info" },
     { id: "createdAt", label: "Date Created", category: "Order Info" },
     { id: "currentStatus", label: "Order Status", category: "Order Info" },
@@ -60,6 +62,13 @@ const AVAILABLE_FIELDS = [
     { id: "shippingAddressName", label: "Customer Name", category: "Customer" },
     { id: "shippingAddressPhone", label: "Customer Phone", category: "Customer" },
     { id: "shippingAddressCity", label: "City", category: "Customer" },
+];
+
+const ORDER_SOURCE_OPTIONS = [
+    { value: "all", label: "All Orders" },
+    { value: "online", label: "Online" },
+    { value: "offline", label: "Offline" },
+    { value: "pos", label: "POS" },
 ];
 
 const ExportModal: React.FC<ExportModalProps> = ({
@@ -82,6 +91,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
     const [showSaveAs, setShowSaveAs] = useState(false);
     const [newPresetName, setNewPresetName] = useState("");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [orderSourceFilter, setOrderSourceFilter] = useState(currentFilters.orderSource || "all");
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 
     // Close dropdown on outside click
@@ -154,10 +164,11 @@ const ExportModal: React.FC<ExportModalProps> = ({
 
         setIsExporting(true);
         try {
+            const mergedFilters = { ...currentFilters, orderSource: orderSourceFilter };
             const response = await axios.post(
                 "/api/admin/order/export",
                 {
-                    filters: currentFilters,
+                    filters: mergedFilters,
                     fields: selectedFields,
                 },
                 {
@@ -330,6 +341,24 @@ const ExportModal: React.FC<ExportModalProps> = ({
                             </div>
                         </div>
 
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order Source</label>
+                            <div className="grid grid-cols-2 gap-1.5">
+                                {ORDER_SOURCE_OPTIONS.map((opt) => (
+                                    <button
+                                        key={opt.value}
+                                        onClick={() => setOrderSourceFilter(opt.value)}
+                                        className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all border ${orderSourceFilter === opt.value
+                                                ? "bg-[#7C1D3E] text-white border-[#7C1D3E] shadow-sm"
+                                                : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                                            }`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         <Card className="p-4 bg-white border-dashed">
                             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 <FaFilter /> Active Filters
@@ -346,6 +375,12 @@ const ExportModal: React.FC<ExportModalProps> = ({
                                 <div className="flex justify-between text-[11px]">
                                     <span className="text-gray-500">Status:</span>
                                     <span className="text-gray-900 font-bold">{currentFilters.orderStatus || "All"}</span>
+                                </div>
+                                <div className="flex justify-between text-[11px]">
+                                    <span className="text-gray-500">Source:</span>
+                                    <Badge variant="brand" className="text-[9px] py-0 px-1.5">
+                                        {ORDER_SOURCE_OPTIONS.find(o => o.value === orderSourceFilter)?.label || "All"}
+                                    </Badge>
                                 </div>
                             </div>
                         </Card>
