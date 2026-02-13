@@ -202,7 +202,8 @@ function AdminLayout({ children }) {
     <div className="flex h-screen ">
       <style jsx global>{`
         .navbar-main,
-        .footer-main {
+        .footer-main
+        .header-main {
           display: none;
         }
         ,
@@ -311,7 +312,7 @@ function AdminLayout({ children }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen overflow-y-auto bg-gray-50">
+      <main className="flex-1 flex flex-col overflow-y-auto bg-gray-50">
         {/* Top Header */}
         <div className="bg-white shadow-sm p-4 sticky top-0 z-30 flex justify-between items-center">
           {/* Left: Spacer for hamburger */}

@@ -171,7 +171,7 @@ const CustomLayout = ({ children }: { children: React.ReactNode }) => {
         {/* ✅ Conditionally render Navbar */}
         {!isAdminRoute && <Navbar />}
 
-        <div className={isAdminRoute ? "" : "pt-24 md:pt-28 pb-24 md:pb-0"}>
+        <div className={isAdminRoute ? "" : "pt-11 md:pt-11 pb-24 md:pb-0"}>
           {children}
 
           {/* WhatsApp Button (hidden on /admin routes) */}

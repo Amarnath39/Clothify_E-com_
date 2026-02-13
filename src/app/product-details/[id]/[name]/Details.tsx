@@ -169,9 +169,12 @@ const ProductDetails = ({
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-6">
-      <Button variant="ghost" className="mb-6 pl-0 hover:bg-transparent hover:text-[#b48a3c] transition-colors" onClick={() => router.back()}>
+      <Button variant="ghost" className="mb-6 pl-0 hover:bg-transparent hover:text-[#b48a3c] transition-colors" 
+      onClick={() => router.back()}
+      >
         <FaArrowLeft className="mr-2" /> Back
       </Button>
+    
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
         {/* Left: Gallery */}
@@ -225,8 +228,8 @@ const ProductDetails = ({
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 className={`relative w-16 h-20 flex-shrink-0 border transition-all ${currentIndex === idx
-                    ? "border-[#b48a3c]"
-                    : "border-transparent hover:border-gray-200"
+                  ? "border-[#b48a3c]"
+                  : "border-transparent hover:border-gray-200"
                   }`}
               >
                 <img src={img} alt="" className="w-full h-full object-cover" />
