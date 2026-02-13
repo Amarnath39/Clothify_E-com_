@@ -28,6 +28,7 @@ import {
     FiCheckCircle,
     FiAlertCircle
 } from "react-icons/fi";
+import { indianStates } from "@/app/profile/state";
 
 interface Product {
     _id: string;
@@ -236,8 +237,21 @@ const CreateOfflineOrderPage = () => {
     // ✅ Submit Order
     const handleSubmitOrder = async () => {
         // Validation
+        const phoneRegex = /^[0-9]{10}$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
         if (!customerName || !customerPhone) {
             toast.error("Customer name and phone are required");
+            return;
+        }
+
+        if (!phoneRegex.test(customerPhone)) {
+            toast.error("Invalid phone number. Must be 10 digits.");
+            return;
+        }
+
+        if (customerEmail && !emailRegex.test(customerEmail)) {
+            toast.error("Invalid email address format.");
             return;
         }
 
@@ -494,13 +508,21 @@ const CreateOfflineOrderPage = () => {
                         placeholder="City"
                         required
                     />
-                    <ZapanInput
-                        label="State"
-                        value={billingState}
-                        onChange={(e) => setBillingState(e.target.value)}
-                        placeholder="State"
-                        required
-                    />
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">State</label>
+                        <Select value={billingState} onValueChange={setBillingState}>
+                            <SelectTrigger className="h-14 bg-gray-50 border-gray-100 rounded-2xl px-6 focus:ring-2 focus:ring-[#7C1D3E]/20 transition-all">
+                                <SelectValue placeholder="Select State" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[300px]">
+                                {indianStates.map((state) => (
+                                    <SelectItem key={state} value={state}>
+                                        {state}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                     <ZapanInput
                         label="Pincode"
                         value={billingZipCode}
@@ -553,12 +575,21 @@ const CreateOfflineOrderPage = () => {
                                 onChange={(e) => setShippingCity(e.target.value)}
                                 placeholder="City"
                             />
-                            <ZapanInput
-                                label="State"
-                                value={shippingState}
-                                onChange={(e) => setShippingState(e.target.value)}
-                                placeholder="State"
-                            />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">State</label>
+                                <Select value={shippingState} onValueChange={setShippingState}>
+                                    <SelectTrigger className="h-14 bg-gray-50 border-gray-100 rounded-2xl px-6 focus:ring-2 focus:ring-[#7C1D3E]/20 transition-all">
+                                        <SelectValue placeholder="Select State" />
+                                    </SelectTrigger>
+                                    <SelectContent className="max-h-[300px]">
+                                        {indianStates.map((state) => (
+                                            <SelectItem key={state} value={state}>
+                                                {state}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <ZapanInput
                                 label="Pincode"
                                 value={shippingZipCode}
@@ -897,6 +928,10 @@ const ProductSearchItem = ({
     const [selectedSize, setSelectedSize] = useState("");
     const [quantity, setQuantity] = useState(1);
 
+    // Calculate dynamic price based on selected size
+    const sizeObj = product.sizes.find((s) => s._id === selectedSize);
+    const priceToDisplay = sizeObj ? sizeObj.offerPrice : product.actualPrice;
+
     return (
         <div className="flex items-start gap-4 p-4 border border-gray-100 rounded-2xl hover:bg-white hover:shadow-lg transition-all bg-white mb-2 group">
             <img
@@ -912,7 +947,7 @@ const ProductSearchItem = ({
                     </Badge>
                 </div>
                 <p className="text-sm font-black text-[#7C1D3E]">
-                    ₹{product.actualPrice}
+                    ₹{priceToDisplay}
                 </p>
             </div>
             <div className="flex flex-col gap-2 items-end">

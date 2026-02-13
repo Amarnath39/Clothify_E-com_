@@ -37,7 +37,7 @@ export const sendAdminOrderEmail = async (orderDetails: OrderDetails): Promise<v
     // Prepare mail options
     const mailOptions = {
       from: '"Swaarasya" <noreply@swaarasya.com>',
-      to: process.env.REC_EMAIL || 'sisbymridhulaparvathy@gmail.com',
+      to: process.env.REC_EMAIL || 'swethasarin2@gmail.com',
       subject: '🛒 New Order Received',
       html: emailContent,
     };

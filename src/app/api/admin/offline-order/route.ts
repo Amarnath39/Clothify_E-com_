@@ -404,8 +404,8 @@ export const POST = async (req: NextRequest) => {
                         num_pieces: item.count.toString(),
 
                         origin_details: {
-                            name: process.env.DTDC_ORIGIN_NAME || "SIS BY MP",
-                            phone: process.env.DTDC_ORIGIN_PHONE || "6282667959",
+                            name: process.env.DTDC_ORIGIN_NAME || "Swaarasya",
+                            phone: process.env.DTDC_ORIGIN_PHONE || "6282 025 003",
                             address_line_1: process.env.DTDC_ORIGIN_ADDR1 || "PERUKAVU ",
                             address_line_2: process.env.DTDC_ORIGIN_ADDR2 || "VILAVOORKAL , MALAYINKEEZHU,",
                             pincode: dtdcDetails.pickupPincode || process.env.DTDC_ORIGIN_PINCODE || "695573",

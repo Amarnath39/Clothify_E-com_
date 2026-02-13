@@ -75,11 +75,6 @@ const GSTSettingsPage = () => {
             <PageHeader
                 title="GST Settings"
                 description="Configure tax percentages for product categories applied during checkout."
-                action={
-                    <div className="p-2 bg-[#7C1D3E]/5 rounded-xl">
-                        <FiSettings className="text-[#7C1D3E] animate-spin-slow" size={20} />
-                    </div>
-                }
             />
 
             <Card className="overflow-hidden border-gray-100 shadow-xl shadow-gray-200/50">

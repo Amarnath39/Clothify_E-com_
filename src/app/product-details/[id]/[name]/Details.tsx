@@ -80,18 +80,22 @@ const ProductDetails = ({
   //   if (type === "dec") setQuantity(q => Math.max(1, q - 1));
   // };
   const handleQuantityChange = (type: "inc" | "dec") => {
-    setQuantity((q) => {
+    if (!selectedSize) return;
+
+    setQuantity((prevQ) => {
       if (type === "inc") {
-        // 🚫 block if quantity reached stock
-        if (q >= selectedSize.stock) return q;
-        return q + 1;
+        if (prevQ >= selectedSize.stock) {
+          toast.error("Cannot add more quantity. Out of stock!", { id: "stock-limit" });
+          return prevQ;
+        }
+        return prevQ + 1;
       }
 
       if (type === "dec") {
-        return Math.max(1, q - 1);
+        return Math.max(1, prevQ - 1);
       }
 
-      return q;
+      return prevQ;
     });
   };
 
@@ -294,33 +298,6 @@ const ProductDetails = ({
                 </>
               )}
             </div>
-            <span className="text-sm text-gray-500">
-              ({productData?.rating?.ratedBy || 65} reviews)
-            </span>
-          </div>
-
-          {/* PRICE */}
-
-          <div className="flex items-center gap-4 mb-6 flex-wrap">
-            {/* Offer Price */}
-            <span className="text-3xl font-medium text-black">
-              ₹{selectedSize?.offerPrice || productData.actualPrice}
-            </span>
-
-            {/* Actual Price (Strikethrough) */}
-            {selectedSize?.offerPrice &&
-              productData.actualPrice > selectedSize.offerPrice && (
-                <span className="text-lg text-gray-500 line-through">
-                  ₹{productData.actualPrice}
-                </span>
-              )}
-
-            {/* Discount */}
-            {discount > 0 && (
-              <span className="text-red-600 font-semibold text-sm">
-                {discount}% OFF
-              </span>
-            )}
           </div>
 
 

@@ -403,7 +403,7 @@ const OrdersPage = () => {
                     <TableCell className="py-4 px-6">
                       <div className="flex flex-col gap-1">
                         <span className="font-bold text-gray-900">{order.orderId}</span>
-                        <span className="text-[10px] text-gray-400 font-medium">{new Date(order.createdAt).toLocaleDateString()}</span>
+                        <span className="text-[10px] text-gray-400 font-medium">{new Date(order.createdAt).toLocaleString()}</span>
                       </div>
                     </TableCell>
                     <TableCell className="py-4 px-6">
