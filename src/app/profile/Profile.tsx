@@ -518,7 +518,7 @@ const Profile = () => {
           >
             <DialogTrigger asChild>
               <div
-                className="bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-lg flex items-center cursor-pointer z-[9999]"
+                className="bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-lg flex items-center cursor-pointer "
                 onClick={() => {
                   setEditingAddress(null);
                   setNewAddress(initialAddressState);
