@@ -93,14 +93,12 @@ const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
   return (
     <div
       className={`
-    fixed md:sticky top-20 left-0 bottom-0 z-40 
-    w-80 bg-white border-r border-gray-200
-    transition-transform duration-300 ease-in-out
-    ${isOpen ? "translate-x-0" : "-translate-x-full"}
-    md:translate-x-0 md:static
-    h-[calc(100vh-5rem)] overflow-y-auto
-    flex-shrink-0 
-  `}
+      min-h-[80vh] fixed md:sticky top-20 inset-y-0 left-0 z-40 
+      w-full md:w-80 bg-white border-r border-gray-200
+      md:max-h-[60vh] transition-transform duration-300 ease-in-out
+      ${isOpen ? "translate-x-0 z-[9999]" : "-translate-x-full"}
+      md:relative md:translate-x-0
+    `}
     >
 
       <div className="flex flex-col h-full md:max-h-[80vh]">
@@ -117,7 +115,7 @@ const ProductFilters = ({ onFilterChange, isOpen, onClose, onfilterApply }) => {
         </div>
 
         {/* Filter Sections */}
-        <div className="flex-grow overflow-y-auto px-4 py-6 space-y-8">
+        <div className="flex-grow overflow-y-auto px-4 py-8 space-y-8">
           {/* Sort Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-gray-900">Sort By</h3>
