@@ -189,9 +189,12 @@ const ProductDetails = ({
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-6">
-      <Button variant="ghost" className="mb-6 pl-0 hover:bg-transparent hover:text-[#b48a3c] transition-colors" onClick={() => router.back()}>
+      <Button variant="ghost" className="mb-6 pl-0 hover:bg-transparent hover:text-[#b48a3c] transition-colors" 
+      onClick={() => router.back()}
+      >
         <FaArrowLeft className="mr-2" /> Back
       </Button>
+    
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
         {/* Left: Gallery */}

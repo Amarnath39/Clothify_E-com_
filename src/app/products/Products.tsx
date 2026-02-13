@@ -52,6 +52,7 @@ const Products = () => {
     (item) =>
       item.id === selectedProduct?._id && item.size._id == selectedSize?._id
   );
+
   const fetchProducts = useCallback(
     async (page: number, filters: any) => {
       const queryParams = new URLSearchParams({
@@ -60,7 +61,6 @@ const Products = () => {
         limit: "12",
         search: searchQuery,
         sort: filters?.sort || "",
-        // percentageOff: filters?.discount?.value?.toString() || "",
         material: JSON.stringify(filters.material || []),
         colors: JSON.stringify(filters.color || []),
         minPrice: filters?.price?.[0]?.toString() || "0",
@@ -110,6 +110,29 @@ const Products = () => {
   };
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [hideFilterButton, setHideFilterButton] = useState(false);
+
+  // ✅ ONLY FILTER LOGIC UPDATED (TypeScript-safe)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleScroll = () => {
+      const grid = document.getElementById("product-grid") as HTMLElement | null;
+      if (!grid) return;
+
+      const gridRect = grid.getBoundingClientRect();
+      const offset = 20;
+
+      if (gridRect.bottom <= -offset) {
+        setHideFilterButton(true);
+      } else {
+        setHideFilterButton(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleAddToCart = (size) => {
     if (size?.stock <= 0) {
@@ -158,17 +181,15 @@ const Products = () => {
     dispatch(removeFromCart({ id, sizeId }));
   };
 
-  // console.log(products, "products");
-
   return (
     <>
       <div
         key={searchQuery}
-        className=" mx-auto sm:px-4 py-2 mt-32 sm:mt-36 min-h-screen"
+        className=" mx-auto sm:px-4 py-2 mt-32 sm:mt-36"
       >
-        {!isFilterOpen && (
+        {!isFilterOpen && !hideFilterButton && (
           <button
-            className="md:hidden fixed top-[90px] right-4 z-[9999] bg-black p-4 rounded-full shadow-lg"
+            className="mobile-filter-btn md:hidden fixed top-[90px] right-4 z-30 bg-black p-4 rounded-full shadow-lg"
             onClick={() => setIsFilterOpen(true)}
           >
             <FaFilter size={24} color="white" />
@@ -184,7 +205,7 @@ const Products = () => {
 
           <div key={searchQuery} className="flex-1 md:ml-8 px-2 py-2 mt-4 md:mt-0">
             <div className="flex flex-col md:flex-row gap-8 ">
-              <div className="min-w-[60vw] mx-auto">
+              <div id="product-grid" className="min-w-[60vw] mx-auto">
                 {loading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {Array.from({ length: 8 }).map((_, index) => (
@@ -221,12 +242,11 @@ const Products = () => {
                 ) : products.products?.length > 0 ? (
                   <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                     {products.products.map((product: any) => (
-                    <StandardProductCard
-                      key={product._id}
-                      product={product}
-                    />
-                  ))}
-
+                      <StandardProductCard
+                        key={product._id}
+                        product={product}
+                      />
+                    ))}
                   </div>
                 ) : (
                   <NotFound height="80vh" text="Products" />
