@@ -31,10 +31,10 @@ export async function generateMetadata({ params }): Promise<Metadata> {
   const fullTitle = `${product.name}`;
 
   const imageUrl = product.img && product.img.length > 0
-    ? (product.img[0].startsWith("http") ? product.img[0] : `https://www.siskerala.com${product.img[0].startsWith('/') ? '' : '/'}${product.img[0]}`)
-    : "https://www.siskerala.com/assets/static/logo/ogimage.png";
+    ? (product.img[0].startsWith("http") ? product.img[0] : `https://www.Swaarasya.com${product.img[0].startsWith('/') ? '' : '/'}${product.img[0]}`)
+    : "https://www.Swaarasya.com/assets/static/logo/ogimage.png";
 
-  const productUrl = `https://www.siskerala.com/product-details/${id}/${params.name}`;
+  const productUrl = `https://www.Swaarasya.com/product-details/${id}/${params.name}`;
 
   return {
     title: fullTitle,

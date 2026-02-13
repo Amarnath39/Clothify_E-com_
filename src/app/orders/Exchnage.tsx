@@ -1,3 +1,5 @@
+"use client";
+
 // components/ExchangeModal.tsx
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";

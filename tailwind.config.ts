@@ -79,6 +79,21 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        brand: {
+          DEFAULT: "#7C1D3E",
+          dark: "#5A152D",
+          light: "#9B2D5A",
+          accent: "#E91E7B",
+          accentDark: "#C2185B",
+          accentLight: "#F8BBD0",
+          muted: "#FCE4EC",
+          surface: "#FFF0F5",
+        },
+        surface: {
+          DEFAULT: "#F8F9FA",
+          card: "#FFFFFF",
+          border: "#F3F4F6",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -20,8 +20,7 @@ export async function GET(req: NextRequest) {
                 .sort({ createdAt: -1 })
                 .skip((page - 1) * limit)
                 .limit(limit)
-                .populate("productId", "name sku img")
-                .populate("orderId", "orderId");
+                .populate("productId", "name sku img");
 
             const total = await StockHistory.countDocuments(query);
 
@@ -47,21 +46,15 @@ export async function GET(req: NextRequest) {
         const total = await Product.countDocuments(query);
 
         // Calculate status for each product
-        // Calculate status for each product
         const inventoryData = products.map((p: any) => {
-            let total = Number(p.totalStock) || 0;
+            // ✅ ALWAYS derive from sizes for 100% accuracy
+            const total = p.sizes && p.sizes.length > 0
+                ? p.sizes.reduce((acc: number, curr: any) => acc + (Number(curr.stock) || 0), 0)
+                : (Number(p.totalStock) || 0);
 
-            // Fallback: If dynamic/calculated total is 0 but product has sizes, calculate from sizes
-            if (total === 0 && p.sizes && p.sizes.length > 0) {
-                total = p.sizes.reduce((acc: number, curr: any) => acc + (Number(curr.stock) || 0), 0);
-            }
-
-            // Available Stock Logic
-            let available = Number(p.availableStock);
-            // If available is failing (NaN or 0 while total is positive), default to total
-            if (isNaN(available) || (total > 0 && available <= 0)) {
-                available = total;
-            }
+            const available = p.sizes && p.sizes.length > 0
+                ? total - (Number(p.reservedStock) || 0)
+                : (Number(p.availableStock) || total);
 
             let status = "In Stock";
             if (available <= 0) status = "Out of Stock";
@@ -74,7 +67,7 @@ export async function GET(req: NextRequest) {
                 img: p.img?.[0],
                 totalStock: total,
                 availableStock: available,
-                soldStock: Math.max(0, total - available), // ✅ CALCULATED: Always accurate
+                soldStock: p.sellCount || 0, // ✅ CORRECT: Use historical sellCount
                 lowStockThreshold: p.lowStockThreshold,
                 status,
                 sizes: p.sizes

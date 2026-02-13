@@ -12,10 +12,19 @@ import {
     sendAdminOrderEmail,
     OrderDetails,
 } from "../../../../helper/sendAdminOrderEmail";
-import { sendOrderConfirmation } from "../../../../helper/whatsappNotifier";
+import { sendOrderConfirmation, sendPOSInvoice } from "../../../../helper/whatsappNotifier";
 import { sseClients } from "../../../../lib/sseClients";
 import Razorpay from "razorpay";
 import { updateStock } from "@/lib/stockManager";
+
+// Helper for debugging SSE
+function logSseStatus(orderId: string) {
+    const keys = Array.from(sseClients.keys());
+    console.log(`📊 SSE Map Status [Searching for: ${orderId}]`);
+    console.log(`📊 Active SSE Keys:`, keys.length > 0 ? keys : "NONE");
+    const found = sseClients.has(orderId);
+    console.log(`📊 Found Match: ${found ? "✅ YES" : "❌ NO"}`);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // WEBHOOK HANDLER
@@ -88,8 +97,10 @@ export async function POST(req: NextRequest) {
         if (webhookEvent === "payment.captured") {
             const payment = payload.payload.payment.entity;
 
-            if (!payment?.order_id) {
-                console.log("⚠️ No order_id in payment.captured event");
+            // ⭐ QR payments and some Link payments don't have a top-level order_id
+            // We should only return if we have ABSOLUTELY no way to identify the order
+            if (!payment?.order_id && !payment?.notes?.orderId && !payment?.description && !payment?.qr_code_id) {
+                console.log("⚠️ No identification (order_id/notes/description/qr_id) in payment.captured event");
                 return NextResponse.json({ success: true });
             }
 
@@ -106,24 +117,33 @@ export async function POST(req: NextRequest) {
                 status: payment.status,
             });
 
-            // ───────────────────────────────────────────────────────────────────────
-            // Find Order
-            // ───────────────────────────────────────────────────────────────────────
-            let order = await Order.findOne({ razorpayOrderId: payment.order_id })
-                .populate("user")
-                .populate("productDetails.product");
+            // 1. Try Razorpay Order ID (Standard Checkout)
+            let order;
+            if (payment.order_id) {
+                order = await Order.findOne({ razorpayOrderId: payment.order_id })
+                    .populate("user")
+                    .populate("productDetails.product");
+            }
 
+            // 2. Try QR Code ID (New)
+            if (!order && payment.qr_code_id) {
+                console.log("🔍 Looking up order by QR Code ID:", payment.qr_code_id);
+                order = await Order.findOne({ "metadata.qrCodeId": payment.qr_code_id })
+                    .populate("user")
+                    .populate("productDetails.product");
+            }
+
+            // 3. Fallback for Payment Links / QR (Notes)
             if (!order && payment.notes?.orderId) {
-                // Fallback for Payment Links (Notes)
                 console.log("🔍 Looking up order by notes:", payment.notes.orderId);
                 order = await Order.findOne({ orderId: payment.notes.orderId })
                     .populate("user")
                     .populate("productDetails.product");
             }
 
-            // Fallback: Parse Description (e.g. "Swaarasya POS Order #ON-12345")
+            // 4. Fallback: Parse Description (e.g. "Swaarasya POS Order #ON-12345" or "OFF-12345")
             if (!order && payment.description) {
-                const match = payment.description.match(/Order #(ON-\d+)/);
+                const match = payment.description.match(/Order #((?:ON|POS|OFF)-\d+)/);
                 if (match) {
                     const extractedId = match[1];
                     console.log("🔍 Looking up order by description:", extractedId);
@@ -134,11 +154,12 @@ export async function POST(req: NextRequest) {
             }
 
             if (!order) {
-                console.error("❌ Order not found:", payment.order_id);
+                console.error("❌ Order not found for payment:", payment.id, "OrderId:", payment.order_id, "Notes:", payment.notes);
                 return NextResponse.json({ success: true });
             }
 
-            console.log("✅ Order found:", order.orderId);
+            console.log("✅ Order found for payment capture:", order.orderId);
+            logSseStatus(order.orderId);
 
             // ⭐ VALIDATE PAYMENT AMOUNT
             const expectedAmount = Math.round(order.payablePrice * 100); // Convert to paise
@@ -200,7 +221,7 @@ export async function POST(req: NextRequest) {
                 order.transactionId = payment.id;
                 order.paymentStatus = "PAYMENT_SUCCESS";
                 order.paymentMethod = "RAZORPAY"; // ⭐ This is where it gets set
-                order.currentStatus = "PENDING";
+                order.currentStatus = order.order_type === "POS" ? "COMPLETED" : "PENDING"; // Offline/Online remain PENDING for shipping
                 order.paidAt = new Date();
 
                 // Update payment details
@@ -304,13 +325,18 @@ export async function POST(req: NextRequest) {
                         sizeLabel: item.size?.size
                     })).filter((i: any) => i.sizeId);
 
+                    // Determine Source: ONLINE, POS, or OFFLINE
+                    const orderSource = order.paymentMethod === "COD" ? "ONLINE" :
+                        (order.order_type === "POS" ? "POS" :
+                            (order.order_type === "OFFLINE" ? "OFFLINE" : "ONLINE"));
+
                     const stockResult = await updateStock(
                         stockItems,
                         "SALE",
-                        order.paymentMethod === "COD" ? "ONLINE" : (order.order_type === "POS" ? "POS" : "ONLINE"),
-                        order.orderId
+                        orderSource,
+                        order._id.toString(), // Fix: Pass Mongo ID
+                        order.createdBy // Pass admin ID for POS/Offline attribution
                     );
-
                     if (!stockResult.success) {
                         const errorMsg = stockResult.errors?.join("; ") || "Stock update failed";
                         console.error("❌ Stock Update Failed:", errorMsg);
@@ -404,19 +430,37 @@ export async function POST(req: NextRequest) {
                     }
 
                     // WhatsApp notification
-                    if (order.shippingAddress?.mobile) {
+                    const customerPhone = order.shippingAddress?.mobile || order.shippingAddress?.phone;
+
+                    if (customerPhone) {
                         try {
-                            await sendOrderConfirmation(
-                                order.shippingAddress.name,
-                                order.shippingAddress.mobile,
-                                order.orderId,
-                                "Swaarasya",
-                                "DTDC"
-                            );
-                            console.log("  ✅ WhatsApp order confirmation sent");
+                            if (order.order_type === "POS") {
+                                // ✅ Send POS-specific Invoice link
+                                const invoiceUrl = `https://www.swaarasya.com/invoice/${order.invoiceId}`;
+                                await sendPOSInvoice(
+                                    order.shippingAddress.name || "Customer",
+                                    customerPhone,
+                                    order.orderId,
+                                    invoiceUrl,
+                                    "Swaarasya"
+                                );
+                                console.log(`  ✅ WhatsApp POS invoice sent to ${customerPhone}`);
+                            } else {
+                                // Standard online order confirmation
+                                await sendOrderConfirmation(
+                                    order.shippingAddress.name || "Customer",
+                                    customerPhone,
+                                    order.orderId,
+                                    "Swaarasya",
+                                    order.deliveryPartner || "DTDC"
+                                );
+                                console.log(`  ✅ WhatsApp order confirmation sent to ${customerPhone}`);
+                            }
                         } catch (e) {
                             console.error("  ❌ WhatsApp failed:", e);
                         }
+                    } else {
+                        console.warn("  ⚠️ No phone number found for WhatsApp notification");
                     }
                 });
 
@@ -513,6 +557,9 @@ export async function POST(req: NextRequest) {
         // ═════════════════════════════════════════════════════════════════════════
         // EVENT: payment_link.paid → Payment Link Successfully Paid
         // ═════════════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════════════
+        // EVENT: payment_link.paid → Payment Link Successfully Paid
+        // ═════════════════════════════════════════════════════════════════════════
         if (webhookEvent === "payment_link.paid") {
             const paymentLink = payload.payload.payment_link.entity;
 
@@ -583,6 +630,8 @@ export async function POST(req: NextRequest) {
             }
 
             // Check if already processed
+            // Note: We check if paymentStatus is success AND stockUpdated to be sure.
+            // But for offline orders initialized as PENDING, we need to process even if paymentStatus was somehow set (rare via link).
             if (order.paymentStatus === "PAYMENT_SUCCESS" && order.stockUpdated) {
                 console.log("⚠️ Payment link already processed:", order.orderId);
                 return NextResponse.json({
@@ -591,24 +640,129 @@ export async function POST(req: NextRequest) {
                 });
             }
 
-            // NOTE: The actual stock deduction will happen when payment.captured webhook fires
-            // This event just marks the payment link as paid
-            order.metadata.paymentLinkStatus = "paid";
-            order.metadata.paymentLinkPaidAt = new Date();
+            // 🚀 FULL FULFILLMENT LOGIC (Offline Order Fix)
+            try {
+                // 1. Update Status
+                order.paymentStatus = "PAYMENT_SUCCESS";
+                order.metadata.paymentLinkStatus = "paid";
+                order.metadata.paymentLinkPaidAt = new Date();
+                order.paidAt = new Date();
+                order.paymentMethod = order.paymentMethod || "RAZORPAY_LINK";
 
-            order.paymentLogs = order.paymentLogs || [];
-            order.paymentLogs.push({
-                status: "PAYMENT_LINK_PAID",
-                timestamp: new Date(),
-                details: {
-                    paymentLinkId: paymentLink.id,
-                    amount: paymentLink.amount / 100,
-                    status: paymentLink.status
+                // Update current status if it was just created (Pending)
+                if (order.currentStatus === "PENDING" || order.currentStatus === "CHECKOUT") {
+                    order.currentStatus = order.order_type === "POS" ? "COMPLETED" : "PENDING";
                 }
-            });
 
-            await order.save();
-            console.log("✅ Payment link marked as paid:", order.orderId);
+                // 2. Deduct Stock Only if NOT already done
+                if (!order.stockUpdated) {
+                    console.log("📦 Payment Link Paid: Reducing Stock...");
+
+                    const stockItems = order.productDetails.map((item: any) => ({
+                        productId: item.product._id.toString(),
+                        sizeId: item.size?._id?.toString(),
+                        quantity: item.count + (item.freeCount || 0),
+                        productName: item.product?.name,
+                        sizeLabel: item.size?.size
+                    })).filter((i: any) => i.sizeId);
+
+                    const orderSource = order.order_type === "OFFLINE" ? "OFFLINE" : (order.order_type === "POS" ? "POS" : "ONLINE");
+                    const adminId = order.metadata?.adminId || order.createdBy;
+
+                    const stockResult = await updateStock(
+                        stockItems,
+                        "SALE",
+                        orderSource,
+                        order._id.toString(), // Fix: Pass Mongo ID
+                        adminId
+                    );
+
+                    if (stockResult.success) {
+                        order.stockUpdated = true;
+                        console.log("✅ Stock updated for payment link order");
+                    } else {
+                        console.log("❌ Stock update failed for payment link:", stockResult.errors);
+                        order.fulfillmentError = "Stock update failed: " + (stockResult.errors || []).join(", ");
+                    }
+                }
+
+                // 3. Save Order
+                await order.save();
+                console.log("✅ Order updated via Payment Link event");
+
+                // 4. Notifications (WhatsApp & Email)
+                setImmediate(async () => {
+
+                    // WhatsApp: Handle "phone" vs "mobile" field mismatch for Offline Orders
+                    const customerPhone = order.shippingAddress?.mobile || order.shippingAddress?.phone;
+
+                    if (customerPhone) {
+                        try {
+                            if (order.order_type === "POS") {
+                                // POS Invoice
+                                const invoiceUrl = `https://www.swaarasya.com/invoice/${order.invoiceId}`;
+                                await sendPOSInvoice(
+                                    order.shippingAddress.name || "Customer",
+                                    customerPhone,
+                                    order.orderId,
+                                    invoiceUrl,
+                                    "Swaarasya"
+                                );
+                            } else {
+                                // Standard / Offline Confirmation
+                                await sendOrderConfirmation(
+                                    order.shippingAddress.name || "Customer",
+                                    customerPhone,
+                                    order.orderId,
+                                    "Swaarasya",
+                                    order.deliveryPartner || "DTDC"
+                                );
+                            }
+                            console.log(`✅ WhatsApp sent to ${customerPhone}`);
+                        } catch (e) {
+                            console.error("❌ WhatsApp failed:", e);
+                        }
+                    } else {
+                        console.warn("⚠️ No phone number found for WhatsApp notification");
+                    }
+
+                    // Email (Offline orders might want re-confirmation or usually just initial creation email. 
+                    // But if this is a "Payment Received" flow, we might want to send admin email or user email if not sent.)
+                    // Use existing helpers.
+                    try {
+                        // Send User Email
+                        /* 
+                          Note: sendUserOrderEmail helper usually expects standard structure.
+                          If offline order has email in user object (which might be null), fallback to shippingAddress email if stored?
+                          Offline orders usually store email in customerDetails (shippingAddress/billingAddress doesn't strictly enforce email field in schema usually).
+                          Let's check if we can send based on metadata or user.
+                        */
+                        if (order.user) {
+                            await sendUserOrderEmail(order);
+                            console.log("✅ User email sent");
+                        } else if (order.metadata?.customerEmail) {
+                            // Custom logic if valid, but for now skip if no linked user to avoid crash
+                        }
+
+                        // Send Admin Notification
+                        const orderInfo: OrderDetails = {
+                            orderId: order.orderId,
+                            customerName: order.shippingAddress?.name || "Customer",
+                            customerEmail: order.user?.email || "Offline Customer",
+                            totalAmount: order.payablePrice,
+                            orderDate: new Date().toLocaleDateString("en-IN"),
+                        };
+                        await sendAdminOrderEmail(orderInfo);
+                        console.log("✅ Admin email sent");
+
+                    } catch (e) { console.error("❌ Email notifications failed", e) }
+
+                });
+
+            } catch (err: any) {
+                console.error("❌ Payment Link Processing Failed:", err);
+                // Don't fail the webhook response, just log
+            }
 
             return NextResponse.json({ success: true, orderId: order.orderId });
         }
@@ -699,6 +853,101 @@ export async function POST(req: NextRequest) {
             }
 
             return NextResponse.json({ success: true });
+        }
+
+        // ═════════════════════════════════════════════════════════════════════════
+        // EVENT: qr_code.credited → Dynamic QR Payment Received
+        // ═════════════════════════════════════════════════════════════════════════
+        if (webhookEvent === "qr_code.credited") {
+            const qrCode = payload.payload.qr_code.entity;
+            const payment = payload.payload.payment.entity;
+
+            console.log("✅ QR Code credited event received:", {
+                qrCodeId: qrCode.id,
+                paymentId: payment.id,
+                amount: payment.amount / 100,
+                notes: qrCode.notes
+            });
+
+            // Find order by QR Code ID or Notes
+            let order = await Order.findOne({ "metadata.qrCodeId": qrCode.id })
+                .populate("user")
+                .populate("productDetails.product");
+
+            if (!order && qrCode.notes?.orderId) {
+                console.log("🔍 Looking up order by QR notes:", qrCode.notes.orderId);
+                order = await Order.findOne({ orderId: qrCode.notes.orderId })
+                    .populate("user")
+                    .populate("productDetails.product");
+            }
+
+            if (!order) {
+                console.error("❌ Order not found for QR payment:", qrCode.id, "Notes:", qrCode.notes);
+                return NextResponse.json({ success: true });
+            }
+
+            console.log("✅ Order found for QR payment:", order.orderId);
+            logSseStatus(order.orderId);
+
+            // Reuse fulfillment logic (Since we are in the middle of a massive file, 
+            // the logic above for captured is very similar, but for now we'll 
+            // set properties and let it fall through or we can refactor.
+            // For now, I'll implement a targeted update here.)
+
+            if (order.paymentStatus === "PAYMENT_SUCCESS" && order.stockUpdated) {
+                console.log("⚠️ QR Payment already processed:", order.orderId);
+                return NextResponse.json({ success: true });
+            }
+
+            order.transactionId = payment.id;
+            order.paymentStatus = "PAYMENT_SUCCESS";
+            order.paymentMethod = "RAZORPAY_QR";
+            order.currentStatus = order.order_type === "POS" ? "COMPLETED" : "PENDING";
+            order.paidAt = new Date();
+
+            if (!order.paymentLogs) order.paymentLogs = [];
+            order.paymentLogs.push({
+                status: "PAYMENT_SUCCESS_QR",
+                timestamp: new Date(),
+                details: {
+                    paymentId: payment.id,
+                    qrCodeId: qrCode.id,
+                    amount: payment.amount / 100,
+                },
+            });
+
+            // Update Stock if needed
+            if (!order.stockUpdated) {
+                const stockItems = order.productDetails.map((item: any) => ({
+                    productId: item.product._id.toString(),
+                    sizeId: item.size?._id?.toString(),
+                    quantity: item.count + (item.freeCount || 0),
+                    productName: item.product?.name,
+                    sizeLabel: item.size?.size
+                })).filter((i: any) => i.sizeId);
+
+                const orderSource = order.order_type === "POS" ? "POS" : "OFFLINE";
+                const adminId = order.metadata?.adminId || order.createdBy;
+
+                const stockResult = await updateStock(stockItems, "SALE", orderSource, order._id.toString(), adminId);
+                if (stockResult.success) order.stockUpdated = true;
+            }
+
+            await order.save();
+            console.log("✅ Order fulfilled via QR Code event");
+
+            // SSE Update
+            const client = sseClients.get(order.orderId);
+            if (client) {
+                console.log("🚀 Sending SUCCESS signal to client for:", order.orderId);
+                client.write(`data: ${JSON.stringify({ paymentStatus: "PAYMENT_SUCCESS", orderId: order.orderId })}\n\n`);
+                client.end();
+                sseClients.delete(order.orderId);
+            } else {
+                console.warn("⚠️ No SSE client found to notify for:", order.orderId);
+            }
+
+            return NextResponse.json({ success: true, orderId: order.orderId });
         }
 
         // ═════════════════════════════════════════════════════════════════════════

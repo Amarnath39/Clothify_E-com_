@@ -276,8 +276,8 @@ export async function GET(req: Request, { params }: Params) {
               num_pieces: item.count.toString(),
 
               origin_details: {
-                name: "SIS BY MP",
-                phone: 6282667959,
+                name: "Swaarasya",
+                phone: 6282025003,
                 address_line_1:
                   "PERUKAVU ",
                 address_line_2: "VILAVOORKAL , MALAYINKEEZHU,",

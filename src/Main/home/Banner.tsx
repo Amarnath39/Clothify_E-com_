@@ -15,11 +15,21 @@ import { getAllCategories } from "@/lib/features/catogary";
 const Banner: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [banners, setBanners] = useState<any[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
   const timerRef = useRef<any>(null);
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [categories, setCategories] = useState<any[]>([]);
 
+  // --- Detect mobile screen ---
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // --- Fetch Data ---
   useEffect(() => {
@@ -32,6 +42,7 @@ const Banner: React.FC = () => {
             id: item._id,
             // Ensure any backslashes in DB are converted to forward slashes for valid URLs
             img: item.img ? item.img.replace(/\\/g, '/') : "",
+            mobileImg: item.mobileImg ? item.mobileImg.replace(/\\/g, '/') : null,
             type: item.type,
             title: item.title,
             description: item.description,
@@ -123,13 +134,18 @@ const Banner: React.FC = () => {
   }
 
   const currentBanner = banners[activeIndex];
-  const sareeCategory = categories.find(
-  (c) => c.name.toLowerCase() === "saree"
-);
+  // Get the appropriate image source based on screen size
+  const bannerSrc = isMobile && currentBanner.mobileImg
+    ? currentBanner.mobileImg
+    : currentBanner.img;
 
-const jewelleryCategory = categories.find(
-  (c) => c.name.toLowerCase() === "jewellery"
-);
+  const sareeCategory = categories.find(
+    (c) => c.name.toLowerCase() === "saree"
+  );
+
+  const jewelleryCategory = categories.find(
+    (c) => c.name.toLowerCase() === "jewellery"
+  );
 
   return (
     <section className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden">
@@ -137,7 +153,7 @@ const jewelleryCategory = categories.find(
       <div className="absolute inset-0">
         {currentBanner.type === "video" ? (
           <video
-            src={currentBanner.img}
+            src={bannerSrc}
             className="w-full h-full object-cover object-center"
             autoPlay
             loop
@@ -146,7 +162,7 @@ const jewelleryCategory = categories.find(
           />
         ) : (
           <img
-            src={currentBanner.img}
+            src={bannerSrc}
             alt={currentBanner.title}
             className="w-full h-full object-cover object-center"
           />
@@ -167,32 +183,32 @@ const jewelleryCategory = categories.find(
             {currentBanner.description}
           </p>
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
-  <Link
-    href={sareeCategory ? `/categories/${sareeCategory._id}` : "#"}
-    className="px-0 py-2"
-  >
-    <Button
-      size="lg"
-      variant="secondary"
-      className="!h-12 !rounded-none !bg-[#C9A24D] text-black hover:!bg-[#b48a3c]"
-    >
-      Shop Sarees
-    </Button>
-  </Link>
+            <Link
+              href={sareeCategory ? `/categories/${sareeCategory._id}` : "#"}
+              className="px-0 py-2"
+            >
+              <Button
+                size="lg"
+                variant="secondary"
+                className="!h-12 !rounded-none !bg-[#C9A24D] text-black hover:!bg-[#b48a3c]"
+              >
+                Shop Sarees
+              </Button>
+            </Link>
 
-  <Link
-    href={jewelleryCategory ? `/categories/${jewelleryCategory._id}` : "#"}
-    className="px-0 py-2"
-  >
-    <Button
-      size="lg"
-      variant="secondary"
-      className="!h-12 !rounded-none text-white bg-black hover:bg-white hover:text-black transition-all duration-300"
-    >
-      View Jewellery
-    </Button>
-  </Link>
-</div>
+            <Link
+              href={jewelleryCategory ? `/categories/${jewelleryCategory._id}` : "#"}
+              className="px-0 py-2"
+            >
+              <Button
+                size="lg"
+                variant="secondary"
+                className="!h-12 !rounded-none text-white bg-black hover:bg-white hover:text-black transition-all duration-300"
+              >
+                View Jewellery
+              </Button>
+            </Link>
+          </div>
 
         </div>
       </div>

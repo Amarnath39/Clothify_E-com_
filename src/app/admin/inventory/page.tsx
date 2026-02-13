@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
+  PageHeader,
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+  Button,
+  Badge,
+  SearchInput,
+  Pagination,
+  ZapanInput,
+} from "@/theme/components";
 import {
   Table,
   TableBody,
@@ -18,31 +18,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Pagination } from "@/components/ui/pagination";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  FaHistory,
-  FaSearch,
-  FaExclamationTriangle,
-  FaEdit,
-  FaBoxOpen,
-  FaSync,
-  FaClipboardList,
-  FaArrowUp,
-  FaArrowDown,
-  FaCheckCircle,
-} from "react-icons/fa";
+  FiBox,
+  FiClock,
+  FiSearch,
+  FiAlertTriangle,
+  FiEdit3,
+  FiRefreshCw,
+  FiActivity,
+  FiArrowUp,
+  FiArrowDown,
+  FiCheckCircle,
+  FiDatabase,
+} from "react-icons/fi";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import toast from "react-hot-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSelector } from "react-redux";
+import { LuLoader } from "react-icons/lu";
+import useOnlineStatus from "@/hooks/useOnlineStatus";
 
 interface InventoryItem {
   _id: string;
@@ -81,6 +81,7 @@ interface HistoryItem {
 }
 
 const InventoryPage = () => {
+  const { user } = useSelector((state: any) => state.auth);
   // Inventory State
   const [data, setData] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +101,9 @@ const InventoryPage = () => {
   const [updateReason, setUpdateReason] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // ✅ Online Status Check
+  const isOnline = useOnlineStatus();
+
   // Fetch Inventory
   const fetchInventory = async () => {
     setLoading(true);
@@ -115,7 +119,6 @@ const InventoryPage = () => {
         toast.error("Failed to load inventory");
       }
     } catch (error) {
-      console.error("Failed to fetch inventory", error);
       toast.error("Error loading inventory");
     } finally {
       setLoading(false);
@@ -135,7 +138,6 @@ const InventoryPage = () => {
         setHistoryTotalPages(json.totalPages);
       }
     } catch (e) {
-      console.error(e);
       toast.error("Error loading history");
     } finally {
       setHistoryLoading(false);
@@ -148,9 +150,8 @@ const InventoryPage = () => {
   }, [page, search]);
 
   useEffect(() => {
-    // Fetch history when tab might be active or essentially on mount if we want data ready
     fetchHistory();
-  }, [historyPage]); // Re-fetch when history page changes
+  }, [historyPage]);
 
   // Update Stock Handler
   const handleUpdateStock = async (
@@ -163,9 +164,18 @@ const InventoryPage = () => {
       return;
     }
 
+    // ✅ Prevent stock updates when offline
+    if (!isOnline) {
+      toast.error("You are offline. Stock updates are disabled.", {
+        icon: "📡",
+        duration: 4000,
+      });
+      return;
+    }
+
     setIsUpdating(true);
     try {
-      const adminId = localStorage.getItem("adminId");
+      const adminId = user?._id || localStorage.getItem("adminId");
       const res = await fetch("/api/admin/inventory", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -181,22 +191,12 @@ const InventoryPage = () => {
 
       if (json.success) {
         toast.success("Stock updated successfully");
-
-        // If updating a specific size, we might want to keep the modal open or refresh local state
-        // But for simplicity, we refresh the inventory and close modal if it was a total update
-        // For size update, we'll refresh inventory in background
         fetchInventory();
-        fetchHistory(); // Refresh history log too
-
+        fetchHistory();
         if (!variantId) {
-          // Closed if total update
           setEditItem(null);
           setNewStockValue("");
           setUpdateReason("");
-        } else {
-          // If variant update, clear only the input logic if needed, or notify user
-          // We can close modal too to be safe
-          // setEditItem(null);
         }
       } else {
         toast.error(json.msg || "Failed to update");
@@ -208,174 +208,149 @@ const InventoryPage = () => {
     }
   };
 
-  // Helper for Status Badge Color
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "In Stock":
-        return "default"; // Black/Primary
+        return <Badge variant="success" className="font-bold uppercase tracking-wider text-[10px]"><FiCheckCircle className="mr-1" /> In Stock</Badge>;
       case "Low Stock":
-        return "warning"; // Yellow/Orange
+        return <Badge className="bg-red-100 text-red-600 font-bold uppercase tracking-wider text-[10px] border-none"><FiAlertTriangle className="mr-1" /> Low Stock</Badge>;
       case "Out of Stock":
-        return "destructive"; // Red
+        return <Badge className="bg-gray-100 text-gray-600 font-bold uppercase tracking-wider text-[10px] border-none"><FiAlertTriangle className="mr-1" /> Out of Stock</Badge>;
       default:
-        return "secondary";
+        return <Badge variant="neutral" className="font-bold uppercase tracking-wider text-[10px]">{status}</Badge>;
     }
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-8 min-h-screen bg-gray-50/50">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Inventory Management
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Track stock levels, update quantities, and view history.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={fetchInventory} variant="outline">
-            <FaSync className={`mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader
+        title="Inventory"
+        description="Monitor stock levels, manage variants, and track all inventory movements."
+        action={
+          <Button
+            onClick={fetchInventory}
+            variant="outline"
+            className="h-10 rounded-xl bg-white"
+            disabled={!isOnline}
+          >
+            <FiRefreshCw className={`mr-2 ${loading ? "animate-spin" : ""}`} size={16} />
+            Sync Stock
           </Button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* Main Content Tabs */}
       <Tabs defaultValue="inventory" className="w-full">
-        <TabsList className="grid w-full md:w-[400px] grid-cols-2 mb-6">
-          <TabsTrigger value="inventory" className="flex gap-2">
-            <FaBoxOpen /> Active Inventory
+        <TabsList className="bg-white p-1 rounded-xl border border-gray-100 mb-8 inline-flex">
+          <TabsTrigger value="inventory" className="data-[state=active]:bg-[#7C1D3E] data-[state=active]:text-white rounded-lg px-6 py-2 text-sm font-bold flex items-center gap-2 transition-all">
+            <FiBox size={14} /> Active Inventory
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex gap-2" onClick={fetchHistory}>
-            <FaHistory /> Stock History
+          <TabsTrigger value="history" className="data-[state=active]:bg-[#7C1D3E] data-[state=active]:text-white rounded-lg px-6 py-2 text-sm font-bold flex items-center gap-2 transition-all" onClick={fetchHistory}>
+            <FiActivity size={14} /> Stock History
           </TabsTrigger>
         </TabsList>
 
-        {/* --- TAB 1: INVENTORY --- */}
-        <TabsContent value="inventory" className="space-y-4">
-          {/* Search Bar */}
-          <div className="flex items-center space-x-2 bg-white p-4 rounded-lg border shadow-sm">
-            <div className="relative w-full md:w-1/3">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                placeholder="Search by product name or SKU..."
-                className="pl-10 border-gray-200 focus:ring-blue-500"
+        <TabsContent value="inventory" className="space-y-6">
+          <Card className="p-6">
+            <div className="w-full max-w-md">
+              <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-wider">Search Catalog</label>
+              <SearchInput
+                placeholder="Product name, SKU..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(val: string) => {
+                  setPage(1);
+                  setSearch(val);
+                }}
               />
             </div>
-          </div>
+          </Card>
 
-          <Card>
-            <CardContent className="p-0">
+          <Card className="overflow-hidden border-gray-100">
+            <div className="overflow-x-auto scrollbar-thin">
               <Table>
-                <TableHeader className="bg-gray-50">
-                  <TableRow>
-                    <TableHead className="w-[300px]">Product</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead className="text-center">Total Stock</TableHead>
-                    <TableHead className="text-center">Available</TableHead>
-                    <TableHead className="text-center">Sold</TableHead>
-                    <TableHead className="text-center">Low Stock Alert</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                <TableHeader className="bg-gray-50/50">
+                  <TableRow className="border-b border-gray-100">
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6">Product Details</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6">SKU</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6 text-center">Current Stock</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6 text-center">Available/Sold</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6 text-center text-xs">Low Stock Threshold</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6 text-center">Status</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loading ? (
+                  {loading && data.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-16 text-gray-500">
-                        <div className="flex flex-col items-center gap-2">
-                          <FaSync className="animate-spin text-2xl" />
-                          <p>Loading inventory data...</p>
-                        </div>
+                      <TableCell colSpan={7} className="text-center py-20">
+                        <LuLoader className="w-8 h-8 animate-spin text-[#7C1D3E] mx-auto" />
                       </TableCell>
                     </TableRow>
                   ) : data.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-16 text-gray-500">
-                        No products found matching your search.
+                      <TableCell colSpan={7} className="text-center py-20 text-gray-400">
+                        <FiBox className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                        <p>No inventory records found.</p>
                       </TableCell>
                     </TableRow>
                   ) : (
                     data.map((item) => (
-                      <TableRow key={item._id} className="hover:bg-gray-50/50">
-                        <TableCell className="font-medium">
+                      <TableRow key={item._id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-100">
+                        <TableCell className="py-4 px-6">
                           <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 rounded-lg bg-gray-100 border overflow-hidden flex-shrink-0">
+                            <div className="h-12 w-12 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
                               {item.img ? (
-                                <img
-                                  src={item.img}
-                                  className="w-full h-full object-cover"
-                                  alt={item.name}
-                                />
+                                <img src={item.img} className="w-full h-full object-cover" alt={item.name} />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                  <FaBoxOpen />
+                                  <FiBox size={18} />
                                 </div>
                               )}
                             </div>
                             <div>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {item.name}
-                              </p>
+                              <p className="text-sm font-bold text-gray-900 line-clamp-1">{item.name}</p>
                               {item.sizes?.length > 0 && (
-                                <p className="text-xs text-gray-500">
-                                  {item.sizes.length} Variants
-                                </p>
+                                <Badge variant="neutral" className="mt-1 h-5 text-[9px] uppercase font-bold tracking-widest">{item.sizes.length} SIZES</Badge>
                               )}
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-gray-600 font-mono text-xs">
-                          {item.sku}
+                        <TableCell className="py-4 px-6">
+                          <span className="text-xs font-mono font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded">{item.sku}</span>
                         </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline" className="bg-gray-100">
-                            {item.totalStock}
-                          </Badge>
+                        <TableCell className="py-4 px-6 text-center">
+                          <span className="text-lg font-black text-gray-900">{item.totalStock}</span>
                         </TableCell>
-                        <TableCell className="text-center font-bold text-gray-900">
-                          {item.availableStock}
+                        <TableCell className="py-4 px-6 text-center">
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">{item.availableStock} Available</span>
+                            <span className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">{item.soldStock} Sold</span>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-center text-gray-600">
-                          {item.soldStock}
+                        <TableCell className="py-4 px-6 text-center">
+                          <span className="text-xs font-bold text-gray-400">{item.lowStockThreshold}</span>
                         </TableCell>
-                        <TableCell className="text-center text-gray-500">
-                          {item.lowStockThreshold}
+                        <TableCell className="py-4 px-6 text-center">
+                          {getStatusBadge(item.status)}
                         </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={getStatusColor(item.status) as any}
-                            className="flex w-fit items-center gap-1"
-                          >
-                            {item.status === "Low Stock" && (
-                              <FaExclamationTriangle className="w-3 h-3" />
-                            )}
-                            {item.status === "Out of Stock" && (
-                              <FaExclamationTriangle className="w-3 h-3" />
-                            )}
-                            {item.status === "In Stock" && (
-                              <FaCheckCircle className="w-3 h-3" />
-                            )}
-                            {item.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="py-4 px-6 text-right">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={() => {
+                              if (!isOnline) {
+                                toast.error("You are offline. Cannot edit inventory.", {
+                                  icon: "📡",
+                                });
+                                return;
+                              }
                               setEditItem(item);
                               setNewStockValue(item.totalStock.toString());
                               setUpdateReason("");
                             }}
-                            className="hover:border-blue-500 hover:text-blue-600"
+                            className="h-8 w-8 p-0 rounded-lg text-gray-400 hover:text-[#7C1D3E] hover:bg-[#7C1D3E]/5"
+                            disabled={!isOnline}
                           >
-                            <FaEdit className="mr-2 h-3 w-3" />
-                            Adjust
+                            <FiEdit3 size={16} />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -383,7 +358,7 @@ const InventoryPage = () => {
                   )}
                 </TableBody>
               </Table>
-            </CardContent>
+            </div>
           </Card>
 
           {totalPages > 1 && (
@@ -397,89 +372,81 @@ const InventoryPage = () => {
           )}
         </TabsContent>
 
-        {/* --- TAB 2: HISTORY --- */}
-        <TabsContent value="history">
-          <Card>
-            <CardHeader>
-              <CardTitle>Stock Movement Log</CardTitle>
-              <CardDescription>
-                Detailed history of all inventory changes including orders and manual updates.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
+        <TabsContent value="history" className="space-y-6">
+          <Card className="overflow-hidden border-gray-100">
+            <div className="overflow-x-auto scrollbar-thin">
               <Table>
-                <TableHeader className="bg-gray-50">
-                  <TableRow>
-                    <TableHead>Date & Time</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Order ID / Reference</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead className="text-center">Change</TableHead>
-                    <TableHead className="text-center">Stock Flow</TableHead>
-                    <TableHead>Reason</TableHead>
+                <TableHeader className="bg-gray-50/50">
+                  <TableRow className="border-b border-gray-100">
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6">Date & Time</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6">Product Information</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6">Reference</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6">Action</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6 text-center">Variance</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6 text-center">Inventory Flow</TableHead>
+                    <TableHead className="font-bold text-gray-400 uppercase text-[10px] tracking-wider py-4 px-6">Reason</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {historyLoading ? (
+                  {historyLoading && history.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-16 text-gray-500">
-                        <div className="flex flex-col items-center gap-2">
-                          <FaSync className="animate-spin text-2xl" />
-                          <p>Loading history...</p>
-                        </div>
+                      <TableCell colSpan={7} className="text-center py-20">
+                        <LuLoader className="w-8 h-8 animate-spin text-[#7C1D3E] mx-auto" />
                       </TableCell>
                     </TableRow>
                   ) : history.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-16 text-gray-500">
-                        No history records found.
+                      <TableCell colSpan={7} className="text-center py-20 text-gray-400">
+                        <FiDatabase className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                        <p>No activity logs found.</p>
                       </TableCell>
                     </TableRow>
                   ) : (
                     history.map((h) => (
-                      <TableRow key={h._id} className="hover:bg-gray-50/50">
-                        <TableCell className="text-xs text-gray-600">
-                          {new Date(h.createdAt).toLocaleDateString()}{" "}
-                          <span className="text-gray-400">
-                            {new Date(h.createdAt).toLocaleTimeString()}
-                          </span>
+                      <TableRow key={h._id} className="hover:bg-gray-50/50 transition-colors border-b border-gray-100">
+                        <TableCell className="py-4 px-6">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-gray-900">{new Date(h.createdAt).toLocaleDateString()}</span>
+                            <span className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5"><FiClock size={10} /> {new Date(h.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
                         </TableCell>
-                        <TableCell className="font-medium text-sm">
-                          {h.productId?.name || "Unknown Product"}
+                        <TableCell className="py-4 px-6">
+                          <span className="text-sm font-bold text-gray-900">{h.productId?.name || "Unknown Product"}</span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="py-4 px-6">
                           {h.orderId ? (
-                            <Badge variant="outline" className="font-mono bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer">
-                              #{h.orderId.orderId}
+                            <Badge variant="brand" className="h-5 text-[9px] uppercase font-bold tracking-widest border-none">
+                              #{typeof h.orderId === 'object' ? h.orderId.orderId : h.orderId}
                             </Badge>
                           ) : (
-                            <span className="text-gray-400 text-xs italic">-</span>
+                            <span className="text-[10px] text-gray-300 italic">SYSTEM ADJUST</span>
                           )}
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="text-xs">
-                            {h.action}
-                          </Badge>
+                        <TableCell className="py-4 px-6 text-xs font-bold text-gray-600 uppercase">
+                          {h.action}
                         </TableCell>
-                        <TableCell className="text-center">
-                          <div className={`font-bold flex items-center justify-center gap-1 ${h.changeAmount > 0 ? "text-green-600" : "text-red-600"
-                            }`}>
-                            {h.changeAmount > 0 ? <FaArrowUp className="w-3 h-3" /> : <FaArrowDown className="w-3 h-3" />}
+                        <TableCell className="py-4 px-6 text-center">
+                          <div className={`font-black flex items-center justify-center gap-1 ${h.changeAmount > 0 ? "text-green-600" : "text-red-600"}`}>
+                            {h.changeAmount > 0 ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
                             {Math.abs(h.changeAmount)}
                           </div>
                         </TableCell>
-                        <TableCell className="text-center text-xs font-mono text-gray-500">
-                          {h.oldStock} <span className="text-gray-300">→</span> {h.newStock}
+                        <TableCell className="py-4 px-6 text-center">
+                          <div className="inline-flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                            <span className="text-xs font-bold text-gray-400">{h.oldStock}</span>
+                            <FiActivity size={10} className="text-gray-300" />
+                            <span className="text-xs font-bold text-gray-900">{h.newStock}</span>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-sm text-gray-600 max-w-[200px] truncate" title={h.reason}>
-                          {h.reason}
+                        <TableCell className="py-4 px-6">
+                          <p className="text-xs text-gray-600 max-w-[150px] line-clamp-1" title={h.reason}>{h.reason}</p>
                         </TableCell>
                       </TableRow>
                     ))
                   )}
                 </TableBody>
               </Table>
-            </CardContent>
+            </div>
           </Card>
 
           {historyTotalPages > 1 && (
@@ -494,89 +461,96 @@ const InventoryPage = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Edit DIALOG */}
-      <Dialog
-        open={!!editItem}
-        onOpenChange={(open) => !open && setEditItem(null)}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Update Stock</DialogTitle>
-            <DialogDescription>
-              Manually adjust stock levels for <strong>{editItem?.name}</strong>.
-            </DialogDescription>
-          </DialogHeader>
+      <Dialog open={!!editItem} onOpenChange={(open) => !open && setEditItem(null)}>
+        <DialogContent className="sm:max-w-[500px] rounded-2xl overflow-hidden p-0 border-none shadow-2xl">
+          <div className="bg-[#7C1D3E] p-8 text-white">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                <FiEdit3 size={24} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black leading-tight">Adjust Stock</h2>
+                <p className="text-white/60 text-xs font-medium uppercase tracking-[0.2em]">Inventory Control</p>
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-xl p-4 border border-white/10">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">Target Product</p>
+              <p className="font-bold text-lg leading-tight">{editItem?.name}</p>
+              <p className="text-xs font-mono text-white/40 mt-1">{editItem?.sku}</p>
+            </div>
+          </div>
 
-          <div className="space-y-4 py-2">
+          <div className="p-8 space-y-6">
             {editItem?.sizes && editItem.sizes.length > 0 ? (
               <div className="space-y-4">
-                <p className="text-sm font-medium text-gray-700">Variants:</p>
-                <ScrollArea className="h-[200px] pr-4 border rounded-md bg-gray-50 p-2">
-                  {editItem.sizes.map((size) => (
-                    <div
-                      key={size._id}
-                      className="flex items-center justify-between p-3 mb-2 bg-white rounded shadow-sm border"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-bold text-sm">{size.size}</span>
-                        <span className="text-xs text-gray-500">
-                          Current: {size.stock}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Input
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Product Variants</label>
+                  <span className="text-[10px] font-bold text-[#7C1D3E] bg-[#7C1D3E]/5 px-2 py-0.5 rounded uppercase tracking-wider">Tap to update</span>
+                </div>
+                <ScrollArea className="h-[250px] pr-4">
+                  <div className="grid grid-cols-1 gap-3">
+                    {editItem.sizes.map((size) => (
+                      <div key={size._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group transition-all hover:border-[#7C1D3E]/20 hover:bg-white hover:shadow-sm">
+                        <div>
+                          <p className="font-black text-gray-900">{size.size}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">In Stock: {size.stock}</span>
+                          </div>
+                        </div>
+                        <input
                           type="number"
                           placeholder="New"
-                          className="w-20 h-8 text-right"
+                          className="w-20 h-10 text-center font-bold bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7C1D3E]/20 focus:border-[#7C1D3E]/50 transition-all text-sm"
                           defaultValue={size.stock}
+                          disabled={!isOnline}
                           onBlur={(e) => {
                             const val = e.target.value;
-                            if (val && val !== size.stock.toString()) {
+                            if (val !== "" && val !== size.stock.toString()) {
                               handleUpdateStock(editItem._id, size._id, val);
                             }
                           }}
                         />
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </ScrollArea>
-                <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                  <FaExclamationTriangle className="inline mr-1" />
-                  Tip: Changes to variants are saved immediately when clicking outside the input.
-                </div>
               </div>
             ) : (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">New Total Stock</label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    value={newStockValue}
-                    onChange={(e) => setNewStockValue(e.target.value)}
-                    placeholder="Enter total stock quantity"
-                  />
-                  <Button
-                    onClick={() =>
-                      handleUpdateStock(editItem?._id || "", undefined, newStockValue)
-                    }
-                    disabled={isUpdating}
-                  >
-                    {isUpdating ? "Updating..." : "Update"}
-                  </Button>
-                </div>
-              </div>
+              <ZapanInput
+                label="Total Inventory Count"
+                type="number"
+                value={newStockValue}
+                onChange={(e: any) => setNewStockValue(e.target.value)}
+                placeholder="0"
+                className="text-lg font-black h-14"
+              />
             )}
 
-            <div className="pt-2">
-              <label className="text-sm font-medium text-gray-700">
-                Reason for Change
-              </label>
-              <Input
-                placeholder="e.g. Stock Count, Damage, Gift..."
-                value={updateReason}
-                onChange={(e) => setUpdateReason(e.target.value)}
-                className="mt-1"
-              />
+            <ZapanInput
+              label="Audit Reason"
+              placeholder="E.g. Stock Re-count, Quality Check, Damage..."
+              value={updateReason}
+              onChange={(e: any) => setUpdateReason(e.target.value)}
+              className="italic"
+            />
+
+            {!editItem?.sizes?.length && (
+              <Button
+                variant="primary"
+                className="w-full h-14 rounded-2xl text-md font-bold shadow-xl shadow-[#7C1D3E]/20"
+                onClick={() => handleUpdateStock(editItem?._id || "", undefined, newStockValue)}
+                disabled={isUpdating || !isOnline}
+              >
+                {isUpdating ? <LuLoader className="animate-spin mr-2" /> : <FiCheckCircle className="mr-2" />}
+                {!isOnline ? "Offline - Cannot Update" : "Confirm Stock Update"}
+              </Button>
+            )}
+
+            <div className="pt-2 text-center">
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider flex items-center justify-center gap-2">
+                <FiAlertTriangle className="text-[#7C1D3E]" /> All adjustments are permanently logged in audit trail
+              </p>
             </div>
           </div>
         </DialogContent>

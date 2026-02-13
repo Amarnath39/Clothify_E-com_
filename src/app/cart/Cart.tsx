@@ -101,9 +101,9 @@ const Cart = () => {
 
   const callGetCartItems = useCallback(async () => {
     if (cartItems.length === 0) {
-        setCartProducts([]);
-        setLoading(false);
-        return;
+      setCartProducts([]);
+      setLoading(false);
+      return;
     }
     try {
       setLoading(true);
@@ -115,24 +115,24 @@ const Cart = () => {
 
       if (payload.success) {
         const hydratedCartProducts = cartItems.map((cartItem: any) => {
-            const product = payload.products.find(
-              (p: any) => p._id === cartItem.id
-            );
-            if (!product) return null;
-            const matchedSize = product.sizes.find(
-              (size: any) => size._id === cartItem.size._id
-            );
-            return {
-              _id: product._id,
-              name: product.name,
-              img: product.img,
-              color: product.color,
-              actualPrice: product.actualPrice,
-              description: product.description,
-              size: matchedSize ? matchedSize : null,
-              count: cartItem.count,
-            };
-          }).filter(Boolean) as CartProduct[];
+          const product = payload.products.find(
+            (p: any) => p._id === cartItem.id
+          );
+          if (!product) return null;
+          const matchedSize = product.sizes.find(
+            (size: any) => size._id === cartItem.size._id
+          );
+          return {
+            _id: product._id,
+            name: product.name,
+            img: product.img,
+            color: product.color,
+            actualPrice: product.actualPrice,
+            description: product.description,
+            size: matchedSize ? matchedSize : null,
+            count: cartItem.count,
+          };
+        }).filter(Boolean) as CartProduct[];
         setCartProducts(hydratedCartProducts);
       } else {
         toast.error(payload.msg);
@@ -165,18 +165,18 @@ const Cart = () => {
 
   const { subtotal, tax, finalTotal, promotions, deliveryFee, offerPriceTotal } = useMemo(() => {
     const subtotal = cartProducts.reduce((sum, item) => {
-        return sum + (item.actualPrice || 0) * item.count;
+      return sum + (item.actualPrice || 0) * item.count;
     }, 0);
 
     const offerPriceTotal = cartProducts.reduce((sum, item) => {
-        return sum + (item.size?.offerPrice || 0) * item.count;
+      return sum + (item.size?.offerPrice || 0) * item.count;
     }, 0);
 
     const promotions = subtotal - offerPriceTotal;
     const deliveryFee = 0; // Replace with your actual delivery fee logic
     const tax = 0;
     const finalTotal = offerPriceTotal + deliveryFee + tax - couponDiscount;
-    
+
     dispatch(setTotalAmount(finalTotal));
     return { subtotal, tax, finalTotal, promotions, deliveryFee, offerPriceTotal };
   }, [cartProducts, couponDiscount, dispatch]);
@@ -196,12 +196,12 @@ const Cart = () => {
       console.log(error);
     }
   };
-  
+
   const calculateCouponDiscount = (coupon: any, cartTotal: number) => {
     let discount = 0;
     const discountValue = parseFloat(coupon.amount) || 0;
     const maxCap = parseFloat(coupon.maxDiscount) || null;
-    
+
     if (coupon.type === "percentage") {
       discount = (cartTotal * discountValue) / 100;
       if (maxCap && maxCap > 0) {
@@ -210,20 +210,20 @@ const Cart = () => {
     } else if (coupon.type === "flat") {
       discount = discountValue;
     }
-    
+
     discount = Math.min(discount, cartTotal);
     return Math.abs(discount);
   };
 
-const handleApplyCoupon = useCallback(async (code) => {
+  const handleApplyCoupon = useCallback(async (code) => {
     if (!token) {
       router.push("/login");
       return;
     }
     try {
       const { payload }: any = await dispatch(
-        getCouponById({ 
-          code: code, 
+        getCouponById({
+          code: code,
           totalPrice: offerPriceTotal
         })
       );
@@ -255,7 +255,7 @@ const handleApplyCoupon = useCallback(async (code) => {
 
   useEffect(() => {
     if (cartItems.length === 0 || offerPriceTotal <= 0) return;
-    
+
     const previousCouponCode = appliedCoupons[0]?.couponCode;
     setAppliedCoupons([]);
     setCouponDiscount(0);
@@ -275,12 +275,12 @@ const handleApplyCoupon = useCallback(async (code) => {
     const item = cartItems.find((i: any) => i.id === id && i.size._id === sizeId);
 
     if (action === 'decrease' && item?.count <= 1) {
-        handleRemoveItem(id, sizeId);
-        return;
+      handleRemoveItem(id, sizeId);
+      return;
     }
     if (action === 'increase' && product && item?.count >= product.size!.stock) {
-        toast.error(`Only ${product.size!.stock} items available`);
-        return;
+      toast.error(`Only ${product.size!.stock} items available`);
+      return;
     }
     dispatch(action === 'increase' ? increaseCount({ id, sizeId }) : decreaseCount({ id, sizeId }));
   };
@@ -302,12 +302,16 @@ const handleApplyCoupon = useCallback(async (code) => {
       orderId: orderId,
       shippingCost: deliveryFee,
     };
-    
+
     try {
       const { payload }: any = await dispatch(proceedToCheckoutApi(payloadApi));
       if (payload.success) {
         setIsCheckoutModal(true);
-        setCreatedOrderDetails(payload.orderDetails);
+        // Combine order details with guestToken if present
+        setCreatedOrderDetails({
+          ...payload.orderDetails,
+          guestToken: payload.guestToken
+        });
         dispatch(
           setOrderId({
             orderId: payload.orderDetails._id,
@@ -318,7 +322,7 @@ const handleApplyCoupon = useCallback(async (code) => {
         toast.error(payload.msg || "Failed to create order.");
       }
     } catch (error) {
-        toast.error("An error occurred during checkout.");
+      toast.error("An error occurred during checkout.");
     } finally {
       setCheckoutLoading(false);
     }
@@ -387,16 +391,16 @@ const handleApplyCoupon = useCallback(async (code) => {
       if (item) {
         const isInWishlist = wishlistItems.some((w: any) => w.id === item._id);
         if (!isInWishlist) {
-            dispatch(
-                addItem({
-                  id: item._id,
-                  name: item.name,
-                  colors: item.color ? [item.color] : [],
-                  img: item.img,
-                  description: item.description,
-                  amount: item.size?.offerPrice || 0,
-                })
-              );
+          dispatch(
+            addItem({
+              id: item._id,
+              name: item.name,
+              colors: item.color ? [item.color] : [],
+              img: item.img,
+              description: item.description,
+              amount: item.size?.offerPrice || 0,
+            })
+          );
         }
         dispatch(removeFromCart({ id, sizeId }));
         movedCount++;
@@ -406,7 +410,7 @@ const handleApplyCoupon = useCallback(async (code) => {
     toast.success(`${movedCount} items moved to wishlist`);
   };
 
-  
+
   // Render logic...
   return (
     <div className="min-h-screen">
@@ -420,132 +424,132 @@ const handleApplyCoupon = useCallback(async (code) => {
         <CartSkeletonLoader />
       ) : cartProducts.length > 0 ? (
         <div className="container mx-auto px-4 pt-40 pb-8">
-            <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
-            
-            {/* Bulk Actions Bar */}
-            {selectedItems.length > 0 && (
-              <div className="bg-gray-100 p-4 rounded-lg mb-4 flex justify-between items-center animate-in fade-in slide-in-from-top-2">
-                <span className="font-medium">{selectedItems.length} items selected</span>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleBulkMoveToWishlist} className="bg-white hover:bg-gray-200 text-black border-gray-300">
-                    <FaHeart className="mr-2 h-4 w-4" /> Move to Wishlist
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={handleBulkRemove} className="bg-red-600 hover:bg-red-700 text-white">
-                    <FaTrash className="mr-2 h-4 w-4" /> Delete Selected
-                  </Button>
+          <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+
+          {/* Bulk Actions Bar */}
+          {selectedItems.length > 0 && (
+            <div className="bg-gray-100 p-4 rounded-lg mb-4 flex justify-between items-center animate-in fade-in slide-in-from-top-2">
+              <span className="font-medium">{selectedItems.length} items selected</span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleBulkMoveToWishlist} className="bg-white hover:bg-gray-200 text-black border-gray-300">
+                  <FaHeart className="mr-2 h-4 w-4" /> Move to Wishlist
+                </Button>
+                <Button variant="destructive" size="sm" onClick={handleBulkRemove} className="bg-red-600 hover:bg-red-700 text-white">
+                  <FaTrash className="mr-2 h-4 w-4" /> Delete Selected
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col lg:flex-row gap-8">
+            <div className="lg:w-7/12">
+              {/* Select All Checkbox */}
+              <div className="flex items-center gap-2 mb-2 px-4">
+                <Checkbox
+                  id="select-all"
+                  checked={selectedItems.length === cartProducts.length && cartProducts.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+                <Label htmlFor="select-all" className="cursor-pointer">Select All</Label>
+              </div>
+
+              {/* Cart Items */}
+              <div className="bg-white rounded-lg shadow-sm">
+                {cartProducts.map((item) => (
+                  <div key={`${item._id}-${item.size?._id}`} className="border-b last:border-b-0">
+                    <div className="grid grid-cols-[auto,auto,1fr,auto] md:grid-cols-[auto,100px,1fr,auto,auto,auto] gap-4 p-4 items-center">
+                      {/* Checkbox */}
+                      <Checkbox
+                        checked={selectedItems.includes(`${item._id}-${item.size?._id}`)}
+                        onCheckedChange={() => handleToggleSelect(item._id, item.size!._id)}
+                      />
+
+                      <img src={item.img[0]} alt={item.name} className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-md" />
+                      <div className="flex-grow">
+                        <h3 className="font-medium">{item.name}</h3>
+                        <p className="text-sm text-gray-500">Size: {item.size?.size}</p>
+                        <div className="md:hidden flex items-baseline space-x-2">
+                          <p className="font-semibold">₹{item.size?.offerPrice.toFixed(2)}</p>
+                          {item.actualPrice && item.size && item.size.offerPrice < item.actualPrice && (
+                            <p className="text-sm text-gray-500 line-through">₹{item.actualPrice.toFixed(2)}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="hidden md:flex items-center space-x-2">
+                        <button onClick={() => handleQuantityChange(item._id, item.size!._id, "decrease")} className="p-1 rounded-md hover:bg-gray-100">
+                          <FaMinus className="h-3 w-3" />
+                        </button>
+                        <span>{item.count}</span>
+                        <button onClick={() => handleQuantityChange(item._id, item.size!._id, "increase")} className="p-1 rounded-md hover:bg-gray-100">
+                          <FaPlus className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <div className="hidden md:flex flex-col items-end">
+                        <span className="font-medium">₹{(item.size!.offerPrice * item.count).toFixed(2)}</span>
+                        {item.actualPrice && item.size && item.size.offerPrice < item.actualPrice && (
+                          <span className="text-sm text-gray-500 line-through">₹{(item.actualPrice * item.count).toFixed(2)}</span>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={() => handleRemoveItem(item._id, item.size!._id)}
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                          title="Remove from Cart"
+                        >
+                          <FaTrash />
+                        </button>
+                        <button
+                          onClick={() => handleMoveToWishlist(item)}
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                          title="Move to Wishlist"
+                        >
+                          <FaHeart />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="lg:w-5/12">
+              <div className="sticky top-28 bg-gray-50 rounded-xl p-6">
+                <div className="mt-2">
+                  <CouponSelector
+                    visibleCoupons={visibleCoupons}
+                    appliedCoupons={appliedCoupons}
+                    handleApplyCoupon={handleApplyCoupon}
+                    handleRemoveCoupon={handleRemoveCoupon}
+                    discountAmount={couponDiscount}
+                  />
+                </div>
+                <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
+                {/* Price Breakdown */}
+                <div className="space-y-2">
+                  <div className="flex justify-between"><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{promotions.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>Delivery Fee</span><span>₹{deliveryFee.toFixed(2)}</span></div>
+                  <Separator className="my-2" />
+                  {appliedCoupons.length > 0 && (
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <span className="text-green-700 font-medium block mb-2">Applied Coupons</span>
+                      {appliedCoupons.map((coupon) => (
+                        <div key={coupon._id} className="flex justify-between text-green-600 items-center">
+                          <span className="text-sm font-medium">{coupon.couponCode}</span>
+                          <span className="font-medium">-₹{couponDiscount.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex justify-between font-bold text-lg"><span>Total</span><span>₹{finalTotal.toFixed(2)}</span></div>
+                </div>
+                <div className="mt-6">
+                  <button onClick={handleProceedToCheckout} disabled={checkoutLoading} className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 disabled:bg-gray-400">
+                    {checkoutLoading ? 'Processing...' : 'Proceed to Checkout'}
+                  </button>
                 </div>
               </div>
-            )}
-
-            <div className="flex flex-col lg:flex-row gap-8">
-                <div className="lg:w-7/12">
-                    {/* Select All Checkbox */}
-                    <div className="flex items-center gap-2 mb-2 px-4">
-                        <Checkbox 
-                            id="select-all" 
-                            checked={selectedItems.length === cartProducts.length && cartProducts.length > 0}
-                            onCheckedChange={handleSelectAll}
-                        />
-                        <Label htmlFor="select-all" className="cursor-pointer">Select All</Label>
-                    </div>
-
-                    {/* Cart Items */}
-                    <div className="bg-white rounded-lg shadow-sm">
-                        {cartProducts.map((item) => (
-                            <div key={`${item._id}-${item.size?._id}`} className="border-b last:border-b-0">
-                                <div className="grid grid-cols-[auto,auto,1fr,auto] md:grid-cols-[auto,100px,1fr,auto,auto,auto] gap-4 p-4 items-center">
-                                    {/* Checkbox */}
-                                    <Checkbox 
-                                        checked={selectedItems.includes(`${item._id}-${item.size?._id}`)}
-                                        onCheckedChange={() => handleToggleSelect(item._id, item.size!._id)}
-                                    />
-                                    
-                                    <img src={item.img[0]} alt={item.name} className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-md"/>
-                                    <div className="flex-grow">
-                                        <h3 className="font-medium">{item.name}</h3>
-                                        <p className="text-sm text-gray-500">Size: {item.size?.size}</p>
-                                        <div className="md:hidden flex items-baseline space-x-2">
-                                        <p className="font-semibold">₹{item.size?.offerPrice.toFixed(2)}</p>
-                                        {item.actualPrice && item.size && item.size.offerPrice < item.actualPrice && (
-                                            <p className="text-sm text-gray-500 line-through">₹{item.actualPrice.toFixed(2)}</p>
-                                        )}
-                                    </div>
-                                    </div>
-                                    <div className="hidden md:flex items-center space-x-2">
-                                         <button onClick={() => handleQuantityChange(item._id, item.size!._id, "decrease")} className="p-1 rounded-md hover:bg-gray-100">
-                                            <FaMinus className="h-3 w-3" />
-                                        </button>
-                                        <span>{item.count}</span>
-                                        <button onClick={() => handleQuantityChange(item._id, item.size!._id, "increase")} className="p-1 rounded-md hover:bg-gray-100">
-                                            <FaPlus className="h-3 w-3" />
-                                        </button>
-                                    </div>
-                                    <div className="hidden md:flex flex-col items-end">
-                                        <span className="font-medium">₹{(item.size!.offerPrice * item.count).toFixed(2)}</span>
-                                        {item.actualPrice && item.size && item.size.offerPrice < item.actualPrice && (
-                                            <span className="text-sm text-gray-500 line-through">₹{(item.actualPrice * item.count).toFixed(2)}</span>
-                                        )}
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <button 
-                                            onClick={() => handleRemoveItem(item._id, item.size!._id)} 
-                                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                                            title="Remove from Cart"
-                                        >
-                                            <FaTrash />
-                                        </button>
-                                        <button 
-                                            onClick={() => handleMoveToWishlist(item)} 
-                                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                                            title="Move to Wishlist"
-                                        >
-                                            <FaHeart />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div className="lg:w-5/12">
-                    <div className="sticky top-28 bg-gray-50 rounded-xl p-6">
-                        <div className="mt-2">
-                          <CouponSelector
-                            visibleCoupons={visibleCoupons}
-                            appliedCoupons={appliedCoupons}
-                            handleApplyCoupon={handleApplyCoupon}
-                            handleRemoveCoupon={handleRemoveCoupon}
-                            discountAmount={couponDiscount}
-                          />
-                        </div>
-                        <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
-                        {/* Price Breakdown */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between"><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
-                            <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{promotions.toFixed(2)}</span></div>
-                            <div className="flex justify-between"><span>Delivery Fee</span><span>₹{deliveryFee.toFixed(2)}</span></div>
-                            <Separator className="my-2"/>
-                            {appliedCoupons.length > 0 && (
-                              <div className="bg-green-50 p-4 rounded-lg">
-                                <span className="text-green-700 font-medium block mb-2">Applied Coupons</span>
-                                {appliedCoupons.map((coupon) => (
-                                  <div key={coupon._id} className="flex justify-between text-green-600 items-center">
-                                    <span className="text-sm font-medium">{coupon.couponCode}</span>
-                                    <span className="font-medium">-₹{couponDiscount.toFixed(2)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            <div className="flex justify-between font-bold text-lg"><span>Total</span><span>₹{finalTotal.toFixed(2)}</span></div>
-                        </div>
-                        <div className="mt-6">
-                            <button onClick={handleProceedToCheckout} disabled={checkoutLoading} className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 disabled:bg-gray-400">
-                                {checkoutLoading ? 'Processing...' : 'Proceed to Checkout'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-[80vh] gap-4">

@@ -34,7 +34,7 @@ const ShippingPolicy = () => {
   {
     title: "Delays & Issues",
     content:
-      "If your order is delayed or arrives damaged: Email us at sisbymridhulaparvathy@gmail.com or Call us at +91 6282667959. We will work with our courier partners to resolve it as quickly as possible.",
+      "If your order is delayed or arrives damaged: Email us at hello@swaarasya.com or Call us at +91 9876543210. We will work with our courier partners to resolve it as quickly as possible.",
   },
   ];
 
@@ -47,7 +47,7 @@ const ShippingPolicy = () => {
 
         <div className="bg-white rounded-lg shadow-lg p-6 space-y-8">
           <p className="text-gray-700 leading-relaxed">
-            At S.I.S, we are committed to delivering high-quality sarees
+            At Swaarasya, we are committed to delivering high-quality sarees
             to your doorstep efficiently and reliably. Our shipping and delivery
             services ensure that your orders reach you in perfect condition and
             within the stipulated timeframe.
@@ -73,7 +73,7 @@ const ShippingPolicy = () => {
               at:
             </p>
             <p className="font-semibold text-appPrimary-600">
-              Email: sisbymridhulaparvathy@gmail.com | Phone: +91 6282667959
+              Email: hello@swaarasya.com | Phone: +91 9876543210
             </p>
           </div>
         </div>

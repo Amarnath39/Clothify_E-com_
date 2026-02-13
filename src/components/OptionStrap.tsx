@@ -14,7 +14,7 @@ export default function TrustBadges() {
       icon: Truck,
       title: 'Free & Fast Shipping',
       description:
-        'Get free shipping on all prepaid orders above ₹799 with quick delivery across India.',
+        'Free Shipping charges inside Kerala and Outside Kerala around 175',
     },
     {
       icon: Gift,

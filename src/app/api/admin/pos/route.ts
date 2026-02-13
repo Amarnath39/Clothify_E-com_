@@ -8,6 +8,7 @@ import Admin from "../../../../../src/model/Admin"; // Relative path
 import Razorpay from "razorpay";
 import { updateStock } from "../../../../../src/lib/stockManager"; // Relative path
 import { sendPOSInvoice } from "../../../../../src/helper/whatsappNotifier"; // Relative path
+import Counter from "../../../../../src/model/Counter"; // Relative path
 
 /**
  * ✅ Generate unique POS invoice number
@@ -49,15 +50,28 @@ const generatePOSInvoiceNumber = async (): Promise<string> => {
  */
 const generatePOSOrderId = async (): Promise<{ orderId: string; orderSeq: number }> => {
     try {
-        const lastOrder = await Order.findOne()
-            .sort({ orderSeq: -1 })
-            .select("orderSeq")
-            .lean() as { orderSeq: number } | null;
+        const counter = await Counter.findOneAndUpdate(
+            { id: "posOrderSeq" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
 
-        const nextSeq = (lastOrder?.orderSeq || 1799) + 1;
+        // Start POS sequence from 1000 if new
+        if (counter.seq < 1000) {
+            const initialCounter = await Counter.findOneAndUpdate(
+                { id: "posOrderSeq" },
+                { $set: { seq: 1000 } },
+                { new: true, upsert: true }
+            );
+            return {
+                orderId: `POS-${initialCounter.seq.toString().padStart(6, "0")}`,
+                orderSeq: initialCounter.seq,
+            };
+        }
+
         return {
-            orderId: `ON-${nextSeq.toString().padStart(6, "0")}`,
-            orderSeq: nextSeq,
+            orderId: `POS-${counter.seq.toString().padStart(6, "0")}`,
+            orderSeq: counter.seq,
         };
     } catch (error) {
         console.error("Error generating POS order ID:", error);
@@ -176,25 +190,27 @@ export const POST = async (req: NextRequest) => {
                 }, { status: 400 });
             }
 
-            const itemPrice = sizeObj.offerPrice || product.actualPrice;
+            const itemPrice = sizeObj.offerPrice;
             totalActualPrice += product.actualPrice * pd.quantity;
             totalOfferPrice += itemPrice * pd.quantity;
 
-            // Calculate GST
+            // Calculate Inclusive GST
             let productGstPercent = 0;
             if (product.categories && Array.isArray(product.categories) && product.categories.length > 0) {
-                // Handle potential object/string structure in categories
                 productGstPercent = Math.max(...product.categories.map((c: any) => (typeof c === 'object' ? (c.gst || 0) : 0)));
             }
-            const itemTax = (itemPrice * productGstPercent / 100) * pd.quantity;
-            totalGstAmount += itemTax;
+
+            // Formula: Taxable Value = Total Price × 100 / (100 + GST Rate)
+            const itemTaxableValue = (itemPrice * 100) / (100 + productGstPercent);
+            const itemGstAmount = (itemPrice - itemTaxableValue) * pd.quantity;
+            totalGstAmount += itemGstAmount;
 
             taxDetails.push({
                 productId: product._id,
                 name: product.name,
                 gstPercent: productGstPercent,
-                gstAmount: itemTax,
-                price: itemPrice,
+                gstAmount: itemGstAmount,
+                price: itemPrice, // Total inclusive price
                 quantity: pd.quantity
             });
 
@@ -204,7 +220,9 @@ export const POST = async (req: NextRequest) => {
                 quantity: pd.quantity,
                 size: { _id: sizeObj._id, size: sizeObj.size },
                 sizeId: sizeObj._id,
-                sizeLabel: sizeObj.size
+                sizeLabel: sizeObj.size,
+                offerPrice: itemPrice, // Store inclusive price
+                actualPrice: product.actualPrice
             });
 
             stockCheckItems.push({
@@ -216,7 +234,8 @@ export const POST = async (req: NextRequest) => {
             });
         }
 
-        const totalPayablePrice = totalOfferPrice + totalGstAmount;
+        // With inclusive GST, total payable price is just the total offer price
+        const totalPayablePrice = totalOfferPrice;
 
         // 5. Generate Identifiers
         const invoiceId = await generatePOSInvoiceNumber();
@@ -233,7 +252,7 @@ export const POST = async (req: NextRequest) => {
             paymentMethod === "CARD" ||
             action === "COMPLETE"; // Explicit override
 
-        const paymentStatus = isImmediatePayment ? "PAYMENT_SUCCESS" : "PENDING";
+        const paymentStatus = isImmediatePayment ? "PAYMENT_SUCCESS" : "PAYMENT_PENDING";
         const currentStatus = isImmediatePayment ? "COMPLETED" : "PENDING";
         const paidAt = isImmediatePayment ? new Date() : null;
 
@@ -268,6 +287,8 @@ export const POST = async (req: NextRequest) => {
                 transactionDetails: transactionDetails || null,
                 taxDetails,
                 totalGstAmount,
+                totalSgstAmount: totalGstAmount / 2,
+                totalCgstAmount: totalGstAmount / 2,
                 notes: { orderId: newOrderId, invoiceId } // For Webhook recovery
             },
         });
@@ -333,6 +354,62 @@ export const POST = async (req: NextRequest) => {
                 return NextResponse.json({
                     success: false,
                     message: "Razorpay API Failed",
+                    error: rzpError.error?.description || rzpError.message || "Unknown Razorpay Error"
+                }, { status: 502 });
+            }
+        }
+
+        // ==========================================
+        // 🚀 ACTION: GENERATE QR CODE
+        // ==========================================
+        else if (action === "GenerateQR") {
+            // Verify Razorpay Env
+            if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+                return NextResponse.json({ success: false, message: "Razorpay keys not configured on server" }, { status: 500 });
+            }
+
+            try {
+                const razorpay = new Razorpay({
+                    key_id: process.env.RAZORPAY_KEY_ID,
+                    key_secret: process.env.RAZORPAY_KEY_SECRET,
+                });
+
+                const qrOptions = {
+                    type: "upi_qr",
+                    usage: "single_use",
+                    fixed_amount: true,
+                    payment_amount: Math.round(totalPayablePrice * 100), // paise
+                    description: `Swaarasya POS Order #${newOrderId}`,
+                    customer_id: undefined, // Optional
+                    notes: { orderId: newOrderId, invoiceId, orderType: "POS" },
+                };
+
+                console.log("Generating Razorpay Dynamic QR...", JSON.stringify(qrOptions));
+
+                const qrCode = await (razorpay as any).qrCode.create(qrOptions);
+
+                newOrder.metadata.qrCodeId = qrCode.id;
+                newOrder.metadata.qrCodeImageUrl = (qrCode as any).image_url; // Razorpay SDK typings might be missing this
+                newOrder.metadata.qrCodeStatus = qrCode.status;
+                newOrder.paymentMethod = "RAZORPAY_QR";
+
+                await newOrder.save();
+
+                return NextResponse.json({
+                    success: true,
+                    message: "QR Code Generated",
+                    qrCode: (qrCode as any).image_url,
+                    qrCodeId: qrCode.id,
+                    orderId: newOrderId,
+                    invoiceId: invoiceId,
+                    order: newOrder
+                });
+
+            } catch (rzpError: any) {
+                console.error("Razorpay QR Creation Failed:", rzpError);
+                return NextResponse.json({
+                    success: false,
+                    message: "Razorpay API Failed (QR)",
                     error: rzpError.error?.description || rzpError.message || "Unknown Razorpay Error"
                 }, { status: 502 });
             }

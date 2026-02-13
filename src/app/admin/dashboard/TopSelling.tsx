@@ -9,11 +9,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { FaSpinner, FaSearch, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
+import { Badge, SearchInput, Pagination, Button } from "@/theme/components";
+import {
+  FiSearch,
+  FiChevronUp,
+  FiChevronDown,
+  FiBox,
+  FiTrendingUp,
+  FiShoppingBag
+} from "react-icons/fi";
+import { LuLoader } from "react-icons/lu";
 import axios from "axios";
 
 type Country = "IND" | "UAE";
@@ -55,10 +60,7 @@ const MostSellingProductsPage: React.FC = () => {
       if (data.success) {
         setProducts(data.mostSellingProducts);
         setDisplayedProducts(data.mostSellingProducts);
-        console.log(data.mostSellingProducts);
         setTotalPages(data.totalPages);
-      } else {
-        console.error(data.msg);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -74,11 +76,6 @@ const MostSellingProductsPage: React.FC = () => {
   useEffect(() => {
     sortProducts();
   }, [sortConfig, products]);
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setPage(1);
-  };
 
   const handleSort = (key: keyof Product) => {
     let direction: "asc" | "desc" = "asc";
@@ -114,116 +111,134 @@ const MostSellingProductsPage: React.FC = () => {
 
   const SortIcon: React.FC<{ column: keyof Product }> = ({ column }) => {
     if (sortConfig.key !== column) return null;
-    return sortConfig.direction === "asc" ? <FaSortAmountUp className="ml-2" /> : <FaSortAmountDown className="ml-2" />;
+    return sortConfig.direction === "asc" ? <FiChevronUp size={14} className="ml-1" /> : <FiChevronDown size={14} className="ml-1" />;
   };
 
   return (
-    <Card className="container mx-auto p-6 mt-8">
-      <CardHeader>
-        <CardTitle className="text-3xl font-bold mb-6 text-center text-gray-800">Most Selling Products</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Search + Country Selector */}
-        <div className="flex items-center gap-4 mb-4">
-          <div className="relative flex-1">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="pl-10"
-            />
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row items-end gap-4">
+        <div className="flex-1 w-full max-w-md">
+          <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-wider">Search Products</label>
+          <SearchInput
+            placeholder="Filter by name..."
+            value={searchTerm}
+            onChange={(val) => {
+              setSearchTerm(val);
+              setPage(1);
+            }}
+          />
+        </div>
+        <div className="w-full md:w-auto">
+          <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-wider">Region</label>
           <select
             value={country}
             onChange={(e) => setCountry(e.target.value as Country)}
-            className="border rounded px-2 py-1 appearance-none"
+            className="h-11 px-4 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#7C1D3E]/20 transition-all appearance-none pr-10 relative bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22currentColor%22%3E%3Cpath stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22 /%3E%3C/svg%3E')] bg-[length:1.25em_1.25em] bg-[right_0.75rem_center] bg-no-repeat"
           >
             <option value="IND">India (₹)</option>
+            {/* UAE can be added if backend supports */}
           </select>
         </div>
+      </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto min-h-[50vh]">
-          <Table>
-            <TableHeader>
+      <div className="overflow-x-auto scrollbar-thin rounded-xl border border-gray-100">
+        <Table>
+          <TableHeader className="bg-gray-50/50">
+            <TableRow className="border-b border-gray-100">
+              <TableHead className="py-4 px-6 cursor-pointer group" onClick={() => handleSort("name")}>
+                <div className="flex items-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  Product <SortIcon column="name" />
+                </div>
+              </TableHead>
+              <TableHead className="py-4 px-6 text-center cursor-pointer group" onClick={() => handleSort("sellCount")}>
+                <div className="flex items-center justify-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  Sold <SortIcon column="sellCount" />
+                </div>
+              </TableHead>
+              <TableHead className="py-4 px-6 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">Market Price</TableHead>
+              <TableHead className="py-4 px-6 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">Availability</TableHead>
+              <TableHead className="py-4 px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Categories</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading && displayedProducts.length === 0 ? (
               <TableRow>
-                <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>
-                  Product {<SortIcon column="name" />}
-                </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort("sellCount")}>
-                  Sold {<SortIcon column="sellCount" />}
-                </TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Categories</TableHead>
+                <TableCell colSpan={5} className="py-12 text-center">
+                  <LuLoader className="w-8 h-8 animate-spin text-[#7C1D3E] mx-auto" />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayedProducts.map((item) => (
-                <TableRow key={item._id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className="avatar">
-                        <div className="mask mask-squircle w-12 h-12">
-                          <img src={item.img[0]} alt={item.name} />
-                        </div>
+            ) : displayedProducts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="py-12 text-center text-gray-400">
+                  <FiShoppingBag className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                  <p className="text-sm font-medium">No results matched your search.</p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              displayedProducts.map((item) => (
+                <TableRow key={item._id} className="group hover:bg-gray-50/50 transition-colors border-b border-gray-100 last:border-0">
+                  <TableCell className="py-4 px-6">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
+                        <img src={item.img[0]} className="w-full h-full object-cover" alt={item.name} />
                       </div>
-                      <div className="font-bold">{item.name}</div>
+                      <div className="font-bold text-sm text-gray-900 leading-tight line-clamp-1">{item.name}</div>
                     </div>
                   </TableCell>
-                    <TableCell>{item.sizes.reduce((sum, s) => sum + (s.sellCount || 0), 0)}</TableCell>
-                  <TableCell>
-                    <span className="text-green-600 font-bold">
-                        {getCurrencySymbol(country)}
-                        {typeof item?.actualPrice === "object"
-                            ? item?.actualPrice?.[country] ?? 0
-                            : item?.actualPrice ?? 0}
-                    </span>
-                    {typeof item?.sizes?.[0]?.offerPrice === "object" &&
-                     (item?.sizes?.[0]?.offerPrice?.[country] ?? 0) < (item?.actualPrice?.[country] ?? 0) && (
-                        <span className="text-sm text-gray-500 line-through ml-2">
-                            {getCurrencySymbol(country)}
-                            {typeof item?.sizes?.[0]?.offerPrice === "object"
-                                ? item?.sizes?.[0]?.offerPrice?.[country] ?? 0
-                                : item?.sizes?.[0]?.offerPrice ?? 0}
-                        </span>
-                    )}
+                  <TableCell className="py-4 px-6 text-center">
+                    <div className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-lg text-xs font-black">
+                      <FiTrendingUp size={10} />
+                      {item.sizes.reduce((sum, s) => sum + (s.sellCount || 0), 0)}
+                    </div>
                   </TableCell>
-
-                  <TableCell>{item.sizes.reduce((sum, s) => sum + (s.stock || 0), 0)}</TableCell>
-                  <TableCell>
+                  <TableCell className="py-4 px-6 text-center">
+                    <div className="flex flex-col items-center">
+                      <span className="text-sm font-black text-gray-900">
+                        {getCurrencySymbol(country)}
+                        {(typeof item?.actualPrice === "object" ? item?.actualPrice?.[country] : item?.actualPrice) ?? 0}
+                      </span>
+                      {typeof item?.sizes?.[0]?.offerPrice === "object" && (item?.sizes?.[0]?.offerPrice?.[country] ?? 0) < (item?.actualPrice?.[country] ?? 0) && (
+                        <span className="text-[10px] text-gray-400 line-through">
+                          {getCurrencySymbol(country)}
+                          {item?.sizes[0].offerPrice[country]}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-4 px-6 text-center">
+                    <span className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                      {item.sizes.reduce((sum, s) => sum + (s.stock || 0), 0)} IN STOCK
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
                     <div className="flex flex-wrap gap-1">
-                      {item.categories.map((cat, idx) => (
-                        <Badge key={idx} variant="secondary">{cat.name}</Badge>
+                      {item.categories.slice(0, 2).map((cat, idx) => (
+                        <Badge key={idx} variant="neutral" className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest leading-none h-auto">
+                          {cat.name}
+                        </Badge>
                       ))}
+                      {item.categories.length > 2 && (
+                        <span className="text-[9px] text-gray-400 font-bold ml-1">+{item.categories.length - 2}</span>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-        {loading && (
-          <div className="flex justify-center items-center mt-4">
-            <FaSpinner className="animate-spin text-blue-500 text-2xl" />
-          </div>
-        )}
-
-        {/* Pagination */}
-        <div className="flex justify-center mt-4 space-x-2">
-          <Button onClick={() => setPage((prev) => Math.max(prev - 1, 1))} disabled={page === 1}>
-            Previous
-          </Button>
-          <span className="self-center">Page {page} of {totalPages}</span>
-          <Button onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))} disabled={page === totalPages}>
-            Next
-          </Button>
+      {totalPages > 1 && (
+        <div className="flex justify-center pt-4">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
 

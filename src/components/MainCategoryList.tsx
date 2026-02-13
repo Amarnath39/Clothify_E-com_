@@ -98,8 +98,8 @@ const CategoryList = () => {
         </div>
 
         {/* Grid Layout */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 lg:gap-10">
-          {categories.slice(0, 4).map((cat: any, idx: number) => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
+          {categories.map((cat: any, idx: number) => (
             <CategoryCard
               key={cat._id}
               name={cat.name}
@@ -114,13 +114,13 @@ const CategoryList = () => {
             Snippet implied specific grid, sticking to 4 or wrapping nicely. 
             If many categories, grid-cols-2 md:grid-cols-4 works great for wrapping too.
          */}
-        {categories.length > 4 && (
+        {/* {categories.length > 4 && (
           <div className="mt-12 text-center">
-            <Link href="/categories" className="inline-block border-b border-gray-900 pb-1 text-sm uppercase tracking-widest hover:text-[#b48a3c] hover:border-[#b48a3c] transition-colors">
+            <Link href="/products" className="inline-block border-b border-gray-900 pb-1 text-sm uppercase tracking-widest hover:text-[#b48a3c] hover:border-[#b48a3c] transition-colors">
               View All Categories
             </Link>
           </div>
-        )}
+        )} */}
       </div>
     </section>
   );

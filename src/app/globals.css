@@ -8,6 +8,7 @@
   font-weight: normal;
   font-style: normal;
 }
+
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap');
 
 .marquee-wrapper {
@@ -20,7 +21,8 @@
 
 .marquee {
   display: flex;
-  gap: 8rem; /* space between category names */
+  gap: 8rem;
+  /* space between category names */
   animation: marqueeScroll 20s linear infinite;
 }
 
@@ -29,8 +31,13 @@
 }
 
 @keyframes marqueeScroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .category-text {
@@ -79,6 +86,10 @@ body {
   overflow-x: hidden;
 }
 
+.admin-body-lock {
+  overflow: hidden !important;
+}
+
 
 @layer base {
   :root {
@@ -97,6 +108,7 @@ body {
     --chart-5: 340 75% 55%;
   }
 }
+
 /* Gradient Animation for Welcome Bar */
 .gradient-bar {
   background: linear-gradient(-45deg, #ff6ec4, #7873f5, #4ADEDE, #FF9A8B);
@@ -108,9 +120,11 @@ body {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -150,6 +164,15 @@ body {
     --yellow-30: 45 100% 60%;
     --yellow-20: 45 100% 60%;
     --yellow-10: 45 100% 73%;
+
+    /* Zapan Tokens */
+    --color-brand: #7C1D3E;
+    --color-brand-dark: #5A152D;
+    --color-brand-accent: #E91E7B;
+    --color-brand-muted: #FCE4EC;
+    --color-surface: #F8F9FA;
+    --radius-card: 12px;
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   }
 
   .dark {
@@ -184,35 +207,44 @@ body {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
 .text-bloodRed {
-  color: #b22222; /* Blood red color */
-  text-shadow: 2px 2px 4px rgba(78, 49, 49, 0.5); /* Shadow effect */
-  transition: transform 0.3s ease-in-out; /* Smooth transition for hover effect */
+  color: #b22222;
+  /* Blood red color */
+  text-shadow: 2px 2px 4px rgba(78, 49, 49, 0.5);
+  /* Shadow effect */
+  transition: transform 0.3s ease-in-out;
+  /* Smooth transition for hover effect */
 }
 
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
 }
 
 .blood-red-button {
-  background-color: #b22222; /* Blood red color */
+  background-color: #b22222;
+  /* Blood red color */
   color: white;
   font-weight: bold;
   padding: 0.5rem 1rem;
-  border-radius: 0.375rem; /* Rounded corners */
+  border-radius: 0.375rem;
+  /* Rounded corners */
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Shadow */
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Text shadow */
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  /* Shadow */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  /* Text shadow */
   transition: transform 0.3s ease-in-out;
   position: relative;
   overflow: hidden;
@@ -229,12 +261,10 @@ body {
   left: -100%;
   width: 200%;
   height: 100%;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
+  background: linear-gradient(to right,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent);
   opacity: 0.1;
   animation: shimmer 2s infinite;
 }
@@ -250,8 +280,10 @@ body {
 }
 
 .loader {
-  border: 2px solid white; /* Light gray */
-  border-top: 2px solid #b22222; /* Blood red */
+  border: 2px solid white;
+  /* Light gray */
+  border-top: 2px solid #b22222;
+  /* Blood red */
   border-radius: 50%;
   width: 16px;
   height: 16px;
@@ -263,10 +295,12 @@ body {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
 }
+
 .custom-handle {
   width: 6px;
   background-color: #f0f0f0;
@@ -339,6 +373,7 @@ body {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -349,6 +384,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -387,12 +423,11 @@ body {
 
 /* In your globals.css or a custom CSS file */
 .dialog-overlay {
-  background-color: rgba(
-    0,
-    0,
-    0,
-    0.5
-  ) !important; /* Adjust the opacity as needed */
+  background-color: rgba(0,
+      0,
+      0,
+      0.5) !important;
+  /* Adjust the opacity as needed */
 }
 
 /* Optional: If you want to remove the overlay entirely */
@@ -405,18 +440,22 @@ body {
     left: -100%;
     opacity: 0;
   }
+
   50% {
     opacity: 1;
   }
+
   100% {
     left: 100%;
     opacity: 0;
   }
 }
+
 .offer-badge {
   position: relative;
   overflow: hidden;
 }
+
 .offer-badge::after {
   content: "";
   position: absolute;
@@ -424,18 +463,90 @@ body {
   left: -100%;
   width: 50%;
   height: 200%;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background: linear-gradient(to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0) 100%);
   transform: rotate(30deg);
   transition: all 0.5s;
 }
+
 .offer-badge::after {
   animation: polish 1s ease-in-out infinite;
 }
+
 .offer-badge:hover::after {
   animation: polish 1s ease-in-out infinite;
+}
+
+/* 🪄 Modern Minimal Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 29, 62, 0.2) transparent;
+}
+
+/* Chrome, Edge, and Safari */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-brand, #7C1D3E);
+}
+
+/* Custom utility for hidden scrollbars but keeping functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 🧪 Minimal Utility Classes */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-brand::-webkit-scrollbar-thumb {
+  background-color: var(--color-brand, #7C1D3E);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(124, 29, 62, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #7C1D3E;
+}
+
+html {
+  scrollbar-gutter: stable;
 }

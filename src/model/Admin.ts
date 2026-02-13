@@ -1,6 +1,13 @@
 import mongoose from "mongoose";
 
-const Admin  = new mongoose.Schema({
+const twoFASchema = new mongoose.Schema({
+    enabled: { type: Boolean, default: false },
+    secret: { type: String },        // encrypted TOTP secret
+    tempSecret: { type: String },    // during setup
+    backupCodes: [String],           // hashed backup codes
+}, { _id: false });
+
+const Admin = new mongoose.Schema({
     name: {
         type: String,
     },
@@ -20,7 +27,10 @@ const Admin  = new mongoose.Schema({
     },
     otpExp: {
         type: Date
-    }
+    },
+
+    twoFA: twoFASchema
+
 }, { timestamps: true });
 
 export default mongoose.models.Admin || mongoose.model("Admin", Admin);

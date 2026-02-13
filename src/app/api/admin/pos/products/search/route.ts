@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../../../db";
-import Product from "@/model/Product";
-import Category from "@/model/Category";
+import Product from "../../../../../../../src/model/Product";
+import Category from "../../../../../../../src/model/Category"; // Ensure this is registered
 
 
 // connectDB(); // Moved inside handler
@@ -13,8 +13,9 @@ export const dynamic = "force-dynamic";
  * Fast product search for POS (SKU, Barcode, or Name)
  */
 export const GET = async (req: NextRequest) => {
-    await connectDB();
     try {
+        await connectDB();
+
         const adminId = req.headers.get("x-admin-id");
 
         if (!adminId) {
@@ -34,13 +35,12 @@ export const GET = async (req: NextRequest) => {
             );
         }
 
-        console.log("🔍 POS Product Search:", query);
+        console.log("🔍 POS Product Search Request:", query);
 
         // ✅ Search by SKU (exact match), barcode, or name (partial match)
         const searchConditions = [
             { sku: { $regex: query, $options: "i" } },
             { name: { $regex: query, $options: "i" } },
-            // Add barcode field if you have it in your schema
         ];
 
         const products = await Product.find({
@@ -48,7 +48,7 @@ export const GET = async (req: NextRequest) => {
         })
             .select("_id name sku img actualPrice sizes categories")
             .populate("categories", "name gst")
-            .limit(20) // Limit results for performance
+            .limit(20)
             .lean();
 
         // ✅ Filter out products with zero stock
@@ -68,12 +68,16 @@ export const GET = async (req: NextRequest) => {
             { status: 200 }
         );
     } catch (error: any) {
-        console.error("❌ POS Product search failed:", error);
+        console.error("❌ POS Product search failed CRITICAL:");
+        console.error("Error Message:", error.message);
+        console.error("Error Stack:", error.stack);
+
         return NextResponse.json(
             {
                 success: false,
                 message: "Search failed",
                 error: error.message,
+                debug: process.env.NODE_ENV === "development" ? error.stack : undefined
             },
             { status: 500 }
         );

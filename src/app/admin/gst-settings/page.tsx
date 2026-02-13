@@ -3,8 +3,28 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+    PageHeader,
+    Card,
+    Button,
+    ZapanInput,
+    Badge
+} from "@/theme/components";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow
+} from "@/components/ui/table";
+import {
+    FiPercent,
+    FiSave,
+    FiSettings,
+    FiHash
+} from "react-icons/fi";
+import { LuLoader } from "react-icons/lu";
 
 interface Category {
     _id: string;
@@ -51,38 +71,63 @@ const GSTSettingsPage = () => {
     };
 
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-6">GST Settings</h1>
-            <p className="text-gray-600 mb-6">
-                Set GST percentages for each category. This will be applied to POS orders.
-            </p>
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <PageHeader
+                title="GST Settings"
+                description="Configure tax percentages for product categories applied during checkout."
+            />
 
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            <th className="p-4 font-semibold uppercase text-sm text-gray-600">Category Name</th>
-                            <th className="p-4 font-semibold uppercase text-sm text-gray-600">Current GST %</th>
-                            <th className="p-4 font-semibold uppercase text-sm text-gray-600">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {loading ? (
-                            <tr>
-                                <td colSpan={3} className="p-4 text-center">Loading...</td>
-                            </tr>
-                        ) : categories.length === 0 ? (
-                            <tr>
-                                <td colSpan={3} className="p-4 text-center">No categories found</td>
-                            </tr>
-                        ) : (
-                            categories.map((cat) => (
-                                <GSTRow key={cat._id} category={cat} onUpdate={handleUpdate} updating={updating === cat._id} />
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            <Card className="overflow-hidden border-gray-100 shadow-xl shadow-gray-200/50">
+                <div className="overflow-x-auto scrollbar-thin">
+                    <Table>
+                        <TableHeader className="bg-gray-50/50">
+                            <TableRow className="border-b border-gray-100">
+                                <TableHead className="py-4 px-8">
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                        <FiHash size={12} />
+                                        Category Name
+                                    </div>
+                                </TableHead>
+                                <TableHead className="py-4 px-8 text-center">
+                                    <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                        <FiPercent size={12} />
+                                        Tax Rate (%)
+                                    </div>
+                                </TableHead>
+                                <TableHead className="py-4 px-8 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    Actions
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="py-20 text-center">
+                                        <LuLoader className="w-8 h-8 animate-spin text-[#7C1D3E] mx-auto" />
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-4">Loading Tax Tiers...</p>
+                                    </TableCell>
+                                </TableRow>
+                            ) : categories.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="py-20 text-center text-gray-400">
+                                        <FiSettings className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                                        <p className="font-bold text-sm">No categories mapped for tax calculation.</p>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                categories.map((cat) => (
+                                    <GSTRow
+                                        key={cat._id}
+                                        category={cat}
+                                        onUpdate={handleUpdate}
+                                        updating={updating === cat._id}
+                                    />
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </Card>
         </div>
     );
 };
@@ -92,32 +137,49 @@ const GSTRow = ({ category, onUpdate, updating }: { category: Category; onUpdate
     const hasChanged = gstValue !== (category.gst || 0);
 
     return (
-        <tr className="hover:bg-gray-50">
-            <td className="p-4 font-medium">{category.name}</td>
-            <td className="p-4">
-                <div className="flex items-center gap-2">
-                    <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={gstValue}
-                        onChange={(e) => setGstValue(Number(e.target.value))}
-                        className="w-24"
-                    />
-                    <span>%</span>
+        <TableRow className="group hover:bg-gray-50/50 transition-colors border-b border-gray-100 last:border-0 text-black">
+            <TableCell className="py-5 px-8">
+                <div>
+                    <p className="font-black text-gray-900">{category.name}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">ID: {category._id.slice(-6)}</p>
                 </div>
-            </td>
-            <td className="p-4">
+            </TableCell>
+            <TableCell className="py-5 px-8">
+                <div className="flex justify-center">
+                    <div className="relative w-28 group">
+                        <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={gstValue}
+                            onChange={(e) => setGstValue(Number(e.target.value))}
+                            className="w-full h-11 text-center font-black bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7C1D3E]/20 focus:border-[#7C1D3E]/50 transition-all text-sm pr-6"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">%</span>
+                    </div>
+                </div>
+            </TableCell>
+            <TableCell className="py-5 px-8 text-right">
                 <Button
                     size="sm"
                     onClick={() => onUpdate(category._id, gstValue)}
                     disabled={updating || !hasChanged}
-                    className={hasChanged ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}
+                    className={`h-11 px-6 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${hasChanged
+                            ? "bg-[#7C1D3E] text-white shadow-lg shadow-[#7C1D3E]/20"
+                            : "bg-gray-100 text-gray-400 opacity-50"
+                        }`}
                 >
-                    {updating ? "Saving..." : "Update"}
+                    {updating ? (
+                        <LuLoader className="animate-spin" />
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <FiSave size={14} />
+                            Update
+                        </div>
+                    )}
                 </Button>
-            </td>
-        </tr>
+            </TableCell>
+        </TableRow>
     );
 };
 

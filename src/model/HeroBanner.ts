@@ -10,6 +10,9 @@ const HeroBanner = new mongoose.Schema({
     img: {
         type: String,
     },
+    mobileImg: {
+        type: String,
+    },
     type: {
         type: String,
         enum: ["image", "video"],
@@ -22,6 +25,6 @@ const HeroBanner = new mongoose.Schema({
         type: Number,
         default: 0
     },
-}, {timestamps: true});
+}, { timestamps: true });
 
 export default mongoose.models.HeroBanner || mongoose.model("HeroBanner", HeroBanner);

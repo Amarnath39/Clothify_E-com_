@@ -104,7 +104,12 @@ const Footer = () => {
                 </li>
               ))}
               <li>
-                <Link href="/collections" className="hover:text-white">
+                <Link href="/categories/696f5e043d596ec4632a5f0c" className="hover:text-white">
+                  Sarees
+                </Link>
+              </li>
+              <li>
+                <Link href="/products?latestProduct=true" className="hover:text-white">
                   New Arrivals
                 </Link>
               </li>
@@ -118,7 +123,7 @@ const Footer = () => {
             </h4>
             <ul className="space-y-4 text-sm">
               <li>
-                <Link href="/track-order" className="hover:text-white">
+                <Link href="/orders/Status" className="hover:text-white">
                   Track Order
                 </Link>
               </li>
@@ -132,11 +137,11 @@ const Footer = () => {
                   Returns & Exchange
                 </Link>
               </li>
-              <li>
+              {/*<li>
                 <Link href="/care" className="hover:text-white">
                   Saree Care Guide
                 </Link>
-              </li>
+              </li>*/}
               <li>
                 <Button
                   variant="outline"
@@ -181,7 +186,7 @@ const Footer = () => {
             <Link href="/policy/privacy-policy" className="hover:text-white">
               Privacy Policy
             </Link>
-            <Link href="/policy/terms" className="hover:text-white">
+            <Link href="/policy/terms-condition" className="hover:text-white">
               Terms of Service
             </Link>
           </div>

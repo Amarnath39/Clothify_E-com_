@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -72,9 +74,9 @@ export const OrderStatus = ({
   const isCancelled = status === "Cancelled";
   const daysSinceDelivery: number = isDelivered
     ? Math.floor(
-        (new Date().getTime() - new Date(deliveryDate).getTime()) /
-          (1000 * 60 * 60 * 24)
-      )
+      (new Date().getTime() - new Date(deliveryDate).getTime()) /
+      (1000 * 60 * 60 * 24)
+    )
     : 0;
   const canExchange = isDelivered && daysSinceDelivery <= EXCHANGE_PERIOD;
 

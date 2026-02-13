@@ -15,57 +15,57 @@ const TermsAndConditions = () => {
     },
     {
       title: "Responsible Use and Conduct",
-      content:[
+      content: [
         "To shop on our website:",
         "You must be at least 18 years old or under parental guidance.",
         "You are responsible for maintaining the confidentiality of your account.",
       ]
     },
     {
-  title: "Product Availability & Pricing",
-  content:
-    "All products are subject to availability. Prices may change without prior notice. We reserve the right to refuse or cancel any order for any reason.",
-},
-{
-  title: "Orders & Payments",
-  content:
-    "Orders are confirmed via email or SMS. Payments must be made in full at checkout. We accept credit/debit cards, UPI, and other secure payment methods.",
-},
-{
-  title: "Shipping Policy",
-  content:
-    "We only ship within India. Orders are usually dispatched within 1–3 business days. Delivery may take 3–7 business days depending on location.",
-},
-{
-  title: "Cancellation Policy",
-  content:
-    "Once an order is placed, it cannot be cancelled for any reason. Please ensure all details are correct before confirming your purchase.",
-},
-{
-  title: "Returns & Refunds",
-  content:
-    "All sales are final. We do not accept returns or exchanges for reasons such as change of mind, size issues, or color preference. Refunds are not provided once the order has been confirmed and processed.",
-},
-{
-  title: "Intellectual Property",
-  content:
-    "All website content—images, logos, product descriptions, and branding—are the property of S.I.S. Unauthorized use is strictly prohibited.",
-},
-{
-  title: "Limitation of Liability",
-  content:
-    "S.I.S is not liable for delays or failures in performance due to external events or any indirect, incidental, or consequential damages.",
-},
-{
-  title: "Governing Law",
-  content:
-    "These terms shall be governed and interpreted under the laws of the Republic of India.",
-},
-{
-  title: "Contact Information",
-  content:
-    "📧 sisbymridhulaparvathy@gmail.com  | 📞 +91 6282667959",
-},
+      title: "Product Availability & Pricing",
+      content:
+        "All products are subject to availability. Prices may change without prior notice. We reserve the right to refuse or cancel any order for any reason.",
+    },
+    {
+      title: "Orders & Payments",
+      content:
+        "Orders are confirmed via email or SMS. Payments must be made in full at checkout. We accept credit/debit cards, UPI, and other secure payment methods.",
+    },
+    {
+      title: "Shipping Policy",
+      content:
+        "We only ship within India. Orders are usually dispatched within 1–3 business days. Delivery may take 3–7 business days depending on location.",
+    },
+    {
+      title: "Cancellation Policy",
+      content:
+        "Once an order is placed, it cannot be cancelled for any reason. Please ensure all details are correct before confirming your purchase.",
+    },
+    {
+      title: "Returns & Refunds",
+      content:
+        "All sales are final. We do not accept returns or exchanges for reasons such as change of mind, size issues, or color preference. Refunds are not provided once the order has been confirmed and processed.",
+    },
+    {
+      title: "Intellectual Property",
+      content:
+        "All website content—images, logos, product descriptions, and branding—are the property of S.I.S. Unauthorized use is strictly prohibited.",
+    },
+    {
+      title: "Limitation of Liability",
+      content:
+        "S.I.S is not liable for delays or failures in performance due to external events or any indirect, incidental, or consequential damages.",
+    },
+    {
+      title: "Governing Law",
+      content:
+        "These terms shall be governed and interpreted under the laws of the Republic of India.",
+    },
+    {
+      title: "Contact Information",
+      content:
+        "📧 swethasarin2@gmail.com | 📞 +91 6282 025 003",
+    },
 
   ];
 
@@ -83,7 +83,7 @@ const TermsAndConditions = () => {
               href="/"
               className="text-appPrimary-500 font-semibold hover:underline"
             >
-              https://www.siskerala.com/
+              https://www.Swaarasya.com/
             </Link>
             , you agree to be bound by these terms and conditions.
           </p>
