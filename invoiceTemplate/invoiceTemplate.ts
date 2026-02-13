@@ -62,16 +62,14 @@ export const invoiceTemplate = (order: any, companyDetails: any) => `
     <div class="row">
         <div class="col">
             <strong>Invoice Number:</strong> ${order.invoiceId || "N/A"}<br>
-            <strong>Date:</strong> ${
-              order.createdAt
-                ? new Date(order.createdAt).toLocaleDateString()
-                : "N/A"
-            }
+            <strong>Date:</strong> ${order.createdAt
+        ? new Date(order.createdAt).toLocaleDateString()
+        : "N/A"
+    }
         </div>
         <div class="col" style="text-align: right;">
-            <strong>Payment Method:</strong> ${
-              order.paymentMethod || "Not specified"
-            }
+            <strong>Payment Method:</strong> ${order.paymentMethod || "Not specified"
+    }
         </div>
     </div>
 
@@ -93,6 +91,7 @@ export const invoiceTemplate = (order: any, companyDetails: any) => `
         <thead>
             <tr>
                 <th>Item</th>
+                <th>HSN</th>
                 <th>Quantity</th>
                 <th>Price (Rs.)</th>
                 <th>Total (Rs.)</th>
@@ -100,21 +99,33 @@ export const invoiceTemplate = (order: any, companyDetails: any) => `
         </thead>
         <tbody>
             ${(order.productDetails || [])
-              .map(
-                (item: any) => `
+        .map(
+            (item: any) => `
                 <tr>
                     <td>${item.product?.name || "Product Name"}</td>
+                    <td>
+                        ${(() => {
+                    const categories = item.product?.categories;
+                    if (categories && Array.isArray(categories)) {
+                        const catWithHsn = categories.find(
+                            (c: any) => c.hsnCode
+                        );
+                        return catWithHsn ? catWithHsn.hsnCode : "-";
+                    }
+                    return "-";
+                })()}
+                    </td>
                     <td>${item.count || 0}</td>
                     <td>${(item.product?.offerPrice || 0).toFixed(2)}</td>
                     <td>${(
-                      (item.count || 0) * (item.product?.offerPrice || 0)
-                    ).toFixed(2)}</td>
+                    (item.count || 0) * (item.product?.offerPrice || 0)
+                ).toFixed(2)}</td>
                 </tr>
             `
-              )
-              .join("")}
+        )
+        .join("")}
             <tr class="total">
-                <td colspan="3" style="text-align: right;">Total:</td>
+                <td colspan="4" style="text-align: right;">Total:</td>
                 <td>${(order.payablePrice || 0).toFixed(2)}</td>
             </tr>
         </tbody>

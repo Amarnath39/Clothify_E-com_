@@ -28,6 +28,10 @@ const Category = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    hsnCode: {
+        type: String,
+        default: null,
+    },
     displayOrder: { // Added based on conversation history mentioning display order
         type: Number,
         default: 0,

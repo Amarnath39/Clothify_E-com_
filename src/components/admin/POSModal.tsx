@@ -113,6 +113,16 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
         invoiceId: string;
     } | null>(null);
 
+    // ✅ Play Success Sound
+    const playSuccessSound = () => {
+        try {
+            const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+            audio.play().catch(err => console.error("Error playing success sound:", err));
+        } catch (error) {
+            console.error("Audio playback error:", error);
+        }
+    };
+
     // ✅ Auto-focus search input when modal opens
     useEffect(() => {
         if (isOpen) {
@@ -192,6 +202,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
             });
             if (data.success) {
                 setCompletedOrder(data.order);
+                playSuccessSound();
             }
         } catch (error) {
             console.error("Failed to fetch order details:", error);
@@ -481,6 +492,7 @@ const POSModal: React.FC<POSModalProps> = ({ isOpen, onClose }) => {
                 if (data.success) {
                     toast.success("Order Completed Successfully!");
                     setCompletedOrder(data.order);
+                    playSuccessSound();
                 } else {
                     throw new Error(data.message || "Order failed");
                 }

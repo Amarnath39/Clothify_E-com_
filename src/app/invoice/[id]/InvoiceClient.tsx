@@ -112,6 +112,7 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                         <thead>
                             <tr className="bg-gray-100">
                                 <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase border border-gray-300">Description</th>
+                                <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-center border border-gray-300">HSN</th>
                                 <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-center border border-gray-300">Size</th>
                                 <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-center border border-gray-300">Qty</th>
                                 <th className="py-2 px-3 text-sm font-semibold text-gray-600 uppercase text-right border border-gray-300">Unit Price</th>
@@ -146,6 +147,15 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                                     totalGst = (unitPrice - unitTaxableValue) * quantity;
                                 }
 
+                                // Extract HSN Code from categories
+                                let hsnCode = null;
+                                const categories = item.product?.categories;
+                                if (categories && Array.isArray(categories)) {
+                                    // Get the first available HSN code from categories
+                                    const categoryWithHsn = categories.find((c: any) => c.hsnCode);
+                                    hsnCode = categoryWithHsn ? categoryWithHsn.hsnCode : null;
+                                }
+
                                 const unitGst = quantity > 0 ? (totalGst / quantity) : 0;
                                 const unitTaxable = unitPrice - unitGst;
                                 const sgstUnit = unitGst / 2;
@@ -158,6 +168,7 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                                         <td className="py-3 px-3 border border-gray-300">
                                             <div className="font-medium text-gray-900">{productName}</div>
                                         </td>
+                                        <td className="py-3 px-3 text-center border border-gray-300 font-mono text-xs text-gray-500">{hsnCode || "-"}</td>
                                         <td className="py-3 px-3 text-center border border-gray-300">{size}</td>
                                         <td className="py-3 px-3 text-center border border-gray-300">{quantity}</td>
                                         <td className="py-3 px-3 text-right border border-gray-300">₹{unitPrice.toFixed(2)}</td>

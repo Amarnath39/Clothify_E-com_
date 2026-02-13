@@ -30,7 +30,7 @@ export default async function InvoicePage({ params }: { params: { id: string } }
             select: "name actualPrice offerPrice images",
             populate: {
                 path: "categories",
-                select: "gst"
+                select: "gst hsnCode"
             }
         });
 
