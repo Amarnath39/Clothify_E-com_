@@ -11,6 +11,7 @@ import mongoose from "mongoose";
 import axios from "axios";
 import { generateRandomId } from "../../../../helper/generateRandomId";
 import Razorpay from "razorpay";
+import Category from "../../../../model/Category";
 
 connectDB();
 
@@ -135,7 +136,7 @@ export const POST = async (req: NextRequest) => {
             ...new Set(productDetails.map((pd) => pd.product)),
         ];
 
-        const products = await Product.find({ _id: { $in: uniqueProductIds } });
+        const products = await Product.find({ _id: { $in: uniqueProductIds } }).populate("categories");
 
         if (products.length !== uniqueProductIds.length) {
             return NextResponse.json(
@@ -146,6 +147,8 @@ export const POST = async (req: NextRequest) => {
 
         let totalActualPrice = 0;
         let totalOfferPrice = 0;
+        let totalGstAmount = 0;
+        const taxDetails: any[] = [];
         const outOfStockProducts: string[] = [];
 
         const processedProductDetails = productDetails
@@ -163,22 +166,42 @@ export const POST = async (req: NextRequest) => {
                         outOfStockProducts.push(product._id.toString());
                         return null;
                     } else {
+                        const itemPrice = sizeObj.offerPrice || product.actualPrice;
                         totalActualPrice += product.actualPrice * quantity;
-                        totalOfferPrice +=
-                            (sizeObj.offerPrice || product.actualPrice) * quantity;
-                    }
+                        totalOfferPrice += itemPrice * quantity;
 
-                    return {
-                        product: product._id,
-                        count: quantity,
-                        size: {
-                            _id: sizeObj._id,
-                            size: sizeObj.size
-                        },
-                        sizeLabel: sizeObj.size,
-                        actualPrice: product.actualPrice,
-                        offerPrice: sizeObj.offerPrice || product.actualPrice,
-                    };
+                        // GST Calculation (Inclusive)
+                        let productGstPercent = 0;
+                        if (product.categories && Array.isArray(product.categories)) {
+                            // Safely handle both populated and unpopulated categories if needed, though we populated it above
+                            productGstPercent = Math.max(0, ...product.categories.map((c: any) => (typeof c === 'object' ? (c.gst || 0) : 0)));
+                        }
+
+                        const itemTaxableValue = (itemPrice * 100) / (100 + productGstPercent);
+                        const itemGstAmount = (itemPrice - itemTaxableValue) * quantity;
+                        totalGstAmount += itemGstAmount;
+
+                        taxDetails.push({
+                            productId: product._id,
+                            name: product.name,
+                            gstPercent: productGstPercent,
+                            gstAmount: itemGstAmount,
+                            price: itemPrice, // Total inclusive price
+                            quantity: quantity
+                        });
+
+                        return {
+                            product: product._id,
+                            count: quantity,
+                            size: {
+                                _id: sizeObj._id,
+                                size: sizeObj.size
+                            },
+                            sizeLabel: sizeObj.size,
+                            actualPrice: product.actualPrice,
+                            offerPrice: itemPrice,
+                        };
+                    }
                 }
                 return null;
             })
@@ -273,10 +296,14 @@ export const POST = async (req: NextRequest) => {
                 shippingMethod === "DTDC" ? "DTDC" : manualShipping?.courierName || "MANUAL",
             trackingId: manualShipping?.trackingNumber || "",
 
-            // Metadata for recovery
+            // Metadata for recovery and GST display
             metadata: {
                 source: "OFFLINE_ADMIN",
-                adminId
+                adminId,
+                taxDetails,
+                totalGstAmount,
+                totalSgstAmount: totalGstAmount / 2,
+                totalCgstAmount: totalGstAmount / 2,
             }
         });
 
@@ -377,8 +404,8 @@ export const POST = async (req: NextRequest) => {
                         num_pieces: item.count.toString(),
 
                         origin_details: {
-                            name: process.env.DTDC_ORIGIN_NAME || "SIS BY MP",
-                            phone: process.env.DTDC_ORIGIN_PHONE || "6282667959",
+                            name: process.env.DTDC_ORIGIN_NAME || "Swaarasya",
+                            phone: process.env.DTDC_ORIGIN_PHONE || "6282 025 003",
                             address_line_1: process.env.DTDC_ORIGIN_ADDR1 || "PERUKAVU ",
                             address_line_2: process.env.DTDC_ORIGIN_ADDR2 || "VILAVOORKAL , MALAYINKEEZHU,",
                             pincode: dtdcDetails.pickupPincode || process.env.DTDC_ORIGIN_PINCODE || "695573",

@@ -294,6 +294,38 @@ function AdminShell({ children }) {
     }
   }, [isAuth]);
 
+  // ✅ Aggressive Prevent body scroll (double scrollbar fix) 
+  useEffect(() => {
+    if (isAuth) {
+      document.body.classList.add("admin-body-lock");
+      document.documentElement.classList.add("admin-body-lock");
+
+      // Diagnostic: Find elements that might be causing a scrollbar
+      const findOverflow = () => {
+        const root = document.body;
+        if (root.scrollHeight > window.innerHeight) {
+          console.warn('⚠️ Body is taller than window! height:', root.scrollHeight, 'window:', window.innerHeight);
+          const all = document.querySelectorAll('*');
+          for (const el of all) {
+            if (el.scrollHeight > el.clientHeight && !['main', 'aside', 'nav'].includes(el.tagName.toLowerCase())) {
+              const style = window.getComputedStyle(el);
+              if (style.overflowY !== 'hidden' && style.overflowY !== 'clip') {
+                // console.log('Potential overflow culprit:', el);
+              }
+            }
+          }
+        }
+      };
+
+      const timer = setTimeout(findOverflow, 3000);
+      return () => {
+        clearTimeout(timer);
+        document.body.classList.remove("admin-body-lock");
+        document.documentElement.classList.remove("admin-body-lock");
+      };
+    }
+  }, [isAuth]);
+
   if (!isAuth) {
     return null;
   }
@@ -306,6 +338,17 @@ function AdminShell({ children }) {
 
       <div className="flex h-screen bg-[#F8F9FA] overflow-hidden">
         <style jsx global>{`
+        html, body {
+          overflow: hidden !important;
+          height: 100% !important;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          position: fixed !important; 
+        }
+        #__next {
+          height: 100% !important;
+        }
         .navbar-main,
         .footer-main {
           display: none;
@@ -599,7 +642,7 @@ function AdminShell({ children }) {
           </header>
 
           {/* Page Content */}
-          <div className="flex-1 overflow-y-auto p-6 lg:p-8 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-8 scrollbar-thin">
             <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
               {children}
             </div>

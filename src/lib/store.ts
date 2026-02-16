@@ -29,7 +29,7 @@ import marqueeSlice from "./features/marquee";
 
 // Define the persist config
 const persistConfig = {
-  key: "siskerala",
+  key: "Swaarasya",
   storage,
   whitelist: ["cart", "auth", "wishlist", "order", "recentlyViewed", "marquee"],
 };

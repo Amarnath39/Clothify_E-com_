@@ -47,7 +47,7 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
                 <!-- Header with Logo -->
                 <tr>
                   <td style="padding:30px; text-align:center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <img src="https://www.siskerala.com/assets/static/logo/SIS-LOGO.png" alt="SIS Kerala" style="height:80px; width:auto;"/>
+                    <img src="https://www.Swaarasya.com/assets/static/logo/SIS-LOGO.png" alt="SIS Kerala" style="height:80px; width:auto;"/>
                   </td>
                 </tr>
 
@@ -170,7 +170,7 @@ export const sendUserOrderEmail = async (order: any): Promise<{ success: boolean
 
     await transporter.sendMail({
       from: '"Swaarasya" <noreply@swaarasya.com>',
-      to: `${order.user?.email || order.customerEmail},sisbymridhulaparvathy@gmail.com`,
+      to: `${order.user?.email || order.customerEmail},swethasarin2@gmail.com`,
       subject: `✅ Order Confirmed - #${order.orderId || order.tempTransactionId} - SIS Kerala`,
       html: htmlTemplate,
     });

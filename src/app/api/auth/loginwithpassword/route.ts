@@ -58,7 +58,7 @@ export const POST = async (req: NextRequest) => {
         maxAge: 30 * 24 * 60 * 60,
         path: "/",
         domain: process.env.NODE_ENV === "production"
-          ? "siskerala.com"
+          ? "Swaarasya.com"
           : "localhost",
       };
 
@@ -134,7 +134,7 @@ export const POST = async (req: NextRequest) => {
       maxAge: 30 * 24 * 60 * 60,
       path: "/",
       domain: process.env.NODE_ENV === "production"
-        ? "www.siskerala.com"
+        ? "www.Swaarasya.com"
         : "localhost",
     };
 

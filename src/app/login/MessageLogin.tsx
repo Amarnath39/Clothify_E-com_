@@ -15,7 +15,7 @@ export default function MessageLogin() {
   const [resendTimer, setResendTimer] = useState(0);
 
   const router = useRouter();
-  const dispatch = useAppDispatch(); 
+  const dispatch = useAppDispatch();
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const API_KEY = "c5837917-42b5-11f0-a562-0200cd936042";
 
@@ -31,7 +31,7 @@ export default function MessageLogin() {
       const response = await axios.post("/api/send-otp", {
         phoneNumber,
         apiKey: API_KEY,
-        var1Value: "siskerala",
+        var1Value: "Swaarasya",
       });
 
       if (response.data.Status === "Success") {
@@ -71,12 +71,12 @@ export default function MessageLogin() {
         response.data.Details === "OTP Matched"
       ) {
         toast.success("OTP verified successfully!");
-        
+
         // ✅ Use type assertion as a workaround
         const resultAction = await dispatch(
           smsLogin({ phone: phoneNumber }) as any
         );
-        
+
         if (smsLogin.fulfilled.match(resultAction)) {
           router.push("/");
         } else if (smsLogin.rejected.match(resultAction)) {
@@ -194,15 +194,15 @@ export default function MessageLogin() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
             />
           </div>
-           <button
-  onClick={sendOTP}
-  disabled={loading}
-  className={`w-full bg-black py-3 px-4 rounded-lg font-medium focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors duration-200
+          <button
+            onClick={sendOTP}
+            disabled={loading}
+            className={`w-full bg-black py-3 px-4 rounded-lg font-medium focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors duration-200
     ${loading ? "!bg-gray-800 text-white" : "!bg-black text-white hover:!bg-gray-800"}
   `}
->
-  {loading ? "Sending OTP..." : "Send OTP"}
-</button>
+          >
+            {loading ? "Sending OTP..." : "Send OTP"}
+          </button>
 
           {/* <button
             onClick={sendOTP}

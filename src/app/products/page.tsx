@@ -21,7 +21,7 @@ export async function generateMetadata({ searchParams }): Promise<Metadata> {
 
 const Page = () => {
   return (
-    <div className="mt-24">
+    <div className="relative mx-auto px-4 py-8 mt-22 min-h-screen">
       <Products />
     </div>
   );

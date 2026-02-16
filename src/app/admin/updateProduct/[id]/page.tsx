@@ -768,9 +768,8 @@ const UpdateProduct = ({ params }: any) => {
                 type="submit"
                 className="w-full h-14 bg-white text-[#7C1D3E] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                Commit Update
+                Update Product
               </button>
-              <p className="text-[9px] font-bold uppercase tracking-wider mt-4 opacity-60 text-center">Protocol V1.2.4 Deployment</p>
             </ZapanCard>
           </div>
         </div>

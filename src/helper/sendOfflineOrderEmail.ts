@@ -179,7 +179,7 @@ export const sendOfflineOrderEmail = async (
           <tr>
             <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0; font-size: 12px; color: #6b7280;">
-                © ${new Date().getFullYear()} Siskerala. All rights reserved.
+                © ${new Date().getFullYear()} Swaarasya. All rights reserved.
               </p>
               <p style="margin: 10px 0 0 0; font-size: 12px; color: #9ca3af;">
                 This is an automated email. Please do not reply.

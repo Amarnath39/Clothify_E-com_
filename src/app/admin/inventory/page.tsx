@@ -213,9 +213,9 @@ const InventoryPage = () => {
       case "In Stock":
         return <Badge variant="success" className="font-bold uppercase tracking-wider text-[10px]"><FiCheckCircle className="mr-1" /> In Stock</Badge>;
       case "Low Stock":
-        return <Badge variant="warning" className="font-bold uppercase tracking-wider text-[10px]"><FiAlertTriangle className="mr-1" /> Low Stock</Badge>;
+        return <Badge className="bg-red-100 text-red-600 font-bold uppercase tracking-wider text-[10px] border-none"><FiAlertTriangle className="mr-1" /> Low Stock</Badge>;
       case "Out of Stock":
-        return <Badge variant="danger" className="font-bold uppercase tracking-wider text-[10px]"><FiAlertTriangle className="mr-1" /> Out of Stock</Badge>;
+        return <Badge className="bg-gray-100 text-gray-600 font-bold uppercase tracking-wider text-[10px] border-none"><FiAlertTriangle className="mr-1" /> Out of Stock</Badge>;
       default:
         return <Badge variant="neutral" className="font-bold uppercase tracking-wider text-[10px]">{status}</Badge>;
     }

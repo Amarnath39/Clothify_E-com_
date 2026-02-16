@@ -45,6 +45,31 @@ const CatgeoryProducts = ({ params }) => {
   const [isSizeModalOpen, setIsSizeModalOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<any>(null);
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [hideFilterButton, setHideFilterButton] = useState(false);
+
+  // ✅ Same scroll logic as Products page
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleScroll = () => {
+      const grid = document.getElementById("category-grid") as HTMLElement | null;
+      if (!grid) return;
+
+      const gridRect = grid.getBoundingClientRect();
+      const offset = 20;
+
+      if (gridRect.bottom <= -offset) {
+        setHideFilterButton(true);
+      } else {
+        setHideFilterButton(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const fetchProducts = useCallback(
     async (page: number, filters: any) => {
       const queryParams = new URLSearchParams({
@@ -99,14 +124,11 @@ const CatgeoryProducts = ({ params }) => {
     setCurrentPage(1);
   };
 
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-
   const handleAddToCart = (size) => {
     if (size?.stock <= 0) {
       toast.error("Out of stock");
       return;
     }
-    console.log(cartItems, "cartItems");
     if (
       cartItems.some(
         (item) =>
@@ -122,7 +144,6 @@ const CatgeoryProducts = ({ params }) => {
 
   const handleWishlistToggle = (product, event: MouseEvent) => {
     event.stopPropagation();
-    console.log(product, "product");
     const isInWishlist = wishlistItems.some((item) => item.id === product._id);
 
     dispatch(
@@ -145,30 +166,21 @@ const CatgeoryProducts = ({ params }) => {
 
   const handleRemoveItem = (id, sizeId, event) => {
     event.stopPropagation();
-    console.log(id, sizeId, "action");
     dispatch(removeFromCart({ id, sizeId }));
-    // setCartProducts((prevProducts: any) =>
-    //   prevProducts.filter((product) => {
-    //     return !(product._id === id && product.size._id === sizeId);
-    //   })
-    // );
   };
-
-  // console.log(products, "products::");
 
   return (
     <>
       <div className="relative mx-auto px-4 py-8 mt-32 sm:mt-36 min-h-screen">
-        {!isFilterOpen && (
+        {!isFilterOpen && !hideFilterButton && (
           <button
-            className="md:hidden fixed top-[90px] right-4 z-[9999] bg-black p-4 rounded-full shadow-lg"
-
+            className="md:hidden fixed top-[90px] right-4 z-30 bg-black p-4 rounded-full shadow-lg"
             onClick={() => setIsFilterOpen(true)}
           >
             <FaFilter size={24} color="white" />
           </button>
         )}
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col md:flex-row">
           <ProductFilters
             onFilterChange={handleFilterChange}
             isOpen={isFilterOpen}
@@ -176,46 +188,30 @@ const CatgeoryProducts = ({ params }) => {
             onfilterApply={onApplyFilters}
           />
 
-          <div className="md:w-10/12">
+          <div className="flex-1 md:ml-8">
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <Card key={index} className="flex flex-col overflow-hidden">
                     <CardContent className="flex-grow p-0">
-                      <div className="relative">
-                        <Skeleton height={350} />
-                        <div className="absolute top-2 right-2">
-                          <Skeleton circle width={30} height={30} />
-                        </div>
-                      </div>
-                      <div className="p-2 sm:p-3 md:p-4 flex flex-col py-2 sm:py-2 md:py-2">
-                        <CardHeader className="p-0">
-                          <Skeleton width="80%" height={24} />
-                        </CardHeader>
-                        <div className="flex justify-between items-center mt-1 sm:mt-2">
-                          <div className="flex flex-col">
-                            <Skeleton width={60} height={24} />
-                            <Skeleton width={40} height={16} />
-                          </div>
-                          <Skeleton width={40} height={24} />
-                        </div>
-                      </div>
+                      <Skeleton height={350} />
                     </CardContent>
-                    <CardFooter className="p-2 sm:p-3 md:p-4 pt-0 sm:pt-0 md:pt-0">
+                    <CardFooter className="p-4">
                       <Skeleton width="100%" height={36} />
                     </CardFooter>
                   </Card>
                 ))}
               </div>
             ) : products.products?.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                {products.products.map((product: any) => (
-  <StandardProductCard
-    key={product._id}
-    product={product}
-  />
-))}
-
+              <div id="category-grid">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                  {products.products.map((product: any) => (
+                    <StandardProductCard
+                      key={product._id}
+                      product={product}
+                    />
+                  ))}
+                </div>
               </div>
             ) : (
               <NotFound height="80vh" text="Products" />

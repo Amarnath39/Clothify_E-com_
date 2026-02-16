@@ -273,9 +273,13 @@ const Coupons = () => {
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{coupon.description || 'Global Campaign'}</span>
                         </div>
                       </div>
-                    </TableCell>
+                    </TableCell>  
                     <TableCell className="py-5 px-8 text-center">
-                      <Badge variant="brand" className="h-7 px-4 rounded-xl text-[11px] font-black uppercase tracking-wider">{formatCouponDisplay(coupon)}</Badge>
+                      <div className="flex justify-center">
+                        <span className="h-7 px-4 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center justify-center min-w-[80px]">
+                          {formatCouponDisplay(coupon)}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="py-5 px-8 text-center">
                       <div className="flex flex-col items-center">

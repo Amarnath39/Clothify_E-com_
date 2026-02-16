@@ -470,7 +470,7 @@ const AddProduct = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-8 animate-in fade-in duration-700 w-full overflow-x-hidden">
       <PageHeader
         title={isDuplicate ? "Duplicate Prototype" : "New Prototype"}
         description="Define product specifications, aesthetics, and inventory parameters."
@@ -738,9 +738,8 @@ const AddProduct = () => {
                 type="submit"
                 className="w-full h-14 bg-white text-[#7C1D3E] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                {isDuplicate ? "Confirm Copy" : "Finalize Prototype"}
+                {isDuplicate ? "Confirm Copy" : "Add Product"}
               </button>
-              <p className="text-[9px] font-bold uppercase tracking-wider mt-4 opacity-60 text-center">Protocol V1.2.4 Deployment</p>
             </ZapanCard>
           </div>
         </div>

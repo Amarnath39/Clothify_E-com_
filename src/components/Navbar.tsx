@@ -303,7 +303,7 @@ const Navbar = () => {
 
 
             {/* Wishlist */}
-            <Link href="/wishlist" className="text-gray-700 hover:text-[#b48a3c] transition-colors hidden md:block">
+            <Link href="/wishlist" className="text-gray-700 hover:text-[#b48a3c] transition-colors ">
               {wishlistItems.length === 0 ? <Heart className="h-5 w-5" /> : <Heart className="h-5 w-5 fill-[#b48a3c] text-[#b48a3c]" />}
             </Link>
 

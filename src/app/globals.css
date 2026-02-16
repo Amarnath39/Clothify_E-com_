@@ -86,6 +86,10 @@ body {
   overflow-x: hidden;
 }
 
+.admin-body-lock {
+  overflow: hidden !important;
+}
+
 
 @layer base {
   :root {
@@ -541,4 +545,8 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #7C1D3E;
+}
+
+html {
+  scrollbar-gutter: stable;
 }
