@@ -50,13 +50,13 @@ export default function InstagramFeed() {
             Follow Us on Instagram
           </h2>
           <a
-            href="https://instagram.com/sis_by_mp"
+            href="https://www.instagram.com/swaarasya_by_swetha/"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center space-x-2 text-burgundy hover:text-burgundy-dark transition-colors font-medium"
           >
             <Instagram className="w-5 h-5" />
-            <span>@sis_by_mp</span>
+            <span>@swaarasya_by_swetha</span>
           </a>
         </div>
 

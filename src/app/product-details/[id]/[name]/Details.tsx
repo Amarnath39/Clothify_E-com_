@@ -322,7 +322,6 @@ const ProductDetails = ({
               >
                 {size.size}
               </button>
-
             ))}
           </div>
 
