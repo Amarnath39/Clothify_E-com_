@@ -374,472 +374,297 @@ const Profile = () => {
   const isFormValid = isNameValid && isEmailValid && isPhoneValid;
 
   return (
-    <div className="container mx-auto p-6 space-y-6 mt-20">
-      <div className=" mx-auto py-8 sm:min-w-[70vw]">
-        {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-medium text-gray-900">
-            Personal Information
-          </h2>
-          <div className="mt-1 h-1 w-20 bg-gradient-to-r from-gray-800 to-gray-400 rounded-full" />
-          {isProfileIncomplete && (
-            <p className="mt-4 text-red-500 text-sm flex items-center">
-              <span className="inline-block w-1 h-1 bg-red-500 rounded-full mr-2" />
-              Please complete your profile to order
+    <div className="min-h-screen bg-slate-50 pt-24 pb-12 px-4 sm:px-6 lg:px-8 font-roboto">
+      <div className="max-w-6xl mx-auto space-y-10 animate-fadeIn">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-200">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-quicksand">
+              Account Profile
+            </h1>
+            <p className="text-slate-500 max-w-lg">
+              Manage your personal information and delivery addresses for a better shopping experience.
             </p>
+          </div>
+          {addresses.length > 0 && cartItems.length > 0 && (
+            <Button
+              onClick={() => router.push("/cart")}
+              className="bg-slate-900 hover:bg-black text-white font-bold rounded-xl px-6 h-11 flex items-center gap-2 shadow-sm"
+            >
+              <FaCartPlus className="w-4 h-4" />
+              Go to Cart
+            </Button>
           )}
         </div>
 
-        {/* Form Fields */}
-        <div className="space-y-6 sm:space-y-0 sm:flex gap-4 flex-row items-center ">
-          <div className="relative group ">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FiUser className="text-gray-400 group-focus-within:text-gray-600 transition-colors" />
-            </div>
-            <Input
-              name="name"
-              value={personalInfo.name}
-              onChange={handlePersonalInfoChange}
-              placeholder="Name"
-              className="pl-10 py-6 bg-gray-50 border-gray-200 rounded-lg focus:bg-white transition-all"
-            />
-            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-focus-within:w-full transition-all duration-300" />
-          </div>
-
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FiMail className="text-gray-400 group-focus-within:text-gray-600 transition-colors" />
-            </div>
-            <Input
-              name="email"
-              value={personalInfo.email}
-              onChange={handlePersonalInfoChange}
-              placeholder="Email"
-              className="pl-10 py-6 bg-gray-50 border-gray-200 rounded-lg focus:bg-white transition-all"
-            />
-            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-focus-within:w-full transition-all duration-300" />
-          </div>
-
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FiPhone className="text-gray-400 group-focus-within:text-gray-600 transition-colors" />
-            </div>
-            <Input
-              name="phone"
-              value={personalInfo.phone}
-              onChange={handlePersonalInfoChange}
-              placeholder="Phone"
-              className="pl-10 py-6 bg-gray-50 border-gray-200 rounded-lg focus:bg-white transition-all"
-            />
-            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-800 group-focus-within:w-full transition-all duration-300" />
-          </div>
-        </div>
-
-        {/* Submit Button */}
-        <div className="mt-8">
-          <Button
-            onClick={handleUpdateProfile}
-            className="w-full py-6 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 max-w-96"
-            disabled={profileUpdating || !isFormValid}
-          >
-            {profileUpdating ? (
-              <>
-                <FiLoader className="animate-spin h-5 w-5" />
-                <span>Updating...</span>
-              </>
-            ) : (
-              <span>Update Personal Info</span>
-            )}
-          </Button>
-        </div>
-      </div>
-      {addresses.length > 0 && cartItems.length > 0 && (
-        <div className="text-right">
-          <Button onClick={() => router.push("/cart")} className="py-5">
-            <FaCartPlus className="mr-2" /> Proceed to Cart
-          </Button>
-        </div>
-      )}
-
-      {/* <Dialog open={isOtpModalOpen} onOpenChange={setIsOtpModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Verify Email</DialogTitle>
-            <DialogDescription>
-              Enter the 6-digit OTP sent to your email {personalInfo.email}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center space-y-4 py-4">
-            <InputOTP
-              required
-              value={otp}
-              onChange={(otp) => setOtp(otp)}
-              maxLength={6}
-            >
-              <InputOTPGroup className="gap-2">
-                {[1, 1, 1, 1, 1, 1].map((_, index) => (
-                  <InputOTPSlot
-                    key={index}
-                    index={index}
-                    className="rounded-lg border-gray-200 focus:border-black focus:ring-black transition"
-                  />
-                ))}
-              </InputOTPGroup>
-            </InputOTP>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleVerifyEmail} className="w-full">
-              {profileUpdating ? (
-                <>
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                "Verify Email"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog> */}
-
-      <div className="mx-auto py-8">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-2xl font-medium text-gray-900">
-              Shipping Addresses
-            </h2>
-            <div className="mt-1 h-0.5 w-20 bg-gradient-to-r from-gray-900 to-gray-400" />
-          </div>
-
-          <Dialog
-            open={isAddressModalOpen}
-            onOpenChange={setIsAddressModalOpen}
-          >
-            <DialogTrigger asChild>
-              <div
-                className="bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-lg flex items-center cursor-pointer "
-                onClick={() => {
-                  setEditingAddress(null);
-                  setNewAddress(initialAddressState);
-                }}
-              >
-                <FiPlus className="md:mr-2" />{" "}
-                <span className="hidden md:block"> Add New </span>
-              </div>
-            </DialogTrigger>
-
-            <DialogContent className="sm:max-w-[425px] h-[75vh] mt-4 overflow-y-scroll">
-              <button
-                onClick={() => setIsAddressModalOpen(false)}
-                className="absolute right-4 top-4 p-1 rounded-full hover:bg-slate-100 transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <DialogHeader>
-                <DialogTitle>
-                  {editingAddress ? "Edit Address" : "Add New Address"}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingAddress
-                    ? "Edit your shipping address details below."
-                    : "Enter your new shipping address details."}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                {/* <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                   id="name"
-                     name="name"
-                    value={newAddress.name}
-                    onChange={handleNewAddressChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div> */}
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-
-                  <div className="col-span-3">
-                    <Input
-                      id="name"
-                      name="name"
-                      value={newAddress.name}
-                      onChange={handleNewAddressChange}
-                      className={errors.name ? "border-red-500" : ""}
-                      required
-                    />
-
-                    {errors.name && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {errors.name}
-                      </p>
-                    )}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          {/* Personal Info Column */}
+          <div className="lg:col-span-4 lg:sticky lg:top-24">
+            <Card className="border border-slate-200 shadow-sm bg-white rounded-2xl overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-6">
+                <div className="flex items-center gap-3 text-brand">
+                  <div className="p-2 bg-brand/10 rounded-lg">
+                    <FiUser className="w-5 h-5" />
                   </div>
+                  <CardTitle className="text-lg font-bold font-quicksand text-slate-900">Personal Details</CardTitle>
                 </div>
-
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="address" className="text-right">
-                    Address
-                  </Label>
-                  <Textarea
-                    id="address"
-                    name="address"
-                    value={newAddress.address}
-                    onChange={handleNewAddressChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="mobile" className="text-right">
-                    Mobile
-                  </Label>
-                  <Input
-                    type="tel"
-                    id="mobile"
-                    name="mobile"
-                    value={newAddress.mobile}
-                    onChange={(e) => {
-                      const value = e.target.value;
-
-                      // ❌ block letters & special characters
-                      if (!/^\d*$/.test(value)) return;
-
-                      // ❌ limit to 10 digits
-                      if (value.length > 10) return;
-
-                      // ❌ first digit must be 6-9
-                      if (value.length === 1 && !/^[6-9]$/.test(value)) return;
-
-                      handleNewAddressChange(e);
-                    }}
-                    className="col-span-3"
-                    required
-                  />
-
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="city" className="text-right">
-                    City
-                  </Label>
-                  <Input
-                    id="city"
-                    name="city"
-                    value={newAddress.city}
-                    onChange={handleNewAddressChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="state" className="text-right">
-                    State
-                  </Label>
-                  <Select
-                    name="state"
-                    value={newAddress.state}
-                    required
-                    onValueChange={(value) =>
-                      handleNewAddressChange({
-                        target: { name: "state", value },
-                      })
-                    }
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select State" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50" style={{ zIndex: 99999 }}>
-                      {indianStates.map((item, index) => {
-                        return (
-                          <SelectItem key={index} value={item}>
-                            {item}
-                          </SelectItem>
-                        );
-                      })}
-                      {/* Add more countries as needed */}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="country" className="text-right">
-                    Country
-                  </Label>
-                  <Select
-                    name="country"
-                    required
-                    value={newAddress.country}
-                    onValueChange={(value) =>
-                      handleNewAddressChange({
-                        target: { name: "country", value },
-                      })
-                    }
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select Country" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 pt-10" style={{ zIndex: 99999 }}>
-                      <SelectItem value="India">India</SelectItem>
-                      {/* Add more countries as needed */}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="zipCode" className="text-right">
-                    Pin Code
-                  </Label>
-                  <Input
-                    type="text"
-                    id="zipCode"
-                    name="zipCode"
-                    required
-                    value={newAddress.zipCode}
-                    onChange={(e) => {
-                      const value = e.target.value;
-
-                      // allow digits only
-                      if (!/^\d*$/.test(value)) return;
-
-                      // max 6 digits
-                      if (value.length > 6) return;
-
-                      // optional: first digit should not be 0
-                      if (value.length === 1 && value === "0") return;
-
-                      handleNewAddressChange(e);
-                    }}
-                    className="col-span-3"
-                  />
-
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="addressType" className="text-right">
-                    Type
-                  </Label>
-                  <Select
-                    name="addressType"
-                    value={newAddress.addressType}
-                    required
-                    onValueChange={(value) =>
-                      handleNewAddressChange({
-                        target: { name: "addressType", value },
-                      })
-                    }
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Address Type" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50" style={{ zIndex: 99999 }}>
-                      <SelectItem value="Home">Home</SelectItem>
-                      <SelectItem value="Work">Work</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <Button className="text-white bg-black hover:bg-gray-800" onClick={handleAddressSubmit}>
-                {editingAddress ? "Update Address" : "Add Address"}
-              </Button>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Empty State */}
-        {addresses.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 rounded-lg">
-            <FiMapPin className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">
-              No addresses yet
-            </h3>
-            <p className="mt-2 text-gray-500">
-              Add your first shipping address to get started
-            </p>
-            <Button
-              onClick={() => setIsAddressModalOpen(true)}
-              className="mt-6 bg-gray-900 hover:bg-gray-800 text-white"
-            >
-              <FiPlus className="mr-2" /> Add New Address
-            </Button>
-          </div>
-        ) : (
-          // Addresses Grid
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {addresses.map((addr) => (
-              <div
-                key={addr._id}
-                className="group relative bg-white p-6 rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200"
-              >
-                {/* Default Badge */}
-                {addr.isDefault && (
-                  <span className="absolute top-4 right-4 px-2 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
-                    Default
-                  </span>
+              </CardHeader>
+              <CardContent className="p-6 space-y-5">
+                {isProfileIncomplete && (
+                  <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-2 text-[13px] text-red-600">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-600 mt-1.5 shrink-0" />
+                    <p className="font-medium">Complete your profile to place orders.</p>
+                  </div>
                 )}
 
-                {/* Address Content */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-gray-900">{addr.name}</h3>
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
-                      {addr.addressType}
-                    </span>
-                  </div>
-
-                  <div className="text-gray-600 text-sm space-y-1">
-                    <p>{addr.address}</p>
-                    <p>
-                      {addr.city}, {addr.state}
-                    </p>
-                    <p>
-                      {addr.country} - {addr.zipCode}
-                    </p>
-                    <p className="text-gray-500">Phone: {addr.mobile}</p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="pt-4 mt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={addr._id === defaultAddress}
-                        onCheckedChange={() =>
-                          handleSetDefaultAddress(addr._id)
-                        }
-                        className="data-[state=checked]:bg-gray-900"
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name" className="text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">Name</Label>
+                    <div className="relative group">
+                      <FiUser className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-brand transition-colors" />
+                      <Input
+                        id="name"
+                        name="name"
+                        value={personalInfo.name}
+                        onChange={handlePersonalInfoChange}
+                        placeholder="Full Name"
+                        className="pl-10 h-11 bg-white border-slate-200 rounded-xl focus:ring-1 focus:ring-brand transition-all"
                       />
-                      <Label className="text-sm text-gray-600">
-                        Set as default
-                      </Label>
                     </div>
+                  </div>
 
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditAddress(addr)}
-                        className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                      >
-                        <FiEdit2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteAddress(addr._id)}
-                        className="text-gray-600 hover:text-red-600 hover:bg-red-50"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </Button>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">Email</Label>
+                    <div className="relative group">
+                      <FiMail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-brand transition-colors" />
+                      <Input
+                        id="email"
+                        name="email"
+                        value={personalInfo.email}
+                        onChange={handlePersonalInfoChange}
+                        placeholder="Email Address"
+                        className="pl-10 h-11 bg-white border-slate-200 rounded-xl focus:ring-1 focus:ring-brand transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="phone" className="text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">Phone</Label>
+                    <div className="relative group">
+                      <FiPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-brand transition-colors" />
+                      <Input
+                        id="phone"
+                        name="phone"
+                        value={personalInfo.phone}
+                        onChange={handlePersonalInfoChange}
+                        placeholder="Phone Number"
+                        className="pl-10 h-11 bg-white border-slate-200 rounded-xl focus:ring-1 focus:ring-brand transition-all"
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+
+                <div className="pt-2">
+                  <Button
+                    onClick={handleUpdateProfile}
+                    className="w-full h-11 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                    disabled={profileUpdating || !isFormValid}
+                  >
+                    {profileUpdating ? <FiLoader className="animate-spin h-4 w-4" /> : 'Update Info'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
+
+          {/* Addresses Column */}
+          <div className="lg:col-span-8 space-y-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-brand">
+                <div className="p-2 bg-brand/10 rounded-lg">
+                  <FiMapPin className="w-5 h-5" />
+                </div>
+                <h2 className="text-xl font-bold font-quicksand text-slate-900">Saved Addresses</h2>
+              </div>
+
+              <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    onClick={() => { setEditingAddress(null); setNewAddress(initialAddressState); }}
+                    className="h-10 bg-slate-900 hover:bg-black text-white font-bold rounded-xl px-4 flex items-center gap-2"
+                  >
+                    <FiPlus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Add New Address</span>
+                    <span className="sm:hidden text-xs">Add New</span>
+                  </Button>
+                </DialogTrigger>
+
+                <DialogContent className="sm:max-w-[480px] h-[75vh] overflow-y-auto rounded-2xl border-none shadow-2xl p-0">
+                  <div className="sticky top-0 bg-white z-10 p-6 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                      <DialogTitle className="text-xl font-bold text-slate-900 font-quicksand">
+                        {editingAddress ? "Update Address" : "New Address"}
+                      </DialogTitle>
+                    </div>
+                    <button onClick={() => setIsAddressModalOpen(false)} className="p-1 rounded-full hover:bg-slate-100">
+                      <X className="h-5 w-5 text-slate-400" />
+                    </button>
+                  </div>
+
+                  <div className="p-6 space-y-6">
+                    <div className="grid gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="addr-name" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Recipient Name</Label>
+                        <Input id="addr-name" name="name" value={newAddress.name} onChange={handleNewAddressChange} className={errors.name ? "border-red-500 rounded-xl" : "rounded-xl"} />
+                        {errors.name && <p className="text-[10px] text-red-500 font-medium ml-1">{errors.name}</p>}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="addr-text" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Address Details</Label>
+                        <Textarea id="addr-text" name="address" value={newAddress.address} onChange={handleNewAddressChange} className="min-h-[100px] rounded-xl resize-none" />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="addr-mobile" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Mobile Number</Label>
+                          <Input type="tel" id="addr-mobile" name="mobile" value={newAddress.mobile} onChange={(e) => {
+                            const val = e.target.value;
+                            if (!/^\d*$/.test(val) || val.length > 10 || (val.length === 1 && !/^[6-9]$/.test(val))) return;
+                            handleNewAddressChange(e);
+                          }} className="rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="addr-city" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">City</Label>
+                          <Input id="addr-city" name="city" value={newAddress.city} onChange={handleNewAddressChange} className="rounded-xl" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="addr-state" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">State</Label>
+                          <Select name="state" value={newAddress.state} onValueChange={(value) => handleNewAddressChange({ target: { name: "state", value } })}>
+                            <SelectTrigger className="rounded-xl font-medium">
+                              <SelectValue placeholder="Select State" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl max-h-[250px] z-[9999]">
+                              {indianStates.map((s, i) => <SelectItem key={i} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="addr-zip" className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Pin Code</Label>
+                          <Input id="addr-zip" name="zipCode" value={newAddress.zipCode} onChange={(e) => {
+                            const val = e.target.value;
+                            if (!/^\d*$/.test(val) || val.length > 6 || (val.length === 1 && val === "0")) return;
+                            handleNewAddressChange(e);
+                          }} className="rounded-xl" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Country</Label>
+                          <Select name="country" value={newAddress.country} onValueChange={(value) => handleNewAddressChange({ target: { name: "country", value } })}>
+                            <SelectTrigger className="rounded-xl font-medium">
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl z-[9999]">
+                              <SelectItem value="India">India</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Type</Label>
+                          <Select name="addressType" value={newAddress.addressType} onValueChange={(value) => handleNewAddressChange({ target: { name: "addressType", value } })}>
+                            <SelectTrigger className="rounded-xl font-medium">
+                              <SelectValue placeholder="Home/Work" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl z-[9999]">
+                              <SelectItem value="Home">Home</SelectItem>
+                              <SelectItem value="Work">Work</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-slate-50 mt-auto border-t border-slate-100 flex justify-end gap-3 rounded-b-2xl">
+                    <Button variant="ghost" onClick={() => setIsAddressModalOpen(false)} className="rounded-xl font-bold text-slate-500">Cancel</Button>
+                    <Button onClick={handleAddressSubmit} className="bg-brand hover:bg-brand-dark text-white font-bold rounded-xl px-6 min-w-[120px]">{editingAddress ? "Update Address" : "Save Address"}</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Address Grid */}
+            {addresses.length === 0 ? (
+              <div className="text-center py-24 bg-white border border-dashed border-slate-200 rounded-3xl">
+                <div className="w-20 h-20 bg-slate-50 text-slate-300 flex items-center justify-center rounded-full mx-auto mb-6">
+                  <FiMapPin className="h-10 w-10" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2 font-quicksand">No addresses yet</h3>
+                <p className="text-slate-400 text-sm mb-8">Add your first shipping address to get started.</p>
+                <Button onClick={() => setIsAddressModalOpen(true)} variant="outline" className="rounded-xl px-8 border-slate-200 text-slate-600 hover:bg-slate-50 font-bold">
+                  <FiPlus className="mr-2 h-4 w-4" /> Add Address
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2">
+                {addresses.map((addr) => (
+                  <div key={addr._id} className={`group relative bg-white p-6 rounded-2xl border transition-all duration-300 ${addr.isDefault ? 'border-brand/40 shadow-sm shadow-brand/5' : 'border-slate-100 hover:border-brand/20 hover:shadow-md'}`}>
+                    <div className="flex justify-between items-start mb-5">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest rounded-lg">{addr.addressType}</span>
+                        {addr.isDefault && <span className="px-2.5 py-1 bg-brand/10 text-brand text-[10px] font-bold uppercase tracking-widest rounded-lg border border-brand/10">Default</span>}
+                      </div>
+                      <div className="flex gap-1.5 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditAddress(addr)} className="h-8 w-8 rounded-lg text-slate-400 hover:text-brand hover:bg-brand/5">
+                          <FiEdit2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteAddress(addr._id)} className="h-8 w-8 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50">
+                          <FiTrash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-sm mb-1.5">{addr.name}</h4>
+                        <div className="text-slate-500 text-[13px] leading-relaxed">
+                          <p>{addr.address}</p>
+                          <p>{addr.city}, {addr.state}</p>
+                          <p>{addr.country} - {addr.zipCode}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-brand text-xs font-bold bg-brand/5 w-fit px-3 py-1.5 rounded-lg border border-brand/5">
+                        <FiPhone className="w-3.5 h-3.5" />
+                        <span>{addr.mobile}</span>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Switch
+                            checked={addr._id === defaultAddress}
+                            onCheckedChange={() => handleSetDefaultAddress(addr._id)}
+                            className="data-[state=checked]:bg-brand"
+                          />
+                          <Label className="text-[11px] font-bold text-slate-400 group-hover:text-slate-600 cursor-pointer uppercase tracking-widest">Default</Label>
+                        </div>
+
+                        {!addr.isDefault && (
+                          <button onClick={() => handleSetDefaultAddress(addr._id)} className="text-[10px] font-bold uppercase tracking-tighter text-slate-300 hover:text-brand transition-colors">Set Regular</button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

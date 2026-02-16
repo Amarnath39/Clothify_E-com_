@@ -33,7 +33,9 @@ import {
   FaPlus,
   FaTrash,
   FaHeart,
+  FaCartPlus,
 } from "react-icons/fa";
+import { FiLoader } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { CheckIcon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
@@ -412,151 +414,229 @@ const Cart = () => {
 
 
   // Render logic...
+  if (cartProducts.length === 0 && !loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 font-roboto">
+        <div className="max-w-md w-full text-center space-y-6 animate-fadeIn">
+          <div className="relative mx-auto w-24 h-24 bg-white rounded-3xl shadow-sm flex items-center justify-center border border-slate-100">
+            <FaCartPlus className="text-slate-200" size={40} />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-slate-900 font-quicksand tracking-tight">Your Cart is Empty</h2>
+            <p className="text-slate-500">Looks like you haven't added anything to your cart yet. Let's find something special for you.</p>
+          </div>
+          <Button
+            className="w-full h-12 bg-slate-900 hover:bg-black text-white font-bold rounded-xl shadow-md transition-all sm:w-auto px-10"
+            onClick={() => router.push("/")}
+          >
+            Continue Shopping
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50 pt-32 pb-16 px-4 sm:px-6 lg:px-8 font-roboto">
       <CheckoutModal
         isOpen={isCheckoutModal}
         onClose={() => setIsCheckoutModal(false)}
         orderDetails={createdOrderDetails}
         deliveryFee={deliveryFee}
       />
-      {loading ? (
-        <CartSkeletonLoader />
-      ) : cartProducts.length > 0 ? (
-        <div className="container mx-auto px-4 pt-40 pb-8">
-          <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
 
-          {/* Bulk Actions Bar */}
-          {selectedItems.length > 0 && (
-            <div className="bg-gray-100 p-4 rounded-lg mb-4 flex justify-between items-center animate-in fade-in slide-in-from-top-2">
-              <span className="font-medium">{selectedItems.length} items selected</span>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleBulkMoveToWishlist} className="bg-white hover:bg-gray-200 text-black border-gray-300">
-                  <FaHeart className="mr-2 h-4 w-4" /> Move to Wishlist
-                </Button>
-                <Button variant="destructive" size="sm" onClick={handleBulkRemove} className="bg-red-600 hover:bg-red-700 text-white">
-                  <FaTrash className="mr-2 h-4 w-4" /> Delete Selected
-                </Button>
+      <div className="max-w-7xl mx-auto space-y-10 animate-fadeIn">
+        {/* Page Header */}
+        <div className="border-b border-slate-200 pb-8">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-quicksand">Shopping Cart</h1>
+          <p className="text-slate-500 mt-1">Review your items and proceed to checkout.</p>
+        </div>
+
+        {loading ? (
+          <CartSkeletonLoader />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            {/* Left Column: Cart Items */}
+            <div className="lg:col-span-8 space-y-6">
+              {/* Bulk Actions & Select All */}
+              <div className="flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="select-all"
+                    checked={selectedItems.length === cartProducts.length && cartProducts.length > 0}
+                    onCheckedChange={handleSelectAll}
+                    className="rounded-md border-slate-300 data-[state=checked]:bg-brand data-[state=checked]:border-brand"
+                  />
+                  <Label htmlFor="select-all" className="text-sm font-bold text-slate-700 cursor-pointer uppercase tracking-widest">
+                    Select All ({cartProducts.length})
+                  </Label>
+                </div>
+
+                {selectedItems.length > 0 && (
+                  <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-2">
+                    <Button variant="ghost" size="sm" onClick={handleBulkMoveToWishlist} className="text-slate-500 hover:text-brand hover:bg-brand/5 font-bold flex gap-2 rounded-lg h-9 px-3">
+                      <FaHeart className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Move to Wishlist</span>
+                    </Button>
+                    <div className="w-px h-4 bg-slate-200" />
+                    <Button variant="ghost" size="sm" onClick={handleBulkRemove} className="text-slate-500 hover:text-red-500 hover:bg-red-50 font-bold flex gap-2 rounded-lg h-9 px-3">
+                      <FaTrash className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Delete Selected</span>
+                    </Button>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
 
-          <div className="flex flex-col lg:flex-row gap-8">
-            <div className="lg:w-7/12">
-              {/* Select All Checkbox */}
-              <div className="flex items-center gap-2 mb-2 px-4">
-                <Checkbox
-                  id="select-all"
-                  checked={selectedItems.length === cartProducts.length && cartProducts.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
-                <Label htmlFor="select-all" className="cursor-pointer">Select All</Label>
-              </div>
-
-              {/* Cart Items */}
-              <div className="bg-white rounded-lg shadow-sm">
+              {/* Items List */}
+              <div className="space-y-4">
                 {cartProducts.map((item) => (
-                  <div key={`${item._id}-${item.size?._id}`} className="border-b last:border-b-0">
-                    <div className="grid grid-cols-[auto,auto,1fr,auto] md:grid-cols-[auto,100px,1fr,auto,auto,auto] gap-4 p-4 items-center">
-                      {/* Checkbox */}
+                  <Card key={`${item._id}-${item.size?._id}`} className="group bg-white border border-slate-200 rounded-2xl overflow-hidden transition-all hover:shadow-md">
+                    <div className="flex items-center gap-4 p-4 sm:p-6">
                       <Checkbox
                         checked={selectedItems.includes(`${item._id}-${item.size?._id}`)}
                         onCheckedChange={() => handleToggleSelect(item._id, item.size!._id)}
+                        className="rounded-md border-slate-300 data-[state=checked]:bg-brand data-[state=checked]:border-brand"
                       />
 
-                      <img src={item.img[0]} alt={item.name} className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-md" />
-                      <div className="flex-grow">
-                        <h3 className="font-medium">{item.name}</h3>
-                        <p className="text-sm text-gray-500">Size: {item.size?.size}</p>
-                        <div className="md:hidden flex items-baseline space-x-2">
-                          <p className="font-semibold">₹{item.size?.offerPrice.toFixed(2)}</p>
-                          {item.actualPrice && item.size && item.size.offerPrice < item.actualPrice && (
-                            <p className="text-sm text-gray-500 line-through">₹{item.actualPrice.toFixed(2)}</p>
-                          )}
+                      <div className="relative w-24 h-24 sm:w-32 sm:h-32 shrink-0 rounded-xl overflow-hidden border border-slate-100 bg-slate-50">
+                        <img src={item.img[0]} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      </div>
+
+                      <div className="flex-1 min-w-0 flex flex-col sm:flex-row gap-6">
+                        <div className="flex-1 space-y-1">
+                          <h3 className="font-bold text-slate-900 group-hover:text-brand transition-colors font-quicksand leading-tight text-lg">
+                            {item.name}
+                          </h3>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <span className="inline-flex px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+                              Size: {item.size?.size}
+                            </span>
+                            {item.color && (
+                              <span className="inline-flex px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+                                Col: {item.color}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-400 line-clamp-1 mt-2 hidden sm:block">
+                            {item.description}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-4 sm:min-w-[120px]">
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-slate-900">
+                              ₹{(item.size!.offerPrice * item.count).toLocaleString('en-IN')}
+                            </div>
+                            {item.actualPrice && item.size && item.size.offerPrice < item.actualPrice && (
+                              <div className="text-xs text-slate-400 line-through">
+                                ₹{(item.actualPrice * item.count).toLocaleString('en-IN')}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-100">
+                            <button onClick={() => handleQuantityChange(item._id, item.size!._id, "decrease")} className="p-1.5 rounded-md hover:bg-white hover:text-brand hover:shadow-sm transition-all text-slate-400">
+                              <FaMinus size={10} />
+                            </button>
+                            <span className="w-8 text-center text-sm font-bold text-slate-700">{item.count}</span>
+                            <button onClick={() => handleQuantityChange(item._id, item.size!._id, "increase")} className="p-1.5 rounded-md hover:bg-white hover:text-brand hover:shadow-sm transition-all text-slate-400">
+                              <FaPlus size={10} />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      <div className="hidden md:flex items-center space-x-2">
-                        <button onClick={() => handleQuantityChange(item._id, item.size!._id, "decrease")} className="p-1 rounded-md hover:bg-gray-100">
-                          <FaMinus className="h-3 w-3" />
-                        </button>
-                        <span>{item.count}</span>
-                        <button onClick={() => handleQuantityChange(item._id, item.size!._id, "increase")} className="p-1 rounded-md hover:bg-gray-100">
-                          <FaPlus className="h-3 w-3" />
-                        </button>
-                      </div>
-                      <div className="hidden md:flex flex-col items-end">
-                        <span className="font-medium">₹{(item.size!.offerPrice * item.count).toFixed(2)}</span>
-                        {item.actualPrice && item.size && item.size.offerPrice < item.actualPrice && (
-                          <span className="text-sm text-gray-500 line-through">₹{(item.actualPrice * item.count).toFixed(2)}</span>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <button
-                          onClick={() => handleRemoveItem(item._id, item.size!._id)}
-                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                          title="Remove from Cart"
-                        >
-                          <FaTrash />
-                        </button>
-                        <button
-                          onClick={() => handleMoveToWishlist(item)}
-                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                          title="Move to Wishlist"
-                        >
-                          <FaHeart />
-                        </button>
+
+                      <div className="flex flex-col gap-1 shrink-0 ml-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleMoveToWishlist(item)} className="h-9 w-9 text-slate-300 hover:text-brand hover:bg-brand/5 rounded-xl">
+                          <FaHeart className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item._id, item.size!._id)} className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl">
+                          <FaTrash className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
-            <div className="lg:w-5/12">
-              <div className="sticky top-28 bg-gray-50 rounded-xl p-6">
-                <div className="mt-2">
-                  <CouponSelector
-                    visibleCoupons={visibleCoupons}
-                    appliedCoupons={appliedCoupons}
-                    handleApplyCoupon={handleApplyCoupon}
-                    handleRemoveCoupon={handleRemoveCoupon}
-                    discountAmount={couponDiscount}
-                  />
-                </div>
-                <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
-                {/* Price Breakdown */}
-                <div className="space-y-2">
-                  <div className="flex justify-between"><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-green-600"><span>Discount</span><span>-₹{promotions.toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span>Delivery Fee</span><span>₹{deliveryFee.toFixed(2)}</span></div>
-                  <Separator className="my-2" />
-                  {appliedCoupons.length > 0 && (
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <span className="text-green-700 font-medium block mb-2">Applied Coupons</span>
-                      {appliedCoupons.map((coupon) => (
-                        <div key={coupon._id} className="flex justify-between text-green-600 items-center">
-                          <span className="text-sm font-medium">{coupon.couponCode}</span>
-                          <span className="font-medium">-₹{couponDiscount.toFixed(2)}</span>
+
+            {/* Right Column: Order Summary */}
+            <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-6">
+              <Card className="border border-slate-200 shadow-sm bg-white rounded-2xl overflow-hidden">
+                <div className="p-6 space-y-6">
+                  <div className="space-y-4">
+                    <CouponSelector
+                      visibleCoupons={visibleCoupons}
+                      appliedCoupons={appliedCoupons}
+                      handleApplyCoupon={handleApplyCoupon}
+                      handleRemoveCoupon={handleRemoveCoupon}
+                      discountAmount={couponDiscount}
+                    />
+                  </div>
+
+                  <div className="space-y-4 pt-2 border-t border-slate-100">
+                    <h2 className="text-lg font-bold text-slate-900 font-quicksand">Order Summary</h2>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Subtotal ({cartProducts.length} items)</span>
+                        <span className="text-slate-900 font-medium">₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Savings</span>
+                        <span className="text-emerald-600 font-bold">-₹{promotions.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Delivery</span>
+                        <span className="text-slate-900 font-medium">{deliveryFee === 0 ? <span className="text-emerald-600 font-bold">FREE</span> : `₹${deliveryFee.toFixed(2)}`}</span>
+                      </div>
+
+                      {appliedCoupons.length > 0 && (
+                        <div className="flex justify-between text-sm p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                          <div className="flex items-center gap-2 text-emerald-700">
+                            <CheckIcon className="w-4 h-4" />
+                            <span className="font-bold uppercase tracking-widest text-[10px]">Coupon Applied</span>
+                          </div>
+                          <span className="text-emerald-700 font-bold">-₹{couponDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                         </div>
-                      ))}
+                      )}
+
+                      <Separator className="my-4 bg-slate-100" />
+
+                      <div className="flex justify-between items-end">
+                        <div className="flex flex-col">
+                          <span className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-0.5">Total Amount</span>
+                          <span className="text-2xl font-black text-slate-900 tracking-tight">
+                            ₹{finalTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-right text-slate-400 font-medium pb-1">Incl. of all taxes</div>
+                      </div>
                     </div>
-                  )}
-                  <div className="flex justify-between font-bold text-lg"><span>Total</span><span>₹{finalTotal.toFixed(2)}</span></div>
+                  </div>
+
+                  <Button
+                    onClick={handleProceedToCheckout}
+                    disabled={checkoutLoading}
+                    className="w-full h-12 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl shadow-lg shadow-brand/20 transition-all flex items-center justify-center gap-2 text-lg active:scale-[0.98]"
+                  >
+                    {checkoutLoading ? <FiLoader className="animate-spin" /> : (
+                      <>
+                        Checkout Now
+                        <FaArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+
+                  <div className="flex items-center justify-center gap-2 text-slate-400">
+                    <FaInfoCircle className="w-3.5 h-3.5" />
+                    <span className="text-[11px] font-medium">Secure SSL Encrypted Checkout</span>
+                  </div>
                 </div>
-                <div className="mt-6">
-                  <button onClick={handleProceedToCheckout} disabled={checkoutLoading} className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 disabled:bg-gray-400">
-                    {checkoutLoading ? 'Processing...' : 'Proceed to Checkout'}
-                  </button>
-                </div>
-              </div>
+              </Card>
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center h-[80vh] gap-4">
-          <p className="text-lg text-gray-600">Your cart is empty.</p>
-          <Button onClick={() => router.push("/")}>Continue Shopping</Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

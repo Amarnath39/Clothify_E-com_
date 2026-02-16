@@ -347,6 +347,14 @@ const Navbar = () => {
                       Orders
                     </Link>
 
+                    <Link
+                      href="/contact"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#b48a3c]"
+                    >
+                      Contact Us
+                    </Link>
+
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
