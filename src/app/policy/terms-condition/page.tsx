@@ -6,7 +6,7 @@ const TermsAndConditions = () => {
     {
       title: "Introduction",
       content:
-        "These Terms & Conditions govern your use of the S.I.S and all purchases made through our platform.",
+        "These Terms & Conditions govern your use of the clothify and all purchases made through our platform.",
     },
     {
       title: "Effective Date and Modifications",
@@ -49,12 +49,12 @@ const TermsAndConditions = () => {
     {
       title: "Intellectual Property",
       content:
-        "All website content—images, logos, product descriptions, and branding—are the property of S.I.S. Unauthorized use is strictly prohibited.",
+        "All website content—images, logos, product descriptions, and branding—are the property of clothify. Unauthorized use is strictly prohibited.",
     },
     {
       title: "Limitation of Liability",
       content:
-        "S.I.S is not liable for delays or failures in performance due to external events or any indirect, incidental, or consequential damages.",
+        "Clothify is not liable for delays or failures in performance due to external events or any indirect, incidental, or consequential damages.",
     },
     {
       title: "Governing Law",
@@ -64,7 +64,7 @@ const TermsAndConditions = () => {
     {
       title: "Contact Information",
       content:
-        "📧 swethasarin2@gmail.com | 📞 +91 6282 025 003",
+        "📧 clothify@gmail.com | 📞 +91 9876543210",
     },
 
   ];
@@ -83,7 +83,7 @@ const TermsAndConditions = () => {
               href="/"
               className="text-appPrimary-500 font-semibold hover:underline"
             >
-              https://www.Swaarasya.com/
+              https://www.clothify.com/
             </Link>
             , you agree to be bound by these terms and conditions.
           </p>
@@ -115,7 +115,7 @@ const TermsAndConditions = () => {
 
         <div className="mt-12 text-center bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-appPrimary-500">
-            Thank you for using S.I.S !
+            Thank you for using Clothify !
           </h2>
         </div>
       </div>

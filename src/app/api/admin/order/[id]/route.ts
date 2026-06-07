@@ -117,19 +117,18 @@ export const PATCH = async (
         deliveryPartner: order.deliveryPartner,
         userName: order.user.name,
         userEmail: order.user.email,
-        companyName: "S.I.S",
+        companyName: "Clothify",
       };
 
-      // ✅ Send email
       await sendOrderShippedEmail(emailDetails);
 
-      // ✅ Send WhatsApp tracking details (using your first function)
+      // ✅ Send WhatsApp tracking details
       const whatsappResp = await sendOrderTracking(
         order.user.name,          // customerName
         order.user.phone,         // phoneNumber
         order.trackingId || "",   // trackingId
         order.deliveryPartner || "",  // deliveryPartner
-        order.merchantName || "S.I.S"
+        order.merchantName || "Clothify"
       );
 
       console.log("📲 WhatsApp notification result:", whatsappResp);

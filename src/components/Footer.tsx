@@ -71,7 +71,7 @@ const Footer = () => {
           {/* Brand Column - From Source */}
           <div className="space-y-6">
             <img
-              src="/assets/static/logo/saw.svg"
+              src="/assets/static/logo/logo cropped.png"
               alt="Swaarasya"
               className="h-20"
             />
@@ -173,7 +173,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-[#c9a45c]" />
-                <span>hello@swaarasya.com</span>
+                <span>hello@clothify.com</span>
               </li>
             </ul>
           </div>
@@ -181,7 +181,7 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="border-t border-[#5a4a42] pt-6 flex flex-col md:flex-row justify-between items-center text-sm text-[#b9ab9c]">
-          <p>© {currentYear} Swaarasya. All rights reserved.</p>
+          <p>© {currentYear} clothify. All rights reserved.</p>
           <div className="flex gap-8 mt-4 md:mt-0">
             <Link href="/policy/privacy-policy" className="hover:text-white">
               Privacy Policy
@@ -201,7 +201,7 @@ const Footer = () => {
               <X className="w-6 h-6" />
             </button>
             <div className="text-center space-y-4">
-              <h2 className="text-2xl font-serif">Join Swaarasya</h2>
+              <h2 className="text-2xl font-serif">Join clothify</h2>
               <p className="text-gray-500 text-sm">Subscribe to receive updates on new collections and exclusive heritage offers.</p>
               <form onSubmit={submitEmail} className="space-y-4 pt-4">
                 <Input

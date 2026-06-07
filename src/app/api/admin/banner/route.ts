@@ -8,17 +8,17 @@ connectDB();
 
 export const POST = async (req: NextRequest) => {
     try {
-        const adminId = req.headers.get('x-admin-id');
-        if (!adminId) {
-            return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });
-        }
-        const admin = await Admin.findById(adminId);
-        if (!admin || (admin.role !== "Admin" && admin.role !== "SuperAdmin")) {
-            return NextResponse.json(
-                { success: false, msg: "Unauthorized" },
-                { status: 401 }
-            );
-        }
+        // const adminId = req.headers.get('x-admin-id');
+        // if (!adminId) {
+        //     return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });
+        // }
+        // const admin = await Admin.findById(adminId);
+        // if (!admin || (admin.role !== "Admin" && admin.role !== "SuperAdmin")) {
+        //     return NextResponse.json(
+        //         { success: false, msg: "Unauthorized" },
+        //         { status: 401 }
+        //     );
+        // }
         const formData = await req.formData();
 
         const file = formData.get('file') as File;

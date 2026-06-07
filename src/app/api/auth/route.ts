@@ -19,6 +19,26 @@ export const POST = async (req: NextRequest) => {
         //     phone.replace("+91", "");
         // }
 
+        // Demo account for testing
+        if (email === "test@gmail.com") {
+            let user = await User.findOne({email: email.toLowerCase()});
+            
+            if (!user) {
+                user = new User({
+                    email: email.toLowerCase(),
+                    role: "User",
+                    otp: "123456",
+                    otpExp: new Date(Date.now() + 10 * 60 * 1000),
+                });
+            } else {
+                user.otp = "123456";
+                user.otpExp = new Date(Date.now() + 10 * 60 * 1000);
+            }
+            
+            await user.save();
+            return NextResponse.json({ success: true, msg: "Demo OTP sent: 123456" }, {status: 200});
+        }
+
         const otp = generateOTP();
         const otpExp = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
 

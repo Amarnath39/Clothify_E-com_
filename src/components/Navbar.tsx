@@ -212,9 +212,9 @@ const Navbar = () => {
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <img
-                src="/assets/static/logo/saw.svg"
+                src="/assets/static/logo/logo cropped.png"
                 alt="Swaarasya"
-                className="h-10 w-auto object-contain"
+                className="h-12 w-auto object-contain"
               />
             </motion.div>
           </Link>

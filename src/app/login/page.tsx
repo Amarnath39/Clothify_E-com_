@@ -346,7 +346,7 @@ const Login = () => {
       <div className="max-w-md w-full animate-fadeIn">
         <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-sm border border-slate-100 mb-6">
-            <img src="/assets/static/logo/ogimage.png" alt="Swaarasya" className="h-12 w-auto object-contain" />
+            <img src="/assets/static/logo/logo cropped.png" alt="Clothify" className="h-12 w-auto object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-quicksand">
             Account Login
@@ -591,14 +591,14 @@ const Login = () => {
           </CardContent>
         </Card>
 
-        <div className="mt-8 text-center">
+        {/* <div className="mt-8 text-center">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
             Member of{' '}
             <a href="https://www.webgeon.com/" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-brand transition-colors underline-offset-4 decoration-slate-200">
               Webgeon Results
             </a>
           </p>
-        </div>
+        </div> */}
       </div>
 
       <Modal

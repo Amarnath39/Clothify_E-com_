@@ -70,7 +70,7 @@ const Contact = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
               {[
                 { icon: FaPhone, title: "Phone", content: "+91 8943525333", desc: "Mon-Sat (10AM – 11PM)" },
-                { icon: FaEnvelope, title: "Email", content: "swaarasya.shop@gmail.com", desc: "Expected response: 24h" },
+                { icon: FaEnvelope, title: "Email", content: "clothify.shop@gmail.com", desc: "Expected response: 24h" },
                 { icon: FaMapMarkerAlt, title: "Location", content: "Kerala, India", desc: "Crafted with passion" },
                 { icon: FaClock, title: "Business Hours", content: "10 AM – 11 PM", desc: "Sunday to Saturday" },
               ].map((info, i) => (

@@ -28,8 +28,8 @@ export const getOrderInvoicePDF = async (orderId) => {
     }
 
     const companyDetails = {
-      name: "Swaarasya",
-      address: "BiBi Square, Shop No 2,Chalad, Kannur 670014",
+      name: "Clothify",
+      address: "demo Address,123456",
     };
 
     // Generate PDF buffer

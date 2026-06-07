@@ -32,7 +32,7 @@ export async function generateMetadata({ params }): Promise<Metadata> {
 
   const imageUrl = product.img && product.img.length > 0
     ? (product.img[0].startsWith("http") ? product.img[0] : `https://www.Swaarasya.com${product.img[0].startsWith('/') ? '' : '/'}${product.img[0]}`)
-    : "https://www.Swaarasya.com/assets/static/logo/ogimage.png";
+    : "https://www.Swaarasya.com/assets/static/logo/logo cropped.png";
 
   const productUrl = `https://www.Swaarasya.com/product-details/${id}/${params.name}`;
 

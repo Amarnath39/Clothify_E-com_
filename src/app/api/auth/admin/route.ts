@@ -29,6 +29,7 @@ export const POST = async (req: NextRequest) => {
 
     // Check password
     const isMatch = await bcrypt.compare(password, admin.password);
+    // const isMatch = true
     console.log("🔐 Password match result:", isMatch);
 
     if (!isMatch) {

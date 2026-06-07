@@ -61,9 +61,9 @@ export const GET = async (
       order.totalPrice - (order.payablePrice - (order.shippingCost || 0));
 
     const companyDetails = {
-      name: "Swaarasya",
+      name: "Clothify",
       address:
-        "BiBi Square, Shop No 2,Chalad, Kannur 670014",
+        "demo address,123456",
     };
 
     // Create a new PDF document

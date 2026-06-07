@@ -200,13 +200,13 @@ const Banner: React.FC = () => {
               href={jewelleryCategory ? `/categories/${jewelleryCategory._id}` : "#"}
               className="px-0 py-2"
             >
-              <Button
+              {/* <Button
                 size="lg"
                 variant="secondary"
                 className="!h-12 !rounded-none text-white bg-black hover:bg-white hover:text-black transition-all duration-300"
               >
                 View Jewellery
-              </Button>
+              </Button> */}
             </Link>
           </div>
 

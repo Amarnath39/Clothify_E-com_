@@ -12,7 +12,7 @@ const About = () => {
 
           <p className="mb-6 text-md sm:text-lg leading-relaxed text-gray-700">
             <strong className="text-xl sm:text-2xl block mb-2 text-gray-900">
-              Welcome to Swaarasya!
+              Welcome to Clothify!
             </strong>
           </p>
 
@@ -21,19 +21,19 @@ const About = () => {
               Who We Are
             </h2>
             <p className="text-md sm:text-lg text-gray-700 leading-relaxed">
-              <strong>Swaarasya</strong> is your destination for timeless elegance,
+              <strong>Clothify</strong> is your destination for timeless elegance,
               curated by Swetha with a passion for style, tradition, and authentic craftsmanship.
               We bring together a premium range of 
               <strong> handpicked sarees</strong> and 
               <strong> exquisite jewellery</strong> 
               designed to celebrate the beauty of every woman.  
-              At Swaarasya, fashion is more than just clothing—it's an expression of culture, grace, and individuality.
+              At clothify, fashion is more than just clothing—it's an expression of culture, grace, and individuality.
             </p>
           </div>
 
           <div className="mb-6">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
-              What You’ll Discover at Swaarasya
+              What You’ll Discover at clothify
             </h2>
             <ul className="list-disc list-inside text-md sm:text-lg text-gray-700 space-y-1">
               <li>Premium Sarees – modern, elegant, and beautifully curated</li>
@@ -61,12 +61,12 @@ const About = () => {
           <p className="mb-4 text-md sm:text-lg leading-relaxed text-gray-700">
             Whether you're looking for a festive saree, an elegant daily wear piece,
             stunning jewellery, or a complete bridal look, 
-            <strong> Swaarasya</strong> is here to bring you style that feels personal and timeless.
+            <strong> clothify</strong> is here to bring you style that feels personal and timeless.
           </p>
 
           <p className="mb-6 text-md sm:text-lg leading-relaxed text-gray-700">
             Explore our collections today and experience the elegance, heritage,
-            and charm that define Swaarasya.
+            and charm that define clothify.
           </p>
 
         </div>

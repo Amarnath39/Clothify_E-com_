@@ -456,7 +456,7 @@ export const POST = async (req: NextRequest) => {
             // Async Invoice Sending
             try {
                 const invoiceUrl = `https://www.swaarasya.com/invoice/${newOrder.invoiceId}`;
-                sendPOSInvoice("Customer", customerPhone, newOrder.orderId, invoiceUrl, admin.name || "S.I.S").catch(console.error);
+                sendPOSInvoice("Customer", customerPhone, newOrder.orderId, invoiceUrl, admin.name || "Clothify").catch(console.error);
             } catch (e) { console.error("Invoice Send Error:", e) }
 
             return NextResponse.json({

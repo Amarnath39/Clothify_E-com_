@@ -4,7 +4,7 @@ const PrivacyPolicy = () => {
   const sections = [
     {
       title: "Introduction",
-      content: `At Swaarasya, we are committed to protecting your privacy and ensuring that your personal information is handled with the highest level of security and transparency. This Privacy Policy explains what data we collect, how we use it, and the rights you have regarding your information.`,
+      content: `At Clothify, we are committed to protecting your privacy and ensuring that your personal information is handled with the highest level of security and transparency. This Privacy Policy explains what data we collect, how we use it, and the rights you have regarding your information.`,
     },
     {
       title: "Information We Collect",
@@ -61,14 +61,14 @@ const PrivacyPolicy = () => {
     },
     {
       title: "Changes to This Privacy Policy",
-      content: `Swaarasya may update this Privacy Policy as needed to reflect changes in our practices or legal requirements. Updated versions will be posted on this page. Please review periodically to stay informed.`,
+      content: `Clothify may update this Privacy Policy as needed to reflect changes in our practices or legal requirements. Updated versions will be posted on this page. Please review periodically to stay informed.`,
     },
     {
       title: "Contact Us",
       content: `For any privacy-related questions, concerns, or requests, reach out to us at:
 
-          📧 Email: swaarasya.shop@gmail.com
-          📞 Phone: 8943525333`,
+          📧 Email: clothify.shop@gmail.com
+          📞 Phone: 9876543210`,
     },
   ];
 
@@ -97,7 +97,7 @@ const PrivacyPolicy = () => {
 
         <div className="mt-16 text-center">
           <p className="text-xl font-medium text-black">
-            Thank you for trusting Swaarasya with your information!
+            Thank you for trusting Clothify with your information!
           </p>
         </div>
       </div>

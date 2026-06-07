@@ -83,7 +83,7 @@ body {
 
 html,
 body {
-  overflow-x: hidden;
+  /* overflow-x: hidden; */
 }
 
 .admin-body-lock {

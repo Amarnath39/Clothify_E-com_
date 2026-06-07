@@ -27,7 +27,7 @@ export const sendOrderShippedEmail = async (orderDetails: OrderDetails): Promise
 
     // Define mail options
     const mailOptions = {
-      from: '"Swaarasya" <noreply@swaarasya.com>', // Verified sender from ZeptoMail
+      from: '"Clothify" <noreply@clothify.com>', // Verified sender from ZeptoMail
       to: orderDetails.userEmail,
       subject: "📦 Your Order Has Been Shipped!",
       html: emailContent,

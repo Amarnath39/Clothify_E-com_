@@ -17,7 +17,7 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
     const companyDetails = {
         name: "Swaarasya",
         address: "BiBi Square, Shop No 2,Chalad, Kannur 670014",
-        footer: "Thank you for shopping with Swaarasya!",
+        footer: "Thank you for shopping with clothify!",
     };
 
     // Helper to safely get date
@@ -53,7 +53,7 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                     <div>
                         <div className="relative w-48 h-16 mb-2">
                             {/* Use img for better print support than Next Image sometimes */}
-                            <img src="/assets/static/logo/saw.svg" alt="Swaarasya" className="object-contain h-16 w-auto" />
+                            <img src="/assets/static/logo/logo cropped.png" alt="clothify" className="object-contain h-16 w-auto" />
                         </div>
                         <div className="text-sm text-gray-500 whitespace-pre-line mt-2">
                             {companyDetails.address}
@@ -228,7 +228,7 @@ const InvoiceClient: React.FC<InvoiceClientProps> = ({ order }) => {
                         This is a computer-generated invoice. No signature required.
                     </p>
                     <div className="mt-4 print:hidden text-center">
-                        <p className="text-sm text-gray-500">Need help? Contact us: +91 6282 025 003</p>
+                        <p className="text-sm text-gray-500">Need help? Contact us: +91 9876543210</p>
                     </div>
                 </div>
             </div>

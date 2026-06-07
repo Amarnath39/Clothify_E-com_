@@ -123,18 +123,18 @@ function AdminShell({ children }) {
             },
           ]
           : []),
-        {
-          href: "/admin/gst-settings",
-          title: "GST Settings",
-          icon: <FiPercent />,
-          roles: ["SuperAdmin", "Admin"],
-        },
-        {
-          href: "/admin/inventory",
-          title: "Inventory",
-          icon: <FiBox />,
-          roles: ["SuperAdmin", "Admin", "Sales person"],
-        },
+        // {
+        //   href: "/admin/gst-settings",
+        //   title: "GST Settings",
+        //   icon: <FiPercent />,
+        //   roles: ["SuperAdmin", "Admin"],
+        // },
+        // {
+        //   href: "/admin/inventory",
+        //   title: "Inventory",
+        //   icon: <FiBox />,
+        //   roles: ["SuperAdmin", "Admin", "Sales person"],
+        // },
       ]
     },
     {
@@ -384,7 +384,7 @@ function AdminShell({ children }) {
           >
             <div className="flex items-center gap-4 overflow-hidden">
               {!isCollapsed && (
-                <img src="/assets/static/logo/saw.svg" alt="Saw" className="h-14 w-auto ml-2 overflow-hidden" />
+                <img src="/assets/static/logo/logo cropped.png" alt="Saw" className="h-14 w-auto ml-2 overflow-hidden" />
               )}
             </div>
           </div>
@@ -530,8 +530,8 @@ function AdminShell({ children }) {
                 <span className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">W</span>
               ) : (
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Powered By</span>
-                  <span className="text-xs font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 group-hover:from-[#7C1D3E] group-hover:to-pink-600">WEBGEON RESULTS</span>
+                  {/* <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Powered By</span>
+                  <span className="text-xs font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 group-hover:from-[#7C1D3E] group-hover:to-pink-600">WEBGEON RESULTS</span> */}
                 </div>
               )}
             </Link>
@@ -609,7 +609,8 @@ function AdminShell({ children }) {
                           <p className="text-[10px] text-[#7C1D3E] font-black tracking-widest uppercase mt-1.5 opacity-80">{user.role}</p>
                         </div>
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#7C1D3E] to-[#E91E7B] flex items-center justify-center text-white font-black text-lg shadow-xl shadow-brand/20 border-4 border-white ring-1 ring-gray-100 transition-transform group-hover:scale-105">
-                          {user.name.charAt(0).toUpperCase()}
+                          {/* {user.name.charAt(0).toUpperCase()} */}
+                          {user?.name?.charAt(0)?.toUpperCase() || 'U'} 
                         </div>
                       </div>
                     </DropdownMenuTrigger>

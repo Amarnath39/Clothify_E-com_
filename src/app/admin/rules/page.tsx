@@ -38,13 +38,7 @@ const RulesPage = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post(
-        "/api/admin/rules",
-        { rule: newRule },
-        {
-          headers: { "x-admin-id": "your-admin-id-here" }, // Ensure this matches backend requirements
-        }
-      );
+      const response = await axios.post("/api/admin/rules", { rule: newRule });
       setRules([...rules, response.data.rules]);
       setNewRule("");
       toast.success("Rule added successfully");
@@ -59,9 +53,7 @@ const RulesPage = () => {
     if (!confirm("Are you sure you want to delete this rule?")) return;
 
     try {
-      await axios.delete(`/api/admin/rules/${id}`, {
-        headers: { "x-admin-id": "your-admin-id-here" },
-      });
+      await axios.delete(`/api/admin/rules/${id}`);
       setRules(rules.filter((rule) => rule._id !== id));
       toast.success("Rule deleted successfully");
     } catch (error) {

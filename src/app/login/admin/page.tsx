@@ -214,7 +214,7 @@ const AdminLogin = () => {
         <div className="text-center mb-5">
           <div className="w-20 h-20 bg-white rounded-3xl mx-auto shadow-2xl shadow-[#7C1D3E]/20 flex items-center justify-center mb-6">
             <img
-              src="/assets/static/logo/ogimage.png"
+              src="/assets/static/logo/logo cropped.png"
               alt="Zapan"
               className="w-20 h-20 object-contain"
             />
