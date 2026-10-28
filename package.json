@@ -49,7 +49,7 @@
     "lucide-react": "^0.427.0",
     "next-themes": "^0.3.0",
     "otplib": "^13.2.1",
-    "pg-sdk-node": "https://phonepe.mycloudrepo.io/public/repositories/phonepe-pg-sdk-node/releases/v2/phonepe-pg-sdk-node.tgz",
+    "@phonepe-pg/pg-sdk-node": "^2.0.6",
     "puppeteer": "^23.1.1",
     "qrcode": "^1.5.4",
     "razorpay": "^2.9.6",

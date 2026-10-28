@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { getPhonePeClient } from "@/lib/phonepeClient";
-import { StandardCheckoutPayRequest } from "pg-sdk-node";
+import { StandardCheckoutPayRequest } from "@phonepe-pg/pg-sdk-node";
 import { NextRequest, NextResponse } from "next/server";
 import User from "../../../../model/User";
 import Order from "../../../../model/Order";

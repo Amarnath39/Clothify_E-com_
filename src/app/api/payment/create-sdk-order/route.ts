@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { getPhonePeClient } from "@/lib/phonepeClient";
-import { CreateSdkOrderRequest } from "pg-sdk-node";
+import { CreateSdkOrderRequest } from "@phonepe-pg/pg-sdk-node";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {

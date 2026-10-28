@@ -1,4 +1,4 @@
-import { StandardCheckoutClient, Env } from "pg-sdk-node";
+import { StandardCheckoutClient, Env } from "@phonepe-pg/pg-sdk-node";
 
 let phonePeClient: StandardCheckoutClient | null = null;
 
