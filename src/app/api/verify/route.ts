@@ -5,6 +5,12 @@ import Order from "../../../model/Order";
 import { connectDB } from "../../../../db";
 
 export async function POST(req: Request) {
+  // PAYMENT DISABLED
+  return NextResponse.json(
+    { success: false, msg: "Payment is currently disabled" },
+    { status: 503 }
+  );
+
   try {
     await connectDB();
 
