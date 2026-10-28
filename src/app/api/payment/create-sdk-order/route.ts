@@ -1,9 +1,17 @@
 import { v4 as uuidv4 } from "uuid";
 import { getPhonePeClient } from "@/lib/phonepeClient";
-import { CreateSdkOrderRequest } from "@phonepe-pg/pg-sdk-node";
+// PAYMENT DISABLED - PhonePe SDK commented out
+// import { CreateSdkOrderRequest } from "@phonepe-pg/pg-sdk-node";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  // PAYMENT DISABLED
+  return NextResponse.json(
+    { error: "Payment is currently disabled" },
+    { status: 503 }
+  );
+
+  /*
   try {
     const { amount, userId }: { amount: number; userId: string } = await req.json();
 
@@ -42,4 +50,5 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+  */
 }

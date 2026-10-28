@@ -1,12 +1,19 @@
 // app/api/payment-razorpay/route.ts
 import { NextResponse } from "next/server";
-import Razorpay from "razorpay";
+// PAYMENT DISABLED - Razorpay commented out
+// import Razorpay from "razorpay";
 import Order from "../../../model/Order";
 import { connectDB } from "../../../../db";
 
 
-
 export async function POST(req: Request) {
+  // PAYMENT DISABLED
+  return NextResponse.json(
+    { error: "Payment is currently disabled" },
+    { status: 503 }
+  );
+
+  /*
   try {
     await connectDB();
 
@@ -174,4 +181,5 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-}
+  */
+} // <--- Moved this line to close the comment block

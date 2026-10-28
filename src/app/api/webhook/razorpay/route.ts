@@ -14,7 +14,8 @@ import {
 } from "../../../../helper/sendAdminOrderEmail";
 import { sendOrderConfirmation, sendPOSInvoice } from "../../../../helper/whatsappNotifier";
 import { sseClients } from "../../../../lib/sseClients";
-import Razorpay from "razorpay";
+// PAYMENT DISABLED - Razorpay commented out
+// import Razorpay from "razorpay";
 import { updateStock } from "@/lib/stockManager";
 
 // Helper for debugging SSE
@@ -30,6 +31,9 @@ function logSseStatus(orderId: string) {
 // WEBHOOK HANDLER
 // ═══════════════════════════════════════════════════════════════════════════
 export async function POST(req: NextRequest) {
+    // PAYMENT DISABLED
+    return NextResponse.json({ success: true });
+
     const startTime = Date.now();
     let webhookEvent = "unknown";
 

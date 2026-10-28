@@ -4,6 +4,10 @@ import { connectDB } from "../../../../../db";
 import Order from "@/model/Order";
 
 export async function POST(req: Request) {
+  // PAYMENT DISABLED
+  return new Response("OK", { status: 200 });
+
+  /*
   try {
     await connectDB();
     const authorizationHeader = req.headers.get("authorization") || "";
@@ -28,7 +32,7 @@ export async function POST(req: Request) {
 
     console.log("PhonePe Callback received:", callbackData);
 
-    // ✅ Idempotency check - prevent duplicate processing
+    // Idempotency check - prevent duplicate processing
     const existingOrder = await Order.findOne({ tempTransactionId: orderId });
     if (!existingOrder) {
       console.warn(`Callback received for non-existent order: ${orderId}`);
@@ -63,19 +67,19 @@ export async function POST(req: Request) {
         ).populate("user").populate("productDetails.product"); // Populate for notification details
 
         if (updatedOrder) {
-          console.log("✅ Payment successful (Webhook), checking stock updates...");
+          console.log(" Payment successful (Webhook), checking stock updates...");
 
           if (updatedOrder.order_type === "prebooking") {
-            console.log("ℹ️ Pre-booking order detected. Skipping immediate stock reduction.");
+            console.log(" Pre-booking order detected. Skipping immediate stock reduction.");
             // Skipping reduceStock()
           } else {
             // Use the NEW reduceStock function instead of my manual code
-            // ✅ Trigger Stock Reduction
+            // Trigger Stock Reduction
             const { reduceStock } = await import("@/lib/inventory");
             await reduceStock(updatedOrder._id);
           }
 
-          // ✅ Notify Admin
+          // Notify Admin
           const { sendAdminNotification } = await import("@/lib/notifications");
           await sendAdminNotification("ORDER_PLACED", {
             orderId: updatedOrder.orderId,
@@ -115,4 +119,5 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+  */
 }

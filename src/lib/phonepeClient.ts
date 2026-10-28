@@ -1,15 +1,22 @@
-import { StandardCheckoutClient, Env } from "@phonepe-pg/pg-sdk-node";
+// PAYMENT DISABLED - PhonePe SDK commented out
+// import { StandardCheckoutClient, Env } from "@phonepe-pg/pg-sdk-node";
 
-let phonePeClient: StandardCheckoutClient | null = null;
+// let phonePeClient: StandardCheckoutClient | null = null;
 
-export function getPhonePeClient(): StandardCheckoutClient {
-  if (!phonePeClient) {
-    phonePeClient = StandardCheckoutClient.getInstance(
-      process.env.PHONEPE_CLIENT_ID as string,
-      process.env.PHONEPE_CLIENT_SECRET as string,
-      parseInt(process.env.PHONEPE_CLIENT_VERSION || "1"),
-      process.env.PHONEPE_ENV === "PRODUCTION" ? Env.PRODUCTION : Env.SANDBOX
-    );
-  }
-  return phonePeClient;
+// export function getPhonePeClient(): StandardCheckoutClient {
+//   if (!phonePeClient) {
+//     phonePeClient = StandardCheckoutClient.getInstance(
+//       process.env.PHONEPE_CLIENT_ID as string,
+//       process.env.PHONEPE_CLIENT_SECRET as string,
+//       parseInt(process.env.PHONEPE_CLIENT_VERSION || "1"),
+//       process.env.PHONEPE_ENV === "PRODUCTION" ? Env.PRODUCTION : Env.SANDBOX
+//     );
+//   }
+//   return phonePeClient;
+// }
+
+// Placeholder function to prevent errors
+export function getPhonePeClient(): any {
+  console.warn("PhonePe payment is disabled");
+  return null;
 }

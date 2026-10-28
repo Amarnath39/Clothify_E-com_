@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { getPhonePeClient } from "@/lib/phonepeClient";
-import { StandardCheckoutPayRequest } from "@phonepe-pg/pg-sdk-node";
+// PAYMENT DISABLED - PhonePe SDK commented out
+// import { StandardCheckoutPayRequest } from "@phonepe-pg/pg-sdk-node";
 import { NextRequest, NextResponse } from "next/server";
 import User from "../../../../model/User";
 import Order from "../../../../model/Order";
@@ -8,6 +9,13 @@ import { connectDB } from "../../../../../db";
 
 
 export async function POST(req: NextRequest) {
+  // PAYMENT DISABLED
+  return NextResponse.json(
+    { error: "Payment is currently disabled" },
+    { status: 503 }
+  );
+
+  /*
   try {
     await connectDB();
     // 1. Get userId from headers
@@ -98,4 +106,5 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+  */
 }

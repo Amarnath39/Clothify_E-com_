@@ -1,0 +1,379 @@
+  ▲ Next.js 14.2.35
+  - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+✅ DB Connected
+⚠️ TOTP_ENCRYPTION_KEY is missing or invalid. 2FA encryption will not work.
+⚠️ TOTP_ENCRYPTION_KEY is missing or invalid. 2FA encryption will not work.
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+⚠️ TOTP_ENCRYPTION_KEY is missing or invalid. 2FA encryption will not work.
+Using existing DB connection
+✅ DB Connected
+✅ DB Connected
+✅ DB Connected
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+   Generating static pages (0/90) ...
+Using existing DB connection
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/customers. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/customers. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/categories. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/categories. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/addProduct. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/addProduct. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+   Generating static pages (22/90) 
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/get-orders/mostSelling. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/get-orders/mostSelling. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/get-orders. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/get-orders. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/get-orders/sales. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/get-orders/sales. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/gst-settings. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/gst-settings. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/coupon. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/coupon. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/imageText. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/imageText. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/hero-banner. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/hero-banner. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/before-after. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/before-after. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/pos-orders. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/pos-orders. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/inventory. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/inventory. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/resizable. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/resizable. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/marquee. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/marquee. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/instagram. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/instagram. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/rules. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/rules. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/roles. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/roles. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/products. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/products. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/settings/2fa. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/settings/2fa. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/offline-order. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/offline-order. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+   Generating static pages (44/90) 
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/videomanagement. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/videomanagement. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Using existing DB connection
+Using existing DB connection
+Error fetching 2FA status: B [Error]: Dynamic server usage: Route /api/2fa/status couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at V (D:\mainproject\clothify-ecom-stack\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:21778)
+    at Object.get (D:\mainproject\clothify-ecom-stack\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:29465)
+    at d (D:\mainproject\clothify-ecom-stack\.next\server\app\api\2fa\status\route.js:1:599)
+    at async D:\mainproject\clothify-ecom-stack\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:38411
+    at async e_.execute (D:\mainproject\clothify-ecom-stack\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:27880)
+    at async e_.handle (D:\mainproject\clothify-ecom-stack\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:39943)
+    at async exportAppRoute (D:\mainproject\clothify-ecom-stack\node_modules\next\dist\export\routes\app-route.js:77:26)
+    at async exportPageImpl (D:\mainproject\clothify-ecom-stack\node_modules\next\dist\export\worker.js:175:20)
+    at async Span.traceAsyncFn (D:\mainproject\clothify-ecom-stack\node_modules\next\dist\trace\trace.js:154:20)
+    at async Object.exportPage (D:\mainproject\clothify-ecom-stack\node_modules\next\dist\export\worker.js:237:20) {
+  description: "Route /api/2fa/status couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+   Generating static pages (67/90) 
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+Using existing DB connection
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/debug-env. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin/debug-env. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Generating static pages (90/90)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                     Size     First Load JS
+┌ ○ /                                           9.6 kB          202 kB
+├ ○ /_not-found                                 880 B          88.6 kB
+├ ○ /about                                      160 B          87.9 kB
+├ ○ /admin                                      160 B          87.9 kB
+├ ○ /admin/addProduct                           6.28 kB         191 kB
+├ ○ /admin/before-after                         4.01 kB         111 kB
+├ ○ /admin/categories                           9.83 kB         154 kB
+├ ○ /admin/coupon                               8.43 kB         171 kB
+├ ○ /admin/customers                            5.85 kB         101 kB
+├ ○ /admin/dashboard                            108 kB          228 kB
+├ ○ /admin/debug-env                            1.65 kB        89.4 kB
+├ ○ /admin/get-orders                           92.7 kB         267 kB
+├ ○ /admin/get-orders/mostSelling               2.07 kB        97.5 kB
+├ ○ /admin/get-orders/sales                     5.37 kB         139 kB
+├ ○ /admin/gst-settings                         5.79 kB         131 kB
+├ ○ /admin/hero-banner                          7.62 kB         168 kB
+├ ○ /admin/imageText                            6.93 kB         144 kB
+├ ○ /admin/instagram                            7.81 kB         162 kB
+├ ○ /admin/inventory                            6.47 kB         138 kB
+├ ○ /admin/marquee                              6.67 kB         156 kB
+├ ○ /admin/offline-order                        11.5 kB         172 kB
+├ ○ /admin/pos-orders                           8.33 kB         180 kB
+├ ○ /admin/products                             5.85 kB         144 kB
+├ ○ /admin/resizable                            5.51 kB         124 kB
+├ ○ /admin/roles                                10.9 kB         150 kB
+├ ○ /admin/rules                                5.79 kB         130 kB
+├ ○ /admin/settings/2fa                         5.88 kB         125 kB
+├ ƒ /admin/updateProduct/[id]                   5.94 kB         191 kB
+├ ○ /admin/videomanagement                      5.52 kB         123 kB
+├ ○ /adminLogin                                 11 kB           140 kB
+├ ƒ /api/2fa/disable                            0 B                0 B
+├ ƒ /api/2fa/setup                              0 B                0 B
+├ ƒ /api/2fa/status                             0 B                0 B
+├ ƒ /api/2fa/verify                             0 B                0 B
+├ ƒ /api/address                                0 B                0 B
+├ ƒ /api/address/[id]                           0 B                0 B
+├ ƒ /api/address/default                        0 B                0 B
+├ ƒ /api/admin/addZoomdata                      0 B                0 B
+├ ƒ /api/admin/addZoomdata/[id]                 0 B                0 B
+├ ƒ /api/admin/banner                           0 B                0 B
+├ ƒ /api/admin/banner/[id]                      0 B                0 B
+├ ƒ /api/admin/category                         0 B                0 B
+├ ƒ /api/admin/category/[id]                    0 B                0 B
+├ ƒ /api/admin/coupon                           0 B                0 B
+├ ƒ /api/admin/coupon/[id]                      0 B                0 B
+├ ƒ /api/admin/customer                         0 B                0 B
+├ ƒ /api/admin/dashboard/mostselling            0 B                0 B
+├ ƒ /api/admin/dashboard/orderdetails           0 B                0 B
+├ ƒ /api/admin/dashboard/productperformance     0 B                0 B
+├ ƒ /api/admin/dashboard/salesoverview          0 B                0 B
+├ ƒ /api/admin/dashboard/stats                  0 B                0 B
+├ ƒ /api/admin/export-presets                   0 B                0 B
+├ ƒ /api/admin/gst-settings                     0 B                0 B
+├ ƒ /api/admin/imageText                        0 B                0 B
+├ ƒ /api/admin/imageText/[id]                   0 B                0 B
+├ ƒ /api/admin/instagram                        0 B                0 B
+├ ƒ /api/admin/instagram/[id]                   0 B                0 B
+├ ƒ /api/admin/inventory                        0 B                0 B
+├ ƒ /api/admin/invoice/[id]                     0 B                0 B
+├ ƒ /api/admin/marquee                          0 B                0 B
+├ ƒ /api/admin/marquee/[id]                     0 B                0 B
+├ ƒ /api/admin/notifications                    0 B                0 B
+├ ƒ /api/admin/notifications/[id]               0 B                0 B
+├ ƒ /api/admin/offline-order                    0 B                0 B
+├ ƒ /api/admin/order                            0 B                0 B
+├ ƒ /api/admin/order/[id]                       0 B                0 B
+├ ƒ /api/admin/order/export                     0 B                0 B
+├ ƒ /api/admin/order/refresh/[id]               0 B                0 B
+├ ƒ /api/admin/pos                              0 B                0 B
+├ ○ /api/admin/pos/health                       0 B                0 B
+├ ƒ /api/admin/pos/orders                       0 B                0 B
+├ ƒ /api/admin/pos/products/search              0 B                0 B
+├ ƒ /api/admin/pos/refund                       0 B                0 B
+├ ƒ /api/admin/products                         0 B                0 B
+├ ƒ /api/admin/products/[id]                    0 B                0 B
+├ ƒ /api/admin/rules                            0 B                0 B
+├ ƒ /api/admin/rules/[id]                       0 B                0 B
+├ ƒ /api/admin/shipping-label/[orderId]         0 B                0 B
+├ ƒ /api/admin/user                             0 B                0 B
+├ ƒ /api/admin/user/[id]                        0 B                0 B
+├ ƒ /api/admin/user/add-admin                   0 B                0 B
+├ ƒ /api/auth                                   0 B                0 B
+├ ƒ /api/auth/admin                             0 B                0 B
+├ ƒ /api/auth/admin/forgot                      0 B                0 B
+├ ƒ /api/auth/admin/super                       0 B                0 B
+├ ƒ /api/auth/login                             0 B                0 B
+├ ƒ /api/auth/loginwithemail/sendotp            0 B                0 B
+├ ƒ /api/auth/loginwithemail/verifyotp          0 B                0 B
+├ ƒ /api/auth/loginwithotp/sendotp              0 B                0 B
+├ ƒ /api/auth/loginwithotp/verifyotp            0 B                0 B
+├ ƒ /api/auth/loginwithpassword                 0 B                0 B
+├ ƒ /api/auth/logout                            0 B                0 B
+├ ƒ /api/auth/verify-otp                        0 B                0 B
+├ ƒ /api/banner                                 0 B                0 B
+├ ƒ /api/beforeafter                            0 B                0 B
+├ ƒ /api/beforeafter/[id]                       0 B                0 B
+├ ƒ /api/cart                                   0 B                0 B
+├ ƒ /api/category                               0 B                0 B
+├ ƒ /api/contact                                0 B                0 B
+├ ƒ /api/coupon                                 0 B                0 B
+├ ƒ /api/coupon/[code]                          0 B                0 B
+├ ƒ /api/coupon/all                             0 B                0 B
+├ ƒ /api/get-client-id                          0 B                0 B
+├ ƒ /api/hook/phonepe/payment-status/[orderId]  0 B                0 B
+├ ƒ /api/imageText                              0 B                0 B
+├ ƒ /api/instagram                              0 B                0 B
+├ ○ /api/marquee                                0 B                0 B
+├ ƒ /api/order                                  0 B                0 B
+├ ƒ /api/order-verify                           0 B                0 B
+├ ƒ /api/order/[id]                             0 B                0 B
+├ ƒ /api/order/exchange                         0 B                0 B
+├ ƒ /api/order/status/sse                       0 B                0 B
+├ ƒ /api/payment-razorpay                       0 B                0 B
+├ ƒ /api/payment-razorpay/failed                0 B                0 B
+├ ƒ /api/payment/callback                       0 B                0 B
+├ ƒ /api/payment/create-sdk-order               0 B                0 B
+├ ƒ /api/payment/initiate                       0 B                0 B
+├ ƒ /api/payment/status/[orderId]               0 B                0 B
+├ ƒ /api/products                               0 B                0 B
+├ ƒ /api/products/[id]                          0 B                0 B
+├ ƒ /api/rules                                  0 B                0 B
+├ ƒ /api/search                                 0 B                0 B
+├ ƒ /api/send-otp                               0 B                0 B
+├ ƒ /api/subscribe                              0 B                0 B
+├ ƒ /api/test-phonepe                           0 B                0 B
+├ ƒ /api/user                                   0 B                0 B
+├ ƒ /api/user/email-verify                      0 B                0 B
+├ ƒ /api/verify                                 0 B                0 B
+├ ƒ /api/verify-otp                             0 B                0 B
+├ ƒ /api/videos/delete                          0 B                0 B
+├ ƒ /api/videos/list                            0 B                0 B
+├ ƒ /api/videos/upload                          0 B                0 B
+├ ƒ /api/webhook/razorpay                       0 B                0 B
+├ ƒ /api/zoomData                               0 B                0 B
+├ ○ /cart                                       17.3 kB         180 kB
+├ ƒ /categories/[id]                            2.92 kB         181 kB
+├ ○ /contact                                    5.33 kB         113 kB
+├ ƒ /invoice/[id]                               5.34 kB         108 kB
+├ ○ /login                                      10.9 kB         210 kB
+├ ○ /login/admin                                7.95 kB         161 kB
+├ ○ /orders                                     9.84 kB         159 kB
+├ ○ /orders/Status                              5.99 kB         125 kB
+├ ○ /PaymentStatus                              3.27 kB         122 kB
+├ ○ /policy/privacy-policy                      160 B          87.9 kB
+├ ○ /policy/return-policy                       160 B          87.9 kB
+├ ○ /policy/shipping-policy                     160 B          87.9 kB
+├ ○ /policy/terms-condition                     179 B          96.7 kB
+├ ƒ /product-details/[id]/[name]                7.96 kB         241 kB
+├ ƒ /products                                   3.06 kB         182 kB
+├ ○ /profile                                    9.5 kB          189 kB
+├ ○ /robots.txt                                 0 B                0 B
+├ ○ /sitemap.xml                                0 B                0 B
+├ ○ /success                                    3.9 kB          130 kB
+└ ○ /wishlist                                   5.78 kB         118 kB
++ First Load JS shared by all                   87.8 kB
+  ├ chunks/2117-015816e4458fa23f.js             31.9 kB
+  ├ chunks/fd9d1056-5ce39eab51a6b4e3.js         53.6 kB
+  └ other shared chunks (total)                 2.21 kB
+
+
+ƒ Middleware                                    32.5 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
