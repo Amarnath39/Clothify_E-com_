@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import Category from "../../../model/Category";
 import { connectDB } from "../../../../db";
 
-connectDB();
-
 export const GET = async (req: NextRequest) => {
     try {
+      await connectDB();
       const categories = await Category.find().populate(["parentCategory", "childCategory"]);
       return NextResponse.json(
         { success: true, msg: "Success", categories },
