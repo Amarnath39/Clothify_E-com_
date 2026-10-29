@@ -4,8 +4,6 @@ import Coupon from "../../../../../model/Coupon";
 import Admin from "../../../../../model/Admin";
 import { connectDB } from "../../../../../../db";
 
-connectDB();
-
 // =======================
 // DELETE COUPON
 // =======================
@@ -14,6 +12,7 @@ export const DELETE = async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
+    await connectDB();
     const { id } = await params;
     
     const adminId = req.headers.get("x-admin-id");
@@ -61,6 +60,7 @@ export const PATCH = async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
+    await connectDB();
     const { id } = await params;
     
     const adminId = req.headers.get("x-admin-id");
