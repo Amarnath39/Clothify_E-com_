@@ -6,8 +6,6 @@ import { uploadFile } from "../../../../../helper/uploadFile";
 import { deleteFile } from "../../../../../helper/deleteFile";
 import Admin from "../../../../../model/Admin";
 
-connectDB();
-
 interface Colors {
   color: string;
   varientId: string;
@@ -31,6 +29,7 @@ export const DELETE = async (
   { params }: { params: { id: string } }
 ) => {
   try {
+    await connectDB();
     const adminId = req.headers.get("x-admin-id");
     if (!adminId) {
       return NextResponse.json(
@@ -70,6 +69,7 @@ export const PATCH = async (
   { params }: { params: { id: string } }
 ) => {
   try {
+    await connectDB();
     const adminId = req.headers.get("x-admin-id");
     if (!adminId) {
       return NextResponse.json(

@@ -4,13 +4,12 @@ import { connectDB } from "../../../../../../db";
 import Category from "../../../../../model/Category";
 import { uploadFile } from "../../../../../helper/uploadFile";
 
-connectDB();
-
 export const PATCH = async (
   req: NextRequest,
   { params }: { params: { id: string } }
 ) => {
   try {
+    await connectDB();
     const { id } = params;
     const adminId = req.headers.get("x-admin-id");
     if (!adminId) {
@@ -93,6 +92,7 @@ export const DELETE = async (
   { params }: { params: { id: string } }
 ) => {
   try {
+    await connectDB();
     const adminId = req.headers.get("x-admin-id");
     if (!adminId) {
       return NextResponse.json(
