@@ -7,10 +7,9 @@ import { decrypt } from "../../../../../src/lib/encryption";
 import { verifyToken } from "../../../../../src/lib/twofa";
 var cookie = require("cookie");
 
-connectDB();
-
 export const POST = async (req: NextRequest) => {
   try {
+    await connectDB();
     const { email, password, otp } = await req.json();
 
     console.log("📩 Incoming login request:", { email, hasOtp: !!otp });
@@ -75,7 +74,7 @@ export const POST = async (req: NextRequest) => {
       secure: process.env.NODE_ENV === "production",
       maxAge: 1 * 24 * 60 * 60, // 1 day
       path: "/",
-      domain: process.env.NODE_ENV === "production" ? "swaarasya.com" : "localhost",
+      // domain: process.env.NODE_ENV === "production" ? "swaarasya.com" : "localhost",
     };
 
     console.log("🍪 Cookie options:", cookieOptions);
