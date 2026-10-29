@@ -4,10 +4,9 @@ import Admin from "../../../../../model/Admin";
 import ImageText from "../../../../../model/ImageText";
 import { uploadFile } from "../../../../../helper/uploadFile";
 
-connectDB();
-
 export const PUT = async (req: NextRequest) => {
     try {
+        await connectDB();
         const adminId = req.headers.get('x-admin-id');
         if (!adminId) {
             return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });
@@ -97,6 +96,7 @@ export const PUT = async (req: NextRequest) => {
 
 export const DELETE = async (req: NextRequest) => {
     try {
+        await connectDB();
         const adminId = req.headers.get('x-admin-id');
         if (!adminId) {
             return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });

@@ -4,10 +4,9 @@ import ImageText from "../../../../model/ImageText";
 import { connectDB } from "../../../../../db";
 import Admin from "../../../../model/Admin";
 
-connectDB();
-
 export const POST = async (req: NextRequest) => {
   try {
+    await connectDB();
     const adminId = req.headers.get("x-admin-id");
     if (!adminId) {
       return NextResponse.json(

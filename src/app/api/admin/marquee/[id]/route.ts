@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../../../db";
 import MarqueeEntry from "@/model/MarqueeEntry";
 
-connectDB();
-
 export const PATCH = async (req: NextRequest, { params }: { params: { id: string } }) => {
     try {
+        await connectDB();
         const { text } = await req.json();
         const { id } = params;
 
