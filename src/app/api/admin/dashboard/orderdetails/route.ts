@@ -5,11 +5,9 @@ import Admin from "../../../../../model/Admin";
 import Order from "../../../../../model/Order";
 import "../../../../../model/Product";
 
-// Ensure database connection is established
-connectDB();
-
 export const GET = async (req: NextRequest) => {
     try {
+        await connectDB();
         const adminId = req.headers.get('x-admin-id');
         if (!adminId) {
             return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });
