@@ -5,10 +5,9 @@ import HeroBanner from "../../../../../model/HeroBanner";
 import { deleteFile } from "../../../../../helper/deleteFile";
 import { uploadFile } from "../../../../../helper/uploadFile";
 
-connectDB();
-
 export const DELETE = async (req: NextRequest, { params }: { params: { id: string } }) => {
     try {
+        await connectDB();
         const adminId = req.headers.get('x-admin-id');
         if (!adminId) {
             return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });
@@ -34,6 +33,7 @@ export const DELETE = async (req: NextRequest, { params }: { params: { id: strin
 
 export const PATCH = async (req: NextRequest, { params }: { params: { id: string } }) => {
     try {
+        await connectDB();
         const adminId = req.headers.get('x-admin-id');
         if (!adminId) {
             return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });
@@ -93,9 +93,9 @@ export const PATCH = async (req: NextRequest, { params }: { params: { id: string
     }
 }
 
-
 export const GET = async (req: NextRequest, { params }: { params: { id: string } }) => {
     try {
+        await connectDB();
         const adminId = req.headers.get('x-admin-id');
         if (!adminId) {
             return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });

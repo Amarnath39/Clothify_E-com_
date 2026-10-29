@@ -4,7 +4,6 @@ import { uploadFile } from "../../../../helper/uploadFile";
 import Product from "../../../../model/Product";
 import Admin from "../../../../model/Admin";
 
-connectDB();
 interface Colors {
   color: string;
   varientId: string;
@@ -25,6 +24,7 @@ interface Sizes {
 }
 export const POST = async (req: NextRequest) => {
   try {
+    await connectDB();
     const adminId = req.headers.get("x-admin-id");
     if (!adminId) {
       return NextResponse.json(

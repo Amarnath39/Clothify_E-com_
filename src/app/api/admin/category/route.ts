@@ -4,10 +4,9 @@ import { uploadFile } from "../../../../helper/uploadFile";
 import Category from "../../../../model/Category";
 import Admin from "../../../../model/Admin";
 
-connectDB();
-
 export const POST = async (req: NextRequest) => {
   try {
+    await connectDB();
     const adminId = req.headers.get('x-admin-id');
     if (!adminId) {
       return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });
@@ -74,6 +73,7 @@ export const POST = async (req: NextRequest) => {
 
 export const PATCH = async (req: NextRequest) => {
   try {
+    await connectDB();
     const adminId = req.headers.get('x-admin-id');
     if (!adminId) {
       return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });
