@@ -13,6 +13,8 @@ export const PATCH = async (
   { params }: { params: { id: string } }
 ) => {
   try {
+    const { connectDB } = await import("../../../../../../db");
+    await connectDB();
     const adminId = req.headers.get("x-admin-id");
     if (!adminId) {
       return NextResponse.json(
@@ -162,6 +164,8 @@ export const GET = async (
   { params }: { params: { id: string } }
 ) => {
   try {
+    const { connectDB } = await import("../../../../../../db");
+    await connectDB();
     const adminId = req.headers.get("x-admin-id");
     if (!adminId) {
       return NextResponse.json(
