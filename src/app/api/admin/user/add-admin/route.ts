@@ -3,10 +3,9 @@ import Admin from "../../../../../model/Admin";
 import { connectDB } from "../../../../../../db";
 import bcrypt from "bcryptjs";
 
-connectDB();
-
 export const POST = async (req: NextRequest) => {
   try {
+    await connectDB();
     const adminId = req.headers.get("x-admin-id");
     if (!adminId) {
       return NextResponse.json(

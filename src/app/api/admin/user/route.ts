@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import Admin from "../../../../model/Admin";
 import { connectDB } from "../../../../../db";
 
-connectDB();
 export const dynamic = "force-dynamic";
 
 export const GET = async (req: NextRequest) => {
   try {
+    await connectDB();
     const adminId = req.headers.get('x-admin-id');
     if (!adminId) {
       return NextResponse.json({ success: false, msg: "Please provide Admin Id" }, { status: 400 });
