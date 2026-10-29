@@ -4,10 +4,9 @@ import Category from "../../../model/Category";
 import { connectDB } from "../../../../db";
 import "../../../model/Category";
 
-connectDB();
-
 export const GET = async (req: NextRequest) => {
   try {
+    await connectDB();
     const url = new URL(req.url);
     const search = url.searchParams.get("search");
     const categoryId = url.searchParams.get("categoryId");

@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../db";
 import MarqueeEntry from "@/model/MarqueeEntry";
 
-connectDB();
-
 export const GET = async (req: NextRequest) => {
     try {
+        await connectDB();
         // Fetch public entries, sorted by most recent
         const entries = await MarqueeEntry.find().sort({ createdAt: -1 });
 

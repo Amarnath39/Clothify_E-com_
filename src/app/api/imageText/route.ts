@@ -3,10 +3,9 @@ import { connectDB } from "../../../../db";
 import ZoomData from "../../../model/ZoomData";
 import ImageText from "../../../model/ImageText";
 
-connectDB();
-
 export const GET = async (req: NextRequest) => {
     try {
+        await connectDB();
         const itemDataList = await ImageText.find({}).sort({ createdAt: -1 });
 
         return NextResponse.json(
