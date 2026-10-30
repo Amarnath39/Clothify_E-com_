@@ -3,9 +3,9 @@ import { uploadFile } from "../../../helper/uploadFile";
 import BeforeAfter from "../../../model/BeforeAfter";
 import { connectDB } from "../../../../db";
 
-connectDB();
 export const POST = async (req: NextRequest) => {
   try {
+    await connectDB();
     const formData = await req.formData();
     const beforeFile = formData.get("beforefile") as File;
     const afterFile = formData.get("afterfile") as File;
@@ -49,6 +49,7 @@ export const POST = async (req: NextRequest) => {
 
 export const GET = async (req: NextRequest) => {
   try {
+    await connectDB();
     const beforeAfter = await BeforeAfter.find();
     return NextResponse.json(
       { success: true, msg: "Success", beforeAfter },

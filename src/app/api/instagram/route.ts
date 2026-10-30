@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import Instagram from "../../../model/Instagram";
 import { connectDB } from "../../../../db";
 
-connectDB();
-
 export const GET = async (req: NextRequest) => {
     try {
+      await connectDB();
       const instagramDetails = await Instagram.find();
       return NextResponse.json(
         { success: true, msg: "Success", instagramDetails },

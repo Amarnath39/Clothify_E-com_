@@ -3,10 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import Coupon from "../../../model/Coupon";
 import { connectDB } from "../../../../db";
 
-connectDB();
-
 export const GET = async (req: NextRequest) => {
   try {
+    await connectDB();
     const now = new Date();
 
     // Get current user ID from request headers or auth middleware

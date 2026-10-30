@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../db";
 import ZoomData from "../../../model/ZoomData";
 
-connectDB();
-
 export const GET = async (req: NextRequest) => {
     try {
+        await connectDB();
         const zoomDataList = await ZoomData.find({}).sort({ createdAt: -1 });
 
         return NextResponse.json(

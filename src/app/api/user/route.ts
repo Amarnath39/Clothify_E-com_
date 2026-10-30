@@ -5,10 +5,9 @@ import User from "../../../model/User";
 import "../../../model/Address";
 import { sendEmail } from "../../../helper/sendEmail";
 
-connectDB();
-
 export const GET = async (req: NextRequest) => {
   try {
+    await connectDB();
     const userId = req.headers.get("x-user-id");
     if (!userId) {
       return NextResponse.json(
@@ -65,6 +64,7 @@ export const GET = async (req: NextRequest) => {
 
 export const PATCH = async (req: NextRequest) => {
     try {
+        await connectDB();
         const userId = req.headers.get('x-user-id');
         if (!userId) {
             return NextResponse.json({ success: false, msg: "Please provide User Id" }, { status: 400 });

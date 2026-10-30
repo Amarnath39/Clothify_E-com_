@@ -5,13 +5,12 @@ import { connectDB } from "../../../../../db";
 import "../../../../model/Category";
 import "../../../../model/ReturnRules";
 
-connectDB();
-
 export const GET = async (
   req: NextRequest,
   { params }: { params: { id: string } }
 ) => {
   try {
+    await connectDB();
     const id = params.id;
     const product = await Product.findById(id).populate([
       "categories",

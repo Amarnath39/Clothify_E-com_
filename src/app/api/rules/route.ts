@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import ReturnRules from "../../../model/ReturnRules";
 import { connectDB } from "../../../../db";
 
-connectDB();
-
 export const GET = async (req: NextRequest) => {
   try {
+    await connectDB();
     const rules = await ReturnRules.find();
     return NextResponse.json({ success: true, rules }, { status: 200 });
   } catch (error) {
