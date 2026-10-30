@@ -3,10 +3,9 @@ import Address from "../../../../model/Address";
 import { connectDB } from "../../../../../db";
 import User from "../../../../model/User";
 
-connectDB();
-
 export const DELETE = async (req: NextRequest, {params}: {params: {id: string}}) => {
     try {
+        await connectDB();
         const userId = req.headers.get('x-user-id');
         if (!userId) {
             return NextResponse.json({ success: false, msg: "Please provide User Id" }, { status: 400 });
@@ -36,6 +35,7 @@ export const DELETE = async (req: NextRequest, {params}: {params: {id: string}})
 
 export const PATCH = async (req: NextRequest, {params}: {params: {id: string}}) => {
     try {
+        await connectDB();
         const userId = req.headers.get('x-user-id');
         if (!userId) {
             return NextResponse.json({ success: false, msg: "Please provide User Id" }, { status: 400 });

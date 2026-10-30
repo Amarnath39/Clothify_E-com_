@@ -3,10 +3,9 @@ import User from "../../../../model/User";
 import { connectDB } from "../../../../../db";
 import "../../../../model/Address";
 
-connectDB();
-
 export const POST = async (req: NextRequest) => {
   try {
+    await connectDB();
     const userId = req.headers.get("x-user-id");
     if (!userId) {
       return NextResponse.json(

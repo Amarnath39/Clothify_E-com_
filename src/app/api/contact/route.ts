@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import Contact from "../../../model/Contact";
 import { connectDB } from "../../../../db";
 
-connectDB();
-
 export const POST = async (req: NextRequest) => {
     try {
+        await connectDB();
         const body = await req.json();
         const {name, email, description, mobile} = body;
         if(!name || !email || !description || !mobile) return NextResponse.json({ success: false, msg: "Bad Request" }, { status: 400 });
@@ -24,6 +23,7 @@ export const POST = async (req: NextRequest) => {
 
 export const GET = async (req: NextRequest) => {
     try {
+        await connectDB();
         const contacts = await Contact.find();
         return NextResponse.json({ success: true, msg: "Success", contacts }, { status: 200 });
     } catch (error) {
